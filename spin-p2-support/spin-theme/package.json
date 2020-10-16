@@ -16,6 +16,11 @@
                 "label": "Spin-Theme",
                 "uiTheme": "vs-dark",
                 "path": "./themes/spin-theme.json"
+            },
+            {
+                "label": "My-Spin-Theme",
+                "uiTheme": "vs-dark",
+                "path": "./themes/my-spin-theme.json"
             }
         ]
     }
