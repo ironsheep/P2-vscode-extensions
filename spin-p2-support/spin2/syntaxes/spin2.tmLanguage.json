@@ -1,0 +1,144 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Spin2",
+	"patterns": [
+		{ "include": "#section"       },
+		{ "include": "#comment"       },
+		{ "include": "#constant"      },
+		{ "include": "#language"      }
+	],
+	"repository": {
+		"section": {
+			"patterns": [
+				{
+					"name": "entity.name.section.con.spin",
+					"match": "(?i)^CON\\b"
+				},
+				{
+					"name": "entity.name.section.var.spin",
+					"match": "(?i)^VAR\\b"
+				},
+				{
+					"name": "entity.name.section.obj.spin",
+					"match": "(?i)^OBJ\\b"
+				},
+				{
+					"name": "entity.name.section.pub.spin",
+					"match": "(?i)^PUB\\b"
+				},
+				{
+					"name": "entity.name.section.pri.spin",
+					"match": "(?i)^PRI\\b"
+				},
+				{
+					"name": "entity.name.section.dat.spin",
+					"match": "(?i)^DAT\\b"
+				}
+			]
+		},
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.block.spin2",
+					"match": "''.*"
+				},
+				{
+					"name": "comment.line.spin2",
+					"match": "'.*"
+				},
+				{
+					"name": "comment.block.spin2",
+					"begin": "{{",
+					"end": "}}"
+				},
+				{
+					"name": "comment.block.spin2",
+					"begin": "{",
+					"end": "}"
+				}
+			]
+		},
+		"constant": {
+			"patterns": [
+				{
+					"name": "string.spin2",
+					"begin": "\"",
+					"end": "\""
+				},
+				{
+					"name": "constant.character.escape.spin2",
+					"match": "#"
+				},
+				{
+					"name": "constant.numeric.decimal.spin2",
+					"match": "[0-9_]+"
+				},
+				{
+					"name": "constant.numeric.hexadecimal.spin2",
+					"match": "\\$[0-9A-Fa-f_]+"
+				},
+				{
+					"name": "constant.numeric.nibble.spin2",
+					"match": "\\%\\%[0-3_]+"
+				},
+				{
+					"name": "constant.numeric.binary.spin2",
+					"match": "\\%[0-1_]+"
+				},
+				{
+					"name": "constant.character.escape.spin2",
+					"match": "(?i)\\b(TRUE|FALSE)\\b"
+				}
+			]
+		},
+		"language": {
+			"patterns": [
+				{
+					"name": "keyword.other.directive.spin2",
+					"match": "(?i)\\b(ORG|ORGF|ORGH|FIT|ALIGNW|ALIGNL)\\b"
+				},
+				{
+					"name": "keyword.control.spin2",
+					"match": "\\s(?i:_RET_|(_|IF_)((C|NC)_(AND|OR)_(Z|NZ)|(Z|NZ)_(AND|OR)_(C|NC)|C_(EQ|NE)_Z|Z_(EQ|NE)_C|CLR|Z|NZ|E|NE|DIFF|C|NC|LT|B|LE|GE|GT|A|SET|(0|1|X)(0|1|X)))\\s"
+				},
+				{
+					"name": "keyword.operator.spin2",
+					"match": "\\s(?i:NOP|AND|ANDN|OR|XOR|MOV|NOT|ABS|NEG|ROR|ROL|SHR|SHL|RCR|RCL|SAR|SAL|ADD|SUB|CMP|(ADD|SUB|CMP)(X|S|XS)|CMPR|CMPM|SUBR|CMPSUB|(FL|FG)(E|ES)|(SUM|MUX|NEG|WR)(C|NC|Z|NZ)|TEST(B|BN|P|PN)|(BIT|DIR|OUT|FLT|DRV)(L|H|C|NC|Z|NZ|RND|NOT)|(INC|DEC)MOD|ZEROX|SIGNX|(DE|EN)COD|ONES|TEST|TESTN|(SET|GET|ROL)(NIB|BYTE|WORD)|BMASK|CRC(BIT|NIB)|MUX(NITS|NIBS|Q)|MOVBYTS|MUL|MULS|SCA|SCAS|(ADD|MUL|BLN|MIX)PIX|ADDCT(1|2|3)|ALT(((S|G)(N|B|W))|(R|D|S|B|I))|AUG(D|S)|SET(R|D|S)|DJ(Z|NZ|F|NF)|IJ(Z|NZ)|TJ(Z|NZ|F|NF|S|NS|V)|(J|JN|POLL|WAIT)(INT|PAT|FBW|XMT|XFI|XRO|XRL|ATN|QMT|CT(1|2|3)|SE(1|2|3|4))|JMP|JMPREL|CALL|CALL(A|B|PA|PB|D)|RET|RET(A|B)|(RES|RET)(0|1|2|3)|LOC|SKIP|SKIPF|EXECF|(RQ|RD)PIN|(RD|WR)LUT|(RD|WR|RF|WF)(BYTE|WORD|LONG)|WMLONG|(RD|WR)FAST|FBLOCK|RF(VAR|VARS)|PUSH|POP|(PUSH|POP)(A|B)|(WR|WX|WY|ACK)PIN|XINIT|XZERO|XCONT|XSTOP|QMUL|QDIV|QFRAC|QSQRT|QROTATE|QVECTOR|QLOG|QEXP|HUBSET|COG(INIT|ID|STOP|BRK|ATN)|LOCK(NEW|RET|TRY|REL)|GET(QX|QY|CT|RND|XACC)|SET(PAT|DACS|XFRQ|SE(1|2|3|4))|WAITX|ALLOWI|STALLI|(TRG|NIX|SET)INT(1|2|3)|SET(Q|Q2|CY|CI|CQ|CFRQ|CMOD|PIV|PIX)|REP|GET(PTR|BRK)|BRK|SETLUTS|LUTSOFF|LUTSON|(SPLIT|MERGE)(B|W)|SEUSS(F|R)|RGB(SQZ|EXP)|XORO32|REV|RCZ(R|L)|MOD(C|Z|CZ))\\s"
+				},
+				{
+					"name": "keyword.other.storage.spin2",
+					"match": "(?i)\\b(BYTE|WORD|LONG|RES)\\b"
+				},
+				{
+					"name": "keyword.other.register.spin2",
+					"match": "(?i)\\b(DIR(A|B)|IN(A|B)|OUT(A|B)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B))\\b"
+				},
+				{
+					"name": "keyword.control.spin2",
+					"match": "\\s(?i:WC|WZ|WCZ|ANDC|ANDZ|ORC|ORZ|XORC|XORZ)\\s"
+				},
+				{
+					"name": "keyword.other.reserved.spin2",
+					"match": "(?i)\\b(CHIPVER|CLKMODE|_CLKMODE|CLKFREQ|_CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL1|XTAL2|XTAL3|PLL(1|2|4|8|16)X)\\b"
+				},
+				{
+					"name": "keyword.operator.binary.spin2",
+					"match": "(?i)(=|:=|\\+=?|\\-=?|\\*\\*?=?|//?=?|#>=?|<#=?|~>=?|<<=?|>>=?|<-=?|->=?|><=?|\\&=?)"
+				},
+				{
+					"name": "keyword.operator.unary.spin2",
+					"match": "(?i)(\\+\\+?|\\-\\-?|\\^\\^|\\|\\||~~?|\\?|\\|<|>\\||!|NOT|@@?)"
+				},
+				{
+					"name": "keyword.operator.spin1.spin2",
+					"match": "(?i)\\b(COG(ID|NEW|INIT|STOP)|LOCK(NEW|RET|CLR|SET)|WAIT(CNT|PEQ|PNE|VID)|STRING|CONSTANT|FLOAT|ROUND|TRUNC|FILE|REBOOT)\\b"
+				},
+				{
+					"name": "keyword.control.spin1.spin2",
+					"match": "(?i)\\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|OTHER|REPEAT|FROM|TO|STEP|UNIT|WHILE|NEXT|QUIT|RETURN|ABORT)\\b"
+				}
+			]
+		}
+	},
+"scopeName": "source.spin2"
+}

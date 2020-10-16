@@ -1,0 +1,51 @@
+{
+    "name": "spin2",
+    "displayName": "Spin2",
+    "description": "Spin2 language support",
+    "icon": "propeller.ico",
+    "version": "0.1.0",
+    "publisher": "Cluso99",
+    "author": "Cluso99",
+    "galleryBanner": {
+        "color": "#003060",
+        "theme": "dark"
+    },
+    "preview": true,
+    "keywords": [
+        "spin",
+        "spin2",
+        "propeller",
+        "propeller ii",
+        "parallax"
+    ],
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.20.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "grammars": [
+            {
+                "language": "spin2",
+                "scopeName": "source.spin2",
+                "path": "./syntaxes/spin2.tmLanguage.json"
+            }
+        ],
+        "languages": [
+            {
+                "id": "spin2",
+                "aliases": [
+                    "spin2",
+                    "Spin2",
+                    "SPIN2"
+                ],
+                "extensions": [
+                    ".spin2"
+                ],
+                "configuration": "./spin2.language.json"
+            }
+        ]
+    }
+}
