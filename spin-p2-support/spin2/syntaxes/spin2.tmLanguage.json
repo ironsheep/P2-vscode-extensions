@@ -14,15 +14,15 @@
 				"2": { "patterns": [ { "include": "#number" } ] },
 				"3": { "name": "keyword.operator.spin2" }
 			}
-        },
-        "assembly_language": {
-            "name": "meta.block.assembly.language.spin2",
+		},
+		"assembly_language": {
+			"name": "meta.block.assembly.language.spin2",
 			"patterns": [
 				{ "include": "#constant" },
 				{ "include": "#register" },
 				{ "include": "#array_index" },
-                { "include": "#number" },
-                { "include": "#string" },
+				{ "include": "#number" },
+				{ "include": "#string" },
 				{
 					"name": "keyword.pasm.control.directive.pasm2",
 					"match": "(?i)\\b(ORG|ORGF|ORGH|FIT|ALIGNW|ALIGNL)\\b"
@@ -64,7 +64,7 @@
 					"match": "(?i)(\\+|-|\\^\\^|\\|\\||\\|<|>\\||!|@|\\*\\*?|//?|#>|<#|~>|<<|>>|<-|->|><|&|\\||\\^|AND|OR|==|<>|<|>|=<|=>)"
 				}
 			]
-       },
+		},
 		"binary_number": {
 			"name": "constant.numeric.binary.spin2",
 			"match": "(%)\\d+",
@@ -91,15 +91,6 @@
 		"cog": {
 			"name": "keyword.control.cog.spin2",
 			"match": "(?i)\\b(COG(ID|NEW|INIT|STOP)|REBOOT)\\b"
-		},
-		"inline_assembly": {
-			"name": "meta.block.inline.assembly.spin2",
-			"begin": "(?i)\\bORG\\b",
-			"end": "(?i)\\bEND\\b",
-			"patterns": [
-                { "include": "#comment" },
-                { "include": "#assembly_language" }
-            ]
 		},
 		"comment": {
 			"patterns": [
@@ -141,11 +132,7 @@
 					}
 				}
 			]
-        },
-        "flow_control" : {
-            "name": "keyword.control.spin1.spin2",
-            "match": "(?i)\\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|OTHER|REPEAT|FROM|TO|STEP|UNIT|WHILE|NEXT|QUIT|RETURN|ABORT)\\b"
-        },
+		},
 		"data_block": {
 			"name": "meta.block.data.spin2",
 			"begin": "(?i)^DAT\\b",
@@ -154,26 +141,29 @@
 				"0": { "name": "keyword.block.dat.spin2" }
 			},
 			"patterns": [
-                { "include": "#comment" },
-                { "include": "#assembly_language" }
+				{ "include": "#comment" },
+				{ "include": "#string" },
+				{ "include": "#number" },
+				{ "include": "#assembly_language" }
 			]
-        },
-        "debug": {
-            "name": "support.function.debug.spin2",
-            "begin": "(?i)^debug\\(",
-            "end": "\\)(?:(\\s*)?(?:\\')?(?:(.*)?)?$",
-            "beginCaptures": {
-                "0": { "name": "keyword.debug.statement.spin2" }
-            },
-            "patterns": [
-                { "include": "#string" },
-                { "include": "#debug_functions" }
-            ]
-        },
-        "debug_functions": {
-            "name": "support.function.debug.methods.spin2",
-            "match": "(?i)\\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG_|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)(_))|IFNOT|(ZSTR(_))|(LSTR(_))\\("
-        },
+		},
+		"debug": {
+			"name": "support.function.debug.spin2",
+			"begin": "(?i)\\bdebug\\(",
+			"end": "\\)",
+			"beginCaptures": {
+				"0": { "name": "keyword.debug.statement.spin2" }
+			},
+			"patterns": [
+				{ "include": "#number" },
+				{ "include": "#string" },
+				{ "include": "#debug_functions" }
+			]
+		},
+		"debug_functions": {
+			"name": "support.function.debug.methods.spin2",
+			"match": "(?i)\\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG_|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)(_))|IFNOT|(ZSTR(_))|(LSTR(_))"
+		},
 		"decimal_number": {
 			"name": "constant.numeric.decimal.spin2",
 			"match": "\\d+"
@@ -190,6 +180,10 @@
 		"doc_line_comment": {
 			"name": "comment.block.documentation.spin2",
 			"match": "''.*$"
+        },
+        "flow_control" : {
+			"name": "keyword.control.spin1.spin2",
+			"match": "(?i)\\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|OTHER|REPEAT|FROM|TO|STEP|UNIT|WHILE|NEXT|QUIT|RETURN|ABORT)\\b"
 		},
 		"hexadecimal_number": {
 			"name": "constant.numeric.hexadecimal.spin2",
@@ -197,6 +191,15 @@
 			"captures": {
 				"1": { "name": "constant.numeric.base.spin2" }
 			}
+		},
+		"inline_assembly": {
+			"name": "meta.block.inline.assembly.spin2",
+			"begin": "(?i)\\bORG\\b",
+			"end": "(?i)\\bEND\\b",
+			"patterns": [
+				{ "include": "#comment" },
+				{ "include": "#assembly_language" }
+			]
 		},
 		"line_comment": {
 			"name": "comment.line.spin2",
@@ -250,8 +253,8 @@
 			"patterns": [
 				{ "include": "#comment" },
 				{ "include": "#constant" },
-                { "include": "#directives" },
-                { "include": "flow_control" },
+				{ "include": "#directives" },
+				{ "include": "#flow_control" },
 				{ "include": "#array_index" },
 				{ "include": "#number" },
 				{ "include": "#configuration" },
@@ -260,7 +263,7 @@
 				{ "include": "#operator" },
 				{ "include": "#register" },
 				{ "include": "#return" },
-                { "include": "#inline_assembly" },
+				{ "include": "#inline_assembly" },
 				{ "include": "#debug" },
 				{ "include": "#debug_functions" }
 			]
@@ -284,7 +287,7 @@
 				{ "include": "#comment" },
 				{ "include": "#constant" },
 				{ "include": "#directives" },
-                { "include": "flow_control" },
+				{ "include": "#flow_control" },
 				{ "include": "#array_index" },
 				{ "include": "#number" },
 				{ "include": "#configuration" },
@@ -293,9 +296,9 @@
 				{ "include": "#operator" },
 				{ "include": "#register" },
 				{ "include": "#return" },
-                { "include": "#inline_assembly" },
+				{ "include": "#inline_assembly" },
 				{ "include": "#debug" },
-                { "include": "#debug_functions" }
+				{ "include": "#debug_functions" }
 			]
 		},
 		"quaternary_number": {
