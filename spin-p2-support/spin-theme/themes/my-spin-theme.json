@@ -42,7 +42,7 @@
 				"foreground": "#00A800",
 				"fontStyle":  "italic"
 			}
-        },   
+        },
         {
 			"name": "Documentation Line",
 			"scope": ["comment.line.documentation"],
@@ -50,7 +50,7 @@
 				"foreground": "#00A800",
 				"fontStyle":  "italic"
 			}
-        }, 
+        },
         {
 			"name": "Block",
 			"scope": ["comment.block"],
@@ -89,7 +89,7 @@
 			}
 		},
 		{
-			"name": "Section",		
+			"name": "Section",
 			"scope": ["keyword.block"],
 			"settings": {
 				"foreground": "#ff0000",
@@ -97,35 +97,35 @@
 			}
 		},
 		{
-			"name": "Invalid",		
+			"name": "Invalid",
 			"scope": ["invalid"],
 			"settings": {
 				"foreground": "#ff0000"
 			}
 		},
 		{
-			"name": "Control",		
+			"name": "Control",
 			"scope": ["keyword.control"],
 			"settings": {
 				"foreground": "#cccc44"
 			}
         },
 		{
-			"name": "Cog Register",		
+			"name": "Cog Register",
 			"scope": ["variable.language.cog.register"],
 			"settings": {
 				"foreground": "#9437FF"
 			}
         },
         {
-			"name": "Operator",		
+			"name": "Operator",
 			"scope": ["keyword.operator"],
 			"settings": {
 				"foreground": "#aaaa66"
 			}
 		},
 		{
-			"name": "Other",		
+			"name": "Other",
 			"scope": ["keyword.other"],
 			"settings": {
 				"foreground": "#2f8fbf"
@@ -144,51 +144,51 @@
             "settings": {
 				"foreground": "#ffd493"
 			}
-        }, 
+        },
         {
             "name": "storage types",
             "scope": ["storage.type"],
             "settings": {
 				"foreground": "#76D6FF"
 			}
-        }, 
+        },
         {
             "name": "Object Variables",
             "scope": ["entity.name.object"],
             "settings": {
 				"foreground": "#7A81FF"
 			}
-        }, 
+        },
         {
             "name": "Simple Variables",
             "scope": ["variable.name.readwrite"],
             "settings": {
 				"foreground": "#7A81FF"
 			}
-        }, 
+        },
         {
-			"name": "String",		
-			"scope": ["string"],
+			"name": "String",
+			"scope": ["string.quoted.double"],
 			"settings": {
 				"foreground": "#bb0000"
 			}
         },
         {
-			"name": "String",		
+			"name": "String",
 			"scope": ["meta.object.filename"],
             "settings": {
                 "foreground": "#FF7E79"
             }
         }
         {
-			"name": "pasm control",		
+			"name": "pasm control",
 			"scope": ["keyword.pasm.control"],
 			"settings": {
 				"foreground": "#FFFB00"
 			}
         },
             {
-                "name": "pasm instructions",		
+                "name": "pasm instructions",
                 "scope": ["keyword.pasm.instruction"],
                 "settings": {
                     "foreground": "#FFD479"

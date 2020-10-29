@@ -147,23 +147,6 @@
 				{ "include": "#assembly_language" }
 			]
 		},
-		"debug": {
-			"name": "support.function.debug.spin2",
-			"begin": "(?i)\\bdebug\\(",
-			"end": "\\)",
-			"beginCaptures": {
-				"0": { "name": "keyword.debug.statement.spin2" }
-			},
-			"patterns": [
-				{ "include": "#number" },
-				{ "include": "#string" },
-				{ "include": "#debug_functions" }
-			]
-		},
-		"debug_functions": {
-			"name": "support.function.debug.methods.spin2",
-			"match": "(?i)\\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG_|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)(_))|IFNOT|(ZSTR(_))|(LSTR(_))"
-		},
 		"decimal_number": {
 			"name": "constant.numeric.decimal.spin2",
 			"match": "\\d+"
@@ -178,7 +161,7 @@
 			"end": "}}"
 		},
 		"doc_line_comment": {
-			"name": "comment.block.documentation.spin2",
+			"name": "comment.line.documentation.spin2",
 			"match": "''.*$"
         },
         "flow_control" : {
@@ -198,6 +181,7 @@
 			"end": "(?i)\\bEND\\b",
 			"patterns": [
 				{ "include": "#comment" },
+				{ "include": "#number" },
 				{ "include": "#assembly_language" }
 			]
 		},
@@ -228,14 +212,15 @@
 				{ "include": "#comment" },
 				{
 					"name": "meta.object-initialization.spin2",
-					"match": "\\b((\\w|_)+)\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
-					"captures": {
-						"1": { "name": "entity.name.object.spin2" },
-						"3": { "name": "punctuation.spin2" },
-						"4": { "name": "meta.object.filename.spin2" },
-						"5": { "name": "punctuation.spin2" },
-						"7": { "name": "punctuation.spin2" }
-					}
+					"match": "\\b((\\w|_)+)(\\[.*\\])?\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
+                        "captures": {
+                            "1": { "name": "entity.name.object.spin2" },
+                            "3": { "patterns": [ { "include": "#array_index" } ] },
+                            "4": { "name": "punctuation.spin2" },
+                            "5": { "name": "meta.object.filename.spin2" },
+                            "6": { "name": "punctuation.spin2" },
+                            "8": { "name": "punctuation.spin2" }
+                        }
 				}
 			]
 		},
@@ -263,25 +248,22 @@
 				{ "include": "#operator" },
 				{ "include": "#register" },
 				{ "include": "#return" },
-				{ "include": "#inline_assembly" },
-				{ "include": "#debug" },
-				{ "include": "#debug_functions" }
+				{ "include": "#string" },
+				{ "include": "#inline_assembly" }
 			]
 		},
 		"public_block": {
-			"name": "meta.block.public.spin2",
-			"begin": "(?i)^(PUB)(?:\\s+((?:\\w|\\d)+)(?:(\\()(.*)(\\)))?\\s*(?:(\\|)\\s*((\\w|_)+))?)?",
+			"name": "meta.block.public.spin",
+			"begin": "(?i)^PUB\\b",
 			"end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
 			"beginCaptures": {
-				"1": { "name": "keyword.block.pub.spin2" },
-				"2": { "name": "entity.name.function.spin2" },
-				"3": { "name": "punctuation.spin2" },
-				"4": { "name": "meta.parameter.spin2" },
-				"5": { "name": "punctuation.spin2" },
-				"6": { "name": "punctuation.spin2" },
-				"7": { "name": "meta.return-type.spin2" },
-				"8": { "name": "punctuation.spin2" },
-				"9": { "name": "meta.local-variable.spin2" }
+				"1": { "name": "keyword.pub.spin" },
+				"2": { "name": "entity.name.function.spin" },
+				"3": { "name": "punctuation.spin" },
+				"4": { "name": "meta.parameter.spin" },
+				"5": { "name": "punctuation.spin" },
+				"6": { "name": "punctuation.spin" },
+				"7": { "name": "meta.return-type.spin" }
 			},
 			"patterns": [
 				{ "include": "#comment" },
@@ -289,6 +271,7 @@
 				{ "include": "#directives" },
 				{ "include": "#flow_control" },
 				{ "include": "#array_index" },
+				{ "include": "#inline_assembly" },
 				{ "include": "#number" },
 				{ "include": "#configuration" },
 				{ "include": "#cog" },
@@ -296,9 +279,7 @@
 				{ "include": "#operator" },
 				{ "include": "#register" },
 				{ "include": "#return" },
-				{ "include": "#inline_assembly" },
-				{ "include": "#debug" },
-				{ "include": "#debug_functions" }
+				{ "include": "#string" }
 			]
 		},
 		"quaternary_number": {
@@ -318,12 +299,15 @@
 		},
 		"string": {
 			"name": "string.quoted.double.spin2",
-			"match": "(\\\")(\\.|[^\"])*(\\\")",
-			"captures": {
-				"1": { "name": "punctuation.definition.string.spin2" },
-				"3": { "name": "punctuation.definition.string.spin2" }
-			}
-		},
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.spin2",
+					"match": "\\\\."
+				}
+            ]
+        },
 		"variable_block": {
 			"name": "meta.block.variable.spin2",
 			"begin": "(?i)^VAR\\b",

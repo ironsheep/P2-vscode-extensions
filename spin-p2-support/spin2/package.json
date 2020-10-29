@@ -44,7 +44,7 @@
                 "extensions": [
                     ".spin2"
                 ],
-                "configuration": "./spin2.language.json"
+                "configuration": "./spin2.language-configuration.json"
             }
         ]
     }
