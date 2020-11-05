@@ -14,7 +14,7 @@ VSCode support for the Propeller languages: SPIN and PASM
 
 *These are all arriving over time and not yet fully functional.*
 
--
+---
 
 This repository contains three subprojects. Each of which are vscode extensions:
 
