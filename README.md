@@ -12,6 +12,7 @@ VSCode support for the Propeller languages: SPIN and PASM
 - Build and download support (using external compiler and download tool)
 - Companion Themes
 
+*These are all arriving over time and not yet fully functional.*
 
 -
 
@@ -21,6 +22,7 @@ This repository contains three subprojects. Each of which are vscode extensions:
 - SPIN/PASM themes [spin-theme](./spin-theme)
 - SPIN1 and PASM1 syntax highlighting [spin1](./spin1)
 
+*Each of these three are self contained and package their own extension.*
 
 -
 
