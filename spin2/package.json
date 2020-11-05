@@ -1,10 +1,14 @@
 {
     "name": "spin2",
     "displayName": "Spin2",
-    "description": "Spin2 language support",
-    "icon": "propeller.ico",
-    "version": "0.1.0",
+    "description": "Spin2 sytax hightlighting and outline support",
+    "icon": "images/Propeller.ico",
+    "version": "0.1.1",
     "publisher": "Cluso99",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ironsheep/P2-vscode-support"
+    },
     "author": "Cluso99",
     "galleryBanner": {
         "color": "#003060",
@@ -19,8 +23,12 @@
         "parallax"
     ],
     "license": "MIT",
+    "main": "out/spin2.extension.js",
+    "activationEvents": [
+        "onLanguage:spin2"
+    ],
     "engines": {
-        "vscode": "^1.20.0"
+        "vscode": "^1.50.0"
     },
     "categories": [
         "Programming Languages"
@@ -30,7 +38,7 @@
             {
                 "language": "spin2",
                 "scopeName": "source.spin2",
-                "path": "./syntaxes/spin2.tmLanguage.json"
+                "path": "syntaxes/spin2.tmLanguage.json"
             }
         ],
         "languages": [
@@ -47,5 +55,19 @@
                 "configuration": "./spin2.language-configuration.json"
             }
         ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.50.0",
+        "typescript": "^3.7.5",
+        "vscode-test": "^1.3.0"
+    },
+    "dependencies": {
+        "vsce": "^1.81.1"
     }
 }

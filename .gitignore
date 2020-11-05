@@ -1,9 +1,19 @@
 node_modules
+_logs
+
+package-lock.json
+.npmrc
+npm-debug.log
+.lock-wscript
+config.gypi
 
 .DS_Store
 
 TEST_GEN/
 ZIPs/
+out/
+
+*.vsix
 
 
 *-REF*
