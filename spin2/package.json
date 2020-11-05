@@ -3,7 +3,7 @@
     "displayName": "Spin2",
     "description": "Spin2 sytax hightlighting and outline support",
     "icon": "images/Propeller.ico",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "publisher": "Cluso99",
     "repository": {
         "type": "git",
