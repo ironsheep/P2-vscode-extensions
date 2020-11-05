@@ -24,7 +24,7 @@ This repository contains three subprojects. Each of which are vscode extensions:
 
 *Each of these three are self contained and package their own extension.*
 
--
+---
 
 > If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices! 
 > 
