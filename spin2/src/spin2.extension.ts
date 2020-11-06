@@ -27,8 +27,17 @@ class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider
             for (var i = 0; i < document.lineCount; i++) {
                 var line = document.lineAt(i);
                 let linePrefix : string = line.text
+                var lineHasComment : boolean = false
                 if (line.text.length > 3) {
-                    linePrefix = linePrefix.substring(0,3).toUpperCase()
+                    linePrefix = linePrefix.substring(0, 3).toUpperCase()
+                    if (line.text.includes(" ")) {
+                        const lineParts: string[] = line.text.split(" ")
+                        if (lineParts.length > 1) {
+                            if (lineParts[1].startsWith("{")) {
+                                lineHasComment = true
+                            }
+                        }
+                    }
                 }
 
                 if (linePrefix.startsWith("CON") || linePrefix.startsWith("DAT") || linePrefix.startsWith("VAR") || linePrefix.startsWith("OBJ")) {
@@ -37,8 +46,9 @@ class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider
                         const lineParts: string[] = section.split("'")
                         section = lineParts[0].trim()
                     }
+                    var sectionComment = (lineHasComment) ? section.substr(3) : ""
                     let marker_symbol = new vscode.DocumentSymbol(
-                        linePrefix + section.substr(3),
+                        linePrefix + sectionComment,
                         '',
                         vscode.SymbolKind.Field,
                         line.range, line.range)

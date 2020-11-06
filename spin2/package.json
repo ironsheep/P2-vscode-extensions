@@ -1,10 +1,10 @@
 {
     "name": "spin2",
     "displayName": "Spin2",
-    "description": "Spin2 sytax hightlighting and outline support",
+    "description": "Spin2/Pasm2 Syntax Hightlighting and Code Outline support",
     "icon": "images/Propeller.ico",
     "version": "0.1.2",
-    "publisher": "Cluso99",
+    "publisher": "IronSheep",
     "repository": {
         "type": "git",
         "url": "https://github.com/ironsheep/P2-vscode-support"
@@ -12,7 +12,7 @@
 	"bugs": {
 		"url": "https://github.com/ironsheep/P2-vscode-support/issues"
 	},
-    "author": "Cluso99",
+    "author": "IronSheep",
     "galleryBanner": {
         "color": "#003060",
         "theme": "dark"

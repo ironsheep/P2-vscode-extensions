@@ -40,16 +40,14 @@
 			"name": "Documentation Block",
 			"scope": ["comment.block.documentation"],
 			"settings": {
-				"foreground": "#00A800",
-				"fontStyle":  "italic"
+				"foreground": "#00A800"
 			}
         },
         {
 			"name": "Documentation Line",
 			"scope": ["comment.line.documentation"],
 			"settings": {
-				"foreground": "#00A800",
-				"fontStyle":  "italic"
+				"foreground": "#00A800"
 			}
         },
         {
@@ -79,21 +77,21 @@
 			"name": "Constant",
 			"scope": ["constant.language"],
 			"settings": {
-				"foreground": "#ff00ff"
+				"foreground": "#880088"
 			}
 		},
 		{
 			"name": "Numeric",
 			"scope": ["constant.numeric"],
 			"settings": {
-				"foreground": "#ff8888"
+				"foreground": "#377c7f"
 			}
 		},
 		{
 			"name": "Section",
 			"scope": ["keyword.block"],
 			"settings": {
-				"foreground": "#ff0000"
+				"foreground": "#8f0000"
 			}
 		},
 		{
@@ -135,7 +133,7 @@
             "name": "debug functions",
             "scope": ["support.function.debug.methods"],
             "settings": {
-				"foreground": "#ff9300"
+				"foreground": "#b96c00"
 			}
         },
         {
@@ -177,28 +175,49 @@
 			"name": "Method Return Variable",
 			"scope": ["meta.return-type.spin"],
 			"settings": {
-				"foreground": "#008040"
+				"foreground": "#008799"
 			}
         },
         {
 			"name": "Filename",
 			"scope": ["meta.object.filename"],
             "settings": {
-                "foreground": "#FF7E79"
+                "foreground": "#ea3a56"
             }
+        },
+        {
+			"name": "spin operators",
+			"scope": ["keyword.spin.operators"],
+			"settings": {
+				"foreground": "#831799"
+			}
+        },
+        {
+			"name": "spin methods",
+			"scope": ["keyword.spin.methods"],
+			"settings": {
+				"foreground": "#178a99"
+			}
+        },
+        {
+			"name": "pasm storage modifiers",
+			"scope": ["storage.modifier"],
+			"settings": {
+				"foreground": "#5393af"
+			}
         },
         {
 			"name": "pasm control",
 			"scope": ["keyword.pasm.control"],
 			"settings": {
-				"foreground": "#FFFB00"
+				"foreground": "#991b17"
 			}
         },
         {
             "name": "pasm instructions",
             "scope": ["keyword.pasm.instruction"],
             "settings": {
-                "foreground": "#FFD479"
+                "foreground": "#991b17"
             }
         }
 	]

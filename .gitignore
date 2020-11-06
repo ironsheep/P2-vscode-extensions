@@ -11,6 +11,7 @@ config.gypi
 
 TEST_GEN/
 ZIPs/
+REF/
 out/
 
 *.vsix
