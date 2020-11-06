@@ -7,22 +7,21 @@
 VSCode support for the Propeller languages: SPIN and PASM
 
 ## Features
-- Syntax Highlighting
-- File Navigation
-- Build and download support (using external compiler and download tool)
-- Companion Themes
+- Syntax Highlighting - *Mostly working*
+- File Navigation - *Working well*
+- Build and download support (using external compiler and download tool) - *Still figuring this out*
+- Companion Themes - my develop/test theme
 
 *These are all arriving over time and not yet fully functional.*
 
 ---
 
-This repository contains three subprojects. Each of which are vscode extensions:
+This repository contains two subprojects. Each of which are vscode extensions:
 
-- SPIN2 and PASM2 syntax Highlighting and code navigation [spin2](./spin2)
-- SPIN/PASM themes [spin-theme](./spin-theme)
-- SPIN1 and PASM1 syntax highlighting [spin1](./spin1)
+- SPIN2 and PASM2 syntax Highlighting and code navigation [spin2](./spin2) - *Builds*
+- SPIN1 and PASM1 syntax highlighting [spin1](./spin1) - *DOES NOT BUILD*
 
-*Each of these three are self contained and package their own extension.*
+*Each of these two are self contained and package their own extension but spin1 will be migrated into spin2 shortly*
 
 ---
 
@@ -33,9 +32,9 @@ This repository contains three subprojects. Each of which are vscode extensions:
 
 ## Credits
 
-Ray [Cluso99] in our propeller Forums which started this effort for us.
+Ray [Cluso99] in our [Propeller 2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller) which started this effort for us.
 
-Patrick [Entomy](https://github.com/Entomy) for a spin1 extension which helped me get further along with this one.
+Patrick (GitHub [Entomy](https://github.com/Entomy)) for a spin1 extension which helped me get further along with this one.
 
 ## License
 
