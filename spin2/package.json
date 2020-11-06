@@ -7,10 +7,10 @@
     "publisher": "IronSheep",
     "repository": {
         "type": "git",
-        "url": "https://github.com/ironsheep/P2-vscode-support"
+        "url": "https://github.com/ironsheep/P2-vscode-extensions"
     },
 	"bugs": {
-		"url": "https://github.com/ironsheep/P2-vscode-support/issues"
+		"url": "https://github.com/ironsheep/P2-vscode-extensions/issues"
 	},
     "author": "IronSheep",
     "galleryBanner": {
