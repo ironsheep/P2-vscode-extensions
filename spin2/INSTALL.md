@@ -13,7 +13,7 @@ You can manually install the extension in VS Code (replace the '?' wildcards in 
     ```bash
     code --install-extension spin2-?.?.?.vsix
     ```
-    
+
 ## Build the extension
 
 1. Clone the repository and enter into the folder
