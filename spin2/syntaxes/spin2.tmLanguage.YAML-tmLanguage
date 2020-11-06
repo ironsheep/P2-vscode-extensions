@@ -17,42 +17,170 @@ repository:
                     - {include: '#number'}
             '3':
                 name: keyword.operator.spin2
-    assembly_language_hold:
-        name: meta.block.assembly.language.spin2
-        begin: '(?i)\bORG\b'
+    binary_number:
+        name: constant.numeric.binary.spin2
+        match: '(%[01][01_]*)\b'
+        captures:
+            '1':
+                name: constant.numeric.base.spin2
+    block:
+        name: meta.block.spin2
+        patterns:
+            -
+                include: '#constant_block'
+            -
+                include: '#variable_block'
+            -
+                include: '#object_block'
+            -
+                include: '#public_block'
+            -
+                include: '#private_block'
+            -
+                include: '#data_block'
+    block_comment:
+        name: comment.block.spin2
+        begin: '{'
+        end: '}'
+    comment:
+        patterns:
+            -
+                include: '#doc_block_comment'
+            -
+                include: '#block_comment'
+            -
+                include: '#doc_line_comment'
+            -
+                include: '#line_comment'
+    configuration:
+        name: keyword.control.configuration.spin2
+        match: '(?i)\b(CHIPVER|_?CLKMODE|_?CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL[1-3]|PLL(1|2|4|8|16)X)\b'
+    constant:
+        name: constant.spin.values.spin2
+        match: '(?i)\b(TRUE|FALSE|POSX|NEGX|PI)\b'
+    constant_block:
+        name: meta.block.constant.spin2
+        begin: '(?i)^CON\b'
         end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        beginCaptures:
+            '0':
+                name: keyword.block.con.spin2
         patterns:
             -
                 include: '#comment'
             -
-                include: '#constant'
+                include: '#configuration'
             -
-                include: '#register'
+                match: '(?i)\b((\w|_)+)\s*(=)\s*(.*)\b'
+                captures:
+                    '1': {name: entity.name.constant.spin2}
+                    '3': {name: keyword.operator.assignment.spin2}
+                    '4': {patterns: [{include: '#number'}, {include: '#string'}, {include: '#constant'}]}
+    data_block:
+        name: meta.block.data.spin2
+        begin: '(?i)^DAT\b'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        beginCaptures:
+            '0':
+                name: keyword.block.dat.spin2
+        patterns:
             -
-                include: '#array_index'
+                include: '#comment'
             -
-                include: '#number'
+                include: '#constants'
             -
                 include: '#string'
             -
+                include: '#number'
+            -
                 include: '#debug_functions'
             -
-                name: just.junk.stuff.here
-                match: '(?i)\b(ORG(F|H)?|FIT|ALIGNW|ALIGNL)\b'
+                include: '#pasm_language'
+            -
+                match: '(?i)\b((\w|_)+)\b'
+                captures:
+                    '1': {name: variable.name.spin2}
+            -
+                match: '(?i)\b((\w|_)+)\s*\b(byte|word|long|res)\b(\[.*\])?\b'
+                captures:
+                    '1': {name: variable.name.spin2}
+                    '3': {name: storage.type.spin2}
+                    '4': {patterns: [{include: '#number'}, {include: '#constants'}, {include: '#array_index'}]}
+            -
+                match: '(?i)\s*\b(byte|word|long|res)\b(\[.*\])?'
+                captures:
+                    '1': {name: storage.type.spin2}
+                    '2': {patterns: [{include: '#number'}, {include: '#constants'}, {include: '#array_index'}]}
+    debug_functions:
+        name: support.function.debug.methods.spin2
+        match: '(?i)\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|IFNOT|ZSTR(_)?|LSTR(_)?|debug)\b'
     debug_functions_hold:
         name: support.function.debug.methods.spin2
         match: '(?i)\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?)|IF(NOT)?|(ZSTR(_)?)|(LSTR(_)?)|debug\b'
-    assembly_language:
-        name: meta.block.assembly.language.spin2
-        begin: '(?i)\bORG\b'
+    decimal_number:
+        name: constant.numeric.decimal.spin2
+        match: \d+
+    directives:
+        name: keyword.control.directive.spin2
+        match: '(?i)\b(STRING|CONSTANT|FLOAT|ROUND|TRUNC|FILE)\b'
+    doc_block_comment:
+        name: comment.block.documentation.spin2
+        begin: '{{'
+        end: '}}'
+    doc_line_comment:
+        name: comment.line.documentation.spin2
+        match: '''''.*$'
+    hexadecimal_number:
+        name: constant.numeric.hexadecimal.spin2
+        match: '(\$[0-9a-fA-F][0-9a-fA-F_]*)\b'
+        captures:
+            '1':
+                name: constant.numeric.base.spin2
+    line_comment:
+        name: comment.line.spin2
+        match: '''.*$'
+    number:
+        patterns:
+            -
+                include: '#quaternary_number'
+            -
+                include: '#binary_number'
+            -
+                include: '#hexadecimal_number'
+            -
+                include: '#decimal_number'
+    object_block:
+        name: meta.block.object.spin2
+        begin: '(?i)^OBJ\b'
         end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        beginCaptures:
+            '0':
+                name: keyword.block.obj.spin2
+        patterns:
+            -
+                include: '#comment'
+            -
+                name: meta.object-initialization.spin2
+                match: '\b((\w|_)+)(\[.*\])?\s*(:)\s*((\")(\.|[^"])*(\"))'
+                captures:
+                    '1': {name: entity.name.object.spin2}
+                    '3': {patterns: [{include: '#array_index'}]}
+                    '4': {name: punctuation.spin2}
+                    '5': {name: meta.object.filename.spin2}
+                    '6': {name: punctuation.spin2}
+                    '8': {name: punctuation.spin2}
+    operator:
+        name: keyword.operator.spin2
+        match: '(?i)\b(\+(\+|=)?|-(-|=)?|\^(\^|=)?|\|(\||=)?|~(~|>)?=?|\?|\|<|>\||!|NOT|@@?|:?=|\*(\*|=)?|/(/|=)?|#>=?|<#=?|<<?=?|>>?=?|<-=?|->=?|><=?|&=|AND=?|OR=?|===?|<>=?|=[<>]=?)\b'
+    pasm_language:
+        name: meta.block.pasm.language.spin2
+        begin: '(?i)\bORG(H|F)?\b'
+        end: '(?i)(^(?=(CON|VAR|OBJ|PUB|PRI|DAT))|\b(FIT|END))\b'
         patterns:
             -
                 include: '#comment'
             -
                 include: '#constant'
-            -
-                include: '#register'
             -
                 include: '#array_index'
             -
@@ -61,6 +189,11 @@ repository:
                 include: '#string'
             -
                 include: '#debug_functions'
+            -
+                include: '#pasm_language_elements'
+    pasm_language_elements:
+        name: meta.block.pasm.elements.spin2
+        patterns:
             -
                 name: keyword.pasm.control.directive.pasm2
                 match: '(?i)\b(ORG(F|H)?|FIT|ALIGN(W|L))\b'
@@ -69,7 +202,7 @@ repository:
                 match: '(?i)\bCLKSET\b'
             -
                 name: storage.type.pasm2
-                match: "(?i)\\b(BYTE|WORD|LONG|RES)\b"
+                match: '(?i)\\b(BYTE|WORD|LONG|RES)\b'
             -
                 name: keyword.pasm.control.cog.pasm2
                 match: '(?i)\bCOG(ID|NEW|INIT|STOP)\b'
@@ -115,130 +248,28 @@ repository:
             -
                 name: keyword.pasm.instruction.pins.io.pasm2
                 match: '(?i)\b((DIR|DRV|OUT|FLT)(L|H|C|NC|Z|NZ|RND|NOT)|TESTPN?)\b'
-    binary_number:
-        name: constant.numeric.binary.spin2
-        match: '(%[01][01_]*)\b'
-        captures:
-            '1':
-                name: constant.numeric.base.spin2
-    block:
-        name: meta.block.spin2
-        patterns:
-            -
-                include: '#constant_block'
-            -
-                include: '#variable_block'
-            -
-                include: '#object_block'
-            -
-                include: '#public_block'
-            -
-                include: '#private_block'
-            -
-                include: '#data_block'
-    block_comment:
-        name: comment.block.spin2
-        begin: '{'
-        end: '}'
-    cog:
-        name: keyword.control.cog.spin2
-        match: '(?i)\b(COG(ID|NEW|INIT|STOP)|REBOOT)\b'
-    comment:
-        patterns:
-            -
-                include: '#doc_block_comment'
-            -
-                include: '#block_comment'
-            -
-                include: '#doc_line_comment'
-            -
-                include: '#line_comment'
-    configuration:
-        name: keyword.control.configuration.spin2
-        match: '(?i)\b(CHIPVER|_?CLKMODE|_?CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL[1-3]|PLL(1|2|4|8|16)X)\b'
-    constant:
-        name: constant.language.spin2
-        match: '(?i)\b(TRUE|FALSE|POSX|NEGX|PI)\b'
-    constant_block:
-        name: meta.block.constant.spin2
-        begin: '(?i)^CON\b'
+    pasm_language_hold:
+        name: meta.block.pasm.language.spin2
+        begin: '(?i)\bORG\b'
         end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
-        beginCaptures:
-            '0':
-                name: keyword.block.con.spin2
         patterns:
             -
                 include: '#comment'
             -
-                include: '#configuration'
+                include: '#constant'
             -
-                match: '(?i)\b((\w|_)+)\s*(=)\s*(.*)\s*'
-                captures:
-                    '1': {name: entity.name.constant.spin2}
-                    '3': {name: keyword.operator.assignment.spin2}
-                    '4': {patterns: [{include: '#number'}, {include: '#string'}, {include: '#constant'}]}
-    data_block:
-        name: meta.block.data.spin2
-        begin: '(?i)^DAT\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
-        beginCaptures:
-            '0':
-                name: keyword.block.dat.spin2
-        patterns:
-            -
-                include: '#comment'
-            -
-                include: '#constants'
-            -
-                include: '#string'
+                include: '#array_index'
             -
                 include: '#number'
             -
+                include: '#string'
+            -
                 include: '#debug_functions'
             -
-                include: '#assembly_language'
-            -
-                match: '(?i)\b((\w|_)+)\b'
-                captures:
-                    '1': {name: variable.name.spin2}
-            -
-                match: '(?i)\b((\w|_)+)\s*\b(byte|word|long|res)\b(\[.*\])?\b'
-                captures:
-                    '1': {name: variable.name.spin2}
-                    '3': {name: storage.type.spin2}
-                    '4': {patterns: [{include: '#number'}, {include: '#constants'}, {include: '#array_index'}]}
-            -
-                match: '(?i)\s*\b(byte|word|long|res)\b(\[.*\])?'
-                captures:
-                    '1': {name: storage.type.spin2}
-                    '2': {patterns: [{include: '#number'}, {include: '#constants'}, {include: '#array_index'}]}
-    debug_functions:
-        name: support.function.debug.methods.spin2
-        match: '(?i)\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|IFNOT|ZSTR(_)?|LSTR(_)?|debug)\b'
-    decimal_number:
-        name: constant.numeric.decimal.spin2
-        match: \d+
-    directives:
-        name: keyword.control.directive.spin2
-        match: '(?i)\b(STRING|CONSTANT|FLOAT|ROUND|TRUNC|FILE)\b'
-    doc_block_comment:
-        name: comment.block.documentation.spin2
-        begin: '{{'
-        end: '}}'
-    doc_line_comment:
-        name: comment.line.documentation.spin2
-        match: '''''.*$'
-    flow_control:
-        name: keyword.control.spin1.spin2
-        match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|OTHER|REPEAT|FROM|TO|STEP|UNIT|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
-    hexadecimal_number:
-        name: constant.numeric.hexadecimal.spin2
-        match: '(\$[0-9a-fA-F][0-9a-fA-F_]*)\b'
-        captures:
-            '1':
-                name: constant.numeric.base.spin2
-    inline_assembly:
-        name: meta.block.inline.assembly.spin2
+                name: just.junk.stuff.here
+                match: '(?i)\b(ORG(F|H)?|FIT|ALIGNW|ALIGNL)\b'
+    pasm_language_inline:
+        name: meta.block.pasm.language.inline.spin2
         begin: '(?i)\bORG\b'
         end: '(?i)\bEND\b'
         patterns:
@@ -247,52 +278,13 @@ repository:
             -
                 include: '#constant'
             -
-                include: '#register'
-            -
                 include: '#array_index'
             -
                 include: '#number'
             -
                 include: '#debug_functions'
-    line_comment:
-        name: comment.line.spin2
-        match: '''.*$'
-    memory:
-        name: keyword.control.memory.spin2
-        match: '(?i)\b((BYTE|WORD|LONG)(FILL|MOVE)|LOOK(UP?Z|DOWN?Z)|STR(SIZE|CMP))\b'
-    number:
-        patterns:
             -
-                include: '#quaternary_number'
-            -
-                include: '#binary_number'
-            -
-                include: '#hexadecimal_number'
-            -
-                include: '#decimal_number'
-    object_block:
-        name: meta.block.object.spin2
-        begin: '(?i)^OBJ\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
-        beginCaptures:
-            '0':
-                name: keyword.block.obj.spin2
-        patterns:
-            -
-                include: '#comment'
-            -
-                name: meta.object-initialization.spin2
-                match: '\b((\w|_)+)(\[.*\])?\s*(:)\s*((\")(\.|[^"])*(\"))'
-                captures:
-                    '1': {name: entity.name.object.spin2}
-                    '3': {patterns: [{include: '#array_index'}]}
-                    '4': {name: punctuation.spin2}
-                    '5': {name: meta.object.filename.spin2}
-                    '6': {name: punctuation.spin2}
-                    '8': {name: punctuation.spin2}
-    operator:
-        name: keyword.operator.spin2
-        match: '(?i)\b(\+(\+|=)?|-(-|=)?|\^(\^|=)?|\|(\||=)?|~(~|>)?=?|\?|\|<|>\||!|NOT|@@?|:?=|\*(\*|=)?|/(/|=)?|#>=?|<#=?|<<?=?|>>?=?|<-=?|->=?|><=?|&=|AND=?|OR=?|===?|<>=?|=[<>]=?)\b'
+                include: '#pasm_language_elements'
     private_block:
         name: meta.block.private.spin2
         begin: '(?i)^PRI\b'
@@ -318,17 +310,15 @@ repository:
             -
                 include: '#cog'
             -
-                include: '#memory'
-            -
                 include: '#operator'
-            -
-                include: '#register'
             -
                 include: '#return'
             -
                 include: '#string'
             -
                 include: '#debug_functions'
+            -
+                include: '#spin_language'
     public_block:
         name: meta.block.public.spin
         begin: '(?i)^(PUB)(?:\s+((?:\w|\d)+)(?:(\()(.*)(\)))?\s*(?:(\:)\s*((\w|_)+))?\s*(?:(\|)\s*((\w|_)+))?)?'
@@ -366,29 +356,80 @@ repository:
             -
                 include: '#cog'
             -
-                include: '#memory'
-            -
                 include: '#operator'
-            -
-                include: '#register'
             -
                 include: '#return'
             -
                 include: '#string'
             -
                 include: '#debug_functions'
+            -
+                include: '#spin_language'
     quaternary_number:
         name: constant.numeric.quaternary.spin2
         match: '(%%[0-3][0-3_]*)\b'
         captures:
             '1':
                 name: constant.numeric.base.spin2
-    register:
-        name: variable.language.cog.register.spin2
-        match: '(?i)\b(DIR(A|B)|IN(A|B)|OUT(A|B)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|PR(0|1|2|3|4|5|6|7))\b'
     return:
         name: variable.language.return.spin2
         match: '(?i)\breturn\b'
+    spin_language:
+        name: meta.block.spin.language.spin2
+        begin: '(?i)\b(PRI|PUB)\b'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        patterns:
+            -
+                include: '#comment'
+            -
+                include: '#constant'
+            -
+                include: '#array_index'
+            -
+                include: '#number'
+            -
+                include: '#string'
+            -
+                include: '#debug_functions'
+            -
+                include: '#pasm_language_inline'
+            -
+                name: keyword.spin.methods.hub.spin2
+                match: '(?i)\b(COG(CHK|ID|INIT|SPIN|STOP)|(HUB|CLK)SET|LOCK(NEW|RET|TRY|REL|CHK)|(COG|POLL|WAIT)ATN)\b'
+            -
+                name: keyword.spin.methods.string.spin2
+                match: '(?i)\b(STR(ING|COMP|SIZE))\b'
+            -
+                name: keyword.spin.methods.index.spin2
+                match: '(?i)\b(LOOK(I{Z?|DOWNZ?))\b'
+            -
+                name: keyword.spin.methods.memory.spin2
+                match: '(?i)\b((GET|SET)REGS|(BYTE|WORD|LONG)(MOVE|FILL))\b'
+            -
+                name: keyword.spin.methods.math.spin2
+                match: '(?i)\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND)\b'
+            -
+                name: keyword.spin.methods.pasminterface.spin2
+                match: '(?i)\b(CALL|REG(EXEC|LOAD))\b'
+            -
+                name: keyword.spin.methods.timing.spin2
+                match: '(?i)\b(GETSEC|(GET|POLL|WAIT)CT|WAIT(MS|US))\b'
+            -
+                name: keyword.spin.methods.pin.spin2
+                match: '(?i)\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AS|RD|RQ)PIN)\b'
+            -
+                name: keyword.spin.operators.fields.spin2
+                match: '(?i)\b(ADDBITS|ADDPINS)\b'
+            -
+                name: keyword.spin.methods.hub.spin2
+                match: '(?i)\b(ADDBITS|ADDPINS)\b'
+            -
+                name: contant.spin.registers.spin2
+                match: '(?i)\b(PR(0|1|2|3|4|5|6|7)|(IJMP|IRET)(3|2|1)|(P|PTR|DIR|IN|OUT)(A|B)|)\b'
+            -
+                name: keyword.control.spin1.spin2
+                match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|OTHER|REPEAT|FROM|TO|STEP|UNIT|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
+
     string:
         name: string.quoted.double.spin2
         begin: '"'

@@ -9,6 +9,9 @@
         "type": "git",
         "url": "https://github.com/ironsheep/P2-vscode-support"
     },
+	"bugs": {
+		"url": "https://github.com/ironsheep/P2-vscode-support/issues"
+	},
     "author": "Cluso99",
     "galleryBanner": {
         "color": "#003060",
@@ -34,6 +37,18 @@
         "Programming Languages"
     ],
     "contributes": {
+		"themes": [
+			{
+				"label": "Spin2 Ironsheep",
+				"uiTheme": "vs-dark",
+				"path": "./themes/isp-spin-theme.json"
+			},
+			{
+				"label": "Spin2 Cluso99",
+				"uiTheme": "hc-black",
+				"path": "./themes/spin-theme.json"
+			}
+		],
         "grammars": [
             {
                 "language": "spin2",
@@ -57,10 +72,11 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
+        "vscode:prepublish": "npm run compile && npm run compile:grammar",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "pretest": "npm run compile"
+        "pretest": "npm run compile",
+        "compile:grammar": "npx js-yaml syntaxes/spin2.tmLanguage.YAML-tmLanguage > syntaxes/spin2.tmLanguage.json"
     },
     "devDependencies": {
         "@types/vscode": "^1.50.0",

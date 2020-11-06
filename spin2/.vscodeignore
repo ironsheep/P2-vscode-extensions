@@ -1,7 +1,6 @@
 *
 */**
-**/.DS_Store
-*/.DS_Store
+.DS_Store
 syntaxes/*
 !out/*
 !syntaxes/spin2.tmLanguage.json
@@ -12,3 +11,4 @@ syntaxes/*
 !LICENSE
 !copyright
 !images/*
+!themes/*
