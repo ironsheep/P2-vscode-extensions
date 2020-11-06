@@ -10,9 +10,9 @@ _Lastly_, the extension can be built and installed manually by following the ste
 
 You can manually install the extension in VS Code (replace the '?' wildcards in the version number)
 
-    ```bash
-    code --install-extension spin2-?.?.?.vsix
-    ```
+```bash
+code --install-extension spin2-?.?.?.vsix
+```
 
 ## Build the extension
 
