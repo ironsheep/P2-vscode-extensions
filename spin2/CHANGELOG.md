@@ -8,10 +8,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
-- Add smart pin symbols
 - Add Streamer mode symbols
 - Add watching/build/download
-- Working on adding all PASM2 keywords
 - working on fixes to known issues
 
 Possible next additions:
@@ -21,6 +19,14 @@ Possible next additions:
 - (this includes parameters, return values, local variables, method names, etc.)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [0.2.0] 2020-11-07
+
+- SPIN2: Added 105 smart pin symbols
+- SPIN2: Added 78 streamer mode symbols
+- SPIN2: Added missing AKPIN instru.
+- SPIN2: Added 24 COG-REGISTER symbols, fixed classification of 3 variables and 1 instru.
+- Adding remaining PASM2 keywords
 
 ## [0.1.2] 2020-11-06
 

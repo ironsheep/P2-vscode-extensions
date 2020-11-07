@@ -248,7 +248,7 @@
     },
     "debug_functions": {
       "name": "support.function.debug.methods.spin2",
-      "match": "(?i)\\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|IFNOT|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(ENABLE|DELAY|PIN|TIMESTAMP)|DLY)\\b"
+      "match": "(?i)\\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(ENABLE|DELAY|PIN|TIMESTAMP)|DLY)\\b"
     },
     "decimal_number": {
       "name": "constant.numeric.decimal.spin2",
@@ -414,11 +414,11 @@
         },
         {
           "name": "keyword.pasm.control.modify.pasm2",
-          "match": "(?i)\\b(SET(D|R|S|NIB|BYTE|WORD))\\b"
+          "match": "(?i)\\b(SET(D|R|S|NIB|BYTE|WORD)|GET(NIB|BYTE|WORD))\\b"
         },
         {
           "name": "keyword.pasm.control.flow.pasm2",
-          "match": "(?i)\\b(PUSH|POP|(CALL|RET)(A|B)?|JMP(REL)?|SKIP|(SKIP|EXEC)F|CALL(D|PA|PB)|DJ(N?F|N?Z)|WAITX|(POLL|WAIT)(INT|CT(1|2|3)|SE(1|2|3|4)|PAT|FBW|XMT|XFI|XRO|XRL|ATN))\\b"
+          "match": "(?i)\\b(REP|GETRND|PUSH|POP|(CALL|RET)(A|B)?|JMP(REL)?|SKIP|(SKIP|EXEC)F|CALL(D|PA|PB)|DJ(N?F|N?Z)|WAITX|(POLL|WAIT)(INT|CT(1|2|3)|SE(1|2|3|4)|PAT|FBW|XMT|XFI|XRO|XRL|ATN))\\b"
         },
         {
           "name": "keyword.pasm.control.instruction.prefixes.pasm2",
@@ -429,16 +429,16 @@
           "match": "(?i)\\b(W(C|Z|CZ)|AND(C|Z)|OR(C|Z)|XOR(C|Z))\\b"
         },
         {
-          "name": "keyword.pasm.instruction.hubaccess.pasm2",
-          "match": "(?i)\\b((RD|WR|RF|WF|SET|GET|ROL)(BYTE|WORD)|(WR|RF|WF|WM|RD)LONG)\\b"
+          "name": "keyword.pasm.instruction.hub-ram.pasm2",
+          "match": "(?i)\\b((RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG)\\b"
         },
         {
-          "name": "keyword.pasm.instruction.math.logic.pasm2",
-          "match": "(?i)\\bMUX(N?C|N?Z|Q|NITS|NIBS)\\b"
+          "name": "keyword.pasm.instruction.math-logic.pasm2",
+          "match": "(?i)\\b(MUX(N?C|N?Z|Q|NITS|NIBS)|BMASK|CMP(M|R|S|SX|S|SUB)|(FG|FL)ES?)\\b"
         },
         {
           "name": "keyword.pasm.instruction.basic.pasm2",
-          "match": "(?i)\\b(ABS|NEGN?(C|Z)?|MINS?|MAXS?|ADD(ABS|S|X|SX)?|SUB(ABS|S|X|SX)?|SUMN?(C|Z)?|MULS?|ANDN?|X?OR|ONES|ENC|RC(L|R)|REV|RO(L|R)|SH(L|R)|SAR|CMPS?X?|CMPSUB|TESTN?|MOV(S|D|I)?|MUXN?(C|Z)?|HUBOP|NOP)\\b"
+          "match": "(?i)\\b(ABS|NEGN?(C|Z)?|MINS?|MAXS?|ADD(S|X|SX)?|SUB(R|S|X|SX)?|SUMN?(C|Z)?|MULS?|ANDN?|X?OR|ONES|DECOD|ENCOD|RC(L|R)|REV|RO(L|R)|SH(L|R)|SAR|TESTN?|MOV(S|D|I)?|MUXN?(C|Z)?|HUBOP|NOP)\\b"
         },
         {
           "name": "keyword.pasm.instruction.cog.attention.pasm2",
@@ -446,11 +446,39 @@
         },
         {
           "name": "keyword.pasm.instruction.lut.pasm2",
-          "match": "(?i)\\b(LUTS(OFF|ON)|SETLUTS)\\b"
+          "match": "(?i)\\b(LUTS(OFF|ON)|SETLUTS|(RD|WR)LUT)\\b"
         },
         {
           "name": "keyword.pasm.instruction.pins.io.pasm2",
           "match": "(?i)\\b((DIR|DRV|OUT|FLT)(L|H|C|NC|Z|NZ|RND|NOT)|TESTPN?)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.smartpins.io.pasm2",
+          "match": "(?i)\\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.streamer.io.pasm2",
+          "match": "(?i)\\b(X(CONT|INIT|STOP|ZERO)|GETXACC|SETXFRQ)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.colorspace.pasm2",
+          "match": "(?i)\\b(SETC(FRQ|I|MOD|Q|Y))\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.chordic-solver.pasm2",
+          "match": "(?i)\\b(GETQ(X|Y)|Q(DIV|EXP|FRAC|LOG|MUL|ROTATE|SQRT|VECTOR))\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.math-logic.pasm2",
+          "match": "(?i)\\b(BIT(N?C|H|L|NOT|RND|N?Z)|ROL(BYTE|WORD|NIB)?)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.hub-fifo.pasm2",
+          "match": "(?i)\\b((RD|WR)FAST|FBLOCK|RFVARS?|RF(BYTE|WORD|LONG)|WR(BYTE|WORD|LONG))\\b"
+        },
+        {
+          "name": "constant.language.cog-register-names.spin2",
+          "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
         }
       ]
     },
@@ -615,28 +643,24 @@
           "match": "(?i)\\b(COG(CHK|ID|INIT|SPIN|STOP)|(HUB|CLK)SET|LOCK(NEW|RET|TRY|REL|CHK)|(COG|POLL|WAIT)ATN)\\b"
         },
         {
-          "name": "keyword.spin.methods.timing.spin2",
-          "match": "(?i)\\b(GETSEC|(GET|POLL|WAIT)CT|WAIT(MS|US))\\b"
-        },
-        {
           "name": "keyword.spin.methods.pin.spin2",
-          "match": "(?i)\\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AS|RD|RQ)PIN)\\b"
+          "match": "(?i)\\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\\b"
         },
         {
           "name": "keyword.spin.methods.memory.spin2",
           "match": "(?i)\\b((GET|SET)REGS|(BYTE|WORD|LONG)MOVE|(BYTE|WORD|LONG)FILL)\\b"
         },
         {
-          "name": "contant.spin.registers.spin2",
-          "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(3|2|1)|IRET(3|2|1)|(P|PTR|DIR|IN|OUT)A|(P|PTR|DIR|IN|OUT)B)\\b"
-        },
-        {
           "name": "keyword.spin.methods.timing.spin2",
           "match": "(?i)\\b(GETSEC|(GET|POLL|WAIT)CT|WAIT(MS|US))\\b"
         },
         {
-          "name": "keyword.spin.methods.hub.spin2",
+          "name": "constant.language.hub-variable-names.spin2",
           "match": "(?i)\\b(VARBASE|CLK(MODE|FREQ))\\b"
+        },
+        {
+          "name": "constant.language.cog-register-names.spin2",
+          "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
         },
         {
           "name": "keyword.spin.methods.string.spin2",
@@ -669,6 +693,82 @@
         {
           "name": "constant.language.cogspin.spin2",
           "match": "(?i)\\bNEWCOG\\b"
+        },
+        {
+          "name": "constant.language.clkset.spin2",
+          "match": "\\b(clkmode_|clkfreq_)\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_ADC|P_ADC_(100X|10X|1X|30X|3X|EXT|FLOAT|GIO|SCOPE|VIO)|P_ASYNC_(IO|RX|TX)|P_COMPARE_(AB|AB_FB))\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_COUNTER_(HIGHS|PERIODS|TICKS)|P_DAC_(124R_3V|600R_2V|75R_2V|990R_3V|DITHER_PWM|DITHER_RND|NOISE))\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_HIGH_(100UA|10UA|150K|15K|1K5|1MA|FAST|FLOAT|TICKS)|P_COUNT_(HIGHS|RISES)|P_INVERT_(A|B|IN|OUTPUT))\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_LEVEL_A|P_LEVEL_A_(FBN|FBP)|P_LOCAL_(A|B)|P_LOGIC_(A|A_FB|B_FB)|P_LOW_(100UA|10UA|150K|15K|1K5|1MA|FAST|FLOAT))\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_(BITDAC|CHANNEL|EVENTS_TICKS|NORMAL|OE|PULSE|QUADRATURE|REPOSITORY|STATE_TICKS|TRANSITION|TRUE_OUTPUT|USB_PAIR))\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_OUTBIT_(A|B)|P_PERIODS_(HIGHS|TICKS)|P_PLUS(1|2|3)_(A|B)|P_PWM_(SAWTOOTH|SMPS|TRIANGLE)|P_REG_(DOWN|UP))\\b"
+        },
+        {
+          "name": "constant.language.smartpins.spin2",
+          "match": "\\b(P_SCHMITT_(A|A_FB|B_FB)|P_SYNC_(IO|RX|TX)|P_TRUE_(A|B|IN)|P_TT_(0|1)(0|1)|P_MINUS(1|2|3)_(A|B)|P_NCO_(DUTY|FREQ))\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_WRITE_(ON|OFF)|X_ALT_(ON|OFF)|X_PINS_(ON|OFF))\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_16P_2DAC8_WFWORD|X_16P_4DAC4_WFWORD|X_1ADC8_0P_1DAC8_WFBYTE|X_1ADC8_8P_2DAC8_WFWORD|X_1P_1DAC1_WFBYTE|X_2ADC8_0P_2DAC8_WFWORD)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_2ADC8_16P_4DAC8_WFLONG|X_2P_1DAC2_WFBYTE|X_2P_2DAC1_WFBYTE|X_32P_4DAC8_WFLONG|X_4ADC8_0P_4DAC8_WFLONG|X_4P_1DAC4_WFBYTE)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_4P_2DAC2_WFBYTE|X_4P_4DAC1_WF_BYTE|X_8P_1DAC8_WFBYTE|X_8P_2DAC4_WFBYTE|X_8P_4DAC2_WFBYTE|X_DACS_0N0_0N0|X_DACS_0N0_X_X)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_DACS_0_0_0_0|X_DACS_0_0_X_X|X_DACS_0_X_X_X|X_DACS_1N1_0N0|X_DACS_1_0_1_0|X_DACS_1_0_X_X|X_DACS_3_2_1_0|X_DACS_OFF|X_DACS_X_0_X_X)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_DACS_X_X_0N0|X_DACS_X_X_0_0|X_DACS_X_X_0_X|X_DACS_X_X_1_0|X_DACS_X_X_X_0|X_DDS_GOERTZEL_SINC1|X_DDS_GOERTZEL_SINC2|X_IMM_16X2_1DAC2)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_IMM_16X2_2DAC1|X_IMM_16X2_LUT|X_IMM_1X32_4DAC8|X_IMM_2X16_2DAC8|X_IMM_2X16_4DAC4|X_IMM_32X1_1DAC1|X_IMM_32X1_LUT|X_IMM_4X8_1DAC8)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_IMM_4X8_2DAC4|X_IMM_4X8_4DAC2|X_IMM_4X8_LUT|X_IMM_8X4_1DAC4|X_IMM_8X4_2DAC2|X_IMM_8X4_4DAC1|X_IMM_8X4_LUT|X_RFBYTE_1P_1DAC1)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_RFBYTE_2P_1DAC2|X_RFBYTE_2P_2DAC1|X_RFBYTE_4P_1DAC4|X_RFBYTE_4P_2DAC2|X_RFBYTE_4P_4DAC1|X_RFBYTE_8P_1DAC8|X_RFBYTE_8P_2DAC4)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_RFBYTE_8P_4DAC2|X_RFBYTE_LUMA8|X_RFBYTE_RGB8|X_RFBYTE_RGBI8|X_RFLONG_16X2_LUT|X_RFLONG_32P_4DAC8|X_RFLONG_32X1_LUT)\\b"
+        },
+        {
+          "name": "constant.language.streamer.spin2",
+          "match": "\\b(X_RFLONG_4X8_LUT|X_RFLONG_8X4_LUT|X_RFLONG_RGB24|X_RFWORD_16P_2DAC8|X_RFWORD_16P_4DAC4|X_RFWORD_RGB16)\\b"
         }
       ]
     },
