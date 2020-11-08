@@ -459,6 +459,10 @@
         {
           "name": "keyword.pasm.instruction.smartpins.io.pasm2",
           "match": "(?i)\\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.smartpins.io.pasm2",
+          "match": "(?i)\\b(ADDCT(1|2|3)|(COG|J)ATN|JCT(1|2|3)|JN?(FBW|INT)|JNATN|JN?(PAT|QMT|SE1|SE2|SE3|SE4|XFI|XMT|XRL|XRO)|JNCT(1|2|3)|(SETSE|POLLSE|WAITSE)(1|2|3|4))\\b"
         }
       ]
     },
