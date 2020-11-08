@@ -385,80 +385,12 @@
           "match": "(?i)\\b(ORG(F|H)?|FIT)\\b"
         },
         {
-          "name": "keyword.pasm.control.configuration.pasm2",
-          "match": "(?i)\\bCLKSET\\b"
-        },
-        {
           "name": "storage.type.pasm.spin2",
           "match": "(?i)\\b(BYTE|WORD|LONG|RES)\\b"
         },
         {
-          "name": "keyword.pasm.control.cog.pasm2",
-          "match": "(?i)\\bCOG(ID|NEW|INIT|STOP)\\b"
-        },
-        {
-          "name": "keyword.pasm.control.interrupts.pasm2",
-          "match": "(?i)\\b((STALL|ALLOW)I|(TRG|NIX|SET)INT(1|2|3)|(GET|COG)BRK|BRK|(RES|RET)I(0|1|2|3))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.process.pasm2",
-          "match": "(?i)\\b(LOCK(NEW|RET|CLR|SET)|WAIT(CNT|PEQ|PNE|VID))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.q.register.pasm2",
-          "match": "(?i)\\b(SETQ2?|GETQ(X|Y))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.alter.following.pasm2",
-          "match": "(?i)\\b(AUG(S|D)|ALT(SN|GN|SB|GB|SW|GW|R|D|S|B|I))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.modify.pasm2",
-          "match": "(?i)\\b(SET(D|R|S|NIB|BYTE|WORD)|GET(NIB|BYTE|WORD))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.flow.pasm2",
-          "match": "(?i)\\b(REP|GETRND|PUSH|POP|(CALL|RET)(A|B)?|JMP(REL)?|SKIP|(SKIP|EXEC)F|CALL(D|PA|PB)|DJ(N?F|N?Z)|WAITX|(POLL|WAIT)(INT|CT(1|2|3)|SE(1|2|3|4)|PAT|FBW|XMT|XFI|XRO|XRL|ATN))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.instruction.prefixes.pasm2",
-          "match": "(?i)\\b(_RET_|IF_(0|1)(0|1|X)|IF_(A|B)E?|IF_N?(C|Z|E)|IF_N?C_(AND|OR)_N?Z|IF_C_(EQ|NE)_Z|IF_(DIFF|SAME)|IF_NOT_(0|1)(0|1)|IF_N?Z_(AND|OR)_N?C|IF_Z_(EQ|NE)_C|IF_X(0|1))\\b"
-        },
-        {
-          "name": "keyword.pasm.control.effects.pasm2",
-          "match": "(?i)\\b(W(C|Z|CZ)|AND(C|Z)|OR(C|Z)|XOR(C|Z))\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.hub-ram.pasm2",
-          "match": "(?i)\\b((RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG)\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.math-logic.pasm2",
-          "match": "(?i)\\b(MUX(N?C|N?Z|Q|NITS|NIBS)|BMASK|CMP(M|R|S|SX|S|SUB)|(FG|FL)ES?)\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.basic.pasm2",
-          "match": "(?i)\\b(ABS|NEGN?(C|Z)?|MINS?|MAXS?|ADD(S|X|SX)?|SUB(R|S|X|SX)?|SUMN?(C|Z)?|MULS?|ANDN?|X?OR|ONES|DECOD|ENCOD|RC(L|R)|REV|RO(L|R)|SH(L|R)|SAR|TESTN?|MOV(S|D|I)?|MUXN?(C|Z)?|HUBOP|NOP)\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.cog.attention.pasm2",
-          "match": "(?i)\\b(COG|POLL|WAIT|J|JN)ATN\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.lut.pasm2",
-          "match": "(?i)\\b(LUTS(OFF|ON)|SETLUTS|(RD|WR)LUT)\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.pins.io.pasm2",
-          "match": "(?i)\\b((DIR|DRV|OUT|FLT)(L|H|C|NC|Z|NZ|RND|NOT)|TESTPN?)\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.smartpins.io.pasm2",
-          "match": "(?i)\\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\\b"
-        },
-        {
-          "name": "keyword.pasm.instruction.streamer.io.pasm2",
-          "match": "(?i)\\b(X(CONT|INIT|STOP|ZERO)|GETXACC|SETXFRQ)\\b"
+          "name": "keyword.pasm.instruction.branch.pasm2",
+          "match": "(?i)\\b((CALL|RET)(A|B)?|CALL(D|PA|PB)|DJ(N?F|N?Z)|SKIP|(SKIP|EXEC)F|IJN?Z|JMP(REL)?|REP|RESI(0|1|2|3)|RETI(0|1|2|3)|TJ(N?F|N?S|N?Z|V))\\b"
         },
         {
           "name": "keyword.pasm.instruction.colorspace.pasm2",
@@ -469,41 +401,73 @@
           "match": "(?i)\\b(GETQ(X|Y)|Q(DIV|EXP|FRAC|LOG|MUL|ROTATE|SQRT|VECTOR))\\b"
         },
         {
-          "name": "keyword.pasm.instruction.math-logic.pasm2",
-          "match": "(?i)\\b(BIT(N?C|H|L|NOT|RND|N?Z)|ROL(BYTE|WORD|NIB)?)\\b"
+          "name": "keyword.pasm.instruction.hub-fifo.pasm2",
+          "match": "(?i)\\b((RD|WR)FAST|FBLOCK|GETPTR|RFVARS?|RF(BYTE|WORD|LONG)|WF(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG|POP(A|B)|PUSH(A|B))\\b"
         },
         {
-          "name": "keyword.pasm.instruction.hub-fifo.pasm2",
-          "match": "(?i)\\b((RD|WR)FAST|FBLOCK|RFVARS?|RF(BYTE|WORD|LONG)|WR(BYTE|WORD|LONG))\\b"
+          "name": "keyword.pasm.control.instruction-conditionals.pasm2",
+          "match": "(?i)\\b(_RET_|IF_(0|1)(0|1|X)|IF_(A|B)E?|IF_N?(C|Z|E)|IF_N?C_(AND|OR)_N?Z|IF_C_(EQ|NE)_Z|IF_(DIFF|SAME)|IF_NOT_(0|1)(0|1)|IF_N?Z_(AND|OR)_N?C|IF_Z_(EQ|NE)_C|IF_X(0|1))\\b"
+        },
+        {
+          "name": "keyword.pasm.control.instruction-effects.pasm2",
+          "match": "(?i)\\b(W(C|Z|CZ)|AND(C|Z)|OR(C|Z)|XOR(C|Z))\\b"
+        },
+        {
+          "name": "constant.language.clock-register-names.spin2",
+          "match": "(?i)\\b(_rc(fast|slow)|_clkfreq|(_x(in|tl)freq))\\b"
         },
         {
           "name": "constant.language.cog-register-names.spin2",
           "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.hub-ram.pasm2",
+          "match": "(?i)\\b(POP(A|B)|PUSH(A|B)|WR(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.hub-control.pasm2",
+          "match": "(?i)\\b(COG(ID|INIT|STOP)|HUBSET|LOCK(NEW|REL|RET|TRY))\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.interrupts.pasm2",
+          "match": "(?i)\\b((STALL|ALLOW)I|(TRG|NIX|SET)INT(1|2|3)|(GET|COG)BRK|BRK)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.lut.pasm2",
+          "match": "(?i)\\b(SETLUTS|(RD|WR)LUT)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.pins.pasm2",
+          "match": "(?i)\\b((DIR|DRV|OUT|FLT)(L|H|C|NC|Z|NZ|RND|NOT)|TESTPN?)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.miscellaneous.pasm2",
+          "match": "(?i)\\b(AUG(S|D)|GET(CT|RND)|NOP|POP|PUSH|SETQ2?|WAITX)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.pixel-mixer.pasm2",
+          "match": "(?i)\\b((ADD|BLN|MIX|MUL|SET)PIX|SETPIV)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.register-indirect.pasm2",
+          "match": "(?i)\\bALT(SN?|GN|S?B|GB|SW|GW|R|D|I)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.streamer.io.pasm2",
+          "match": "(?i)\\b(X(CONT|INIT|STOP|ZERO)|GETXACC|SETXFRQ)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.smartpins.io.pasm2",
+          "match": "(?i)\\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\\b"
         }
       ]
     },
     "pasm_language_hold": {
       "name": "meta.block.pasm.language.spin2",
-      "begin": "(?i)\\bORG\\b",
-      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
       "patterns": [
         {
-          "include": "#comment"
-        },
-        {
-          "include": "#constants"
-        },
-        {
-          "include": "#array_index"
-        },
-        {
-          "include": "#number"
-        },
-        {
-          "include": "#string"
-        },
-        {
-          "include": "#debug_functions"
+          "name": "keyword.pasm.instruction.smartpins.io.pasm2",
+          "match": "(?i)\\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\\b"
         }
       ]
     },
