@@ -8,12 +8,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
-- Add Streamer mode symbols
 - Add watching/build/download
 - working on fixes to known issues
 
 Possible next additions:
 
+- Adding operators so they can be colored is harder... so, not right away...
 - Add detection of FIXME:, TODO: - Highlight and show in Outline
 - Add Semantic Hightlighting - consistently color names whereever they appear
 - (this includes parameters, return values, local variables, method names, etc.)
@@ -22,11 +22,17 @@ Possible next additions:
 
 ## [0.2.0] 2020-11-07
 
-- SPIN2: Added 105 smart pin symbols
-- SPIN2: Added 78 streamer mode symbols
-- SPIN2: Added missing AKPIN instru.
-- SPIN2: Added 24 COG-REGISTER symbols, fixed classification of 3 variables and 1 instru.
-- Adding remaining PASM2 keywords
+### Spin2 and Pasm2 are now complete
+
+- Spin2: Added 105 smart pin symbols
+- Spin2: Added 78 streamer mode symbols
+- Spin2: Added missing AKPIN instru.
+- Spin2: Added 24 COG-REGISTER symbols, fixed classification of 3 variables and 1 instru.
+- Pasm2: Completely rebuilt the Pasm2 instructions each group seperately labelled
+- Pasm2: Added 105 smart pin symbols
+- Pasm2: Added 78 streamer mode symbols
+- Pasm2: Added 24 COG-REGISTER symbols
+- Pasm2: Added missing clock variables
 
 ## [0.1.2] 2020-11-06
 

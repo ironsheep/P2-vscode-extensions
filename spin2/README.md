@@ -6,6 +6,10 @@ This Extension is in development. Things may not totally work correctly. See _Su
 
 This extension provides support for Spin2 and Pasm2, the primary languages for programming the [Parallax Propeller2 or P2X8C4M64P](https://propeller.parallax.com/p2.html)
 
+## Feature: Syntax Highlighting
+
+Both Spin2 and Pasm2 are now completely supported - including streamer and smartpins constants
+
 ## Feature: Code Outline
 
 The code outline for .spin2 files works as follows:

@@ -66,6 +66,10 @@
       "begin": "{",
       "end": "}"
     },
+    "cog_register_names": {
+      "name": "constant.language.cog-register-names.spin2",
+      "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
+    },
     "comment": {
       "patterns": [
         {
@@ -381,6 +385,15 @@
       "name": "meta.block.pasm.elements.spin2",
       "patterns": [
         {
+          "include": "#smartpins_constants"
+        },
+        {
+          "include": "#streamer_constants"
+        },
+        {
+          "include": "#cog_register_names"
+        },
+        {
           "name": "storage.modifier.spin2",
           "match": "(?i)\\b(ORG(F|H)?|FIT)\\b"
         },
@@ -415,10 +428,6 @@
         {
           "name": "constant.language.clock-register-names.spin2",
           "match": "(?i)\\b(_rc(fast|slow)|_clkfreq|(_x(in|tl)freq))\\b"
-        },
-        {
-          "name": "constant.language.cog-register-names.spin2",
-          "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
         },
         {
           "name": "keyword.pasm.instruction.hub-ram.pasm2",
@@ -467,15 +476,18 @@
         {
           "name": "keyword.pasm.instruction.events.pasm2",
           "match": "(?i)\\b(SETPAT|POLLQMT|(POLLCT|WAITCT)(1|2|3)|(POLL|WAIT)(ATN|FBW|INT|PAT|XFI|XMT|XRL|XRO))\\b"
-        }
-      ]
-    },
-    "pasm_language_hold": {
-      "name": "meta.block.pasm.language.spin2",
-      "patterns": [
+        },
         {
-          "name": "keyword.pasm.instruction.smartpins.io.pasm2",
-          "match": "(?i)\\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\\b"
+          "name": "keyword.pasm.instruction.math-logic.pasm2",
+          "match": "(?i)\\b(ABS|BMASK|LOC|NOT|ONES|OR|REV|SIGNX|ZEROX|ADD(S|SX|X)?|ANDN?|BIT(RND|NOT|H|L|N?Z|N?C)|CMP(M|R|SUB|X|S|SX)?|CRC(BIT|NIB)|(DEC|INC)MOD|(DE|EN)COD|(FG|FL)ES?)\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.math-logic.pasm2",
+          "match": "(?i)\\b(GET(BYTE|NIB|WORD)|MERGE(B|W)|MOD(C|CZ|Z)|MOV(BYTS)?|MUL(S|NIBS|NITS|Q|N?C|N?Z|)?|MUX(N?C|N?Z|Q|NIBS|NITS)|NEG(N?C|N?Z)?|RC(L|R|ZL|ZR)|RGB(EXP|SQZ)|ROL(BYTE|NIB|WORD))\\b"
+        },
+        {
+          "name": "keyword.pasm.instruction.math-logic.pasm2",
+          "match": "(?i)\\b(RO(L|R)|SA(L|R)|SCAS?|SET(R|S|D|BYTE|NIB|WORD)?|SEUSS(F|R)|SH(L|R)|SPLIT(B|W)|SUB(R|S|SX|X)?|SUM(N?C|N?Z)|TESTN?|TESTBN?|WR(N?C|N?Z)|XOR(O32)?)\\b"
         }
       ]
     },
@@ -607,6 +619,15 @@
           "include": "#pasm_language_inline"
         },
         {
+          "include": "#smartpins_constants"
+        },
+        {
+          "include": "#streamer_constants"
+        },
+        {
+          "include": "#cog_register_names"
+        },
+        {
           "name": "keyword.control.flow.spin2",
           "match": "(?i)\\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\\b"
         },
@@ -629,10 +650,6 @@
         {
           "name": "constant.language.hub-variable-names.spin2",
           "match": "(?i)\\b(VARBASE|CLK(MODE|FREQ))\\b"
-        },
-        {
-          "name": "constant.language.cog-register-names.spin2",
-          "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
         },
         {
           "name": "keyword.spin.methods.string.spin2",
@@ -669,7 +686,12 @@
         {
           "name": "constant.language.clkset.spin2",
           "match": "\\b(clkmode_|clkfreq_)\\b"
-        },
+        }
+      ]
+    },
+    "smartpins_constants": {
+      "name": "meta.block.spin.language.spin2",
+      "patterns": [
         {
           "name": "constant.language.smartpins.spin2",
           "match": "\\b(P_ADC|P_ADC_(100X|10X|1X|30X|3X|EXT|FLOAT|GIO|SCOPE|VIO)|P_ASYNC_(IO|RX|TX)|P_COMPARE_(AB|AB_FB))\\b"
@@ -697,7 +719,12 @@
         {
           "name": "constant.language.smartpins.spin2",
           "match": "\\b(P_SCHMITT_(A|A_FB|B_FB)|P_SYNC_(IO|RX|TX)|P_TRUE_(A|B|IN)|P_TT_(0|1)(0|1)|P_MINUS(1|2|3)_(A|B)|P_NCO_(DUTY|FREQ))\\b"
-        },
+        }
+      ]
+    },
+    "streamer_constants": {
+      "name": "meta.block.spin.language.spin2",
+      "patterns": [
         {
           "name": "constant.language.streamer.spin2",
           "match": "\\b(X_WRITE_(ON|OFF)|X_ALT_(ON|OFF)|X_PINS_(ON|OFF))\\b"
