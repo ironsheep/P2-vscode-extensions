@@ -1,16 +1,19 @@
-# Parallax Propeller vscode support
+# Parallax Propeller 2 vscode support
 
 ![Project Maintenance][maintenance-shield]
 
 [![License][license-shield]](LICENSE)
 
-VSCode support for the Propeller languages: SPIN and PASM
+VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax Inc.](https://parallax.com) Propeller 2 [P2 or P2X8C4M64P](https://propeller.parallax.com/p2.html). The P2 community thrives in the [P2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller)
 
 ## Features
-- Syntax Highlighting - *Mostly working*
-- File Navigation - *Working well*
+- Syntax Highlighting for both Spin2 and Pasm2 including all Streamer and Smart Pin Symbols
+- File Navigation
+- Companion Themes (orginal and my development theme)
+
+### Up next
 - Build and download support (using external compiler and download tool) - *Still figuring this out*
-- Companion Themes - my develop/test theme
+
 
 *These are all arriving over time and not yet fully functional.*
 
