@@ -9,7 +9,8 @@ VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax In
 ## Features
 - Syntax Highlighting for both Spin2 and Pasm2 including all Streamer and Smart Pin Symbols
 - File Navigation
-- Companion Themes (orginal and my development theme)
+- Works with your favorite VSCode themes
+- Offers companion Themes (orginal and my development theme)
 
 ### Up next
 - Build and download support (using external compiler and download tool) - *Still figuring this out*
