@@ -409,7 +409,7 @@ repository:
                 include: '#cog_register_names'
             -
                 name: keyword.control.flow.spin2
-                match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
+                match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|NOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
             -
                 name: keyword.spin.methods.hub.spin2
                 match: '(?i)\b(COG(CHK|ID|INIT|SPIN|STOP)|(HUB|CLK)SET|LOCK(NEW|RET|TRY|REL|CHK)|(COG|POLL|WAIT)ATN)\b'
@@ -540,10 +540,6 @@ repository:
         name: string.quoted.double.spin2
         begin: '"'
         end: '"'
-        patterns:
-            -
-                name: constant.character.escape.spin2
-                match: \\.
     variable_block:
         name: meta.block.variable.spin2
         begin: '(?i)^(VAR)\b'

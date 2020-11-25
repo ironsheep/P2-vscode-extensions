@@ -3,15 +3,15 @@
     "displayName": "Spin2",
     "description": "Spin2/Pasm2 Syntax Hightlighting and Code Outline support",
     "icon": "images/Propeller.ico",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "IronSheep",
     "repository": {
         "type": "git",
         "url": "https://github.com/ironsheep/P2-vscode-extensions"
     },
-	"bugs": {
-		"url": "https://github.com/ironsheep/P2-vscode-extensions/issues"
-	},
+    "bugs": {
+        "url": "https://github.com/ironsheep/P2-vscode-extensions/issues"
+    },
     "author": "IronSheep",
     "galleryBanner": {
         "color": "#003060",
@@ -22,6 +22,7 @@
         "spin",
         "spin2",
         "propeller",
+        "propeller 2",
         "propeller ii",
         "parallax"
     ],
@@ -37,18 +38,18 @@
         "Programming Languages"
     ],
     "contributes": {
-		"themes": [
-			{
-				"label": "Spin2 Ironsheep",
-				"uiTheme": "vs-dark",
-				"path": "./themes/isp-spin-theme.json"
-			},
-			{
-				"label": "Spin2 Cluso99",
-				"uiTheme": "hc-black",
-				"path": "./themes/spin-theme.json"
-			}
-		],
+        "themes": [
+            {
+                "label": "Spin2 Ironsheep",
+                "uiTheme": "vs-dark",
+                "path": "./themes/isp-spin-theme.json"
+            },
+            {
+                "label": "Spin2 Cluso99",
+                "uiTheme": "hc-black",
+                "path": "./themes/spin-theme.json"
+            }
+        ],
         "grammars": [
             {
                 "language": "spin2",

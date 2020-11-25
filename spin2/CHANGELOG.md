@@ -20,6 +20,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [0.2.1] 2020-11-25
+
+### Minor repairs
+
+- Spin2: Added "not" operator
+- Spin2: Removed escape sequence recognizer so that strings would highlight correctly
+
 ## [0.2.0] 2020-11-07
 
 ### Spin2 and Pasm2 are now complete
