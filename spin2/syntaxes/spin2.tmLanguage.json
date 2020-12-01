@@ -584,11 +584,11 @@
       }
     },
     "spin_field_operations": {
-      "name": "keyword.spin.operators.fields.spin2",
+      "name": "keyword.operator.field.spin2",
       "match": "(?i)\\b(ADDBITS|ADDPINS)\\b"
     },
     "spin_float_operators": {
-      "name": "keyword.spin.operators.float.spin2",
+      "name": "keyword.operator.float.spin2",
       "match": "(?i)\\b(FLOAT|ROUND|TRUNC)\\b"
     },
     "spin_language_tiny": {
@@ -613,6 +613,9 @@
           "include": "#spin_field_operations"
         },
         {
+          "include": "#spin_float_operators"
+        },
+        {
           "include": "#debug_functions"
         },
         {
@@ -629,7 +632,7 @@
         },
         {
           "name": "keyword.control.flow.spin2",
-          "match": "(?i)\\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|NOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\\b"
+          "match": "(?i)\\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\\b"
         },
         {
           "name": "keyword.spin.methods.hub.spin2",
@@ -686,6 +689,14 @@
         {
           "name": "constant.language.clkset.spin2",
           "match": "\\b(clkmode_|clkfreq_)\\b"
+        },
+        {
+          "name": "keyword.operator.unary.spin2",
+          "match": "(?i)\\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\\b"
+        },
+        {
+          "name": "keyword.operator.binary.spin2",
+          "match": "(?i)(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)"
         }
       ]
     },
@@ -792,15 +803,11 @@
         },
         {
           "name": "keyword.operator.binary.spin2",
-          "match": "(?i)(>>|<<|SAR|ROR|ROL|REV|ZEROX|SIGNX|&|^|\\|*|/|+/|//|+//|SCA|SCAS|FRAC|+|-|#>|<#|<|+<|<=|+<=|==|<>|>=|+>=|>|+>|<=>|&&|AND||^^|XOR|\\|\\||OR)"
+          "match": "(?i)(>>|<<|SAR|ROR|ROL|REV|ZEROX|SIGNX|&|^|\\|*|/|+/|//|+//|SCAS?|FRAC|+|-|#>|<#|<|+<|<=|+<=|==|<>|>=|+>=|>|+>|<=>|&&|AND||^^|XOR|\\|\\||OR)"
         },
         {
           "name": "keyword.operator.address.spin2",
           "match": "(?i)\\b(@@|@|#)\\b"
-        },
-        {
-          "name": "keyword.operator.unary.spin2",
-          "match": "(?i)\\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\\b"
         }
       ]
     },

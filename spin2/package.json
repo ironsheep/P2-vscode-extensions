@@ -3,7 +3,7 @@
     "displayName": "Spin2",
     "description": "Spin2/Pasm2 Syntax Hightlighting and Code Outline support",
     "icon": "images/Propeller.ico",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "publisher": "IronSheep",
     "repository": {
         "type": "git",

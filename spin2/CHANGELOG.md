@@ -20,6 +20,12 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [0.2.2] 2020-11-30
+
+### Minor update
+
+- Spin2: Added missing named operators
+
 ## [0.2.1] 2020-11-25
 
 ### Minor repairs

@@ -376,11 +376,10 @@ repository:
             '1':
                 name: constant.numeric.base4.spin2
     spin_field_operations:
-                name: keyword.spin.operators.fields.spin2
+                name: keyword.operator.field.spin2
                 match: '(?i)\b(ADDBITS|ADDPINS)\b'
-
     spin_float_operators:
-        name: keyword.spin.operators.float.spin2
+        name: keyword.operator.float.spin2
         match: '(?i)\b(FLOAT|ROUND|TRUNC)\b'
     spin_language_tiny:
         name: meta.block.spin.language.spin2
@@ -398,6 +397,8 @@ repository:
             -
                 include: '#spin_field_operations'
             -
+                include: '#spin_float_operators'
+            -
                 include: '#debug_functions'
             -
                 include: '#pasm_language_inline'
@@ -409,7 +410,7 @@ repository:
                 include: '#cog_register_names'
             -
                 name: keyword.control.flow.spin2
-                match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|NOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
+                match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
             -
                 name: keyword.spin.methods.hub.spin2
                 match: '(?i)\b(COG(CHK|ID|INIT|SPIN|STOP)|(HUB|CLK)SET|LOCK(NEW|RET|TRY|REL|CHK)|(COG|POLL|WAIT)ATN)\b'
@@ -452,6 +453,12 @@ repository:
             -
                 name: constant.language.clkset.spin2
                 match: '\b(clkmode_|clkfreq_)\b'
+            -
+                name: keyword.operator.unary.spin2
+                match: '(?i)\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\b'
+            -
+                name: keyword.operator.binary.spin2
+                match: '(?i)(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)'
     smartpins_constants:
         name: meta.block.spin.language.spin2
         patterns:
@@ -529,13 +536,10 @@ repository:
                 match: '(?i)(~~|~|\\)'
             -
                 name: keyword.operator.binary.spin2
-                match: '(?i)(>>|<<|SAR|ROR|ROL|REV|ZEROX|SIGNX|&|^|\|*|/|+/|//|+//|SCA|SCAS|FRAC|+|-|#>|<#|<|+<|<=|+<=|==|<>|>=|+>=|>|+>|<=>|&&|AND||^^|XOR|\|\||OR)'
+                match: '(?i)(>>|<<|SAR|ROR|ROL|REV|ZEROX|SIGNX|&|^|\|*|/|+/|//|+//|SCAS?|FRAC|+|-|#>|<#|<|+<|<=|+<=|==|<>|>=|+>=|>|+>|<=>|&&|AND||^^|XOR|\|\||OR)'
             -
                 name: keyword.operator.address.spin2
                 match: '(?i)\b(@@|@|#)\b'
-            -
-                name: keyword.operator.unary.spin2
-                match: '(?i)\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\b'
     string:
         name: string.quoted.double.spin2
         begin: '"'
