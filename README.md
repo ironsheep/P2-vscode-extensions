@@ -15,8 +15,31 @@ VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax In
 ### Up next
 - Build and download support (using external compiler and download tool) - *Still figuring this out*
 
-
 *These are all arriving over time and not yet fully functional.*
+
+## INSTALLATION into VSCODE
+
+The primary means to install the spin2 extension(s) into vscode with be thru the online store but we are not there yet.
+
+For the time being if you downloaded the .vsix.zip from our Propeller 2 Forums then skip to the next section "**Load Extention into vscode**".
+
+If you don't have the latest .vsix.zip file then visit the [Releases Page](https://github.com/ironsheep/P2-vscode-extensions/releases) and download the latest .vsix.zip file from there.
+
+### Load Extension into vscode
+
+Now that you have downloaded the .vsix.zip file simply unzip it to get the .vsix file.
+
+Open a Command window (on linux, macos, rpi open a terminal window) and cd to the directory containing this file. 
+
+Execute this command:
+
+```bash
+code --install-extension {filename}.vsix
+```
+
+*(replacing {filename} with the name of your file, of course.)*
+
+YOu should be ready to start editing spin2 code.  Enjoy!
 
 ---
 
