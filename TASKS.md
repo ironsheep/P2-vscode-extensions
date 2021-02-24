@@ -12,15 +12,26 @@ I'm also expecting to document building and download with various tools such as 
 
 ## Tasks in VScode
 
-A Task is how we automate behaviors in VScode.
+A Task is how we integrate with External toola in VScode.
 
-There are a number of types of tasks and places Task definitions live. These include Users Tasks, Built-in Tasks, and Project-specific Tasks.
+See: [VSCode "Tasks" Reference Page](https://code.visualstudio.com/docs/editor/tasks)
+
+There are a number of types of tasks and places Task definitions live. These include [Auto-detected Tasks](https://code.visualstudio.com/docs/editor/tasks#_task-autodetection), [User level tasks](https://code.visualstudio.com/docs/editor/tasks#_user-level-tasks), and [Custom Tasks](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks).  Tasks when run, can be crafted to depend upon the running of other tasks  See: [Compound Tasks](https://code.visualstudio.com/docs/editor/tasks#_compound-tasks)  Some tasks can be [run in background](https://code.visualstudio.com/docs/editor/tasks#_background-watching-tasks) such as file watchers which execute when a file has been changed.
+
 
 ...More TBA...
 
 ### Invoking tasks
 
-A project can have a single default build task invoke with comamnd-shift-B. We'll testing having our download tasks activiated with specific key-strokes as well.
+Tasks can be invoked with the search, identify, run technique or they can have keyboard shortcuts assigned to them.  
+
+A project can have a single default build task which is, by default, invoked with comamnd-shift-B. 
+
+We'll configure our compileP2 task to be the default.
+
+We'll add a downloadP2 task and assign comamnd-shift-D to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result.
+
+#### More Advanced building
 
 We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
 
@@ -35,7 +46,7 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "compile",
+            "label": "compileP2",
             "type": "shell",
             "command": "/Applications/Flexprop/bin/flexspin.mac",
             "args": [
@@ -46,11 +57,11 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
                 "owner": "Spin2",
                 "fileLocation": ["relative", "${workspaceFolder}"],
                 "pattern": {
-                "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                "file": 1,
-                "line": 2,
-                "severity": 3,
-                "message": 4
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
                 }
             },
             "presentation": {
@@ -62,17 +73,20 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
             }
         },
         {
-            "label": "download",
+            "label": "downloadP2",
             "type": "shell",
             "command": "/Applications/Flexprop/bin/loadp2.mac",
             "problemMatcher": [],
+            "presentation": {
+                "panel": "new"
+            },
             "args": [
                 "-b230400",
                 "${fileBasenameNoExtension}.binary",
                 "-t"
             ],
             "dependsOn": [
-                "compile"
+                "compileP2"
             ]
         }
     ]
