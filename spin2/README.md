@@ -1,4 +1,4 @@
-# Spin2/Pasm2 Syntax highlighting and Code Navigaion for VSCode
+# Spin2/Pasm2 Syntax highlighting and Code Navigation for VSCode
 
 This Extension is in development. Things may not totally work correctly. See _Support_, below, for how to report issues.
 
@@ -14,10 +14,10 @@ Both Spin2 and Pasm2 are now completely supported - including streamer and smart
 
 The code outline for .spin2 files works as follows:
 
-- Shows All Sections CON, OBJ, VAR, DAT
+- Shows All Sections CON, OBJ, VAR, DAT, PUB, PRI
 - Section name is shown in outline, except:
-- If section name is following by {comment} then name and comment will be shown in outline
-- For PUB and PRI the method name, parameters and return values are shown
+    - If section name is following by {comment} then name and comment will be shown in outline
+    - For PUB and PRI the method name, parameters and return values are shown
 
 _Hint:_ Configure the OUTLINE panel to "Sort by Position" to reflect the order in your source code.
 
@@ -27,6 +27,7 @@ We are working on fixes to the following issues we've seen during our testing. H
 
 - Some line comments are not properly colored
 - Multiple return values are not properly colored
+- Variable names have highlighted numerics within (bug, should not!)
 
 ## Reporting Issues
 
