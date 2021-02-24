@@ -43,6 +43,12 @@ There are two companion documents in this Repository:
 1. [Configuring Tasks](TASKS.md) which advises on how to automate your P2 Development when using VScode
 2. [VSCode Extensions](EXTENSIONS.md) we find useful in our own P2 development
 
+Also, here are a couple of really useful VSCode sources:
+
+- [VSCode can do that?](https://www.vscodecandothat.com/) Fun website showing specific things VSCode can do - review whats possible that may help you in your use of VSCode.
+- YouTube Channel: [Code 2020](https://www.youtube.com/channel/UCyYh-eAr74avLwOyPa1dDNg) - A large list of short videos presenting all manner of useful VSCode tips.
+
+*Please go look at each of these once so you can know what's here when you need them!*
 
 ## Repository Notes
 
