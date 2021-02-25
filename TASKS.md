@@ -43,24 +43,24 @@ To complete your setup so you can use FlexProp on your mac under VScode you'll n
 
 One time:
 
-- install a common keybinding (works accross all your P2 projects)
-- Optionally add a couple of VSCode extension if you wish to have the features I demonstrated"
+- Install a common keybinding (works accross all your P2 projects)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
     - "Error Lens" which adds the compile errors messages to the associated line of code
     - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
 
 For each P2 Project:
 
-- install a tasks.json file in each of your P2 projects
+- Install a tasks.json file in each of your P2 projects
 
 ### FlexProp install specifics
 
 The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
 
-I my case, on my Mac's, I install the folder at /Applications/Flexprop. Yours will likely be different.  If it is different you will need to modify two lines in the following tasks.json file.  The two lines are: 
+In my case, on my Mac's, I install the folder at /Applications/Flexprop. Yours will likely be different.  If it is different you will need to modify two lines in the your tasks.json file.  The two lines are: 
 - "command": "{installPath}/bin/flexspin.mac",  (in the "compileP2" task)
 - "command": "{installPath}/bin/loadp2.mac",    (in the "downloadP2" task)
 
-Simply replace {installPath} with your own path.
+Simply replace {installPath} with your own install path (the folder containing the bin folder).
 
 ### Add custom tasks for compileP2 and downloadP2
 
@@ -125,6 +125,12 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
 ```
 
 This provides the comamds to be run for compile and download. Download will always be preceeded by a compile.
+
+*Behavior Note: there is a issue with filenames not being reported the same for the top-level file as included files. This makes this problemMatcher for compileP2 not work. I've filed an issue at Eric's Repo that requests that he always issue errors/warnings from all files with exactly the same filename form: either path relative to folder of top-level file or an absolute path.*
+
+TODO: *the compiler as driven by the compileP2 task stops on first error. I need to locate option for generate all errors before stop, or file an issue requesting one if it's not present.*
+
+NOTE: VSCode does not have any concept of top-level file. So currently please only request a download from the opened top-level file editor window.
 
 ### Add Keyboard Shortcut for the Download task
 
