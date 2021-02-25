@@ -52,6 +52,8 @@ One time:
 For each P2 Project:
 
 - Install a tasks.json file in each of your P2 projects
+    - Make sure your path to the compiler of your choice is correct
+    - Make sure the name of your top-level file is correctly placed in your compileTop task  
 
 ### FlexProp install specifics
 
@@ -63,7 +65,7 @@ In my case, on my Mac's, I install the folder at /Applications/Flexprop. Yours w
 
 Simply replace {installPath} with your own install path (the folder containing the bin folder).
 
-### Add custom tasks for compileP2 and downloadP2
+### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
 
