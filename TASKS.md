@@ -126,11 +126,11 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
 
 This provides the comamds to be run for compile and download. Download will always be preceeded by a compile.
 
-*Behavior Note: there is a issue with filenames not being reported the same for the top-level file as included files. This makes this problemMatcher for compileP2 not work. I've filed an issue at Eric's Repo that requests that he always issue errors/warnings from all files with exactly the same filename form: either path relative to folder of top-level file or an absolute path.*
+*Behavior Note: there is a issue with filenames not being reported the same for the top-level file as included files. This makes this problemMatcher for compileP2 not work. I've [filed an issue at Eric's Repo](https://github.com/totalspectrum/spin2cpp/issues/115) that requests that he always issue errors/warnings from all files with exactly the same filename form: either path relative to folder of top-level file or an absolute path.*
 
-TODO: *the compiler as driven by the compileP2 task stops on first error. I need to locate option for generate all errors before stop, or file an issue requesting one if it's not present.*
+TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
 
-NOTE: VSCode does not have any concept of top-level file. So currently please only request a download from the opened top-level file editor window.
+NOTE: VSCode does not have any concept of top-level file. So currently **please only request a download from the opened top-level file** editor window.
 
 ### Add Keyboard Shortcut for the Download task
 
