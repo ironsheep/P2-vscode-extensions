@@ -6,9 +6,25 @@
 
 ##Automating Build and Download to our P2 development boards
 
-This Document is being developed over time as I prove a working environment for each of my target platforms.  I'm expecting to document building on Windows, MacOS, and RaspberryPiOS.
+This document is being developed over time as I prove a working environment for each of my target platforms.  I'm expecting to document building on Windows, MacOS, and RaspberryPiOS.
 
 I'm also expecting to document building and download with various tools such as Flexspin, download with direct attached boards via USB, download via Wifi with the Wx boards attached to our development board, with more compilers as they come ready for multi-platform use, etc.
+
+### VSCode development of P2 Projects
+
+By choosing to adopt the Custom Tasks described in this document along with the keybindings your work flow is now quite sweet.
+
+- Create a new project
+- Add existing files you have already created or are using from P2 Obex.
+- Create your new top-level file.
+- Add Custom Tasks as shown in this document (adjusting the project specifics in the task examples provided before you use them the first time.
+
+Iterate until your project works as desired:
+
+- Make changes to file(s)
+- Compile the files to see if they compile cleanly (cmd-shift-B) on which ever file you are editing
+- Once the files compile cleanly
+- Download and test (cmd-shift-D) [if you use keybinds shown in examples on this page]
 
 ## Tasks in VScode
 
@@ -67,7 +83,7 @@ Simply replace {installPath} with your own install path (the folder containing t
 
 ### Top-Level file project specifics
 
-IN order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
+In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
 
 When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
 
@@ -75,9 +91,9 @@ In order to make this work you'll have to customize the CompileTopP2 task (shown
 
 In this example our CompileTopP2 task is compiling "jm_p2-es_matrix_control_demo.spin"
 
-YOu need to find the line containing "jm_p2-es_matrix_control_demo" and replace this name with the name of your top-level file. 
+You need to find the line containing "jm_p2-es_matrix_control_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm_p2-es_matrix_control_demo.spin".
+**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm_p2-es_matrix_control_demo.spin".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
