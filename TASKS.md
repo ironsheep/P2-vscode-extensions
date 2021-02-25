@@ -96,7 +96,8 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
                 }
             },
             "presentation": {
-                "panel": "new"
+                "panel": "new",
+                "focus": true
             },
             "group": {
                 "kind": "build",
@@ -104,12 +105,37 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
             }
         },
         {
+            "label": "compileTopP2",
+            "type": "shell",
+            "command": "/Applications/Flexprop/bin/flexspin.mac",
+            "args": [
+                "-2",
+                "jm_p2-es_matrix_control_demo"
+            ],
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+        },
+        {
             "label": "downloadP2",
             "type": "shell",
             "command": "/Applications/Flexprop/bin/loadp2.mac",
             "problemMatcher": [],
             "presentation": {
-                "panel": "new"
+                "panel": "new",
+                "focus": true
             },
             "args": [
                 "-b230400",
@@ -117,20 +143,26 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
                 "-t"
             ],
             "dependsOn": [
-                "compileP2"
+                "compileTopP2"
             ]
         }
     ]
 }
 ```
 
-This provides the comamds to be run for compile and download. Download will always be preceeded by a compile.
+This provides the commands to be run for:
+
+- CompileP2 - Compile current file  [cmd-shift-B]
+- CompileTopP2 - Compile the top-file of this project
+- DownloadP2 - Download the binary to our connected P2  [cmd-shift-D -if keybindings are added.]
+
+As written download will always be preceeded by a CompileTop.
 
 *Behavior Note: there is a issue with filenames not being reported the same for the top-level file as included files. This makes this problemMatcher for compileP2 not work. I've [filed an issue at Eric's Repo](https://github.com/totalspectrum/spin2cpp/issues/115) that requests that he always issue errors/warnings from all files with exactly the same filename form: either path relative to folder of top-level file or an absolute path.*
 
 TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
 
-NOTE: VSCode does not have any concept of top-level file. So currently **please only request a download from the opened top-level file** editor window.
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
 
 ### Add Keyboard Shortcut for the Download task
 
