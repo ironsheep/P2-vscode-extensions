@@ -65,6 +65,20 @@ In my case, on my Mac's, I install the folder at /Applications/Flexprop. Yours w
 
 Simply replace {installPath} with your own install path (the folder containing the bin folder).
 
+### Top-Level file project specifics
+
+IN order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
+
+When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
+
+In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
+
+In this example our CompileTopP2 task is compiling "jm_p2-es_matrix_control_demo.spin"
+
+YOu need to find the line containing "jm_p2-es_matrix_control_demo" and replace this name with the name of your top-level file. 
+
+**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm_p2-es_matrix_control_demo.spin".
+
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
