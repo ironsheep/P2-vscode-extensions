@@ -10,24 +10,31 @@ Here's the list I find really helpful:
 
 | Name | Context | Description |
 |------------|--------|--------|
-| Error Lens | code work | bring error messages up into the code for quicker understanding, fixing<br>**usernamehw.errorlens** |
+| Error Lens | code work | bring error messages up into your code for quicker understanding, fixing<br>**usernamehw.errorlens** |
 | Hex Editor | code work | view and edit binary files || peacock | many open contexts at same time | for coloring open workspaces |
 | TODO Highlight | code work | brightly mark significant pending work in your code<br>**wayou.vscode-todo-highlight** |
 | Settings Sync | code work | when you run vscode from multiple machines, keep extensions and settings all in sync!<br>**shan.code-settings-sync**|
 | Bracket Pair Colorizer 2 | code work | colorizes matching brackets, paranthesis, etc.<br> **coenraads.bracket-pair-colorizer-2** |
 | Explorer Exclude| code work | Enable hiding of file types within File Explorer panel<br>**redvanworkshop.explorer-exclude-vscode-extension**|
 
-Then, here are some more specialized Extensions I like to use:
+Then, here are some more specialized Extensions I, and others of us, like to use:
 
 | Name | Context | Description |
 |------------|--------|--------|
 | Python Extension Pack | Python code work | EXPANSION PACK: MagicPython, Python, Jinja, Django, and VS Intellicode extensions <br>**donjayamanne.python-extension-pack**|
+| Anaconda & Jupyter | Python code work | (_trying to find this one, more soon_) |
 | GitHub Markdown Preview | Publishing to GitHub | EXPANSION PACK: Github markdown preview, emojiis, checkboxes, yaml preamble<br>**bierner.github-markdown-preview** |
 | Git Lens | working with git | git command support and built-in help<br>**eamodio.gitlens** |
-| Docker | code work | provide means to work with vscode workspaces/development environments in docker containers<br>**ms-azuretools.vscode-docker** |
+| Docker | development environment in virtual containers | provide means to work with vscode workspaces/development environments in docker containers<br>**ms-azuretools.vscode-docker** |
 | Version Lens | typescript, javascript, npm projects, etc.| annotates your project dependancies with latest versions and up-to-date status for each<br>**pflannery.vscode-versionlens** |
 | CodeTour | authoring tours of your code | document areas of your code for follow-on developers<br>**vsls-contrib.codetour** |
 | Polacode | authoring documentation | polaroid for your code: create screen shots of your code<br>**pnp.polacode** |
+| PrintCode | code work | Print code from within VSCode<br>**nobuhito.printcode** |
+| VS Code Printing Free | code work | Syntax colored, line numbered, printing<br>**pdconsec.vscode-print** |
+| Rainbow Brackets | code work | provide rainbow colors for round, square and squiggly brackets<br>**2gua.rainbow-brackets** |
+| C/C++ | C/C++ code work| C and C++ for Visual Studio Code<br>**ms-vscode.cpptools**  |
+| Diff | code work | Compoare two open files with ease <br>**fabiospampinato.vscode-diff** |
+| hexdump for VSCode | code work | Display a specific file in hex <br>**slevesque.vscode-hexdump** |
 
 If you have VSCode extensions that have really helped you in your P2 development and wish for them to be shown here please file in [ISSUE](https://github.com/ironsheep/P2-vscode-extensions/issues) with this project or [create and file a Pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests) adding the information to this document.  This is done by forking my repository to make a copy of your own. Modifying yours by adding the information you wish to add. Committing the changes to your repo copy, and then filing a pull request to my repo from yours.  I'll complete the action by reviewing your changes and then committing them to my repo.
 
