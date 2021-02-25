@@ -12,7 +12,7 @@ I'm also expecting to document building and download with various tools such as 
 
 ## Tasks in VScode
 
-A Task is how we integrate with External toola in VScode.
+A Task is how we integrate with External tools in VScode.
 
 See: [VSCode "Tasks" Reference Page](https://code.visualstudio.com/docs/editor/tasks)
 
@@ -29,13 +29,44 @@ A project can have a single default build task which is, by default, invoked wit
 
 We'll configure our compileP2 task to be the default.
 
-We'll add a downloadP2 task and assign comamnd-shift-D to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result.
+We'll add a downloadP2 task and assign command-shift-D to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result.
+
+TODO: we need to ensure download doesn't proceed if compile fails
 
 #### More Advanced building
 
 We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
 
-## Building with Flexspin on macOS
+## P2 Code Development with FlexProp on macOS
+
+To complete your setup so you can use FlexProp on your mac under VScode you'll need to install FlexProp and then:
+
+One time:
+
+- install a common keybinding (works accross all your P2 projects)
+- Optionally add a couple of VSCode extension if you wish to have the features I demonstrated"
+    - "Error Lens" which adds the compile errors messages to the associated line of code
+    - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+
+For each P2 Project:
+
+- install a tasks.json file in each of your P2 projects
+
+### FlexProp install specifics
+
+The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
+
+I my case, on my Mac's, I install the folder at /Applications/Flexprop. Yours will likely be different.  If it is different you will need to modify two lines in the following tasks.json file.  The two lines are: 
+- "command": "{installPath}/bin/flexspin.mac",  (in the "compileP2" task)
+- "command": "{installPath}/bin/loadp2.mac",    (in the "downloadP2" task)
+
+Simply replace {installPath} with your own path.
+
+### Add custom tasks for compileP2 and downloadP2
+
+In your project folder create a directory named ".vscode" (if it's not already there.)
+
+In this new directory create a "tasks.json" file containing the following contents.
 
 Here is a project-specific file for macOS: **.vscode/tasks.json**
 
@@ -95,9 +126,42 @@ Here is a project-specific file for macOS: **.vscode/tasks.json**
 
 This provides the comamds to be run for compile and download. Download will always be preceeded by a compile.
 
-TODO: ensure download doesn't proceed if compile fails
+### Add Keyboard Shortcut for the Download task
 
-## Tools
+This is the keybinding I used for mapping download to a key sequence.
+
+You get to this file by:
+
+1. Opening the Keyboard shortcuts list [cmd-K, cmd-S or Menu: Code->Preferences->Keyboard Shortcuts]
+2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
+
+Contents I used for file: **keybindings.json**:
+
+```json
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "shift+cmd+d",
+        "command": "workbench.action.tasks.runTask",
+        "args": "downloadP2"
+    }
+
+]
+```
+
+*NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
+
+## P2 Code Development with FlexProp on Windows
+
+... coming soon! ...
+
+## P2 Code Development with FlexProp on Raspbery Pi
+
+... coming soon! ...
+
+## P2 Code Development with PNut on Windows
+
+... coming soon! ...
 
 ## License
 
