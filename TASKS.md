@@ -157,7 +157,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             "command": "/Applications/Flexprop/bin/flexspin.mac",
             "args": [
                 "-2",
-                "jm_p2-es_matrix_control_demo"
+                "jm_p2-es_matrix_control_demo.spin"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -336,7 +336,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             },
             "args": [
                 "-2",
-                "jm_p2-es_matrix_control_demo"
+                "jm_p2-es_matrix_control_demo.spin"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -399,7 +399,7 @@ This is the keybinding I used for mapping download to a key sequence.
 
 You get to this file by:
 
-1. Opening the Keyboard shortcuts list [cmd-K, cmd-S or Menu: Code->Preferences->Keyboard Shortcuts]
+1. Opening the Keyboard shortcuts list [ctrl-K, ctrl-S or Menu: Code->Preferences->Keyboard Shortcuts]
 2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
 
 Contents I used for file: **keybindings.json**:
@@ -408,7 +408,7 @@ Contents I used for file: **keybindings.json**:
 // Place your key bindings in this file to override the defaults
 [
     {
-        "key": "shift+cmd+d",
+        "key": "ctrl+shift+d",
         "command": "workbench.action.tasks.runTask",
         "args": "downloadP2"
     }
