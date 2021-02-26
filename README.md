@@ -70,11 +70,13 @@ This repository contains two subprojects. Each of which are vscode extensions:
 
 ---
 
+
 ## Credits
 
 Ray [Cluso99] in our [Propeller 2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller) which started this effort for us.
 
 Patrick (GitHub [Entomy](https://github.com/Entomy)) for a spin1 extension which helped me get further along with this one.
+
 
 ## Older install info (for reference only)
 
