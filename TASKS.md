@@ -133,7 +133,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["relative", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -161,7 +161,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["relative", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -309,7 +309,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["relative", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -340,7 +340,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["relative", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
