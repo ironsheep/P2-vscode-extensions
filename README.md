@@ -15,28 +15,28 @@
 
 VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax Inc.](https://parallax.com) Propeller 2 [P2 or P2X8C4M64P](https://propeller.parallax.com/p2.html). The P2 community thrives in the [P2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller)
 
-The **P2 Forum Thread** containing discussion of [these VSCode Extensions](https://forums.parallax.com/discussion/170068/visual-studio-code-editor-for-p1-p2-spin-pasm#latest)
+The **P2 Forum Thread** containing discussion of [this VSCode support](https://forums.parallax.com/discussion/170068/visual-studio-code-editor-for-p1-p2-spin-pasm#latest)
 
 ## Features
-- Syntax Highlighting for both Spin2 and Pasm2 including all Streamer and Smart Pin Symbols
-- File Navigation
+- Syntax highlighting for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols
+- File navigation from outline view
 - Works with your favorite VSCode themes
 - Offers companion Theme (my development theme, mostly for refence so one can see what can be themed in support of Spin2)
 
 ### Up next
-- Build and Download support (using external compiler and download tool) - *Still figuring this out but follow along with me as I drop HOW-TOs in [Configuring Tasks](TASKS.md)*
-- Implement Sematic syntax highlighting for Spin2
+- Build and Download support (using external compiler(s) and download tool(s)) - *Still figuring this out but follow along with me as I drop HOW-TOs in [Configuring Tasks](TASKS.md)*
+- Implement Sematic highlighting for Spin2
 
 ### Future directions
 
-- Task Provider - *studies the currtent environment and offers to write the tasks for a given spin2 project*
+- Task Provider - *studies the current environment and offers to write the tasks for a given P2 project*
 - Spin2/Pasm2 code formatter/beautifier - *allows us to have standard formatting for code we share! (source code could be formatted on each file save)*
 - Snippets for Spin2/Pasm2 (common code sequences which can be added easily to file being edited (e.g., smart pin setup code for given mode/use)
 - Possible Extension Package for P2 (including all P2 related extensions)
 
 ## Installation
 
-In VSCode search for the "spin2" extension and install it.  It's that easy!
+In VSCode search for the "spin2" extension and install it.  It's that easy!  After installation you will be notified to download and install a new version as new versions are released.
 
 ## VSCode Environment
 
@@ -61,9 +61,22 @@ This repository contains two subprojects. Each of which are vscode extensions:
 
 *Each of these two are self contained and package their own extension but spin1 will be migrated into spin2 shortly*
 
+
 ---
 
-## Older install info for reference only
+> If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices! 
+> 
+> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep)
+
+---
+
+## Credits
+
+Ray [Cluso99] in our [Propeller 2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller) which started this effort for us.
+
+Patrick (GitHub [Entomy](https://github.com/Entomy)) for a spin1 extension which helped me get further along with this one.
+
+## Older install info (for reference only)
 
 If you had downloaded the .vsix.zip from our [Propeller 2 Forum thread](https://forums.parallax.com/discussion/170068/visual-studio-code-editor-for-p1-amp-p2-spin-amp-pasm#latest) then skip to the next section "**Load Extention into vscode**".
 
@@ -88,19 +101,6 @@ After restarting VSCode you should be ready to start editing spin2 code.  Enjoy!
 NOTE: to activate one of the experimental themes distributed with this extension using Ctl-K Ctl-T (on macOS Cmd-K, Cmd-T) and select "Spin2 Ironsheep" or "Spin2 Cluso99".  Of course, your favorte themes should work as well.
 
 
-
----
-
-> If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices! 
-> 
-> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep)
-
-
-## Credits
-
-Ray [Cluso99] in our [Propeller 2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller) which started this effort for us.
-
-Patrick (GitHub [Entomy](https://github.com/Entomy)) for a spin1 extension which helped me get further along with this one.
 
 ## License
 
