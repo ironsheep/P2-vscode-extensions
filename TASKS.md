@@ -205,7 +205,7 @@ This provides the commands to be run for:
 
 As written download will always be preceeded by a CompileTop.
 
-*Behavior Note: there is a issue with filenames not being reported the same for the top-level file as included files. This makes this problemMatcher for compileP2 not work. I've [filed an issue at Eric's Repo](https://github.com/totalspectrum/spin2cpp/issues/115) that requests that he always issue errors/warnings from all files with exactly the same filename form: either path relative to folder of top-level file or an absolute path.*
+*Behavior Note: The task problem matchers now use 'autoDetect' so we can handle Flexspin's mix of relative and absolute file specifications within error messages.*
 
 TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
 
@@ -387,7 +387,7 @@ This provides the commands to be run for:
 
 As written download will always be preceeded by a CompileTop.
 
-*Behavior Note: there is a issue with filenames not being reported the same for the top-level file as included files. This makes this problemMatcher for compileP2 not work. I've [filed an issue at Eric's Repo](https://github.com/totalspectrum/spin2cpp/issues/115) that requests that he always issue errors/warnings from all files with exactly the same filename form: either path relative to folder of top-level file or an absolute path.*
+*Behavior Note: The task problem matchers now use 'autoDetect' so we can handle Flexspin's mix of relative and absolute file specifications within error messages.*
 
 TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
 
