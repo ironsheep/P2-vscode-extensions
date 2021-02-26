@@ -209,6 +209,8 @@ As written download will always be preceeded by a CompileTop.
 
 TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
 
+**NEWs** (26 Feb) A fix is coming in an upcoming FlexProp release which will allow us to show many more errors from a single compile.
+
 NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
 
 ### Add Keyboard Shortcut for the Download task
@@ -389,7 +391,9 @@ As written download will always be preceeded by a CompileTop.
 
 *Behavior Note: The task problem matchers now use 'autoDetect' so we can handle Flexspin's mix of relative and absolute file specifications within error messages.*
 
-TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
+TODO: *the compiler as driven by the compileP2 task stops before reporting all errors. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
+
+**NEWs** (26 Feb) A fix is coming in an upcoming FlexProp release which will allow us to show many more errors from a single compile.
 
 NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
 
