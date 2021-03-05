@@ -15,10 +15,12 @@
     "noImplicitAny": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "removeComments": true
   },
   "exclude": [
     "node_modules",
-    ".vscode-test"
+    ".vscode-test",
+    "REF/*.ts",
   ]
 }

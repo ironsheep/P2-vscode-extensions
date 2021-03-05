@@ -8,17 +8,21 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
-- Add watching/build/download
 - working on fixes to known issues
 
 Possible next additions:
 
 - Adding operators so they can be colored is harder... so, not right away...
-- Add detection of FIXME:, TODO: - Highlight and show in Outline
-- Add Semantic Hightlighting - consistently color names whereever they appear
-- (this includes parameters, return values, local variables, method names, etc.)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [0.3.0] 2021-03-0?
+
+- Spin2: Initial partial Semantic Highlighting support
+- (this will eventually include parameters, return values, local variables, method names, etc.)
+- Syntax Highlight BUGFIX: stop falsely recognizing 'or' within symbol name
+- Syntax Highlight BUGFIX: stop falsely recognizing numbers within symbol name
+- DECISION: we won't add FIXME/TODO highlighting as there is an extension for that!
 
 ## [0.2.2] 2020-11-30
 

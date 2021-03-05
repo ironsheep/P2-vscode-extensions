@@ -3,7 +3,7 @@
     "displayName": "Spin2",
     "description": "Spin2/Pasm2 Syntax Hightlighting and Code Outline support",
     "icon": "images/Propeller.ico",
-    "version": "0.2.2",
+    "version": "0.2.4",
     "publisher": "IronSheepProductionsLLC",
     "repository": {
         "type": "git",
@@ -82,7 +82,7 @@
     "devDependencies": {
         "@types/vscode": "^1.50.0",
         "js-yaml": "^3.14.0",
-        "typescript": "^3.7.5",
+        "typescript": "^4.0.2",
         "vscode-test": "^1.3.0"
     },
     "dependencies": {

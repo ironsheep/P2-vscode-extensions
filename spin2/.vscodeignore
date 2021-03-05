@@ -3,6 +3,7 @@
 .DS_Store
 syntaxes/*
 REF/*
+TEST/*
 !out/*
 !syntaxes/spin2.tmLanguage.json
 !spin2.language-configuration.json

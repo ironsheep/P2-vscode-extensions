@@ -1,6 +1,7 @@
 {
     "$schema": "vscode://schemas/color-theme",
 	"name": "Spin2 Ironsheep",
+    "semanticHighlighting": true,
 	"type": "dark",
 	"colors": {
 		"activityBar.background": "#444444",
@@ -220,5 +221,17 @@
                 "foreground": "#991b17"
             }
         }
-	]
+	],
+    "semanticTokenColors": {
+        "variable.readonly": "#ae00ae",
+        "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
+        "namespace": {
+            "foreground": "#4b4fa2",
+            "fontStyle": "bold"
+         }, // token of type namespace in spin2 files
+         "namespace.declaration": {
+            "foreground": "#7A81FF",
+            "fontStyle": "bold"
+        }, // all declarations are bold
+    }
 }

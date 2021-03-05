@@ -158,7 +158,7 @@ repository:
         match: '(?i)\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(ENABLE|DELAY|PIN|TIMESTAMP)|DLY)\b'
     decimal_number:
         name: constant.numeric.decimal.spin2
-        match: '(([+-])?[0-9][0-9_\.]*)'
+        match: '\b(([+-])?[0-9][0-9_\.]*)'
         captures:
             '1':
                 name: constant.numeric.base10.spin2
@@ -371,7 +371,7 @@ repository:
                 include: '#spin_language_tiny'
     quaternary_number:
         name: constant.numeric.quaternary.spin2
-        match: '(%%[0-3][0-3_]*)\b'
+        match: '\b(%%[0-3][0-3_]*)\b'
         captures:
             '1':
                 name: constant.numeric.base4.spin2
@@ -458,7 +458,7 @@ repository:
                 match: '(?i)\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\b'
             -
                 name: keyword.operator.binary.spin2
-                match: '(?i)(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)'
+                match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)\b'
     smartpins_constants:
         name: meta.block.spin.language.spin2
         patterns:
@@ -519,27 +519,6 @@ repository:
             -
                 name: constant.language.streamer.spin2
                 match: '\b(X_RFLONG_4X8_LUT|X_RFLONG_8X4_LUT|X_RFLONG_RGB24|X_RFWORD_16P_2DAC8|X_RFWORD_16P_4DAC4|X_RFWORD_RGB16)\b'
-    spin_language:
-        name: meta.block.spin.language.spin2
-        patterns:
-            -
-                name: keyword.operator.ternary.spin2
-                match: '(?|:)'
-            -
-                name: keyword.operator.equate-assign.spin2
-                match: '(:=|=)'
-            -
-                name: keyword.operator.pre-postfix.spin2
-                match: '(?i)(++|--)'
-            -
-                name: keyword.operator.postfix.spin2
-                match: '(?i)(~~|~|\\)'
-            -
-                name: keyword.operator.binary.spin2
-                match: '(?i)(>>|<<|SAR|ROR|ROL|REV|ZEROX|SIGNX|&|^|\|*|/|+/|//|+//|SCAS?|FRAC|+|-|#>|<#|<|+<|<=|+<=|==|<>|>=|+>=|>|+>|<=>|&&|AND||^^|XOR|\|\||OR)'
-            -
-                name: keyword.operator.address.spin2
-                match: '(?i)\b(@@|@|#)\b'
     string:
         name: string.quoted.double.spin2
         begin: '"'
