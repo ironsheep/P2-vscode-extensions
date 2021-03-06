@@ -224,8 +224,17 @@
 	],
     "semanticTokenColors": {
         // method parts: name (parameters) : returnValues | localVariables
-        //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA
-        "variable.readonly": "#ab51ab",     // constants
+        //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
+        "enum": "#a968a9",     // constants
+        "enum.declaration": "#ab40ab",     // constants
+        "variable.readonly": "#a968a9",     // constants
+        "variable.declaration.readonly": "#ab40ab",     // constants
+        "variable.local": "#FEF5FA",     // constants
+        "variable.declaration.local": "#f7d4e7",     // constants
+        "returnValue.local": "#3e8b95",     // constants
+        "returnValue.declaration.local": "#238795",     // constants
+        "parameter.readonly": "#D0BBE6",     // constants
+        "parameter.declaration.readonly": "#b68ce3",     // constants
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
         "namespace": {

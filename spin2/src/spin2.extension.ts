@@ -128,14 +128,15 @@ const legend = (function () {
 	const tokenTypesLegend = [
 		'comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
 		'type', 'struct', 'class', 'interface', 'enum', 'typeParameter', 'function',
-		'method', 'macro', 'variable', 'parameter', 'property', 'label', 'enumMember', 'event'
+        'method', 'macro', 'variable', 'parameter', 'property', 'label', 'enumMember',
+        'event', 'returnValue'
 	];
     // FIXME: we need a 'returnValue' type??
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 
 	const tokenModifiersLegend = [
 		'declaration', 'documentation', 'readonly', 'static', 'abstract', 'deprecated',
-		'modification', 'async', 'definition', 'defaultLibrary'
+		'modification', 'async', 'definition', 'defaultLibrary', 'local'
     ];
     // FIXME: we need a 'local' modifier!
 	tokenModifiersLegend.forEach((tokenModifier, index) => tokenModifiers.set(tokenModifier, index));
@@ -185,8 +186,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private globalTokens = new Map<string, IRememberedToken>();
     private localTokens = new Map<string, IRememberedToken>();
-    private spin2log: any = undefined;
 
+    private spin2log: any = undefined;
+    // adjust following true/false to show spcific parsing debug
     private showCode: boolean = false;
     private showCON: boolean = true;
     private showOBJ: boolean = false;
@@ -600,18 +602,50 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // HAVE    DIGIT_NO_VALUE = -2   ' digit value when NOT [0-9]
         //  -or-   _clkfreq = CLK_FREQ   ' set system clock
         //
-        //skip Past Whitespace
-        let currentOffset = this._skipWhite(line, startingOffset)
-        // get line parts - we only care about first one
-        const lineParts : string[] = line.substr(currentOffset).split(/[ \t=]/)
-        const newName = lineParts[0];
-        this._logCON('  -- GetCONDecl newName=[' + newName + ']');
-        // remember this object name so we can annotate a call to it
-        if (!this.globalTokens.has(newName)) {
-            this.globalTokens.set(newName, {
-                tokenType: 'variable',
-                tokenModifiers: ['readonly']
-            });
+        if (line.substr(startingOffset).length > 1) {
+            //skip Past Whitespace
+            let currentOffset = this._skipWhite(line, startingOffset)
+            const assignmentOffset = line.indexOf('=', currentOffset);
+            const emumValueSepOffset = line.indexOf(',', currentOffset);
+            if (assignmentOffset != -1) {
+                // recognize constant name getting initialized
+                // get line parts - we only care about first one
+                const lineParts: string[] = line.substr(currentOffset).split(/[ \t=]/)
+                const newName = lineParts[0];
+                this._logCON('  -- GetCONDecl newName=[' + newName + ']');
+                // remember this object name so we can annotate a call to it
+                if (!this.globalTokens.has(newName)) {
+                    this.globalTokens.set(newName, {
+                        tokenType: 'variable',
+                        tokenModifiers: ['readonly']
+                    });
+                }
+            }
+            else if (emumValueSepOffset != -1) {
+                // recognize enum values getting initialized
+                let beginCommentOffset = line.indexOf("'", currentOffset);
+                if (beginCommentOffset === -1) {
+                    beginCommentOffset = line.indexOf("{", currentOffset);
+                }
+                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
+                const enumDefinitionStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                this._logCON('  -- GetCONDecl enumDefinitionStr=[' + enumDefinitionStr + ']');
+                const lineParts: string[] = enumDefinitionStr.split(',');
+                //this._logCON('  -- lineParts=[' + lineParts + ']');
+                for (let index = 0; index < lineParts.length; index++) {
+                    const enumConstant = lineParts[index].trim();
+                    const valueSetOpOffset = enumConstant.indexOf('#');
+                    if (valueSetOpOffset === -1) {
+                        this._logCON('  -- enumConstant=[' + enumConstant + ']');
+                        if (!this.globalTokens.has(enumConstant)) {
+                            this.globalTokens.set(enumConstant, {
+                                tokenType: 'enumMember',
+                                tokenModifiers: ['readonly']
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -711,12 +745,12 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     startCharacter: startIndex,
                     length: paramName.length,
                     tokenType: 'parameter',
-                    tokenModifiers: ['declaration','readonly']
+                    tokenModifiers: ['declaration','readonly', 'local']
                 });
                 // remember so we can ID references
                 this.localTokens.set(paramName, {
                     tokenType: 'parameter',
-                    tokenModifiers: ['readonly']
+                    tokenModifiers: ['readonly', 'local']
                 });
             }
         }
@@ -747,18 +781,18 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 const paramName = returnValueNames[index].trim();
                 const startIndex = line.indexOf(paramName, currentOffset + 1);
                 // FIXME: add .local when we finally have .local
-                // FIXME: add .return when we finally have .return
+                // FIXME: add .returnValue when we finally have .returnValue
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: startIndex,
                     length: paramName.length,
-                    tokenType: 'parameter',
-                    tokenModifiers: ['declaration']
+                    tokenType: 'returnValue',
+                    tokenModifiers: ['declaration', 'local']
                 });
                 // remember so we can ID references
                 this.localTokens.set(paramName, {
-                    tokenType: 'parameter',
-                    tokenModifiers: []
+                    tokenType: 'returnValue',
+                    tokenModifiers: ['local']
                 });
                 currentOffset += paramName.length + 1   // +1 for trailing comma
             }
@@ -782,18 +816,17 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 const paramName = localVarNames[index].trim();
                 const startIndex = line.indexOf(paramName, currentOffset);
                 // FIXME: add .local when we finally have .local
-                // FIXME: add .return when we finally have .return
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: startIndex,
                     length: paramName.length,
                     tokenType: 'variable',
-                    tokenModifiers: ['declaration']
+                    tokenModifiers: ['declaration', 'local']
                 });
                 // remember so we can ID references
                 this.localTokens.set(paramName, {
                     tokenType: 'variable',
-                    tokenModifiers: []
+                    tokenModifiers: ['local']
                 });
                 currentOffset += paramName.length + 1   // +1 for trailing comma
             }
@@ -956,6 +989,39 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 // -------------------------------------------
                 // have line creating set of enum constants
                 // -------------------------------------------
+                let beginCommentOffset = line.indexOf("'", currentOffset);
+                if (beginCommentOffset === -1) {
+                    beginCommentOffset = line.indexOf("{", currentOffset);
+                }
+                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
+                // recognize enum values getting initialized
+                const enumDefinitionStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                this._logCON('- reportConstant enumDefinitionStr=[' + enumDefinitionStr + ']');
+                const lineParts: string[] = enumDefinitionStr.split(',');
+                //this._logCON('  -- lineParts=[' + lineParts + ']');
+                for (let index = 0; index < lineParts.length; index++) {
+                    const enumConstant = lineParts[index].trim();
+                    const valueSetOpOffset = enumConstant.indexOf('#');
+                    if (valueSetOpOffset === -1) {
+                        this._logCON('  -- enumConstant=[' + enumConstant + ']');
+                        const startPos = line.indexOf(enumConstant, currentOffset)
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: startPos,
+                            length: enumConstant.length,
+                            tokenType: 'enum',
+                            tokenModifiers: ['declaration']
+                        });
+
+                        // remember so we can ID references (if we don't know this name, yet)
+                        if (!this.globalTokens.has(enumConstant)) {
+                            this.globalTokens.set(enumConstant, {
+                                tokenType: 'enum',
+                                tokenModifiers: []
+                            });
+                        }
+                    }
+                }
             }
         }
         return tokenSet;

@@ -70,7 +70,27 @@
                 ],
                 "configuration": "./spin2.language-configuration.json"
             }
-        ]
+        ],
+        "semanticTokenTypes": [
+            {
+                "id": "returnValue",
+                "superType": "parameter",
+                "description": "A parameter type of returnValue."
+            }
+        ],
+        "semanticTokenModifiers": [
+            {
+              "id": "local",
+              "description": "Annotates a symbol that is declared local to a method"
+            }
+        ],
+        "semanticTokenScopes": [
+            {
+              "scopes": {
+                "returnValue": ["meta.returntype.spin"]
+              }
+            }
+          ]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && npm run compile:grammar",
