@@ -176,14 +176,14 @@
 			"name": "Method Return Variable",
 			"scope": ["meta.return-type.spin"],
 			"settings": {
-				"foreground": "#008799"
+				"foreground": "#3e8b95"
 			}
         },
         {
 			"name": "Filename",
 			"scope": ["meta.object.filename"],
             "settings": {
-                "foreground": "#ea3a56"
+                "foreground": "#eb6077"
             }
         },
         {
@@ -223,15 +223,24 @@
         }
 	],
     "semanticTokenColors": {
-        "variable.readonly": "#ae00ae",
+        // method parts: name (parameters) : returnValues | localVariables
+        //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA
+        "variable.readonly": "#ab51ab",     // constants
+        "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
         "namespace": {
-            "foreground": "#4b4fa2",
+            "foreground": "#5d60a0",
             "fontStyle": "bold"
-         }, // token of type namespace in spin2 files
+         },
          "namespace.declaration": {
             "foreground": "#7A81FF",
             "fontStyle": "bold"
-        }, // all declarations are bold
+        },
+        "method": {
+            "foreground": "#7b9be4",
+         },
+         "method.declaration": {
+            "foreground": "#7b9be4",
+        },
     }
 }
