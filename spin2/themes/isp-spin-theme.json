@@ -10,7 +10,7 @@
 		"activityBarBadge.foreground": "#FFFFFF",
 		"activityBarBadge.background": "#2F8FBF",
 		"editor.background": "#222222",
-		"editor.foreground": "#AAAAAA",
+		"editor.foreground": "#aaaaaa",   // #3981da
 		"editorError.border": "#BF2F2F",
 		"editorLineNumber.foreground": "#444444",
 		"panel.border": "#2F8FBF",

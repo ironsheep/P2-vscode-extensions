@@ -43,37 +43,36 @@ class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider
 
             for (let i = 0; i < document.lineCount; i++) {
                 let line = document.lineAt(i);
-                let linePrefix : string = line.text
-                let lineHasComment : boolean = false
-                if (line.text.length > 3) {
-                    linePrefix = linePrefix.substring(0, 3).toUpperCase()
+                let linePrefix: string = line.text;
+                let lineHasComment: boolean = false;
+                let commentOffset: number = 0;
+                let commentLength: number = 0;
+                if (line.text.length > 2) {
+                    const lineParts: string[] = linePrefix.split(/[ \t]/)
+                    linePrefix = (lineParts.length > 0) ? lineParts[0].toUpperCase() : "";
                     // the only form of comment we care about here is block comment after section name (e.g., "CON { text }")
-                    if (line.text.includes(" ")) {
-                        const lineParts: string[] = line.text.split(" ")
-                        if (lineParts.length > 1) {
-                            if (lineParts[1].startsWith("{")) {
-                                lineHasComment = true
-                            }
+                    const openBraceOffset: number = line.text.indexOf('{');
+                    if (openBraceOffset != -1) {
+                        commentOffset = openBraceOffset;
+                        const closeBraceOffset: number = line.text.indexOf('}',openBraceOffset + 1);
+                        if (closeBraceOffset != -1) {
+                            lineHasComment = true;
+                            commentLength = closeBraceOffset - openBraceOffset + 1;
                         }
                     }
                 }
 
-                if (linePrefix.startsWith("CON") || linePrefix.startsWith("DAT") || linePrefix.startsWith("VAR") || linePrefix.startsWith("OBJ")) {
-                    let section: string = line.text.trim()
-                    if (section.includes("'")) {
-                        const lineParts: string[] = section.split("'")
-                        section = lineParts[0].trim()
-                    }
-                    let sectionComment = (lineHasComment) ? section.substr(3) : ""
+                if (linePrefix == "CON" || linePrefix == "DAT" || linePrefix == "VAR" || linePrefix == "OBJ") {
+                    let sectionComment = (lineHasComment) ? line.text.substr(commentOffset, commentLength) : ""
                     const marker_symbol = new vscode.DocumentSymbol(
-                        linePrefix + sectionComment,
+                        linePrefix + " " + sectionComment,
                         '',
                         vscode.SymbolKind.Field,
                         line.range, line.range)
 
                     symbols.push(marker_symbol)
                 }
-                else if (linePrefix.startsWith("PUB") || linePrefix.startsWith("PRI")) {
+                else if (linePrefix == "PUB" || linePrefix == "PRI") {
                     let methodScope: string = "Public"
                     if (line.text.startsWith("PRI")) {
                         methodScope = "Private"
@@ -188,10 +187,10 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private localTokens = new Map<string, IRememberedToken>();
 
     private spin2log: any = undefined;
-    // adjust following true/false to show spcific parsing debug
-    private spinDebugLogEnabled: boolean = false;
+    // adjust following true/false to show specific parsing debug
+    private spinDebugLogEnabled: boolean = true;
     private showCode: boolean = false;
-    private showCON: boolean = false;
+    private showCON: boolean = true;
     private showOBJ: boolean = false;
     private showDAT: boolean = false;
     private showVAR: boolean = false;
@@ -1143,7 +1142,7 @@ private _encodeTokenType(tokenType: string): number {
                                 tokenType: 'variable',
                                 tokenModifiers: ['readonly']
                             });
-                            }
+                        }
                     }
                 }
                 currentOffset += currPossibleLen + 1;
@@ -1210,43 +1209,62 @@ private _encodeTokenType(tokenType: string): number {
                 const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
                 const assignmentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
                 this._logCON('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
-                const possNames: string[] = assignmentRHSStr.split(/[ \t]/);
+                const possNames: string[] = assignmentRHSStr.split(/[ \t\(\)]/);
                 this._logCON('  -- possNames=[' + possNames + ']');
                 for (let index = 0; index < possNames.length; index++) {
                     const possibleName = possNames[index];
                     const currPossibleLen = possibleName.length;
-                    let possibleNameSet: string[] = [];
+                    if (currPossibleLen < 1) {
+                        continue;
+                    }
                     if (possibleName.substr(0, 1).match(/[a-zA-Z]/)) {
                         // does name contain a namespace reference?
+                        this._logCON('  -- possibleName=[' + possibleName + ']');
+                        let possibleNameSet: string[] = [];
                         if (possibleName.indexOf('.') != -1) {
                             possibleNameSet = possibleName.split('.');
                         }
                         else {
                             possibleNameSet = [possibleName]
                         }
-                        // process name part(s)
-                        for (let index = 0; index < possibleNameSet.length; index++) {
-                            const nameReference = possibleNameSet[index];
-                            if (this.globalTokens.has(nameReference)) {
-                                const referenceDetails: IRememberedToken | undefined = this.globalTokens.get(nameReference);
-                                const startPos = line.indexOf(nameReference, currentOffset)
-                                if (referenceDetails != undefined) {
-                                    tokenSet.push({
-                                        line: lineNumber,
-                                        startCharacter: startPos,
-                                        length: nameReference.length,
-                                        tokenType: referenceDetails.tokenType,
-                                        tokenModifiers: referenceDetails.tokenModifiers
-                                    });
-                                }
-                            }
+                        this._logCON('  --  possibleNameSet=[' + possibleNameSet + ']');
+                        const namePart = possibleNameSet[0];
+                        const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                        let referenceDetails: IRememberedToken | undefined = undefined;
+                        if (this.globalTokens.has(namePart)) {
+                            referenceDetails = this.globalTokens.get(namePart);
+                            this._logCON('  --  FOUND global name=[' + namePart + ']');
+                        }
+                        if (referenceDetails != undefined) {
+                            const startPos = line.indexOf(searchString, currentOffset);
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: namePart.length,
+                                tokenType: referenceDetails.tokenType,
+                                tokenModifiers: referenceDetails.tokenModifiers
+                            });
+                        }
+                        if (possibleNameSet.length > 1) {
+                            // we have .constant namespace suffix
+                            // this can NOT be a method name it can only be a constant name
+                            const referenceOffset = line.indexOf(searchString, currentOffset);
+                            const constantPart: string = possibleNameSet[1];
+                            const startPos = line.indexOf(constantPart, referenceOffset)
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: constantPart.length,
+                                tokenType: 'variable',
+                                tokenModifiers: ['readonly']
+                            });
                         }
                     }
                     currentOffset += currPossibleLen + 1;
                 }
             }
             let enumSeparatorOffset = line.indexOf(',', currentOffset);
-            if (enumSeparatorOffset) {
+            if (enumSeparatorOffset != -1) {
                 // -------------------------------------------
                 // have line creating set of enum constants
                 // -------------------------------------------

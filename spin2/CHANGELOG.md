@@ -18,6 +18,12 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [0.3.1] 2021-03-0?
+
+### BUGFIXs
+- Repaired identification of constant assignment from constant from external object 
+- BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
+
 ## [0.3.0] 2021-03-07
 Preview Release of Semantic Highlighting
 

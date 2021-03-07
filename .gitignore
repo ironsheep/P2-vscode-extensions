@@ -15,6 +15,7 @@ REF/
 out/
 
 *.vsix
+*.zip
 
 
 *-REF*
