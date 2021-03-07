@@ -129,7 +129,7 @@ const legend = (function () {
 		'comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
 		'type', 'struct', 'class', 'interface', 'enum', 'typeParameter', 'function',
         'method', 'macro', 'variable', 'parameter', 'property', 'label', 'enumMember',
-        'event', 'returnValue'
+        'event', 'returnValue', 'storageType'
 	];
     // FIXME: we need a 'returnValue' type??
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
@@ -168,6 +168,8 @@ enum eParseState {
     inPub,
     inPri,
     inVar,
+    inPasmInline,
+    inDatPasm,
     inMultiLineComment,
     inMultiLineDocComment,
     inNothing
@@ -189,8 +191,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show spcific parsing debug
-    private showCode: boolean = false;
-    private showCON: boolean = true;
+    private spinDebugLogEnabled: boolean = true;
+    private showCode: boolean = true;
+    private showCON: boolean = false;
     private showOBJ: boolean = false;
     private showDAT: boolean = false;
     private showVAR: boolean = false;
@@ -238,7 +241,15 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
     }
 
-	private _encodeTokenType(tokenType: string): number {
+    private _logMessage(message: string): void
+    {
+        if (this.spin2log != undefined) {
+            //Write to output window.
+            this.spin2log.appendLine(message);
+        }
+    }
+
+private _encodeTokenType(tokenType: string): number {
 		if (tokenTypes.has(tokenType)) {
 			return tokenTypes.get(tokenType)!;
 		} else if (tokenType === 'notInLegend') {
@@ -260,28 +271,22 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 		return result;
     }
 
-    private _logMessage(message: string): void
-    {
-        //Write to output window.
-        if (this.spin2log != undefined) {
-            this.spin2log.appendLine(message);
-        }
-    }
-
     private _parseText(text: string): IParsedToken[] {
         // parse our entire file
         const lines = text.split(/\r\n|\r|\n/);
         let currState: eParseState = eParseState.Unknown;
         let priorState: eParseState = currState
+        let prePasmState: eParseState = currState
 
-        if (this.spin2log === undefined) {
-            //Create output channel
-            this.spin2log = vscode.window.createOutputChannel("Spin2 OUT");
-            this._logMessage("Spin2 log started.");
-        }
-        else
-        {
-            this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+        if (this.spinDebugLogEnabled) {
+            if (this.spin2log === undefined) {
+                //Create output channel
+                this.spin2log = vscode.window.createOutputChannel("Spin2 OUT");
+                this._logMessage("Spin2 log started.");
+            }
+            else {
+                this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+            }
         }
 
         //
@@ -400,6 +405,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         //
         currState = eParseState.Unknown;    // reset for 2nd pass
         priorState = currState;    // reset for 2nd pass
+        prePasmState = currState;   // same
 
         const tokenSet: IParsedToken[] = [];
 
@@ -541,14 +547,39 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     });
                 }
             }
+            else if (currState == eParseState.inPasmInline) {
+                // process pasm (assembly) lines
+                if (trimmedLine.length > 0) {
+                    this._logCode('- process PASM line trimmedLine=[' + trimmedLine + ']');
+                    const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
+                    if (linePrefix.startsWith("END")) {
+                        currState = prePasmState;
+                        // and ignore rest of this line
+                    }
+                    else {
+                        const partialTokenSet: IParsedToken[] = this._reportLineOfPasmCode(i, 0, line)
+                        partialTokenSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
+                }
+            }
             else if (currState == eParseState.inPub || currState == eParseState.inPri) {
                 // process a method def'n line
                 if (trimmedLine.length > 0) {
                     this._logCode('- process PUB/PRI line trimmedLine=[' + trimmedLine + ']');
-                    const partialTokenSet: IParsedToken[] = this._reportLineOfSpinCode(i, 0, line)
-                    partialTokenSet.forEach(newToken => {
-                        tokenSet.push(newToken);
-                    });
+                    const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
+                    if (linePrefix.startsWith("ORG")) {
+                        prePasmState = currState;
+                        currState = eParseState.inPasmInline;
+                        // and ignore rest of this line
+                    }
+                    else {
+                        const partialTokenSet: IParsedToken[] = this._reportLineOfSpinCode(i, 0, line)
+                        partialTokenSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
                 }
             }
 		}
@@ -640,7 +671,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         if (!this.globalTokens.has(enumConstant)) {
                             this.globalTokens.set(enumConstant, {
                                 tokenType: 'enumMember',
-                                tokenModifiers: ['readonly']
+                                tokenModifiers: []
                             });
                         }
                     }
@@ -651,8 +682,56 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getDataDeclaration(startingOffset: number, line: string): void
     {
-        if (startingOffset) { }
-        if (line) { }
+        // HAVE    bGammaEnable        BYTE   TRUE               ' comment
+        //         didShow             byte   FALSE[256]
+        let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        let beginCommentOffset = line.indexOf("'", currentOffset);
+        if (beginCommentOffset === -1) {
+            beginCommentOffset = line.indexOf("{", currentOffset);
+        }
+        const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
+        const assignmentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+        let lineParts: string[] | null = assignmentRHSStr.match(/[^ \t]+/g)
+        if (lineParts === null) {
+            lineParts = []
+        }
+        // remember this object name so we can annotate a call to it
+        if (lineParts.length > 2) {
+            if (this._isStorageType(lineParts[0])) {
+                // if we start with storage type, not name, ignore line!
+            }
+            else {
+                this._logDAT('- GetDatDecl lineParts=[' + lineParts + ']');
+                const hasGoodType: boolean = this._isStorageType(lineParts[1])
+                if (hasGoodType) {
+                    let newName = lineParts[0];
+                    this._logDAT('  -- newName=[' + newName + ']');
+                    if (!this.globalTokens.has(newName)) {
+                        this.globalTokens.set(newName, {
+                            tokenType: 'variable',
+                            tokenModifiers: []
+                        });
+                    }
+                } else if (!hasGoodType) {
+                    this._logDAT('  -- BAD DATA TYPE: [' + lineParts[1] + ']');
+                }
+            }
+        }
+        else if (lineParts.length == 1) {
+            // handle name declaration only line: [name 'comment]
+            let newName = lineParts[0];
+            this._logDAT('  -- newName=[' + newName + ']');
+            if (!this.globalTokens.has(newName)) {
+                this.globalTokens.set(newName, {
+                    tokenType: 'variable',
+                    tokenModifiers: []
+                });
+            }
+        }
+        else {
+            this._logDAT('  -- SKIPPED: lineParts=[' + lineParts + ']');
+        }
     }
 
     private _getVariableDeclaration(startingOffset: number, line: string): void
@@ -669,8 +748,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         //this._logVAR('- GetVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
         // TODO: ensure this is marked as instance-variable
-        const upperType: string = lineParts[0].toUpperCase();
-        const hasGoodType: boolean = (upperType == "BYTE" || upperType == "WORD" || upperType == "LONG");
+        const hasGoodType: boolean = this._isStorageType(lineParts[0]);
         if (hasGoodType && lineParts.length > 1) {
             let newName = lineParts[1];
             // remove array suffix from name
@@ -834,6 +912,15 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return tokenSet;
     }
 
+    private _reportLineOfPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
+    {
+        const tokenSet: IParsedToken[] = [];
+        // skip Past Whitespace
+        let currentOffset = this._skipWhite(line, startingOffset)
+        if (lineNumber) { }
+        return tokenSet;
+    }
+
     private _reportLineOfSpinCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
     {
         const tokenSet: IParsedToken[] = [];
@@ -849,15 +936,36 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 // -------------------------------------------
                 const variableName = line.substr(currentOffset, (assignmentOffset - 1) - currentOffset).trim();
                 this._logCode('-code: variableName=[' + variableName + ']');
-                // FIXME: UNDONE this should pull from LOCAL if variable is LOCAL
-                // FIXME: UNDONE this should handle chained assignments:  varA := varB := 0
-                tokenSet.push({
-                    line: lineNumber,
-                    startCharacter: currentOffset,
-                    length: variableName.length,
-                    tokenType: 'variable',
-                    tokenModifiers: ['modification']
-                });
+                let referenceDetails: IRememberedToken | undefined = undefined;
+                // TODO: UNDONE this should handle chained assignments:  varA := varB := 0
+                if (this.localTokens.has(variableName)) {
+                    referenceDetails = this.localTokens.get(variableName);
+                }
+                else if (this.globalTokens.has(variableName)) {
+                    referenceDetails = this.globalTokens.get(variableName);
+                }
+                if (referenceDetails != undefined) {
+                    let modificationArray: string[] = referenceDetails.tokenModifiers;
+                    modificationArray.push('modification');
+                    if (referenceDetails != undefined) {
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: currentOffset,
+                            length: variableName.length,
+                            tokenType: referenceDetails.tokenType,
+                            tokenModifiers: modificationArray
+                        });
+                    }
+                }
+                else {
+                    tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: currentOffset,
+                        length: variableName.length,
+                        tokenType: 'variable',
+                        tokenModifiers: ['modification']
+                    });
+                }
                 currentOffset = assignmentOffset + 2;   // skip to RHS of assignment
             }
             let beginCommentOffset = line.indexOf("'", currentOffset);
@@ -884,22 +992,68 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     else {
                         possibleNameSet = [possibleName]
                     }
-                    // process name part(s)
-                    for (let index = 0; index < possibleNameSet.length; index++) {
-                        const nameReference = possibleNameSet[index];
-                        if (this.globalTokens.has(nameReference)) {
-                            const referenceDetails: IRememberedToken | undefined = this.globalTokens.get(nameReference);
-                            const startPos = line.indexOf(nameReference, currentOffset)
-                            if (referenceDetails != undefined) {
-                                tokenSet.push({
-                                    line: lineNumber,
-                                    startCharacter: startPos,
-                                    length: nameReference.length,
-                                    tokenType: referenceDetails.tokenType,
-                                    tokenModifiers: referenceDetails.tokenModifiers
-                                });
-                            }
+                    this._logCode('  --  possibleNameSet=[' + possibleNameSet + ']');
+                    const namePart = possibleNameSet[0];
+                    const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                    let referenceDetails: IRememberedToken | undefined = undefined;
+                    if (this.localTokens.has(namePart)) {
+                        referenceDetails= this.localTokens.get(namePart);
+                        this._logCode('  --  FOUND local name=[' + namePart + ']');
+                    } else if (this.globalTokens.has(namePart)) {
+                        referenceDetails= this.globalTokens.get(namePart);
+                        this._logCode('  --  FOUND global name=[' + namePart + ']');
+                    }
+                    if (referenceDetails != undefined) {
+                        const startPos = line.indexOf(searchString, currentOffset);
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: startPos,
+                            length: namePart.length,
+                            tokenType: referenceDetails.tokenType,
+                            tokenModifiers: referenceDetails.tokenModifiers
+                        });
+                    }
+                    else {
+                        // have unknown name!? is storage type spec?
+                        if (this._isStorageType(namePart)) {
+                            const startPos = line.indexOf(searchString, currentOffset);
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: namePart.length,
+                                tokenType: 'storageType',
+                                tokenModifiers: []
+                            });
                         }
+                    }
+                    if(possibleNameSet.length > 1) {
+                        // we have .constant namespace suffix
+                        // FIXME: UNDONE determine if this is method has '(' or constant name
+                        const referenceOffset = line.indexOf(searchString, currentOffset);
+                        let isMethod: boolean = false;
+                        if (line.substr(referenceOffset + searchString.length, 1) == '(') {
+                            isMethod = true;
+                        }
+                        const constantPart: string = possibleNameSet[1];
+                        const startPos = line.indexOf(constantPart, currentOffset)
+                        if (isMethod) {
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: constantPart.length,
+                                tokenType: 'method',
+                                tokenModifiers: []
+                            });
+                            }
+                        else {
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: constantPart.length,
+                                tokenType: 'variable',
+                                tokenModifiers: ['readonly']
+                            });
+                            }
                     }
                 }
                 currentOffset += currPossibleLen + 1;
@@ -1009,14 +1163,14 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             line: lineNumber,
                             startCharacter: startPos,
                             length: enumConstant.length,
-                            tokenType: 'enum',
+                            tokenType: 'enumMember',
                             tokenModifiers: ['declaration']
                         });
 
                         // remember so we can ID references (if we don't know this name, yet)
                         if (!this.globalTokens.has(enumConstant)) {
                             this.globalTokens.set(enumConstant, {
-                                tokenType: 'enum',
+                                tokenType: 'enumMember',
                                 tokenModifiers: []
                             });
                         }
@@ -1086,10 +1240,65 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _reportDataDeclarationLine(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
     {
-        if (lineNumber) { }
-        if (startingOffset) { }
-        if (line) { }
 		const tokenSet: IParsedToken[] = [];
+        //skip Past Whitespace
+        let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t]+/g)
+        if (lineParts === null) {
+            lineParts = []
+        }
+        //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
+        // remember this object name so we can annotate a call to it
+        if (lineParts.length > 2) {
+            if (this._isStorageType(lineParts[0])) {
+                // if we start with storage type, not name, ignore line!
+            }
+            else {
+                this._logDAT('- rptDatDecl lineParts=[' + lineParts + ']');
+                let newName = lineParts[0];
+                // remove array suffix from name
+                this._logDAT('  -- newName=[' + newName + ']');
+                const startIndex: number = line.indexOf(newName, currentOffset)
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: startIndex,
+                    length: newName.length,
+                    tokenType: 'variable',
+                    tokenModifiers: ['declaration']
+                });
+                if (!this.globalTokens.has(newName)) {
+                    this.globalTokens.set(newName, {
+                        tokenType: 'variable',
+                        tokenModifiers: []
+                    });
+                }
+            }
+        }
+        else if (lineParts.length == 1) {
+            // handle name declaration only line: [name 'comment]
+            this._logDAT('- rptDatDecl lineParts=[' + lineParts + ']');
+            let newName = lineParts[0];
+            this._logDAT('  -- newName=[' + newName + ']');
+            const startIndex: number = line.indexOf(newName, currentOffset)
+            tokenSet.push({
+                line: lineNumber,
+                startCharacter: startIndex,
+                length: newName.length,
+                tokenType: 'variable',
+                tokenModifiers: ['declaration']
+            });
+            if (!this.globalTokens.has(newName)) {
+                this.globalTokens.set(newName, {
+                    tokenType: 'variable',
+                    tokenModifiers: []
+                });
+            }
+        }
+        else {
+            this._logDAT('  -- SKIPPED: lineParts=[' + lineParts + ']');
+        }
+        // TODO: handle name declaration only line: [name 'comment]
         return tokenSet;
     }
 
@@ -1152,7 +1361,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         const namePart = possibleNameSet[0];
                         if (this.globalTokens.has(namePart)) {
                             const referenceDetails: IRememberedToken | undefined = this.globalTokens.get(namePart);
-                            const searchString: string = (possibleNameSet.length == 0) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                            const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
                             const startPos = line.indexOf(searchString, currentOffset)
                             if (referenceDetails != undefined) {
                                 tokenSet.push({
@@ -1273,7 +1482,18 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 		};
     }
 
-    private _skipWhite(line: string, currentOffset : number) : number
+    private _isStorageType(name: string): boolean
+    {
+        let returnStatus: boolean = false;
+        if (name.length > 3) {}
+        const checkType: string = name.toUpperCase();
+        if (checkType == "BYTE" || checkType == "WORD" || checkType == "LONG") {
+            returnStatus = true;
+        }
+        return returnStatus;
+    }
+
+private _skipWhite(line: string, currentOffset : number) : number
     {
         let firstNonWhiteIndex: number = currentOffset;
         for (let index = currentOffset; index < line.length; index++) {

@@ -106,7 +106,7 @@
 			"name": "Control",
 			"scope": ["keyword.control"],
 			"settings": {
-				"foreground": "#cccc44"
+				"foreground": "#c586c0" // cccc44
 			}
         },
 		{
@@ -225,15 +225,18 @@
     "semanticTokenColors": {
         // method parts: name (parameters) : returnValues | localVariables
         //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
-        "enum": "#a968a9",     // constants
-        "enum.declaration": "#ab40ab",     // constants
+        "enumMember": "#a968a9",     // constants
+        "enumMember.declaration": "#a954a9",     // constants
+        "variable": "#9cdcfe",     // global variable
+        "variable.modification": "#9cdcfe",     // global variable
         "variable.readonly": "#a968a9",     // constants
-        "variable.declaration.readonly": "#ab40ab",     // constants
-        "variable.local": "#FEF5FA",     // constants
-        "variable.declaration.local": "#f7d4e7",     // constants
-        "returnValue.local": "#3e8b95",     // constants
-        "returnValue.declaration.local": "#238795",     // constants
-        "parameter.readonly": "#D0BBE6",     // constants
+        "variable.declaration.readonly": "#a954a9",     // constants
+        "variable.local": "#bdbc86",     // constants
+        "variable.modification.local": "#bdbc86",     // constants
+        "variable.declaration.local": "#bdbc57",     // constants
+        "returnValue.local": "#508b93",     // constants
+        "returnValue.declaration.local": "#438e98",     // constants
+        "parameter.readonly": "#c9afe4",     // constants
         "parameter.declaration.readonly": "#b68ce3",     // constants
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold

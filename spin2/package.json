@@ -76,6 +76,11 @@
                 "id": "returnValue",
                 "superType": "parameter",
                 "description": "A parameter type of returnValue."
+            },
+            {
+                "id": "storageType",
+                "superType": "type",
+                "description": "A built-in storage type"
             }
         ],
         "semanticTokenModifiers": [
@@ -87,7 +92,8 @@
         "semanticTokenScopes": [
             {
               "scopes": {
-                "returnValue": ["meta.returntype.spin"]
+                "returnValue": ["meta.returntype.spin"],
+                "storageType": ["storage.type.pasm.spin2"]
               }
             }
           ]
