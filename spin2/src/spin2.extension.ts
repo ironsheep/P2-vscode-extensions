@@ -189,8 +189,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
     private spinDebugLogEnabled: boolean = true;
-    private showCode: boolean = false;
-    private showCON: boolean = true;
+    private showCode: boolean = true;
+    private showCON: boolean = false;
     private showOBJ: boolean = false;
     private showDAT: boolean = false;
     private showVAR: boolean = false;
@@ -854,7 +854,7 @@ private _encodeTokenType(tokenType: string): number {
         if (hasGoodType && lineParts.length > 1) {
             let newName = lineParts[1];
             // remove array suffix from name
-            if (newName.indexOf('[') != -1) {
+            if (newName.includes('[')) {
                 const nameParts: string[] = newName.split('[');
                 newName = nameParts[0];
             }
@@ -908,7 +908,7 @@ private _encodeTokenType(tokenType: string): number {
             // we have parameter(s)!
             const parameterStr = line.substr(currentOffset + 1, (closeParenOffset - currentOffset) - 1).trim()
             let parameterNames: string[] = [];
-            if (parameterStr.indexOf(',') != -1) {
+            if (parameterStr.includes(',')) {
                 // we have multiple parameters
                 parameterNames = parameterStr.split(',');
             }
@@ -1018,42 +1018,100 @@ private _encodeTokenType(tokenType: string): number {
         const remainingLength: number = line.length - (currentOffset + 1);
         if (remainingLength > 0) {
             // locate key indicators of line style
+            // TODO: UNDONE this should handle chained assignments:  varA := varB := 0
             let assignmentOffset = line.indexOf(':=', currentOffset);
             if (assignmentOffset != -1) {
                 // -------------------------------------------
                 // have line assigning value to new constant
                 // -------------------------------------------
                 const variableName = line.substr(currentOffset, (assignmentOffset - 1) - currentOffset).trim();
-                this._logCode('-code: variableName=[' + variableName + ']');
-                let referenceDetails: IRememberedToken | undefined = undefined;
-                // TODO: UNDONE this should handle chained assignments:  varA := varB := 0
-                if (this.localTokens.has(variableName)) {
-                    referenceDetails = this.localTokens.get(variableName);
+                if (variableName.includes("[")) {
+                    // NOTE this handles code: byte[pColor][2] := {value}
+                    // have complex target name, parse in loop
+                    const variableNameParts: string[] = variableName.split(/[\[\]]/);
+                    for (let index = 0; index < variableNameParts.length; index++) {
+                        const variableNamePart = variableNameParts[index];
+                        if (variableNamePart.substr(0, 1).match(/[a-zA-Z]/)) {
+                            this._logCode('-code: variableNamePart=[' + variableNamePart + ']');
+                            if (this._isStorageType(variableNamePart)) {
+                                const startPos = line.indexOf(variableNamePart, currentOffset);
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: startPos,
+                                    length: variableNamePart.length,
+                                    tokenType: 'storageType',
+                                    tokenModifiers: []
+                                });
+                            }
+                            else {
+                                let referenceDetails: IRememberedToken | undefined = undefined;
+                                if (this.localTokens.has(variableName)) {
+                                    referenceDetails = this.localTokens.get(variableName);
+                                }
+                                else if (this.globalTokens.has(variableName)) {
+                                    referenceDetails = this.globalTokens.get(variableName);
+                                }
+                                if (referenceDetails != undefined) {
+                                    let modificationArray: string[] = referenceDetails.tokenModifiers;
+                                    modificationArray.push('modification');
+                                    if (referenceDetails != undefined) {
+                                        tokenSet.push({
+                                            line: lineNumber,
+                                            startCharacter: currentOffset,
+                                            length: variableName.length,
+                                            tokenType: referenceDetails.tokenType,
+                                            tokenModifiers: modificationArray
+                                        });
+                                    }
+                                }
+                                else {
+                                    // we don't have name registered so just mark it
+                                    tokenSet.push({
+                                        line: lineNumber,
+                                        startCharacter: currentOffset,
+                                        length: variableName.length,
+                                        tokenType: 'variable',
+                                        tokenModifiers: ['modification']
+                                    });
+                                }
+                            }
+                        }
+                        currentOffset += variableNamePart.length + 1;
+                    }
                 }
-                else if (this.globalTokens.has(variableName)) {
-                    referenceDetails = this.globalTokens.get(variableName);
-                }
-                if (referenceDetails != undefined) {
-                    let modificationArray: string[] = referenceDetails.tokenModifiers;
-                    modificationArray.push('modification');
+                else {
+                    // have simple target name
+                    this._logCode('-code: variableName=[' + variableName + ']');
+                    let referenceDetails: IRememberedToken | undefined = undefined;
+                    if (this.localTokens.has(variableName)) {
+                        referenceDetails = this.localTokens.get(variableName);
+                    }
+                    else if (this.globalTokens.has(variableName)) {
+                        referenceDetails = this.globalTokens.get(variableName);
+                    }
                     if (referenceDetails != undefined) {
+                        let modificationArray: string[] = referenceDetails.tokenModifiers;
+                        modificationArray.push('modification');
+                        if (referenceDetails != undefined) {
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: currentOffset,
+                                length: variableName.length,
+                                tokenType: referenceDetails.tokenType,
+                                tokenModifiers: modificationArray
+                            });
+                        }
+                    }
+                    else {
+                        // we don't have name registered so just mark it
                         tokenSet.push({
                             line: lineNumber,
                             startCharacter: currentOffset,
                             length: variableName.length,
-                            tokenType: referenceDetails.tokenType,
-                            tokenModifiers: modificationArray
+                            tokenType: 'variable',
+                            tokenModifiers: ['modification']
                         });
                     }
-                }
-                else {
-                    tokenSet.push({
-                        line: lineNumber,
-                        startCharacter: currentOffset,
-                        length: variableName.length,
-                        tokenType: 'variable',
-                        tokenModifiers: ['modification']
-                    });
                 }
                 currentOffset = assignmentOffset + 2;   // skip to RHS of assignment
             }
@@ -1064,7 +1122,12 @@ private _encodeTokenType(tokenType: string): number {
             const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
             const assignmentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
             this._logCode('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
-            const possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)]/);
+            let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)]/);
+            // special code to handle case range strings:  [e.g., SEG_TOP..SEG_BOTTOM:]
+            const isCaseValue: boolean = assignmentRHSStr.endsWith(':');
+            if (isCaseValue && possNames[0].includes("..")) {
+                possNames = possNames[0].split("..");
+            }
             for (let index = 0; index < possNames.length; index++) {
                 const possibleName = possNames[index];
                 const currPossibleLen = possibleName.length;
@@ -1075,7 +1138,7 @@ private _encodeTokenType(tokenType: string): number {
                 let possibleNameSet: string[] = [];
                 if (possibleName.substr(0, 1).match(/[a-zA-Z]/)) {
                     // does name contain a namespace reference?
-                    if (possibleName.indexOf('.') != -1) {
+                    if (possibleName.includes('.')) {
                         possibleNameSet = possibleName.split('.');
                     }
                     else {
@@ -1221,7 +1284,7 @@ private _encodeTokenType(tokenType: string): number {
                         // does name contain a namespace reference?
                         this._logCON('  -- possibleName=[' + possibleName + ']');
                         let possibleNameSet: string[] = [];
-                        if (possibleName.indexOf('.') != -1) {
+                        if (possibleName.includes('.')) {
                             possibleNameSet = possibleName.split('.');
                         }
                         else {
@@ -1334,7 +1397,7 @@ private _encodeTokenType(tokenType: string): number {
                     if (elemCountStr.substr(0, 1).match(/[a-zA-Z]/)) {
                         let possibleNameSet: string[] = [];
                         // is it a namespace reference?
-                        if (elemCountStr.indexOf('.') != -1) {
+                        if (elemCountStr.includes('.')) {
                             possibleNameSet = elemCountStr.split('.');
                         }
                         else {
@@ -1443,7 +1506,7 @@ private _encodeTokenType(tokenType: string): number {
         if (lineParts.length > 1) {
             let newName = lineParts[1];
             // remove array suffix from name
-            if (newName.indexOf('[') != -1) {
+            if (newName.includes('[')) {
                 const nameParts: string[] = newName.split('[');
                 hasArrayReference = true;
                 newName = nameParts[0];
@@ -1474,7 +1537,7 @@ private _encodeTokenType(tokenType: string): number {
                     if (referenceName.substr(0, 1).match(/[a-zA-Z]/)) {
                         let possibleNameSet: string[] = [];
                         // is it a namespace reference?
-                        if (referenceName.indexOf('.') != -1) {
+                        if (referenceName.includes('.')) {
                             possibleNameSet = referenceName.split('.');
                         }
                         else {

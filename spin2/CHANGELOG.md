@@ -19,10 +19,15 @@ Possible next additions:
 - Add additional Snippets as the community identifies them
 
 ## [0.3.1] 2021-03-0?
+2nd Preview Release of Semantic Highlighting
+
+- Spin2: Improved Semantic Highlighting support (partial: Spin only, no Pasm)
 
 ### BUGFIXs
-- Repaired identification of constant assignment from constant from external object 
+- Repaired identification of constant assignment from constant of external object 
 - BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
+- BUGFIX recognize range-value symbols in case statement (e.g., SEG\_TOP..SEG_BOTTOM:)
+- BUGFIX repair recognizer for assignment LHS: (eg., byte[pColor][2] := {value})
 
 ## [0.3.0] 2021-03-07
 Preview Release of Semantic Highlighting
@@ -39,7 +44,6 @@ Preview Release of Semantic Highlighting
 - PASM code not processed at all (in DAT or in PRI/PUB inline)
 - Does NOT handle multi-line enum declarations
 - Does NOT handle comma-delimited constant assignment
-- Does NOT recognize range-value symbols in case statement
 - Does NOT recognize method calls to indexed objects
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
 - I'm sure there are more issues...
