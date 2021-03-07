@@ -131,14 +131,12 @@ const legend = (function () {
         'method', 'macro', 'variable', 'parameter', 'property', 'label', 'enumMember',
         'event', 'returnValue', 'storageType'
 	];
-    // FIXME: we need a 'returnValue' type??
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 
 	const tokenModifiersLegend = [
 		'declaration', 'documentation', 'readonly', 'static', 'abstract', 'deprecated',
 		'modification', 'async', 'definition', 'defaultLibrary', 'local'
     ];
-    // FIXME: we need a 'local' modifier!
 	tokenModifiersLegend.forEach((tokenModifier, index) => tokenModifiers.set(tokenModifier, index));
 
 	return new vscode.SemanticTokensLegend(tokenTypesLegend, tokenModifiersLegend);
@@ -191,13 +189,21 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show spcific parsing debug
-    private spinDebugLogEnabled: boolean = true;
-    private showCode: boolean = true;
+    private spinDebugLogEnabled: boolean = false;
+    private showCode: boolean = false;
     private showCON: boolean = false;
     private showOBJ: boolean = false;
     private showDAT: boolean = false;
     private showVAR: boolean = false;
     private showPASM: boolean = false;
+    private showState: boolean = false;
+
+    private _logState(message: string): void
+    {
+        if (this.showState) {
+            this._logMessage(message)
+        }
+    }
 
     private _logCode(message: string): void
     {
@@ -294,6 +300,7 @@ private _encodeTokenType(tokenType: string): number {
         //
 
         // -------------------- PRE-PARSE just locating symbol names --------------------
+        this._logMessage("---> Pre SCAN");
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmedLine = line.trim();
@@ -320,6 +327,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             else if (sectionStatus.isSectionStart) {
                 currState = sectionStatus.inProgressStatus;
+                this._logState('- scan ln:' + i +' currState=[' + currState + ']');
                 // ID the remainder of the line
                 if (currState == eParseState.inPub || currState == eParseState.inPri) {
                     // process method signature
@@ -333,6 +341,7 @@ private _encodeTokenType(tokenType: string): number {
                         this._getConstantDeclaration(3, line)
                     }
                 }
+                continue;
             }
             else if (trimmedLine.startsWith("''")) {
                 // process single line doc comment
@@ -382,6 +391,16 @@ private _encodeTokenType(tokenType: string): number {
             else if (currState == eParseState.inDat) {
                 // process a data line
                 if (trimmedLine.length > 0) {
+                    if (trimmedLine.length > 3) {
+                        const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
+                        if (linePrefix.startsWith("ORG")) {
+                            this._logPASM('- scan DAT line trimmedLine=[' + trimmedLine + ']');
+                            prePasmState = currState;
+                            currState = eParseState.inDatPasm;
+                            // and ignore rest of this line
+                            continue;
+                        }
+                    }
                     this._getDataDeclaration(0, line)
                 }
             }
@@ -397,8 +416,51 @@ private _encodeTokenType(tokenType: string): number {
                     this._getObjectDeclaration(0, line)
                 }
             }
+            else if (currState == eParseState.inPasmInline) {
+                // process pasm (assembly) lines
+                if (trimmedLine.length > 0) {
+                    const lineParts: string[] = trimmedLine.split(/[ \t]/);
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
+                        this._logPASM('- scan SPIN PASM line trimmedLine=[' + trimmedLine + ']');
+                        currState = prePasmState;
+                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        // and ignore rest of this line
+                    }
+                    else {
+                        this._getInlinePasmDeclaration(0, line)
+                    }
+                }
+            }
+            else if (currState == eParseState.inDatPasm) {
+                // process pasm (assembly) lines
+                if (trimmedLine.length > 0) {
+                    const lineParts: string[] = trimmedLine .split(/[ \t]/);
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
+                        this._logPASM('- scan DAT PASM line trimmedLine=[' + trimmedLine + ']');
+                        currState = prePasmState;
+                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        // and ignore rest of this line
+                    }
+                    else {
+                        this._getDataPasmDeclaration(0, line)
+                    }
+                }
+            }
+            else if (currState == eParseState.inPub || currState == eParseState.inPri) {
+                // Detect start of INLINE PASM - org detect
+                if (trimmedLine.length > 0) {
+                    const lineParts: string[] = trimmedLine.split(/[ \t]/);
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {
+                        this._logPASM('- scan PUB/PRI line trimmedLine=[' + trimmedLine + ']');
+                        prePasmState = currState;
+                        currState = eParseState.inPasmInline;
+                        // and ignore rest of this line
+                    }
+                }
+            }
         }
         // --------------------         End of PRE-PARSE             --------------------
+        this._logMessage("---> Actual SCAN");
 
         //
         // Final PASS to identify all name references
@@ -434,7 +496,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             else if (sectionStatus.isSectionStart) {
                 currState = sectionStatus.inProgressStatus;
-                this._logMessage('  -- currState=[' + currState + ']');
+                this._logState('  -- ln:' + i +' currState=[' + currState + ']');
                 // ID the section name
                 // DON'T mark the section literal, Syntax hightlighting does this well!
 
@@ -521,10 +583,19 @@ private _encodeTokenType(tokenType: string): number {
             else if (currState == eParseState.inDat) {
                 // process a line in a data section
                 if (trimmedLine.length > 0) {
-                    const partialTokenSet: IParsedToken[] = this._reportDataDeclarationLine(i, 0, line)
-                    partialTokenSet.forEach(newToken => {
-                        tokenSet.push(newToken);
-                    });
+                    this._logDAT('- process DAT line trimmedLine=[' + trimmedLine + ']');
+                    const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
+                    if (linePrefix.startsWith("ORG")) {
+                        prePasmState = currState;
+                        currState = eParseState.inDatPasm;
+                        // and ignore rest of this line
+                    }
+                    else {
+                        const partialTokenSet: IParsedToken[] = this._reportDataDeclarationLine(i, 0, line)
+                        partialTokenSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
                 }
             }
             else if (currState == eParseState.inVar) {
@@ -547,13 +618,33 @@ private _encodeTokenType(tokenType: string): number {
                     });
                 }
             }
+            else if (currState == eParseState.inDatPasm) {
+                // process DAT section pasm (assembly) lines
+                if (trimmedLine.length > 0) {
+                    this._logPASM('- process DAT PASM line trimmedLine=[' + trimmedLine + ']');
+                    // in DAT sections we end with FIT or just next section
+                    const lineParts: string[] = trimmedLine.split(/[ \t]/);
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
+                        currState = prePasmState;
+                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        // and ignore rest of this line
+                    }
+                    else {
+                        const partialTokenSet: IParsedToken[] = this._reportLineOfDatPasmCode(i, 0, line)
+                        partialTokenSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
+                }
+            }
             else if (currState == eParseState.inPasmInline) {
                 // process pasm (assembly) lines
                 if (trimmedLine.length > 0) {
-                    this._logCode('- process PASM line trimmedLine=[' + trimmedLine + ']');
-                    const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
-                    if (linePrefix.startsWith("END")) {
+                    this._logPASM('- process SPIN2 PASM line trimmedLine=[' + trimmedLine + ']');
+                    const lineParts: string[] = trimmedLine.split(/[ \t]/);
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
                         currState = prePasmState;
+                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -568,8 +659,8 @@ private _encodeTokenType(tokenType: string): number {
                 // process a method def'n line
                 if (trimmedLine.length > 0) {
                     this._logCode('- process PUB/PRI line trimmedLine=[' + trimmedLine + ']');
-                    const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
-                    if (linePrefix.startsWith("ORG")) {
+                    const lineParts: string[] = trimmedLine.split(/[ \t]/);
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {
                         prePasmState = currState;
                         currState = eParseState.inPasmInline;
                         // and ignore rest of this line
@@ -680,6 +771,18 @@ private _encodeTokenType(tokenType: string): number {
         }
     }
 
+    private _getInlinePasmDeclaration(startingOffset: number, line: string): void {
+        // HAVE    bGammaEnable        BYTE   TRUE               ' comment
+        //         didShow             byte   FALSE[256]
+        let currentOffset = this._skipWhite(line, startingOffset)
+    }
+
+    private _getDataPasmDeclaration(startingOffset: number, line: string): void {
+        // HAVE    bGammaEnable        BYTE   TRUE               ' comment
+        //         didShow             byte   FALSE[256]
+        let currentOffset = this._skipWhite(line, startingOffset)
+    }
+
     private _getDataDeclaration(startingOffset: number, line: string): void
     {
         // HAVE    bGammaEnable        BYTE   TRUE               ' comment
@@ -710,7 +813,7 @@ private _encodeTokenType(tokenType: string): number {
                     if (!this.globalTokens.has(newName)) {
                         this.globalTokens.set(newName, {
                             tokenType: 'variable',
-                            tokenModifiers: []
+                            tokenModifiers: ['static']
                         });
                     }
                 } else if (!hasGoodType) {
@@ -725,7 +828,7 @@ private _encodeTokenType(tokenType: string): number {
             if (!this.globalTokens.has(newName)) {
                 this.globalTokens.set(newName, {
                     tokenType: 'variable',
-                    tokenModifiers: []
+                    tokenModifiers: ['static']
                 });
             }
         }
@@ -747,7 +850,7 @@ private _encodeTokenType(tokenType: string): number {
         }
         //this._logVAR('- GetVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
-        // TODO: ensure this is marked as instance-variable
+        // NOTE this is an instance-variable!
         const hasGoodType: boolean = this._isStorageType(lineParts[0]);
         if (hasGoodType && lineParts.length > 1) {
             let newName = lineParts[1];
@@ -817,7 +920,6 @@ private _encodeTokenType(tokenType: string): number {
             for (let index = 0; index < parameterNames.length; index++) {
                 const paramName = parameterNames[index].trim();
                 const startIndex = line.indexOf(paramName, currentOffset + 1);
-                // FIXME: add .local when we finally have .local
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: startIndex,
@@ -858,8 +960,6 @@ private _encodeTokenType(tokenType: string): number {
             for (let index = 0; index < returnValueNames.length; index++) {
                 const paramName = returnValueNames[index].trim();
                 const startIndex = line.indexOf(paramName, currentOffset + 1);
-                // FIXME: add .local when we finally have .local
-                // FIXME: add .returnValue when we finally have .returnValue
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: startIndex,
@@ -893,7 +993,6 @@ private _encodeTokenType(tokenType: string): number {
             for (let index = 0; index < localVarNames.length; index++) {
                 const paramName = localVarNames[index].trim();
                 const startIndex = line.indexOf(paramName, currentOffset);
-                // FIXME: add .local when we finally have .local
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: startIndex,
@@ -909,15 +1008,6 @@ private _encodeTokenType(tokenType: string): number {
                 currentOffset += paramName.length + 1   // +1 for trailing comma
             }
         }
-        return tokenSet;
-    }
-
-    private _reportLineOfPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
-    {
-        const tokenSet: IParsedToken[] = [];
-        // skip Past Whitespace
-        let currentOffset = this._skipWhite(line, startingOffset)
-        if (lineNumber) { }
         return tokenSet;
     }
 
@@ -1028,7 +1118,7 @@ private _encodeTokenType(tokenType: string): number {
                     }
                     if(possibleNameSet.length > 1) {
                         // we have .constant namespace suffix
-                        // FIXME: UNDONE determine if this is method has '(' or constant name
+                        // determine if this is method has '(' or constant name
                         const referenceOffset = line.indexOf(searchString, currentOffset);
                         let isMethod: boolean = false;
                         if (line.substr(referenceOffset + searchString.length, 1) == '(') {
@@ -1059,6 +1149,23 @@ private _encodeTokenType(tokenType: string): number {
                 currentOffset += currPossibleLen + 1;
             }
         }
+        return tokenSet;
+    }
+
+    private _reportLineOfPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
+    {
+        const tokenSet: IParsedToken[] = [];
+        // skip Past Whitespace
+        let currentOffset = this._skipWhite(line, startingOffset)
+        if (lineNumber) { }
+        return tokenSet;
+    }
+    private _reportLineOfDatPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
+    {
+        const tokenSet: IParsedToken[] = [];
+        // skip Past Whitespace
+        let currentOffset = this._skipWhite(line, startingOffset)
+        if (lineNumber) { }
         return tokenSet;
     }
 
@@ -1255,6 +1362,7 @@ private _encodeTokenType(tokenType: string): number {
                 // if we start with storage type, not name, ignore line!
             }
             else {
+                // this is line with name storageType and initial value
                 this._logDAT('- rptDatDecl lineParts=[' + lineParts + ']');
                 let newName = lineParts[0];
                 // remove array suffix from name
@@ -1265,12 +1373,12 @@ private _encodeTokenType(tokenType: string): number {
                     startCharacter: startIndex,
                     length: newName.length,
                     tokenType: 'variable',
-                    tokenModifiers: ['declaration']
+                    tokenModifiers: ['declaration','static']
                 });
                 if (!this.globalTokens.has(newName)) {
                     this.globalTokens.set(newName, {
                         tokenType: 'variable',
-                        tokenModifiers: []
+                        tokenModifiers: ['static']
                     });
                 }
             }
@@ -1286,19 +1394,18 @@ private _encodeTokenType(tokenType: string): number {
                 startCharacter: startIndex,
                 length: newName.length,
                 tokenType: 'variable',
-                tokenModifiers: ['declaration']
+                tokenModifiers: ['declaration', 'static']
             });
             if (!this.globalTokens.has(newName)) {
                 this.globalTokens.set(newName, {
                     tokenType: 'variable',
-                    tokenModifiers: []
+                    tokenModifiers: ['static']
                 });
             }
         }
         else {
             this._logDAT('  -- SKIPPED: lineParts=[' + lineParts + ']');
         }
-        // TODO: handle name declaration only line: [name 'comment]
         return tokenSet;
     }
 
@@ -1314,8 +1421,6 @@ private _encodeTokenType(tokenType: string): number {
         }
         //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
-        // TODO: ensure this is marked as instance-variable
-        // FIXME: UNDONE add code to detect array index named values
         let hasArrayReference: boolean = false;
         if (lineParts.length > 1) {
             let newName = lineParts[1];
@@ -1447,35 +1552,39 @@ private _encodeTokenType(tokenType: string): number {
 
     private _lineIsSectionStart(line: string): { isSectionStart: boolean, inProgressStatus: eParseState }  {
         // return T/F where T means our string starts a new section!
-        let startStatus: boolean = true;
+        let startStatus: boolean = false;
         let inProgressState: eParseState = eParseState.Unknown;
         if(line.length > 2) {
-            let sectionName: string = line.substr(0, 3).toUpperCase();
-            if (sectionName === "CON") {
-                inProgressState = eParseState.inCon;
-            }
-            else if (sectionName === "DAT") {
-                inProgressState = eParseState.inDat;
-            }
-            else if (sectionName === "OBJ") {
-                inProgressState = eParseState.inObj;
-            }
-            else if (sectionName === "PUB") {
-                inProgressState = eParseState.inPub;
-            }
-            else if (sectionName === "PRI") {
-                inProgressState = eParseState.inPri;
-            }
-            else if(sectionName === "VAR") {
-                inProgressState = eParseState.inVar;
-            }
-            else {
-                startStatus = false;
+            const lineParts: string[] = line.split(/[ \t]/);
+            if (lineParts.length > 0) {
+                const sectionName: string = lineParts[0].toUpperCase();
+                startStatus = true;
+                if (sectionName === "CON") {
+                    inProgressState = eParseState.inCon;
+                }
+                else if (sectionName === "DAT") {
+                    inProgressState = eParseState.inDat;
+                }
+                else if (sectionName === "OBJ") {
+                    inProgressState = eParseState.inObj;
+                }
+                else if (sectionName === "PUB") {
+                    inProgressState = eParseState.inPub;
+                }
+                else if (sectionName === "PRI") {
+                    inProgressState = eParseState.inPri;
+                }
+                else if (sectionName === "VAR") {
+                    inProgressState = eParseState.inVar;
+                }
+                else {
+                    startStatus = false;
+                }
             }
         }
-        else {
-            startStatus = false;
-        }
+        //if (startStatus) {
+        //    this._logMessage('- isSectStart line=[' + line + ']');
+        //}
         return {
 			isSectionStart: startStatus,
 			inProgressStatus: inProgressState

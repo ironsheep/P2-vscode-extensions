@@ -8,6 +8,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
+- Finish 1st draft of Semantic Highlight by adding inline and non-inline pasm support
+- Finish Semantic Highlight of debug() statements
 - working on fixes to known issues
 
 Possible next additions:
@@ -16,13 +18,25 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [0.3.0] 2021-03-0?
+## [0.3.0] 2021-03-07
+Preview Release of Semantic Highlighting
 
-- Spin2: Initial partial Semantic Highlighting support
-- (this will eventually include parameters, return values, local variables, method names, etc.)
+- Spin2: Initial Semantic Highlighting support (partial: Spin only, no Pasm)
 - Syntax Highlight BUGFIX: stop falsely recognizing 'or' within symbol name
 - Syntax Highlight BUGFIX: stop falsely recognizing numbers within symbol name
 - DECISION: we won't add FIXME/TODO highlighting as there is an extension for that!
+
+### Known Issues w/v0.3.0
+
+- Fails to parse debug() statements correctly
+- Misses some symbols in constant declarations
+- PASM code not processed at all (in DAT or in PRI/PUB inline)
+- Does NOT handle multi-line enum declarations
+- Does NOT handle comma-delimited constant assignment
+- Does NOT recognize range-value symbols in case statement
+- Does NOT recognize method calls to indexed objects
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- I'm sure there are more issues...
 
 ## [0.2.2] 2020-11-30
 
