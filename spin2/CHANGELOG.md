@@ -19,14 +19,17 @@ Possible next additions:
 - Add additional Snippets as the community identifies them
 
 ## [0.3.1] 2021-03-0?
-2nd Preview Release of Semantic Highlighting
+2nd Release of Semantic Highlighting
+
+### - What's new
+
+- Theme: Entire theme moved to pastel-like colors, less shocking, more commercial quality
 
 - Spin2: Improved Semantic Highlighting support (partial: Spin only, no Pasm)
 
-### - BUGFIXs
-
 Semantic Fixes:
 
+- BUGFIX recognize comma separated var declarations (names after first name)
 - BUGFIX Repaired identification of constant assignment from constant of external object 
 - BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
 - BUGFIX recognize range-value symbols in case statement (e.g., SEG\_TOP..SEG_BOTTOM:)
@@ -40,6 +43,7 @@ Syntax Fixes:
 - BUGFIX add recognition of 'FILE' include operator in DAT sections
 
 ### - Known Issues w/v0.3.1
+
 
 - Incorrectly marks **built-in** methods and constants
 - Fails to parse some debug() statements correctly
@@ -60,6 +64,7 @@ Preview Release of Semantic Highlighting
 
 ### - Known Issues w/v0.3.0
 
+- Fails to recognize comma separated var declarations (misses names after first)
 - Fails to recognize data init from external constant in DAT section
 - Incorrectly marks **built-in** methods and constants
 - Fails to identify storage types in local variable list of method

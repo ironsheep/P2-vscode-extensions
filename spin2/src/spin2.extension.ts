@@ -192,8 +192,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private showCode: boolean = false;
     private showCON: boolean = false;
     private showOBJ: boolean = false;
-    private showDAT: boolean = true;
-    private showVAR: boolean = false;
+    private showDAT: boolean = false;
+    private showVAR: boolean = true;
     private showPASM: boolean = false;
     private showState: boolean = false;
 
@@ -744,12 +744,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             else if (emumValueSepOffset != -1) {
                 // recognize enum values getting initialized
-                let beginCommentOffset = line.indexOf("'", currentOffset);
-                if (beginCommentOffset === -1) {
-                    beginCommentOffset = line.indexOf("{", currentOffset);
-                }
-                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
-                const enumDefinitionStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                const enumDefinitionStr = this._nonCommentLineRemainder(currentOffset, line);
                 this._logCON('  -- GetCONDecl enumDefinitionStr=[' + enumDefinitionStr + ']');
                 const lineParts: string[] = enumDefinitionStr.split(',');
                 //this._logCON('  -- lineParts=[' + lineParts + ']');
@@ -771,9 +766,11 @@ private _encodeTokenType(tokenType: string): number {
     }
 
     private _getInlinePasmDeclaration(startingOffset: number, line: string): void {
-        // HAVE    bGammaEnable        BYTE   TRUE               ' comment
-        //         didShow             byte   FALSE[256]
+        // HAVE    next8SLine ' or .nextLine in col 0
+        //         nPhysLineIdx        long    0
         let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        const inLinePasmRHSStr = this._nonCommentLineRemainder(currentOffset, line);
     }
 
     private _getDataPasmDeclaration(startingOffset: number, line: string): void {
@@ -788,12 +785,7 @@ private _encodeTokenType(tokenType: string): number {
         //         didShow             byte   FALSE[256]
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
-        let beginCommentOffset = line.indexOf("'", currentOffset);
-        if (beginCommentOffset === -1) {
-            beginCommentOffset = line.indexOf("{", currentOffset);
-        }
-        const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
-        const assignmentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+        const assignmentRHSStr = this._nonCommentLineRemainder(currentOffset, line);
         let lineParts: string[] | null = assignmentRHSStr.match(/[^ \t]+/g)
         if (lineParts === null) {
             lineParts = []
@@ -845,7 +837,7 @@ private _encodeTokenType(tokenType: string): number {
         //skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
-        let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t]+/g)
+        let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t,]+/g)
         if (lineParts === null) {
             lineParts = []
         }
@@ -854,18 +846,21 @@ private _encodeTokenType(tokenType: string): number {
         // NOTE this is an instance-variable!
         const hasGoodType: boolean = this._isStorageType(lineParts[0]);
         if (hasGoodType && lineParts.length > 1) {
-            let newName = lineParts[1];
-            // remove array suffix from name
-            if (newName.includes('[')) {
-                const nameParts: string[] = newName.split('[');
-                newName = nameParts[0];
-            }
-            this._logVAR('  -- GetVarDecl newName=[' + newName + ']');
-            if (!this.globalTokens.has(newName)) {
-                this.globalTokens.set(newName, {
-                    tokenType: 'variable',
-                    tokenModifiers: []
-                });
+            for (let index = 1; index < lineParts.length; index++) {
+                const element = lineParts[index];
+                let newName = lineParts[index];
+                // remove array suffix from name
+                if (newName.includes('[')) {
+                    const nameParts: string[] = newName.split('[');
+                    newName = nameParts[0];
+                }
+                this._logVAR('  -- GetVarDecl newName=[' + newName + ']');
+                if (!this.globalTokens.has(newName)) {
+                    this.globalTokens.set(newName, {
+                        tokenType: 'variable',
+                        tokenModifiers: []
+                    });
+                }
             }
         } else if (!hasGoodType) {
             this._logVAR('  -- GetVarDecl BAD DATA TYPE: [' + lineParts[0] + ']');
@@ -1157,12 +1152,7 @@ private _encodeTokenType(tokenType: string): number {
                 }
                 currentOffset = assignmentOffset + 2;   // skip to RHS of assignment
             }
-            let beginCommentOffset = line.indexOf("'", currentOffset);
-            if (beginCommentOffset === -1) {
-                beginCommentOffset = line.indexOf("{", currentOffset);
-            }
-            const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
-            const assignmentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+            const assignmentRHSStr = this._nonCommentLineRemainder(currentOffset, line);
             this._logCode('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
             let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)]/);
             // special code to handle case range strings:  [e.g., SEG_TOP..SEG_BOTTOM:]
@@ -1320,12 +1310,7 @@ private _encodeTokenType(tokenType: string): number {
                     });
                 }
                 currentOffset = assignmentOffset + 1;   // skip to RHS of assignment
-                let beginCommentOffset = line.indexOf("'", currentOffset);
-                if (beginCommentOffset === -1) {
-                    beginCommentOffset = line.indexOf("{", currentOffset);
-                }
-                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
-                const assignmentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                const assignmentRHSStr = this._nonCommentLineRemainder(currentOffset, line);
                 this._logCON('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
                 const possNames: string[] = assignmentRHSStr.split(/[ \t\(\)]/);
                 this._logCON('  -- possNames=[' + possNames + ']');
@@ -1386,13 +1371,8 @@ private _encodeTokenType(tokenType: string): number {
                 // -------------------------------------------
                 // have line creating set of enum constants
                 // -------------------------------------------
-                let beginCommentOffset = line.indexOf("'", currentOffset);
-                if (beginCommentOffset === -1) {
-                    beginCommentOffset = line.indexOf("{", currentOffset);
-                }
-                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
                 // recognize enum values getting initialized
-                const enumDefinitionStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                const enumDefinitionStr = this._nonCommentLineRemainder(currentOffset, line);
                 this._logCON('- reportConstant enumDefinitionStr=[' + enumDefinitionStr + ']');
                 const lineParts: string[] = enumDefinitionStr.split(',');
                 //this._logCON('  -- lineParts=[' + lineParts + ']');
@@ -1518,15 +1498,10 @@ private _encodeTokenType(tokenType: string): number {
                     });
                 }
                 // process remainder of line
-                let beginCommentOffset = line.indexOf("'", currentOffset);
-                if (beginCommentOffset === -1) {
-                    beginCommentOffset = line.indexOf("{", currentOffset);
-                }
-                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
                 const dataTypeName: string = lineParts[1];
                 currentOffset = line.indexOf(dataTypeName, currentOffset) + dataTypeName.length;
                 // recognize enum values getting initialized
-                const dataDefinitionRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                const dataDefinitionRHSStr = this._nonCommentLineRemainder(currentOffset, line);
                 this._logDAT('  -- dataDefinitionRHSStr=[' + dataDefinitionRHSStr + ']');
 
                 let dataParts: string[] | null = dataDefinitionRHSStr.split(/[ \t\[\]]/);
@@ -1628,8 +1603,8 @@ private _encodeTokenType(tokenType: string): number {
         //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
         let hasArrayReference: boolean = false;
-        if (lineParts.length > 1) {
-            let newName = lineParts[1];
+        for (let index = 1; index < lineParts.length; index++) {
+            let newName = lineParts[index];
             // remove array suffix from name
             if (newName.includes('[')) {
                 const nameParts: string[] = newName.split('[');
@@ -1698,7 +1673,9 @@ private _encodeTokenType(tokenType: string): number {
                         }
                     }
                 }
-            }
+            }        }
+        if (lineParts.length > 1) {
+
         }
         return tokenSet;
     }
@@ -1795,6 +1772,19 @@ private _encodeTokenType(tokenType: string): number {
 			isSectionStart: startStatus,
 			inProgressStatus: inProgressState
 		};
+    }
+
+    private _nonCommentLineRemainder(startingOffset: number, line: string): string
+    {
+        let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        let beginCommentOffset = line.indexOf("'", currentOffset);
+        if (beginCommentOffset === -1) {
+            beginCommentOffset = line.indexOf("{", currentOffset);
+        }
+        const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
+        const nonCommentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+        return nonCommentRHSStr;
     }
 
     private _isStorageType(name: string): boolean
