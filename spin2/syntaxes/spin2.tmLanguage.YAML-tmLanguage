@@ -74,13 +74,15 @@ repository:
             -
                 include: '#configuration'
             -
+                include: '#configuration'
+            -
                 include: '#constants'
             -
                 include: '#string'
             -
                 include: '#number'
             -
-                include: '#spin_float_operators'
+                include: '#con_float_operators'
             -
                 include: '#spin_field_operations'
     constant_operators:
@@ -104,6 +106,8 @@ repository:
                 include: '#number'
             -
                 include: '#debug_functions'
+            -
+                include: '#directives_dat'
             -
                 include: '#array_index'
             -
@@ -162,9 +166,9 @@ repository:
         captures:
             '1':
                 name: constant.numeric.base10.spin2
-    directives:
+    directives_dat:
         name: keyword.control.directive.spin2
-        match: '(?i)\b(STRING|CONSTANT|FLOAT|ROUND|TRUNC|FILE)\b'
+        match: '(?i)\bFILE\b'
     doc_block_comment:
         name: comment.block.documentation.spin2
         begin: '{{'
@@ -378,7 +382,7 @@ repository:
     spin_field_operations:
                 name: keyword.operator.field.spin2
                 match: '(?i)\b(ADDBITS|ADDPINS)\b'
-    spin_float_operators:
+    con_float_operators:
         name: keyword.operator.float.spin2
         match: '(?i)\b(FLOAT|ROUND|TRUNC)\b'
     spin_language_tiny:
@@ -396,8 +400,6 @@ repository:
                 include: '#string'
             -
                 include: '#spin_field_operations'
-            -
-                include: '#spin_float_operators'
             -
                 include: '#debug_functions'
             -

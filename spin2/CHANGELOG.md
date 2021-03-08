@@ -25,12 +25,18 @@ Possible next additions:
 
 ### - BUGFIXs
 
+Semantic Fixes:
+
 - BUGFIX Repaired identification of constant assignment from constant of external object 
 - BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
 - BUGFIX recognize range-value symbols in case statement (e.g., SEG\_TOP..SEG_BOTTOM:)
 - BUGFIX repair recognizer for assignment LHS: (eg., byte[pColor][2] := {value})
 - BUGFIX identify storage types in method's local variable list
 - BUGFIX recognize method calls to indexed objects
+
+Syntax Fixes:
+
+- BUGFIX add recognition of 'FILE' include operator in DAT sections
 
 ### - Known Issues w/v0.3.1
 
