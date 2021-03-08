@@ -23,11 +23,25 @@ Possible next additions:
 
 - Spin2: Improved Semantic Highlighting support (partial: Spin only, no Pasm)
 
-### BUGFIXs
+### - BUGFIXs
+
 - Repaired identification of constant assignment from constant of external object 
 - BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
 - BUGFIX recognize range-value symbols in case statement (e.g., SEG\_TOP..SEG_BOTTOM:)
 - BUGFIX repair recognizer for assignment LHS: (eg., byte[pColor][2] := {value})
+
+### - Known Issues w/v0.3.1
+
+- Incorrectly marks **built-in** methods and constants
+- Fails to identify storage types in method's local variable list
+- Fails to parse debug() statements correctly
+- PASM code not processed at all (in DAT or in PRI/PUB inline)
+- Does NOT handle multi-line enum declarations
+- Does NOT handle comma-delimited constant assignment
+- Does NOT recognize method calls to indexed objects
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- *I'm sure there are more issues...*
+
 
 ## [0.3.0] 2021-03-07
 Preview Release of Semantic Highlighting
@@ -37,8 +51,10 @@ Preview Release of Semantic Highlighting
 - Syntax Highlight BUGFIX: stop falsely recognizing numbers within symbol name
 - DECISION: we won't add FIXME/TODO highlighting as there is an extension for that!
 
-### Known Issues w/v0.3.0
+### - Known Issues w/v0.3.0
 
+- Incorrectly marks **built-in** methods and constants
+- Fails to identify storage types in local variable list of method
 - Fails to parse debug() statements correctly
 - Misses some symbols in constant declarations
 - PASM code not processed at all (in DAT or in PRI/PUB inline)
@@ -46,7 +62,7 @@ Preview Release of Semantic Highlighting
 - Does NOT handle comma-delimited constant assignment
 - Does NOT recognize method calls to indexed objects
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
-- I'm sure there are more issues...
+- *I'm sure there are more issues...*
 
 ## [0.2.2] 2020-11-30
 

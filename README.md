@@ -18,21 +18,21 @@ VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax In
 The **P2 Forum Thread** containing discussion of [this VSCode support](https://forums.parallax.com/discussion/170068/visual-studio-code-editor-for-p1-p2-spin-pasm#latest)
 
 ## Features
-- Syntax highlighting for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols
-- File navigation from outline view
+- **Syntax highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols
+- Initial limited **Semantic Highlighting** now working (continued work in progress)
+- File navigation from **Outline View**
 - Works with your favorite VSCode themes
 - Offers companion Theme (my development theme, mostly for refence so one can see what can be themed in support of Spin2)
 
 ### Up next
 - Build and Download support (using external compiler(s) and download tool(s)) - *Still figuring this out but follow along with me as I drop HOW-TOs in [Configuring Tasks](TASKS.md)*
-- Implement Sematic highlighting for Spin2
 
 ### Future directions
 
 - Task Provider - *studies the current environment and offers to write the tasks for a given P2 project*
 - Spin2/Pasm2 code formatter/beautifier - *allows us to have standard formatting for code we share! (source code could be formatted on each file save)*
 - Snippets for Spin2/Pasm2 (common code sequences which can be added easily to file being edited (e.g., smart pin setup code for given mode/use)
-- Possible Extension Package for P2 (including all P2 related extensions)
+- Possible Extension Package for P2 (would include all P2 specific extensions)
 
 ## Installation
 
