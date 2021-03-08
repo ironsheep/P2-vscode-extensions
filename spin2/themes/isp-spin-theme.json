@@ -41,21 +41,21 @@
 			"name": "Documentation Block",
 			"scope": ["comment.block.documentation"],
 			"settings": {
-				"foreground": "#00A800"
+				"foreground": "#5db55d"
 			}
         },
         {
 			"name": "Documentation Line",
 			"scope": ["comment.line.documentation"],
 			"settings": {
-				"foreground": "#00A800"
+				"foreground": "#5db55d"
 			}
         },
         {
 			"name": "Block",
 			"scope": ["comment.block"],
 			"settings": {
-				"foreground": "#006700",
+				"foreground": "#538054",
 				"fontStyle":  "italic"
 			}
 		},
@@ -63,7 +63,7 @@
 			"name": "Comment",
 			"scope": ["comment.line"],
 			"settings": {
-				"foreground": "#006700",
+				"foreground": "#538054",
 				"fontStyle":  "italic"
 			}
 		},
@@ -92,7 +92,8 @@
 			"name": "Section",
 			"scope": ["keyword.block"],
 			"settings": {
-				"foreground": "#8f0000"
+				"foreground": "#873d54",
+				"fontStyle":  "bold"
 			}
 		},
 		{
@@ -197,7 +198,7 @@
 			"name": "spin methods",
 			"scope": ["keyword.spin.methods"],
 			"settings": {
-				"foreground": "#178a99"
+				"foreground": "#547fac"
 			}
         },
         {
@@ -232,8 +233,8 @@
         "variable.readonly": "#a968a9",     // constants
         "variable.declaration.readonly": "#a954a9",     // constants
         "variable.local": "#bdbc86",     // constants
-        "variable.modification.local": "#bdbc86",     // constants
-        "variable.declaration.local": "#bdbc57",     // constants
+        "variable.modification.local": "#bab986",     // constants
+        "variable.declaration.local": "#c1c07d",     // constants
         "returnValue.local": "#508b93",     // constants
         "returnValue.declaration.local": "#438e98",     // constants
         "parameter.readonly": "#c9afe4",     // constants

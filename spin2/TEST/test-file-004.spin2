@@ -159,35 +159,35 @@ PUB allClockVariabless()
     clkmode
 
 PUB allnamedOperators()
-    ABS 
+    ABS
     ENCOD
     DECOD
     BMASK
-    ONES 
+    ONES
     SQRT
     QLOG
     QEXP
-    SAR 
-    ROR 
-    ROL 
-    REV 
-    ZEROX 
-    SIGNX 
-    SCA 
-    SCAS 
+    SAR
+    ROR
+    ROL
+    REV
+    ZEROX
+    SIGNX
+    SCA
+    SCAS
     FRAC
     NOT
     ' Field Operations
     ADDBITS
     ADDPINS
     AND
-    OR 
-    XOR 
+    OR
+    XOR
     ' Float Operations
-    FLOAT 
-    ROUND 
+    FLOAT
+    ROUND
     TRUNC
-    
+
 
 
 PUB allFlowControl()
@@ -199,7 +199,6 @@ PUB allFlowControl()
     ELSEIFNOT
     FROM
     IF
-    NOT
     IFNOT
     NEXT
     OTHER

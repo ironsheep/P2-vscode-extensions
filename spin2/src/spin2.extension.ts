@@ -657,7 +657,7 @@ private _encodeTokenType(tokenType: string): number {
             else if (currState == eParseState.inPub || currState == eParseState.inPri) {
                 // process a method def'n line
                 if (trimmedLine.length > 0) {
-                    this._logCode('- process PUB/PRI line trimmedLine=[' + trimmedLine + ']');
+                    this._logCode('- process SPIN2 line trimmedLine=[' + trimmedLine + ']');
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {
                         prePasmState = currState;
@@ -918,6 +918,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             for (let index = 0; index < parameterNames.length; index++) {
                 const paramName = parameterNames[index].trim();
+                this._logCode('  -- paramName=[' + paramName + ']');
                 const startIndex = line.indexOf(paramName, currentOffset + 1);
                 tokenSet.push({
                     line: lineNumber,
@@ -957,21 +958,22 @@ private _encodeTokenType(tokenType: string): number {
                 returnValueNames = [varNameStr];
             }
             for (let index = 0; index < returnValueNames.length; index++) {
-                const paramName = returnValueNames[index].trim();
-                const startIndex = line.indexOf(paramName, currentOffset + 1);
+                const returnValueName = returnValueNames[index].trim();
+                this._logCode('  -- returnValueName=[' + returnValueName + ']');
+                const startIndex = line.indexOf(returnValueName, currentOffset + 1);
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: startIndex,
-                    length: paramName.length,
+                    length: returnValueName.length,
                     tokenType: 'returnValue',
                     tokenModifiers: ['declaration', 'local']
                 });
                 // remember so we can ID references
-                this.localTokens.set(paramName, {
+                this.localTokens.set(returnValueName, {
                     tokenType: 'returnValue',
                     tokenModifiers: ['local']
                 });
-                currentOffset += paramName.length + 1   // +1 for trailing comma
+                currentOffset += returnValueName.length + 1   // +1 for trailing comma
             }
         }
         // find local vars
@@ -990,21 +992,59 @@ private _encodeTokenType(tokenType: string): number {
                 localVarNames = [localVarStr];
             }
             for (let index = 0; index < localVarNames.length; index++) {
-                const paramName = localVarNames[index].trim();
-                const startIndex = line.indexOf(paramName, currentOffset);
-                tokenSet.push({
-                    line: lineNumber,
-                    startCharacter: startIndex,
-                    length: paramName.length,
-                    tokenType: 'variable',
-                    tokenModifiers: ['declaration', 'local']
-                });
-                // remember so we can ID references
-                this.localTokens.set(paramName, {
-                    tokenType: 'variable',
-                    tokenModifiers: ['local']
-                });
-                currentOffset += paramName.length + 1   // +1 for trailing comma
+                const localVariableName = localVarNames[index].trim();
+                const startIndex = line.indexOf(localVariableName, currentOffset);
+                let nameParts: string[] = []
+                if (localVariableName.includes(" ")) {
+                    // have name with storage and/or alignment operators
+                    nameParts = localVariableName.split(' ')
+                }
+                else {
+                    // have single name
+                    nameParts = [localVariableName]
+                }
+                this._logCode('  -- nameParts=[' + nameParts + ']');
+                for (let index = 0; index < nameParts.length; index++) {
+                    const localName = nameParts[index];
+                    const localNameIndex = line.indexOf(localName, startIndex);
+                    if (index == nameParts.length - 1) {
+                        // have name
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: localNameIndex,
+                            length: localName.length,
+                            tokenType: 'variable',
+                            tokenModifiers: ['declaration', 'local']
+                        });
+                        // remember so we can ID references
+                        this.localTokens.set(localName, {
+                            tokenType: 'variable',
+                            tokenModifiers: ['local']
+                        });
+                        }
+                    else {
+                        // have modifier!
+                        if (this._isStorageType(localName)) {
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: localNameIndex,
+                                length: localName.length,
+                                tokenType: 'storageType',
+                                tokenModifiers: []
+                            });
+                        }
+                        else if (this._isAlignType(localName)) {
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: localNameIndex,
+                                length: localName.length,
+                                tokenType: 'storageType',
+                                tokenModifiers: []
+                            });
+                        }
+                    }
+                }
+                currentOffset += localVariableName.length + 1   // +1 for trailing comma
             }
         }
         return tokenSet;
@@ -1168,6 +1208,7 @@ private _encodeTokenType(tokenType: string): number {
                     else {
                         // have unknown name!? is storage type spec?
                         if (this._isStorageType(namePart)) {
+                            this._logCode('  --  storageType=[' + namePart + ']');
                             const startPos = line.indexOf(searchString, currentOffset);
                             tokenSet.push({
                                 line: lineNumber,
@@ -1207,6 +1248,19 @@ private _encodeTokenType(tokenType: string): number {
                             });
                         }
                     }
+                }
+                else if (possibleName.startsWith('.')) {
+                    const externalMethodName: string = possibleName.replace('.','')
+                    this._logCode('  --  externalMethodName=[' + externalMethodName + ']');
+                    let referenceDetails: IRememberedToken | undefined = undefined;
+                    const startPos = line.indexOf(externalMethodName, currentOffset);
+                    tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: startPos,
+                        length: externalMethodName.length,
+                        tokenType: 'method',
+                        tokenModifiers: []
+                    });
                 }
                 currentOffset += currPossibleLen + 1;
             }
@@ -1675,10 +1729,23 @@ private _encodeTokenType(tokenType: string): number {
     private _isStorageType(name: string): boolean
     {
         let returnStatus: boolean = false;
-        if (name.length > 3) {}
-        const checkType: string = name.toUpperCase();
-        if (checkType == "BYTE" || checkType == "WORD" || checkType == "LONG") {
-            returnStatus = true;
+        if (name.length > 3) {
+            const checkType: string = name.toUpperCase();
+            if (checkType == "BYTE" || checkType == "WORD" || checkType == "LONG") {
+                returnStatus = true;
+            }
+        }
+        return returnStatus;
+    }
+
+    private _isAlignType(name: string): boolean
+    {
+        let returnStatus: boolean = false;
+        if (name.length > 5) {
+            const checkType: string = name.toUpperCase();
+            if (checkType == "ALIGNL" || checkType == "ALIGNW") {
+                returnStatus = true;
+            }
         }
         return returnStatus;
     }
