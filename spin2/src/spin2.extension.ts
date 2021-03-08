@@ -823,12 +823,14 @@ private _encodeTokenType(tokenType: string): number {
         else if (lineParts.length == 1) {
             // handle name declaration only line: [name 'comment]
             let newName = lineParts[0];
-            this._logDAT('  -- newName=[' + newName + ']');
-            if (!this.globalTokens.has(newName)) {
-                this.globalTokens.set(newName, {
-                    tokenType: 'variable',
-                    tokenModifiers: ['static']
-                });
+            if (!this._isAlignType(newName)) {
+                this._logDAT('  -- newName=[' + newName + ']');
+                if (!this.globalTokens.has(newName)) {
+                    this.globalTokens.set(newName, {
+                        tokenType: 'variable',
+                        tokenModifiers: ['static']
+                    });
+                }
             }
         }
         else {
@@ -1520,22 +1522,23 @@ private _encodeTokenType(tokenType: string): number {
         }
         else if (lineParts.length == 1) {
             // handle name declaration only line: [name 'comment]
-            this._logDAT('- rptDatDecl lineParts=[' + lineParts + ']');
             let newName = lineParts[0];
-            this._logDAT('  -- newName=[' + newName + ']');
-            const startIndex: number = line.indexOf(newName, currentOffset)
-            tokenSet.push({
-                line: lineNumber,
-                startCharacter: startIndex,
-                length: newName.length,
-                tokenType: 'variable',
-                tokenModifiers: ['declaration', 'static']
-            });
-            if (!this.globalTokens.has(newName)) {
-                this.globalTokens.set(newName, {
+            if (!this._isAlignType(newName)) {
+                this._logDAT('  -- newName=[' + newName + ']');
+                const startIndex: number = line.indexOf(newName, currentOffset)
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: startIndex,
+                    length: newName.length,
                     tokenType: 'variable',
-                    tokenModifiers: ['static']
+                    tokenModifiers: ['declaration', 'static']
                 });
+                if (!this.globalTokens.has(newName)) {
+                    this.globalTokens.set(newName, {
+                        tokenType: 'variable',
+                        tokenModifiers: ['static']
+                    });
+                }
             }
         }
         else {

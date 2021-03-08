@@ -170,7 +170,7 @@
 			"name": "String",
 			"scope": ["string.quoted.double"],
 			"settings": {
-				"foreground": "#bb0000"
+				"foreground": "#ba4343"
 			}
         },
         {
