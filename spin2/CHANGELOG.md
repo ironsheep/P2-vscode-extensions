@@ -33,6 +33,7 @@ Semantic Fixes:
 - BUGFIX repair recognizer for assignment LHS: (eg., byte[pColor][2] := {value})
 - BUGFIX identify storage types in method's local variable list
 - BUGFIX recognize method calls to indexed objects
+- BUGFIX recognize data init from external constant in DAT section
 
 Syntax Fixes:
 
@@ -59,6 +60,7 @@ Preview Release of Semantic Highlighting
 
 ### - Known Issues w/v0.3.0
 
+- Fails to recognize data init from external constant in DAT section
 - Incorrectly marks **built-in** methods and constants
 - Fails to identify storage types in local variable list of method
 - Fails to parse some debug() statements correctly

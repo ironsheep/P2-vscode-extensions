@@ -189,10 +189,10 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
     private spinDebugLogEnabled: boolean = true;
-    private showCode: boolean = true;
+    private showCode: boolean = false;
     private showCON: boolean = false;
     private showOBJ: boolean = false;
-    private showDAT: boolean = false;
+    private showDAT: boolean = true;
     private showVAR: boolean = false;
     private showPASM: boolean = false;
     private showState: boolean = false;
@@ -1254,7 +1254,6 @@ private _encodeTokenType(tokenType: string): number {
                 else if (possibleName.startsWith('.')) {
                     const externalMethodName: string = possibleName.replace('.','')
                     this._logCode('  --  externalMethodName=[' + externalMethodName + ']');
-                    let referenceDetails: IRememberedToken | undefined = undefined;
                     const startPos = line.indexOf(externalMethodName, currentOffset);
                     tokenSet.push({
                         line: lineNumber,
@@ -1490,7 +1489,7 @@ private _encodeTokenType(tokenType: string): number {
         // get line parts - we only care about first one
         let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t]+/g)
         if (lineParts === null) {
-            lineParts = []
+            lineParts = [];
         }
         //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
@@ -1510,13 +1509,82 @@ private _encodeTokenType(tokenType: string): number {
                     startCharacter: startIndex,
                     length: newName.length,
                     tokenType: 'variable',
-                    tokenModifiers: ['declaration','static']
+                    tokenModifiers: ['declaration', 'static']
                 });
                 if (!this.globalTokens.has(newName)) {
                     this.globalTokens.set(newName, {
                         tokenType: 'variable',
                         tokenModifiers: ['static']
                     });
+                }
+                // process remainder of line
+                let beginCommentOffset = line.indexOf("'", currentOffset);
+                if (beginCommentOffset === -1) {
+                    beginCommentOffset = line.indexOf("{", currentOffset);
+                }
+                const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
+                const dataTypeName: string = lineParts[1];
+                currentOffset = line.indexOf(dataTypeName, currentOffset) + dataTypeName.length;
+                // recognize enum values getting initialized
+                const dataDefinitionRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+                this._logDAT('  -- dataDefinitionRHSStr=[' + dataDefinitionRHSStr + ']');
+
+                let dataParts: string[] | null = dataDefinitionRHSStr.split(/[ \t\[\]]/);
+                if (dataParts === null) {
+                    dataParts = []
+                }
+                this._logDAT('  -- dataParts=[' + dataParts + ']');
+                for (let index = 0; index < dataParts.length; index++) {
+                    const possibleName = dataParts[index];
+                    const currPossibleLen = possibleName.length;
+                    if (currPossibleLen < 1) {
+                        continue;
+                    }
+                    this._logDAT('  -- possibleName=[' + possibleName + ']');
+                    let possibleNameSet: string[] = [];
+                    if (possibleName.substr(0, 1).match(/[a-zA-Z]/)) {
+                        // does name contain a namespace reference?
+                        if (possibleName.includes('.')) {
+                            possibleNameSet = possibleName.split('.');
+                        }
+                        else {
+                            possibleNameSet = [possibleName];
+                        }
+                        this._logDAT('  --  possibleNameSet=[' + possibleNameSet + ']');
+                        const namePart = possibleNameSet[0];
+                        const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                        let referenceDetails: IRememberedToken | undefined = undefined;
+                        if (this.globalTokens.has(namePart)) {
+                            referenceDetails = this.globalTokens.get(namePart);
+                            this._logDAT('  --  FOUND global name=[' + namePart + ']');
+                        }
+                        if (referenceDetails != undefined) {
+                            const startPos = line.indexOf(searchString, currentOffset);
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: namePart.length,
+                                tokenType: referenceDetails.tokenType,
+                                tokenModifiers: referenceDetails.tokenModifiers
+                            });
+                        }
+                        if (possibleNameSet.length > 1) {
+                            // we have .constant namespace suffix
+                            // this can NOT be a method name it can only be a constant name
+                            const referenceOffset = line.indexOf(searchString, currentOffset);
+                            const constantPart: string = possibleNameSet[1];
+                            this._logDAT('  --  FOUND external constantPart=[' + constantPart + ']');
+                            const startPos = line.indexOf(constantPart, referenceOffset)
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: startPos,
+                                length: constantPart.length,
+                                tokenType: 'variable',
+                                tokenModifiers: ['readonly']
+                            });
+                        }
+                    }
+                    currentOffset += currPossibleLen + 1;
                 }
             }
         }
