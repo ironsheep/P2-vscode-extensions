@@ -234,12 +234,16 @@
         "variable.modification": "#9cdcfe",     // global variable
         "variable.readonly": "#a968a9",     // constants
         "variable.declaration.readonly": "#a954a9",     // constants
-        "variable.local": "#bdbc86",     // constants
-        "variable.modification.local": "#bab986",     // constants
+        "variable.local": "#c1c07d",     // constants
+        "variable.modification.local": "#c1c07d",     // constants
         "variable.declaration.local": "#c1c07d",     // constants
         "returnValue.local": "#508b93",     // constants
         "returnValue.declaration.local": "#438e98",     // constants
-        "parameter.readonly": "#c9afe4",     // constants
+        "method": "#7b9be4",     // constants
+        "method.declaration": "#7b9be4",     // constants
+        "method.static": "#9178da",     // private methods
+        "method.declaration.static": "#9178da",     // private method declarations
+        "parameter.readonly": "#b68ce3",     // constants
         "parameter.declaration.readonly": "#b68ce3",     // constants
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
@@ -251,11 +255,5 @@
             "foreground": "#7A81FF",
             "fontStyle": "bold"
         },
-        "method": {
-            "foreground": "#7b9be4",
-         },
-         "method.declaration": {
-            "foreground": "#7b9be4",
-        },
-    }
+     }
 }
