@@ -335,6 +335,32 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         this._getConstantDeclaration(3, line)
                     }
                 }
+                else if (currState == eParseState.inDat) {
+                    // process a data line
+                    //this._logPASM('- ('+ i + 1 +'): pre-scan DAT line trimmedLine=[' + trimmedLine + ']');
+                    if (trimmedLine.length > 6) {
+                        if (trimmedLine.toUpperCase().includes("ORG")) { // ORG, ORGF, ORGH
+                            this._logPASM('- ('+ i + 1 +'): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
+                            prePasmState = currState;
+                            currState = eParseState.inDatPasm;
+                            // and ignore rest of this line
+                            continue;
+                        }
+                    }
+                    this._getDataDeclaration(0, line)
+                }
+                else if (currState == eParseState.inObj) {
+                    // process a constant line
+                    if (line.length > 3) {
+                        this._getObjectDeclaration(3, line)
+                    }
+                }
+                else if (currState == eParseState.inVar) {
+                    // process a constant line
+                    if (line.length > 3) {
+                        this._getVariableDeclaration(3, line)
+                    }
+                }
                 continue;
             }
             else if (trimmedLine.startsWith("''")) {
@@ -385,10 +411,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inDat) {
                 // process a data line
                 if (trimmedLine.length > 0) {
-                    if (trimmedLine.length > 3) {
-                        const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
-                        if (linePrefix.startsWith("ORG")) { // ORG, ORGF, ORGH
-                            this._logPASM('- ('+ i + 1 +'): scan DAT line trimmedLine=[' + trimmedLine + ']');
+                    if (trimmedLine.length > 6) {
+                        if (trimmedLine.toUpperCase().includes("ORG")) { // ORG, ORGF, ORGH
+                            this._logPASM('- ('+ i + 1 +'): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
                             prePasmState = currState;
                             currState = eParseState.inDatPasm;
                             // and ignore rest of this line
@@ -415,7 +440,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
-                        this._logPASM('- ('+ i + 1 +'): scan SPIN PASM line trimmedLine=[' + trimmedLine + ']');
+                        this._logPASM('- ('+ i + 1 +'): pre-scan SPIN PASM line trimmedLine=[' + trimmedLine + ']');
                         currState = prePasmState;
                         this._logState('- scan ln:' + i+1 + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
@@ -430,7 +455,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
-                        this._logPASM('- ('+ i + 1 +'): scan DAT PASM line trimmedLine=[' + trimmedLine + ']');
+                        this._logPASM('- ('+ i + 1 +'): pre-scan DAT PASM line trimmedLine=[' + trimmedLine + ']');
                         currState = prePasmState;
                         this._logState('- scan ln:' + i+1 + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
@@ -445,7 +470,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {  // Only ORG not ORGF, ORGH
-                        this._logPASM('- ('+ i + 1 +'): scan PUB/PRI line trimmedLine=[' + trimmedLine + ']');
+                        this._logPASM('- ('+ i + 1 +'): pre-scan PUB/PRI line trimmedLine=[' + trimmedLine + ']');
                         prePasmState = currState;
                         currState = eParseState.inPasmInline;
                         // and ignore rest of this line
@@ -513,17 +538,43 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         });
                     }
                 }
-                /*
-                else {
-                    // process possible comments on the SECTION line itself!
+                else if (currState == eParseState.inDat) {
+                    // process a possible constant use on the CON line itself!
                     if (line.length > 3) {
-                        const partialTokenSet: IParsedToken[] = this._reportComments(i, 3, line)
+                        if (trimmedLine.length > 6) {
+                            const nonCommentLineRemainder: string = this._getNonCommentLineRemainder(0, trimmedLine);
+                            if (nonCommentLineRemainder.toUpperCase().includes("ORG")) { // ORG, ORGF, ORGH
+                                this._logPASM('- ('+ i + 1 +'): scan DAT line nonCommentLineRemainder=[' + nonCommentLineRemainder + ']');
+                                prePasmState = currState;
+                                currState = eParseState.inDatPasm;
+                                // and ignore rest of this line
+                                continue;
+                            }
+                        }
+                        const partialTokenSet: IParsedToken[] = this._reportDataDeclarationLine(i, 3, line)
                         partialTokenSet.forEach(newToken => {
                             tokenSet.push(newToken);
                         });
                     }
                 }
-                */
+                else if (currState == eParseState.inObj) {
+                    // process a possible constant use on the CON line itself!
+                    if (line.length > 3) {
+                        const partialTokenSet: IParsedToken[] = this._reportObjectDeclarationLine(i, 3, line)
+                        partialTokenSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
+                }
+                else if (currState == eParseState.inVar) {
+                    // process a possible constant use on the CON line itself!
+                    if (line.length > 3) {
+                        const partialTokenSet: IParsedToken[] = this._reportVariableDeclarationLine(i, 3, line)
+                        partialTokenSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
+                }
             }
             else if (trimmedLine.startsWith("''")) {
                 // process single line doc comment
@@ -861,7 +912,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
         }
         else {
-            this._logDAT('  -- SKIPPED: lineParts=[' + lineParts + ']');
+            this._logDAT('  -- getDAT SKIPPED: lineParts=[' + lineParts + ']');
         }
     }
 
@@ -1803,7 +1854,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
         }
         else {
-            this._logDAT('  -- SKIPPED: lineParts=[' + lineParts + ']');
+            this._logDAT('  -- DAT SKIPPED: lineParts=[' + lineParts + ']');
         }
         return tokenSet;
     }
@@ -2076,7 +2127,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonWhitePasmLineParts(line: string): string[]
     {
-        let lineParts: string[] | null = line.match(/[^ \t\,]+/g);
+        let lineParts: string[] | null = line.match(/[^ \t\,\+\*\-\\]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
