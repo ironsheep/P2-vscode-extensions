@@ -1247,7 +1247,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
             const assignmentRHSStr = this._getNonCommentLineRemainder(currentOffset, line);
             this._logSpin('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
-            let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)\!]/);
+            let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|]/);
             // special code to handle case range strings:  [e.g., SEG_TOP..SEG_BOTTOM:]
             const isCaseValue: boolean = assignmentRHSStr.endsWith(':');
             if (isCaseValue && possNames[0].includes("..")) {
@@ -1640,7 +1640,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 currentOffset = assignmentOffset + 1;   // skip to RHS of assignment
                 const assignmentRHSStr = this._getNonCommentLineRemainder(currentOffset, line);
                 this._logCON('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
-                const possNames: string[] = assignmentRHSStr.split(/[ \t\(\)]/);
+                const possNames: string[] = assignmentRHSStr.split(/[ \t\(\)\*\+\-\/]/);
                 this._logCON('  -- possNames=[' + possNames + ']');
                 for (let index = 0; index < possNames.length; index++) {
                     const possibleName = possNames[index];
