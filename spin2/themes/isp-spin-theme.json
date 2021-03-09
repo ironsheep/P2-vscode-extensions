@@ -228,6 +228,8 @@
         //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
         "enumMember": "#a968a9",     // constants
         "enumMember.declaration": "#a954a9",     // constants
+        "label": "#875756",     // constants
+        "label.declaration": "#9a4c49",     // constants
         "variable": "#9cdcfe",     // global variable
         "variable.modification": "#9cdcfe",     // global variable
         "variable.readonly": "#a968a9",     // constants

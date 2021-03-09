@@ -176,15 +176,18 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
         if (cancelToken) { }  // silence our compiler for now... TODO: we should adjust loop so it can break on cancelToken.isCancellationRequested
         const allTokens = this._parseText(document.getText());
-		const builder = new vscode.SemanticTokensBuilder();
-		allTokens.forEach((token) => {
-			builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.tokenType), this._encodeTokenModifiers(token.tokenModifiers));
-		});
-		return builder.build();
+        const builder = new vscode.SemanticTokensBuilder();
+        allTokens.forEach((token) => {
+            builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.tokenType), this._encodeTokenModifiers(token.tokenModifiers));
+        });
+        return builder.build();
     }
 
     private globalTokens = new Map<string, IRememberedToken>();
     private localTokens = new Map<string, IRememberedToken>();
+    private localPasmTokensByMethodName = new Map<string, Map<string, IRememberedToken>>();
+
+    private currentMethodName: string = "";
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
@@ -193,87 +196,79 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private showCON: boolean = false;
     private showOBJ: boolean = false;
     private showDAT: boolean = false;
-    private showVAR: boolean = true;
-    private showPASM: boolean = false;
+    private showVAR: boolean = false;
+    private showPASM: boolean = true;
     private showState: boolean = false;
 
-    private _logState(message: string): void
-    {
+    private _logState(message: string): void {
         if (this.showState) {
             this._logMessage(message)
         }
     }
 
-    private _logCode(message: string): void
-    {
+    private _logCode(message: string): void {
         if (this.showCode) {
             this._logMessage(message)
         }
     }
 
-    private _logCON(message: string): void
-    {
+    private _logCON(message: string): void {
         if (this.showCON) {
             this._logMessage(message)
         }
     }
 
-    private _logVAR(message: string): void
-    {
+    private _logVAR(message: string): void {
         if (this.showVAR) {
             this._logMessage(message)
         }
     }
 
-    private _logDAT(message: string): void
-    {
+    private _logDAT(message: string): void {
         if (this.showDAT) {
             this._logMessage(message)
         }
     }
 
-    private _logOBJ(message: string): void
-    {
+    private _logOBJ(message: string): void {
         if (this.showOBJ) {
             this._logMessage(message)
         }
     }
 
-    private _logPASM(message: string): void
-    {
+    private _logPASM(message: string): void {
         if (this.showPASM) {
             this._logMessage(message)
         }
     }
 
-    private _logMessage(message: string): void
-    {
+    private _logMessage(message: string): void {
         if (this.spin2log != undefined) {
             //Write to output window.
             this.spin2log.appendLine(message);
         }
     }
 
-private _encodeTokenType(tokenType: string): number {
-		if (tokenTypes.has(tokenType)) {
-			return tokenTypes.get(tokenType)!;
-		} else if (tokenType === 'notInLegend') {
-			return tokenTypes.size + 2;
-		}
-		return 0;
+    private _encodeTokenType(tokenType: string): number {
+        if (tokenTypes.has(tokenType)) {
+            return tokenTypes.get(tokenType)!;
+        } else if (tokenType === 'notInLegend') {
+            return tokenTypes.size + 2;
+        }
+        return 0;
     }
 
-	private _encodeTokenModifiers(strTokenModifiers: string[]): number {
-		let result = 0;
-		for (let i = 0; i < strTokenModifiers.length; i++) {
-			const tokenModifier = strTokenModifiers[i];
-			if (tokenModifiers.has(tokenModifier)) {
-				result = result | (1 << tokenModifiers.get(tokenModifier)!);
-			} else if (tokenModifier === 'notInLegend') {
-				result = result | (1 << tokenModifiers.size + 2);
-			}
-		}
-		return result;
+    private _encodeTokenModifiers(strTokenModifiers: string[]): number {
+        let result = 0;
+        for (let i = 0; i < strTokenModifiers.length; i++) {
+            const tokenModifier = strTokenModifiers[i];
+            if (tokenModifiers.has(tokenModifier)) {
+                result = result | (1 << tokenModifiers.get(tokenModifier)!);
+            } else if (tokenModifier === 'notInLegend') {
+                result = result | (1 << tokenModifiers.size + 2);
+            }
+        }
+        return result;
     }
 
     private _parseText(text: string): IParsedToken[] {
@@ -326,7 +321,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             else if (sectionStatus.isSectionStart) {
                 currState = sectionStatus.inProgressStatus;
-                this._logState('- scan ln:' + i +' currState=[' + currState + ']');
+                this._logState('- scan ln:' + i + ' currState=[' + currState + ']');
                 // ID the remainder of the line
                 if (currState == eParseState.inPub || currState == eParseState.inPri) {
                     // process method signature
@@ -392,7 +387,7 @@ private _encodeTokenType(tokenType: string): number {
                 if (trimmedLine.length > 0) {
                     if (trimmedLine.length > 3) {
                         const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
-                        if (linePrefix.startsWith("ORG")) {
+                        if (linePrefix.startsWith("ORG")) { // ORG, ORGF, ORGH
                             this._logPASM('- scan DAT line trimmedLine=[' + trimmedLine + ']');
                             prePasmState = currState;
                             currState = eParseState.inDatPasm;
@@ -422,7 +417,7 @@ private _encodeTokenType(tokenType: string): number {
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
                         this._logPASM('- scan SPIN PASM line trimmedLine=[' + trimmedLine + ']');
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:' + i + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -433,11 +428,11 @@ private _encodeTokenType(tokenType: string): number {
             else if (currState == eParseState.inDatPasm) {
                 // process pasm (assembly) lines
                 if (trimmedLine.length > 0) {
-                    const lineParts: string[] = trimmedLine .split(/[ \t]/);
+                    const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
                         this._logPASM('- scan DAT PASM line trimmedLine=[' + trimmedLine + ']');
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:' + i + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -449,7 +444,7 @@ private _encodeTokenType(tokenType: string): number {
                 // Detect start of INLINE PASM - org detect
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
-                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {  // Only ORG not ORGF, ORGH
                         this._logPASM('- scan PUB/PRI line trimmedLine=[' + trimmedLine + ']');
                         prePasmState = currState;
                         currState = eParseState.inPasmInline;
@@ -471,7 +466,7 @@ private _encodeTokenType(tokenType: string): number {
         const tokenSet: IParsedToken[] = [];
 
         // for each line do...
-		for (let i = 0; i < lines.length; i++) {
+        for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmedLine = line.trim();
             const sectionStatus = this._lineIsSectionStart(line);
@@ -495,7 +490,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             else if (sectionStatus.isSectionStart) {
                 currState = sectionStatus.inProgressStatus;
-                this._logState('  -- ln:' + i +' currState=[' + currState + ']');
+                this._logState('  -- ln:' + i + ' currState=[' + currState + ']');
                 // ID the section name
                 // DON'T mark the section literal, Syntax hightlighting does this well!
 
@@ -584,7 +579,7 @@ private _encodeTokenType(tokenType: string): number {
                 if (trimmedLine.length > 0) {
                     this._logDAT('- process DAT line trimmedLine=[' + trimmedLine + ']');
                     const linePrefix: string = trimmedLine.substr(0, 3).toUpperCase();
-                    if (linePrefix.startsWith("ORG")) {
+                    if (linePrefix.startsWith("ORG")) { // ORG, ORGF, ORGH
                         prePasmState = currState;
                         currState = eParseState.inDatPasm;
                         // and ignore rest of this line
@@ -625,7 +620,7 @@ private _encodeTokenType(tokenType: string): number {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:' + i + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -643,11 +638,11 @@ private _encodeTokenType(tokenType: string): number {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i +' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:' + i + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
-                        const partialTokenSet: IParsedToken[] = this._reportLineOfPasmCode(i, 0, line)
+                        const partialTokenSet: IParsedToken[] = this._reportLineOfInLinePasmCode(i, 0, line)
                         partialTokenSet.forEach(newToken => {
                             tokenSet.push(newToken);
                         });
@@ -659,7 +654,7 @@ private _encodeTokenType(tokenType: string): number {
                 if (trimmedLine.length > 0) {
                     this._logCode('- process SPIN2 line trimmedLine=[' + trimmedLine + ']');
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
-                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {
+                    if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {  // Only ORG not ORGF, ORGH
                         prePasmState = currState;
                         currState = eParseState.inPasmInline;
                         // and ignore rest of this line
@@ -672,12 +667,11 @@ private _encodeTokenType(tokenType: string): number {
                     }
                 }
             }
-		}
-		return tokenSet;
+        }
+        return tokenSet;
     }
 
-    private _getMethodName(startingOffset: number, line: string): void
-    {
+    private _getMethodName(startingOffset: number, line: string): void {
         const methodType = line.substr(0, 3).toUpperCase();
         // reset our list of local variables
         const isPrivate = methodType.indexOf('PRI');
@@ -688,6 +682,7 @@ private _encodeTokenType(tokenType: string): number {
         currentOffset = line.indexOf('(', currentOffset);
         let nameLength = currentOffset - startName
         const newName = line.substr(startName, nameLength);
+        this.currentMethodName = newName;   // notify of latest method name so we can track inLine PASM symbols
         // remember this method name so we can annotate a call to it
         if (!this.globalTokens.has(newName)) {
             const refModifiers: string[] = (isPrivate) ? [] : ['static']
@@ -698,15 +693,14 @@ private _encodeTokenType(tokenType: string): number {
         }
     }
 
-    private _getObjectDeclaration(startingOffset: number, line: string): void
-    {
+    private _getObjectDeclaration(startingOffset: number, line: string): void {
         // HAVE    color           : "isp_hub75_color"
         //  -or-   segments[7]     : "isp_hub75_segment"
         //
         //skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
-        const lineParts : string[] = line.substr(currentOffset).split(/[ \t\[]/)
+        const lineParts: string[] = line.substr(currentOffset).split(/[ \t\[]/)
         const newName = lineParts[0];
         this._logOBJ('  -- GetOBJDecl newName=[' + newName + ']');
         // remember this object name so we can annotate a call to it
@@ -718,8 +712,7 @@ private _encodeTokenType(tokenType: string): number {
         }
     }
 
-    private _getConstantDeclaration(startingOffset: number, line: string): void
-    {
+    private _getConstantDeclaration(startingOffset: number, line: string): void {
         // HAVE    DIGIT_NO_VALUE = -2   ' digit value when NOT [0-9]
         //  -or-   _clkfreq = CLK_FREQ   ' set system clock
         //
@@ -771,25 +764,54 @@ private _encodeTokenType(tokenType: string): number {
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
         const inLinePasmRHSStr = this._nonCommentLineRemainder(currentOffset, line);
+        const lineParts: string[] = this._getNonWhiteLineParts(inLinePasmRHSStr);
+        //this._logPASM('- GetInLinePasmDecl lineParts=[' + lineParts + ']');
+        // handle name in 1 column
+        const isDataDeclarationLine: boolean = (lineParts.length > 1 && this._isDatStorageType(lineParts[1]));
+        if (line.substr(0, 1).match(/[a-zA-Z\.\:]/)) {
+            const labelName: string = lineParts[0];
+            const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
+            const localPasmTokensMap = this._getLocalTokensMap(this.currentMethodName);
+            this._logPASM('  -- Inline PASM labelName=[' + labelName + '(' + labelType + ')]');
+            if (!localPasmTokensMap.has(labelName)) {
+                localPasmTokensMap.set(labelName, {
+                    tokenType: labelType,
+                    tokenModifiers: []
+                });
+            }
+        }
     }
 
     private _getDataPasmDeclaration(startingOffset: number, line: string): void {
         // HAVE    bGammaEnable        BYTE   TRUE               ' comment
         //         didShow             byte   FALSE[256]
         let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        const datPasmRHSStr = this._nonCommentLineRemainder(currentOffset, line);
+        const lineParts: string[] = this._getNonWhiteLineParts(datPasmRHSStr);
+        //this._logPASM('- GetDATPasmDecl lineParts=[' + lineParts + ']');
+        // handle name in 1 column
+        const isDataDeclarationLine: boolean = (lineParts.length > 1 && this._isDatStorageType(lineParts[1]));
+        if (line.substr(0, 1).match(/[a-zA-Z\.\:]/)) {
+            const labelName: string = lineParts[0];
+            const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
+            this._logPASM('  -- DAT PASM labelName=[' + labelName + '(' + labelType + ')]');
+            if (!this.globalTokens.has(labelName)) {
+                this.globalTokens.set(labelName, {
+                    tokenType: labelType,
+                    tokenModifiers: []
+                });
+            }
+        }
     }
 
-    private _getDataDeclaration(startingOffset: number, line: string): void
-    {
+    private _getDataDeclaration(startingOffset: number, line: string): void {
         // HAVE    bGammaEnable        BYTE   TRUE               ' comment
         //         didShow             byte   FALSE[256]
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
         const assignmentRHSStr = this._nonCommentLineRemainder(currentOffset, line);
-        let lineParts: string[] | null = assignmentRHSStr.match(/[^ \t]+/g)
-        if (lineParts === null) {
-            lineParts = []
-        }
+        let lineParts: string[] = this._getNonWhiteLineParts(assignmentRHSStr);
         // remember this object name so we can annotate a call to it
         if (lineParts.length > 2) {
             if (this._isStorageType(lineParts[0])) {
@@ -797,7 +819,7 @@ private _encodeTokenType(tokenType: string): number {
             }
             else {
                 this._logDAT('- GetDatDecl lineParts=[' + lineParts + ']');
-                const hasGoodType: boolean = this._isStorageType(lineParts[1])
+                const hasGoodType: boolean = this._isDatStorageType(lineParts[1])
                 if (hasGoodType) {
                     let newName = lineParts[0];
                     this._logDAT('  -- newName=[' + newName + ']');
@@ -830,17 +852,13 @@ private _encodeTokenType(tokenType: string): number {
         }
     }
 
-    private _getVariableDeclaration(startingOffset: number, line: string): void
-    {
+    private _getVariableDeclaration(startingOffset: number, line: string): void {
         // HAVE    long    demoPausePeriod   ' comment
         //
         //skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
-        let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t,]+/g)
-        if (lineParts === null) {
-            lineParts = []
-        }
+        let lineParts: string[] = this._getNonWhiteLineParts(line.substr(currentOffset));
         //this._logVAR('- GetVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
         // NOTE this is an instance-variable!
@@ -867,8 +885,7 @@ private _encodeTokenType(tokenType: string): number {
         }
     }
 
-    private _reportMethodSignature(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
-    {
+    private _reportMethodSignature(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
         const methodType = line.substr(0, 3).toUpperCase();
         // reset our list of local variables
@@ -881,8 +898,9 @@ private _encodeTokenType(tokenType: string): number {
         currentOffset = line.indexOf('(', currentOffset);
         let nameLength = currentOffset - startName
         const methodName: string = line.substr(startName, nameLength);
+        this.currentMethodName = methodName;   // notify of latest method name so we can track inLine PASM symbols
         // record definition of method
-        const declModifiers : string[] = (isPrivate) ? ['declaration'] : ['declaration', 'static']
+        const declModifiers: string[] = (isPrivate) ? ['declaration'] : ['declaration', 'static']
         tokenSet.push({
             line: lineNumber,
             startCharacter: startName,
@@ -922,7 +940,7 @@ private _encodeTokenType(tokenType: string): number {
                     startCharacter: startIndex,
                     length: paramName.length,
                     tokenType: 'parameter',
-                    tokenModifiers: ['declaration','readonly', 'local']
+                    tokenModifiers: ['declaration', 'readonly', 'local']
                 });
                 // remember so we can ID references
                 this.localTokens.set(paramName, {
@@ -1018,7 +1036,7 @@ private _encodeTokenType(tokenType: string): number {
                             tokenType: 'variable',
                             tokenModifiers: ['local']
                         });
-                        }
+                    }
                     else {
                         // have modifier!
                         if (this._isStorageType(localName)) {
@@ -1047,8 +1065,7 @@ private _encodeTokenType(tokenType: string): number {
         return tokenSet;
     }
 
-    private _reportLineOfSpinCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
-    {
+    private _reportLineOfSpinCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
         // skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
@@ -1181,10 +1198,10 @@ private _encodeTokenType(tokenType: string): number {
                     const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
                     let referenceDetails: IRememberedToken | undefined = undefined;
                     if (this.localTokens.has(namePart)) {
-                        referenceDetails= this.localTokens.get(namePart);
+                        referenceDetails = this.localTokens.get(namePart);
                         this._logCode('  --  FOUND local name=[' + namePart + ']');
                     } else if (this.globalTokens.has(namePart)) {
-                        referenceDetails= this.globalTokens.get(namePart);
+                        referenceDetails = this.globalTokens.get(namePart);
                         this._logCode('  --  FOUND global name=[' + namePart + ']');
                     }
                     if (referenceDetails != undefined) {
@@ -1211,7 +1228,7 @@ private _encodeTokenType(tokenType: string): number {
                             });
                         }
                     }
-                    if(possibleNameSet.length > 1) {
+                    if (possibleNameSet.length > 1) {
                         // we have .constant namespace suffix
                         // determine if this is method has '(' or constant name
                         const referenceOffset = line.indexOf(searchString, currentOffset);
@@ -1229,7 +1246,7 @@ private _encodeTokenType(tokenType: string): number {
                                 tokenType: 'method',
                                 tokenModifiers: []
                             });
-                            }
+                        }
                         else {
                             tokenSet.push({
                                 line: lineNumber,
@@ -1242,7 +1259,7 @@ private _encodeTokenType(tokenType: string): number {
                     }
                 }
                 else if (possibleName.startsWith('.')) {
-                    const externalMethodName: string = possibleName.replace('.','')
+                    const externalMethodName: string = possibleName.replace('.', '')
                     this._logCode('  --  externalMethodName=[' + externalMethodName + ']');
                     const startPos = line.indexOf(externalMethodName, currentOffset);
                     tokenSet.push({
@@ -1259,20 +1276,251 @@ private _encodeTokenType(tokenType: string): number {
         return tokenSet;
     }
 
-    private _reportLineOfPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
-    {
+
+    private _reportLineOfInLinePasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
         // skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
-        if (lineNumber) { }
+        // get line parts - we only care about first one
+        const inLinePasmRHSStr = this._nonCommentLineRemainder(currentOffset, line);
+        const lineParts: string[] = this._getNonWhitePasmLineParts(inLinePasmRHSStr);
+        this._logPASM('  -- reportInLinePasmDecl lineParts=[' + lineParts + ']');
+        // handle name in 1 column
+        const isDataDeclarationLine: boolean = (lineParts.length > 1 && (this._isDatStorageType(lineParts[0]) || this._isDatStorageType(lineParts[1])));
+        let haveLabel: boolean = false;
+        if (!this._isDatStorageType(lineParts[0]) && line.substr(0, 1).match(/[a-zA-Z\.\:]/)) {
+            // process label/variable name
+            const labelName: string = lineParts[0];
+            this._logPASM('  -- labelName=[' + labelName + ']');
+            const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
+            tokenSet.push({
+                line: lineNumber,
+                startCharacter: 0,
+                length: labelName.length,
+                tokenType: labelType,
+                tokenModifiers: ['declaration']
+            });
+            haveLabel = true;
+        }
+        if (!isDataDeclarationLine) {
+            // process assembly code
+            let argumentOffset = 0;
+            if (lineParts.length > 1) {
+                let minNonLabelParts: number = 1;
+                if (haveLabel) {
+                    // skip our label
+                    argumentOffset++;
+                    minNonLabelParts++;
+                }
+                if (lineParts[argumentOffset].toUpperCase().startsWith("IF_")) {
+                    // skip our conditional
+                    argumentOffset++;
+                    minNonLabelParts++;
+                }
+                if (lineParts.length > minNonLabelParts) {
+                    currentOffset = line.indexOf(lineParts[minNonLabelParts - 1], currentOffset) + lineParts[minNonLabelParts - 1].length + 1;
+                    for (let index = minNonLabelParts; index < lineParts.length; index++) {
+                        const argumentName = lineParts[index].replace('##', '').replace('#', '').replace('@', '');
+                        if (argumentName.length < 1) {
+                            // skip empty operand
+                            continue;
+                        }
+                        if (index == lineParts.length - 1 && this._isPasmConditional(argumentName)) {
+                            // conditional flag-set spec.
+                            this._logPASM('  -- SKIP argumentName=[' + argumentName + ']');
+                            continue;
+                        }
+                        const currArgumentLen = argumentName.length;
+                        if (argumentName.substr(0, 1).match(/[a-zA-Z\.]/)) {
+                            // does name contain a namespace reference?
+                            this._logPASM('  -- argumentName=[' + argumentName + ']');
+                            let possibleNameSet: string[] = [];
+                            if (argumentName.includes('.') && !argumentName.startsWith('.')) {
+                                possibleNameSet = argumentName.split('.');
+                            }
+                            else {
+                                possibleNameSet = [argumentName]
+                            }
+                            this._logPASM('  --  possibleNameSet=[' + possibleNameSet + ']');
+                            const namePart = possibleNameSet[0];
+                            const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                            let referenceDetails: IRememberedToken | undefined = undefined;
+                            const localPasmTokensMap = this._getLocalTokensMap(this.currentMethodName);
+                            if (localPasmTokensMap.has(namePart)) {
+                                referenceDetails = localPasmTokensMap.get(namePart);
+                                this._logPASM('  --  FOUND local PASM name=[' + namePart + ']');
+                            }
+                            else if (this.localTokens.has(namePart)) {
+                                referenceDetails = this.localTokens.get(namePart);
+                                this._logPASM('  --  FOUND local name=[' + namePart + ']');
+                            }
+                            else if (this.globalTokens.has(namePart)) {
+                                referenceDetails = this.globalTokens.get(namePart);
+                                this._logPASM('  --  FOUND global name=[' + namePart + ']');
+                            }
+                            if (referenceDetails != undefined) {
+                                const startPos = line.indexOf(searchString, currentOffset);
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: startPos,
+                                    length: namePart.length,
+                                    tokenType: referenceDetails.tokenType,
+                                    tokenModifiers: referenceDetails.tokenModifiers
+                                });
+                            }
+                            if (possibleNameSet.length > 1) {
+                                // we have .constant namespace suffix
+                                // this can NOT be a method name it can only be a constant name
+                                const referenceOffset = line.indexOf(searchString, currentOffset);
+                                const constantPart: string = possibleNameSet[1];
+                                const startPos = line.indexOf(constantPart, referenceOffset)
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: startPos,
+                                    length: constantPart.length,
+                                    tokenType: 'variable',
+                                    tokenModifiers: ['readonly']
+                                });
+                            }
+                        }
+                        currentOffset += currArgumentLen + 1;
+                    }
+                }
+            }
+        }
+        else {
+            // process data declaration
+            if (this._isDatStorageType(lineParts[0])) {
+                currentOffset = line.indexOf(lineParts[0], currentOffset);
+            }
+            else {
+                currentOffset = line.indexOf(lineParts[1], currentOffset);
+            }
+            const allowLocalVarStatus: boolean = true;
+            const partialTokenSet: IParsedToken[] = this._reportLDataValueDeclarationCode(lineNumber, currentOffset, line, allowLocalVarStatus, this.showPASM)
+            partialTokenSet.forEach(newToken => {
+                tokenSet.push(newToken);
+            });
+        }
         return tokenSet;
     }
-    private _reportLineOfDatPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
-    {
+
+    private _reportLineOfDatPasmCode(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
         // skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
-        if (lineNumber) { }
+        // get line parts - we only care about first one
+        const inLinePasmRHSStr = this._nonCommentLineRemainder(currentOffset, line);
+        const lineParts: string[] = this._getNonWhitePasmLineParts(inLinePasmRHSStr);
+        this._logPASM('  -- reportDATPasmDecl lineParts=[' + lineParts + ']');
+        // handle name in 1 column
+        const isDataDeclarationLine: boolean = (lineParts.length > 1 && (this._isDatStorageType(lineParts[1]) || this._isDatStorageType(lineParts[0])));
+        let haveLabel: boolean = false;
+        if (!this._isDatStorageType(lineParts[0]) && line.substr(0, 1).match(/[a-zA-Z\.\:]/)) {
+            // process label/variable name
+            const labelName: string = lineParts[0];
+            this._logPASM('  -- labelName=[' + labelName + ']');
+            const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
+            tokenSet.push({
+                line: lineNumber,
+                startCharacter: 0,
+                length: labelName.length,
+                tokenType: labelType,
+                tokenModifiers: ['declaration']
+            });
+            haveLabel = true;
+        }
+        if (!isDataDeclarationLine) {
+            // process assembly code
+            let argumentOffset = 0;
+            if (lineParts.length > 1) {
+                let minNonLabelParts: number = 1;
+                if (haveLabel) {
+                    // skip our label
+                    argumentOffset++;
+                    minNonLabelParts++;
+                }
+                if (lineParts[argumentOffset].toUpperCase().startsWith("IF_")) {
+                    // skip our conditional
+                    argumentOffset++;
+                    minNonLabelParts++;
+                }
+                if (lineParts.length > minNonLabelParts) {
+                    currentOffset = line.indexOf(lineParts[minNonLabelParts - 1], currentOffset) + lineParts[minNonLabelParts - 1].length + 1;
+                    for (let index = minNonLabelParts; index < lineParts.length; index++) {
+                        const argumentName = lineParts[index].replace('##', '').replace('#', '').replace('@', '');
+                        if (argumentName.length < 1) {
+                            // skip empty operand
+                            continue;
+                        }
+                        if (index == lineParts.length - 1 && this._isPasmConditional(argumentName)) {
+                            // conditional flag-set spec.
+                            this._logPASM('  -- SKIP argumentName=[' + argumentName + ']');
+                            continue;
+                        }
+                        const currArgumentLen = argumentName.length;
+                        if (argumentName.substr(0, 1).match(/[a-zA-Z\.]/)) {
+                            // does name contain a namespace reference?
+                            this._logPASM('  -- argumentName=[' + argumentName + ']');
+                            let possibleNameSet: string[] = [];
+                            if (argumentName.includes('.') && !argumentName.startsWith('.')) {
+                                possibleNameSet = argumentName.split('.');
+                            }
+                            else {
+                                possibleNameSet = [argumentName]
+                            }
+                            this._logPASM('  --  possibleNameSet=[' + possibleNameSet + ']');
+                            const namePart = possibleNameSet[0];
+                            const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                            let referenceDetails: IRememberedToken | undefined = undefined;
+                            if (this.globalTokens.has(namePart)) {
+                                referenceDetails = this.globalTokens.get(namePart);
+                                this._logPASM('  --  FOUND global name=[' + namePart + ']');
+                            }
+                            if (referenceDetails != undefined) {
+                                const startPos = line.indexOf(searchString, currentOffset);
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: startPos,
+                                    length: namePart.length,
+                                    tokenType: referenceDetails.tokenType,
+                                    tokenModifiers: referenceDetails.tokenModifiers
+                                });
+                            }
+                            if (possibleNameSet.length > 1) {
+                                // we have .constant namespace suffix
+                                // this can NOT be a method name it can only be a constant name
+                                const referenceOffset = line.indexOf(searchString, currentOffset);
+                                const constantPart: string = possibleNameSet[1];
+                                const startPos = line.indexOf(constantPart, referenceOffset)
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: startPos,
+                                    length: constantPart.length,
+                                    tokenType: 'variable',
+                                    tokenModifiers: ['readonly']
+                                });
+                            }
+                        }
+                        currentOffset += currArgumentLen + 1;
+                    }
+                }
+            }
+        }
+        else {
+            // process data declaration
+            if (this._isDatStorageType(lineParts[0])) {
+                currentOffset = line.indexOf(lineParts[0], currentOffset);
+            }
+            else {
+                currentOffset = line.indexOf(lineParts[1], currentOffset);
+            }
+            const allowLocalVarStatus: boolean = false;
+            const partialTokenSet: IParsedToken[] = this._reportLDataValueDeclarationCode(lineNumber, currentOffset, line, allowLocalVarStatus, this.showPASM)
+            partialTokenSet.forEach(newToken => {
+                tokenSet.push(newToken);
+            });
+        }
         return tokenSet;
     }
 
@@ -1467,10 +1715,7 @@ private _encodeTokenType(tokenType: string): number {
         //skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
-        let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t]+/g)
-        if (lineParts === null) {
-            lineParts = [];
-        }
+        let lineParts: string[] = this._getNonWhiteLineParts(line.substr(currentOffset));
         //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
         if (lineParts.length > 2) {
@@ -1498,69 +1743,12 @@ private _encodeTokenType(tokenType: string): number {
                     });
                 }
                 // process remainder of line
-                const dataTypeName: string = lineParts[1];
-                currentOffset = line.indexOf(dataTypeName, currentOffset) + dataTypeName.length;
-                // recognize enum values getting initialized
-                const dataDefinitionRHSStr = this._nonCommentLineRemainder(currentOffset, line);
-                this._logDAT('  -- dataDefinitionRHSStr=[' + dataDefinitionRHSStr + ']');
-
-                let dataParts: string[] | null = dataDefinitionRHSStr.split(/[ \t\[\]]/);
-                if (dataParts === null) {
-                    dataParts = []
-                }
-                this._logDAT('  -- dataParts=[' + dataParts + ']');
-                for (let index = 0; index < dataParts.length; index++) {
-                    const possibleName = dataParts[index];
-                    const currPossibleLen = possibleName.length;
-                    if (currPossibleLen < 1) {
-                        continue;
-                    }
-                    this._logDAT('  -- possibleName=[' + possibleName + ']');
-                    let possibleNameSet: string[] = [];
-                    if (possibleName.substr(0, 1).match(/[a-zA-Z]/)) {
-                        // does name contain a namespace reference?
-                        if (possibleName.includes('.')) {
-                            possibleNameSet = possibleName.split('.');
-                        }
-                        else {
-                            possibleNameSet = [possibleName];
-                        }
-                        this._logDAT('  --  possibleNameSet=[' + possibleNameSet + ']');
-                        const namePart = possibleNameSet[0];
-                        const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
-                        let referenceDetails: IRememberedToken | undefined = undefined;
-                        if (this.globalTokens.has(namePart)) {
-                            referenceDetails = this.globalTokens.get(namePart);
-                            this._logDAT('  --  FOUND global name=[' + namePart + ']');
-                        }
-                        if (referenceDetails != undefined) {
-                            const startPos = line.indexOf(searchString, currentOffset);
-                            tokenSet.push({
-                                line: lineNumber,
-                                startCharacter: startPos,
-                                length: namePart.length,
-                                tokenType: referenceDetails.tokenType,
-                                tokenModifiers: referenceDetails.tokenModifiers
-                            });
-                        }
-                        if (possibleNameSet.length > 1) {
-                            // we have .constant namespace suffix
-                            // this can NOT be a method name it can only be a constant name
-                            const referenceOffset = line.indexOf(searchString, currentOffset);
-                            const constantPart: string = possibleNameSet[1];
-                            this._logDAT('  --  FOUND external constantPart=[' + constantPart + ']');
-                            const startPos = line.indexOf(constantPart, referenceOffset)
-                            tokenSet.push({
-                                line: lineNumber,
-                                startCharacter: startPos,
-                                length: constantPart.length,
-                                tokenType: 'variable',
-                                tokenModifiers: ['readonly']
-                            });
-                        }
-                    }
-                    currentOffset += currPossibleLen + 1;
-                }
+                currentOffset = line.indexOf(lineParts[1], currentOffset);
+                const allowLocalVarStatus: boolean = false;
+                const partialTokenSet: IParsedToken[] = this._reportLDataValueDeclarationCode(lineNumber, currentOffset, line, allowLocalVarStatus, this.showDAT)
+                partialTokenSet.forEach(newToken => {
+                    tokenSet.push(newToken);
+                });
             }
         }
         else if (lineParts.length == 1) {
@@ -1590,16 +1778,95 @@ private _encodeTokenType(tokenType: string): number {
         return tokenSet;
     }
 
+    private _reportLDataValueDeclarationCode(lineNumber: number, startingOffset: number, line: string, allowLocal: boolean, showDebug: boolean): IParsedToken[] {
+        const tokenSet: IParsedToken[] = [];
+        // process data declaration
+        const dataValueInitStr = this._nonCommentLineRemainder(startingOffset, line);
+        let lineParts: string[] = this._getNonWhiteDataInitLineParts(dataValueInitStr);
+        const ArgumentStartIndex: number = (this._isDatStorageType(lineParts[0])) ? 1 : 2;
+        if (showDebug) {
+            this._logMessage('  -- reportDataValueInit lineParts=[' + lineParts + ']');
+        }
+        let currentOffset: number = line.indexOf(lineParts[ArgumentStartIndex - 1], startingOffset) + lineParts[ArgumentStartIndex - 1].length + 1;
+        // process remainder of line
+        for (let index = ArgumentStartIndex; index < lineParts.length; index++) {
+            const possibleName = lineParts[index].replace(/[\(\)]/, '');
+            const currPossibleLen = possibleName.length;
+            if (currPossibleLen < 1) {
+                continue;
+            }
+            if (showDebug) {
+                this._logMessage('  -- possibleName=[' + possibleName + ']');
+            }
+            let possibleNameSet: string[] = [];
+            if (possibleName.substr(0, 1).match(/[a-zA-Z]/)) {
+                // does name contain a namespace reference?
+                if (possibleName.includes('.')) {
+                    possibleNameSet = possibleName.split('.');
+                }
+                else {
+                    possibleNameSet = [possibleName];
+                }
+                if (showDebug) {
+                    this._logMessage('  --  possibleNameSet=[' + possibleNameSet + ']');
+                }
+                const namePart = possibleNameSet[0];
+                const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                let referenceDetails: IRememberedToken | undefined = undefined;
+                if (allowLocal && this.localTokens.has(namePart)) {
+                    referenceDetails = this.localTokens.get(namePart);
+                    if (showDebug) {
+                        this._logMessage('  --  FOUND local name=[' + namePart + ']');
+                    }
+                }
+                else if (this.globalTokens.has(namePart)) {
+                    referenceDetails = this.globalTokens.get(namePart);
+                    if (showDebug) {
+                        this._logMessage('  --  FOUND global name=[' + namePart + ']');
+                    }
+                }
+                if (referenceDetails != undefined) {
+                    const startPos = line.indexOf(searchString, currentOffset);
+                    tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: startPos,
+                        length: namePart.length,
+                        tokenType: referenceDetails.tokenType,
+                        tokenModifiers: referenceDetails.tokenModifiers
+                    });
+                }
+                if (possibleNameSet.length > 1) {
+                    // we have .constant namespace suffix
+                    // this can NOT be a method name it can only be a constant name
+                    const referenceOffset = line.indexOf(searchString, currentOffset);
+                    const constantPart: string = possibleNameSet[1];
+                    if (showDebug) {
+                        this._logMessage('  --  FOUND external constantPart=[' + constantPart + ']');
+                    }
+                    const startPos = line.indexOf(constantPart, referenceOffset)
+                    tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: startPos,
+                        length: constantPart.length,
+                        tokenType: 'variable',
+                        tokenModifiers: ['readonly']
+                    });
+                }
+            }
+            currentOffset += currPossibleLen + 1;
+        }
+        return tokenSet;
+    }
+
+
+
     private _reportVariableDeclarationLine(lineNumber: number, startingOffset: number, line: string): IParsedToken[]
     {
 		const tokenSet: IParsedToken[] = [];
         //skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
-        let lineParts: string[] | null = line.substr(currentOffset).match(/[^ \t]+/g)
-        if (lineParts === null) {
-            lineParts = []
-        }
+        let lineParts: string[]  = this._getNonWhiteLineParts(line.substr(currentOffset));
         //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
         let hasArrayReference: boolean = false;
@@ -1774,6 +2041,16 @@ private _encodeTokenType(tokenType: string): number {
 		};
     }
 
+    private _getLocalTokensMap(methodName: string): Map<string, IRememberedToken>
+    {
+        let desiredMap: Map<string, IRememberedToken> | undefined = this.localPasmTokensByMethodName.get(methodName);
+        if (desiredMap == undefined) {
+            desiredMap = new Map<string, IRememberedToken>();
+            this.localPasmTokensByMethodName.set(methodName, desiredMap)
+        }
+        return desiredMap;
+    }
+
     private _nonCommentLineRemainder(startingOffset: number, line: string): string
     {
         let currentOffset = this._skipWhite(line, startingOffset)
@@ -1785,6 +2062,67 @@ private _encodeTokenType(tokenType: string): number {
         const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
         const nonCommentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
         return nonCommentRHSStr;
+    }
+
+    private _getNonWhiteDataInitLineParts(line: string): string[]
+    {
+        let lineParts: string[] | null = line.match(/[^ \t\,\[\]\(\)]+/g);
+        if (lineParts === null) {
+            lineParts = [];
+        }
+        return lineParts;
+    }
+
+    private _getNonWhitePasmLineParts(line: string): string[]
+    {
+        let lineParts: string[] | null = line.match(/[^ \t\,]+/g);
+        if (lineParts === null) {
+            lineParts = [];
+        }
+        return lineParts;
+    }
+
+    private _getNonWhiteLineParts(line: string): string[]
+    {
+        let lineParts: string[] | null = line.match(/[^ \t]+/g);
+        if (lineParts === null) {
+            lineParts = [];
+        }
+        return lineParts;
+    }
+
+    private _isPasmConditional(name: string): boolean
+    {
+        /*
+            ' flag write controls
+            WC | WZ | WCZ
+            XORC | XORZ
+            ORC | ORZ
+            ANDC | ANDZ
+        */
+        let returnStatus: boolean = false;
+        if (name.length >= 2) {
+            const checkType: string = name.toUpperCase();
+            if (checkType == "WC" || checkType == "WZ" || checkType == "WCZ" ||
+            checkType == "XORC" || checkType == "XORZ" ||
+            checkType == "ORC" || checkType == "ORZ" ||
+            checkType == "ANDC" || checkType == "ANDZ") {
+                returnStatus = true;
+            }
+        }
+        return returnStatus;
+    }
+
+    private _isDatStorageType(name: string): boolean
+    {
+        let returnStatus: boolean = false;
+        if (name.length > 2) {
+            const checkType: string = name.toUpperCase();
+            if (checkType == "BYTE" || checkType == "WORD" || checkType == "LONG" || checkType == "RES") {
+                returnStatus = true;
+            }
+        }
+        return returnStatus;
     }
 
     private _isStorageType(name: string): boolean
@@ -1811,7 +2149,7 @@ private _encodeTokenType(tokenType: string): number {
         return returnStatus;
     }
 
-private _skipWhite(line: string, currentOffset : number) : number
+    private _skipWhite(line: string, currentOffset : number) : number
     {
         let firstNonWhiteIndex: number = currentOffset;
         for (let index = currentOffset; index < line.length; index++) {

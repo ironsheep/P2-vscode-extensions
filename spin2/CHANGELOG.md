@@ -25,7 +25,7 @@ Possible next additions:
 
 - Theme: Entire theme moved to pastel-like colors, less shocking, more commercial quality
 
-- Spin2: Improved Semantic Highlighting support (partial: Spin only, no Pasm)
+- Spin2: Added Semantic Highlighting support for PASM
 
 Semantic Fixes:
 
@@ -44,13 +44,16 @@ Syntax Fixes:
 
 ### - Known Issues w/v0.3.1
 
-
+- Spin: Fails to correctly highlight symbol when NOT used `!maskBitsBGR`
+- Spin: Fails to correctly highlight address var of `byte[@msgPwm][3] := frameASCII`
+- Spin: Fails to correctly highlight RHS of `usePwmFrameset1 := !usePwmFrameset1`
 - Incorrectly marks **built-in** methods and constants
 - Fails to parse some debug() statements correctly
 - PASM code not processed at all (in DAT or in PRI/PUB inline)
 - Does NOT handle multi-line enum declarations
 - Does NOT handle comma-delimited constant assignment
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Syntax highlight of DAT section sometimes failes... RES and FIT not colored correctly
 - *I'm sure there are more issues...*
 
 
@@ -64,6 +67,9 @@ Preview Release of Semantic Highlighting
 
 ### - Known Issues w/v0.3.0
 
+- Spin: Fails to correctly highlight symbol when NOT used `!maskBitsBGR`
+- Spin: Fails to correctly highlight address var of `byte[@msgPwm][3] := frameASCII`
+- Spin: Fails to correctly highlight RHS of `usePwmFrameset1 := !usePwmFrameset1`
 - Fails to recognize comma separated var declarations (misses names after first)
 - Fails to recognize data init from external constant in DAT section
 - Incorrectly marks **built-in** methods and constants
@@ -75,6 +81,7 @@ Preview Release of Semantic Highlighting
 - Does NOT handle comma-delimited constant assignment
 - Does NOT recognize method calls to indexed objects
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Syntax highlight of DAT section sometimes failes... RES and FIT not colored correctly
 - *I'm sure there are more issues...*
 
 ## [0.2.2] 2020-11-30
