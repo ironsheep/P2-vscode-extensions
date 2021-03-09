@@ -87,7 +87,11 @@
             {
               "id": "local",
               "description": "Annotates a symbol that is declared local to a method"
-            }
+            },
+            {
+                "id": "instance",
+                "description": "Annotates a variable unique to an instance"
+              }
         ],
         "semanticTokenScopes": [
             {

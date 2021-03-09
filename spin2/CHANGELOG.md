@@ -23,7 +23,7 @@ Possible next additions:
 
 ### - What's new
 
-- Theme: Entire theme moved to pastel-like colors, less shocking, more commercial quality
+- Theme: Entire theme moved to pastel-like colors, less shocking, closer to commercial quality
 
 - Spin2: Added Semantic Highlighting support for PASM
 
@@ -33,27 +33,27 @@ Semantic Fixes:
 - BUGFIX Repaired identification of constant assignment from constant of external object 
 - BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
 - BUGFIX recognize range-value symbols in case statement (e.g., SEG\_TOP..SEG_BOTTOM:)
-- BUGFIX repair recognizer for assignment LHS: (eg., byte[pColor][2] := {value})
+- BUGFIX repair recognizer for assignment LHS: (eg., `byte[pColor][2] := {value}`)
 - BUGFIX identify storage types in method's local variable list
 - BUGFIX recognize method calls to indexed objects
 - BUGFIX recognize data init from external constant in DAT section
+- BUGFIX correctly highlight symbol when NOT(!) used: `!maskBitsBGR`
+- BUGFIX correctly highlight address var of: `byte[@msgPwm][3] := frameASCII`
 
 Syntax Fixes:
 
 - BUGFIX add recognition of 'FILE' include operator in DAT sections
+- BUGFIX repair decimal number recognition (was falsely including [+|-] prefix)
 
 ### - Known Issues w/v0.3.1
 
-- Spin: Fails to correctly highlight symbol when NOT used `!maskBitsBGR`
-- Spin: Fails to correctly highlight address var of `byte[@msgPwm][3] := frameASCII`
-- Spin: Fails to correctly highlight RHS of `usePwmFrameset1 := !usePwmFrameset1`
-- Incorrectly marks **built-in** methods and constants
+- Spin: Badly handles strings (should be ignoring contents of them)
+- Incorrectly colors **built-in** constants (should be own color)
 - Fails to parse some debug() statements correctly
-- PASM code not processed at all (in DAT or in PRI/PUB inline)
 - Does NOT handle multi-line enum declarations
 - Does NOT handle comma-delimited constant assignment
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
-- Syntax highlight of DAT section sometimes failes... RES and FIT not colored correctly
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - *I'm sure there are more issues...*
 
 
@@ -67,12 +67,12 @@ Preview Release of Semantic Highlighting
 
 ### - Known Issues w/v0.3.0
 
+- Spin: Badly handles strings (should be ignoring contents of them)
 - Spin: Fails to correctly highlight symbol when NOT used `!maskBitsBGR`
 - Spin: Fails to correctly highlight address var of `byte[@msgPwm][3] := frameASCII`
-- Spin: Fails to correctly highlight RHS of `usePwmFrameset1 := !usePwmFrameset1`
 - Fails to recognize comma separated var declarations (misses names after first)
 - Fails to recognize data init from external constant in DAT section
-- Incorrectly marks **built-in** methods and constants
+- Incorrectly colors **built-in** constants
 - Fails to identify storage types in local variable list of method
 - Fails to parse some debug() statements correctly
 - Misses some symbols in constant declarations

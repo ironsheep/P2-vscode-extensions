@@ -78,14 +78,14 @@
 			"name": "Constant",
 			"scope": ["constant.language"],
 			"settings": {
-				"foreground": "#880088"
+				"foreground": "#8a358a"
 			}
 		},
 		{
 			"name": "Numeric",
 			"scope": ["constant.numeric"],
 			"settings": {
-				"foreground": "#377c7f"
+				"foreground": "#3e9096"
 			}
 		},
 		{
@@ -107,7 +107,7 @@
 			"name": "Control",
 			"scope": ["keyword.control"],
 			"settings": {
-				"foreground": "#c586c0" // cccc44
+				"foreground": "#b57bb0" // c586c0, cccc44
 			}
         },
 		{
@@ -121,7 +121,7 @@
 			"name": "Operator",
 			"scope": ["keyword.operator"],
 			"settings": {
-				"foreground": "#aaaa66"
+				"foreground": "#b567ae" // aaaa66
 			}
 		},
 		{
@@ -149,7 +149,7 @@
             "name": "storage types",
             "scope": ["storage.type"],
             "settings": {
-				"foreground": "#76D6FF"
+				"foreground": "#468a9d"
 			}
         },
         {
@@ -198,42 +198,46 @@
 			"name": "spin methods",
 			"scope": ["keyword.spin.methods"],
 			"settings": {
-				"foreground": "#547fac"
+				"foreground": "#6d8ad3" // 5D83AC
 			}
         },
         {
 			"name": "pasm storage modifiers",
 			"scope": ["storage.modifier"],
 			"settings": {
-				"foreground": "#5393af"
+				"foreground": "#4a4dae"
 			}
         },
         {
 			"name": "pasm control",
 			"scope": ["keyword.pasm.control"],
 			"settings": {
-				"foreground": "#991b17"
+				"foreground": "#9b3834"
 			}
         },
         {
             "name": "pasm instructions",
             "scope": ["keyword.pasm.instruction"],
             "settings": {
-                "foreground": "#991b17"
+                "foreground": "#9b3834"
             }
         }
 	],
     "semanticTokenColors": {
         // method parts: name (parameters) : returnValues | localVariables
         //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
-        "enumMember": "#a968a9",     // constants
-        "enumMember.declaration": "#a954a9",     // constants
-        "label": "#875756",     // constants
-        "label.declaration": "#9a4c49",     // constants
-        "variable": "#9cdcfe",     // global variable
-        "variable.modification": "#9cdcfe",     // global variable
-        "variable.readonly": "#a968a9",     // constants
-        "variable.declaration.readonly": "#a954a9",     // constants
+        // colors
+        "label": "#9a5849",     // pasm labels
+        "label.declaration": "#9a5849",     // pasm labels
+        "variable": "#8bc4e3",     // class global variable
+        "variable.modification": "#8bc4e3",     // class global variable
+        "variable.instance": "#69c8c1",     // instance global varable
+        "variable.modification.instance": "#69c8c1",     // instance global varable
+        "variable.declaration.instance": "#69c8c1",     // instance global varable
+        "enumMember": "#a051a0",     // constants
+        "enumMember.declaration": "#a051a0",     // constants
+        "variable.readonly": "#a051a0",     // constants
+        "variable.declaration.readonly": "#a051a0",     // constants
         "variable.local": "#c1c07d",     // constants
         "variable.modification.local": "#c1c07d",     // constants
         "variable.declaration.local": "#c1c07d",     // constants
@@ -245,15 +249,10 @@
         "method.declaration.static": "#9178da",     // private method declarations
         "parameter.readonly": "#b68ce3",     // constants
         "parameter.declaration.readonly": "#b68ce3",     // constants
+        "namespace": "#6a66b3",     // objects (old: 7A81FF) (new:5d60a0)
+        "namespace.declaration": "#6a66b3",     // objects
+        // style overrides
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
-        "namespace": {
-            "foreground": "#5d60a0",
-            "fontStyle": "bold"
-         },
-         "namespace.declaration": {
-            "foreground": "#7A81FF",
-            "fontStyle": "bold"
-        },
      }
 }

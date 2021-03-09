@@ -162,7 +162,7 @@ repository:
         match: '(?i)\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(ENABLE|DELAY|PIN|TIMESTAMP)|DLY)\b'
     decimal_number:
         name: constant.numeric.decimal.spin2
-        match: '\b(([+-])?[0-9][0-9_\.]*)'
+        match: '\b([0-9][0-9_\.]*)\b'
         captures:
             '1':
                 name: constant.numeric.base10.spin2
