@@ -47,6 +47,7 @@ Syntax Fixes:
 
 ### - Known Issues w/v0.3.1
 
+- Pasm: Does not handle the .label (local-scoped pasm labels) properly (:labels for P1, . for P2)
 - Spin: Badly handles strings (should be ignoring contents of them)
 - Incorrectly colors **built-in** constants (should be own color)
 - Fails to parse some debug() statements correctly
@@ -67,6 +68,7 @@ Preview Release of Semantic Highlighting
 
 ### - Known Issues w/v0.3.0
 
+- Pasm: Does not handle the .label (local-scoped pasm labels) properly
 - Spin: Badly handles strings (should be ignoring contents of them)
 - Spin: Fails to correctly highlight symbol when NOT used `!maskBitsBGR`
 - Spin: Fails to correctly highlight address var of `byte[@msgPwm][3] := frameASCII`
