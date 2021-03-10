@@ -188,10 +188,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private localPasmTokensByMethodName = new Map<string, Map<string, IRememberedToken>>();
 
     private currentMethodName: string = "";
-
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = true;
+    private spinDebugLogEnabled: boolean = false;
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
@@ -199,6 +198,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private showVAR: boolean = true;
     private showPasmCode: boolean = true;
     private showState: boolean = false;
+
 
     private _logState(message: string): void {
         if (this.showState) {
@@ -249,6 +249,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
     }
 
+
     private _encodeTokenType(tokenType: string): number {
         if (tokenTypes.has(tokenType)) {
             return tokenTypes.get(tokenType)!;
@@ -298,6 +299,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmedLine = line.trim();
+            const trimmedNonCOmmentLine = this._getNonCommentLineRemainder(0, line);
             const sectionStatus = this._isSectionStartLine(line);
             if (currState == eParseState.inMultiLineComment) {
                 // in multi-line non-doc-comment, hunt for end '}' to exit
@@ -325,20 +327,20 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 // ID the remainder of the line
                 if (currState == eParseState.inPub || currState == eParseState.inPri) {
                     // process method signature
-                    if (line.length > 3) {
+                    if (trimmedNonCOmmentLine.length > 3) {
                         this._getMethodName(3, line)
                     }
                 }
                 else if (currState == eParseState.inCon) {
                     // process a constant line
-                    if (line.length > 3) {
+                    if (trimmedNonCOmmentLine.length > 3) {
                         this._getConstantDeclaration(3, line)
                     }
                 }
                 else if (currState == eParseState.inDat) {
                     // process a data line
                     //this._logPASM('- ('+ i + 1 +'): pre-scan DAT line trimmedLine=[' + trimmedLine + ']');
-                    if (trimmedLine.length > 6) {
+                    if (trimmedNonCOmmentLine.length > 6) {
                         if (trimmedLine.toUpperCase().includes("ORG")) { // ORG, ORGF, ORGH
                             this._logPASM('- ('+ i + 1 +'): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
                             prePasmState = currState;
@@ -351,13 +353,13 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 }
                 else if (currState == eParseState.inObj) {
                     // process a constant line
-                    if (line.length > 3) {
+                    if (trimmedNonCOmmentLine.length > 3) {
                         this._getObjectDeclaration(3, line)
                     }
                 }
                 else if (currState == eParseState.inVar) {
                     // process a constant line
-                    if (line.length > 3) {
+                    if (trimmedNonCOmmentLine.length > 3) {
                         this._getVariableDeclaration(3, line)
                     }
                 }
@@ -922,6 +924,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         //skip Past Whitespace
         let currentOffset = this._skipWhite(line, startingOffset)
         const remainingNonCommentLineStr: string = this._getNonCommentLineRemainder(currentOffset, line);
+        this._logVAR('- GetVarDecl remainingNonCommentLineStr=[' + remainingNonCommentLineStr + ']');
         const isMultiDeclaration: boolean = remainingNonCommentLineStr.includes(',');
         let lineParts: string[] = this._getNonWhiteDataInitLineParts(remainingNonCommentLineStr);
         const hasGoodType: boolean = this._isStorageType(lineParts[0]);
@@ -1143,7 +1146,6 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const remainingLength: number = line.length - (currentOffset + 1);
         if (remainingLength > 0) {
             // locate key indicators of line style
-            // TODO: UNDONE this should handle chained assignments:  varA := varB := 0
             let assignmentOffset = line.indexOf(':=', currentOffset);
             if (assignmentOffset != -1) {
                 // -------------------------------------------
@@ -2105,6 +2107,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonCommentLineRemainder(startingOffset: number, line: string): string
     {
+        //this._logMessage('- gnclr startingOffset=[' + startingOffset + '], startingOffset=[' + line + ']');
         let currentOffset = this._skipWhite(line, startingOffset)
         // get line parts - we only care about first one
         let beginCommentOffset = line.indexOf("'", currentOffset);
@@ -2112,7 +2115,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             beginCommentOffset = line.indexOf("{", currentOffset);
         }
         const nonCommentEOL = (beginCommentOffset != -1) ? beginCommentOffset - 1 : line.length - 1;
+        //this._logMessage('- gnclr startingOffset=[' + startingOffset + '], currentOffset=[' + currentOffset + ']');
         const nonCommentRHSStr = line.substr(currentOffset, nonCommentEOL - currentOffset + 1).trim();
+        //this._logMessage('- gnclr nonCommentRHSStr=[' + startingOffset + ']');
         return nonCommentRHSStr;
     }
 
@@ -2127,7 +2132,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonWhitePasmLineParts(line: string): string[]
     {
-        let lineParts: string[] | null = line.match(/[^ \t\,\+\*\-\\]+/g);
+        let lineParts: string[] | null = line.match(/[^ \t\,\+\*\-\\\#]+/g);
         if (lineParts === null) {
             lineParts = [];
         }

@@ -18,7 +18,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [0.3.1] 2021-03-0?
+## [0.3.1] 2021-03-09
 2nd Release of Semantic Highlighting
 
 ### - What's new
