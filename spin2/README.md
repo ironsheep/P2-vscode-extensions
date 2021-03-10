@@ -12,7 +12,8 @@ Both Spin2 and Pasm2 are now completely supported - including streamer and smart
 
 ## Feature: Semantic Highlighting
 
-Spin2 is now partially supported and will be improving over the next couple of releases
+Spin2 and Pasm2 are now supported and will be improving over the next couple of releases.
+See the **ChangeLog** for detailed status.
 
 ## Feature: Code Outline
 
