@@ -825,24 +825,35 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 // if we start with storage type, not name, ignore line!
             }
             else {
-                this._logDAT('- GetDatDecl lineParts=[' + lineParts + ']');
-                const hasGoodType: boolean = this._isDatNFileStorageType(lineParts[1])
-                if (hasGoodType) {
+                this._logDAT('- GetDatDecl lineParts=[' + lineParts + '](' + lineParts.length + ')');
+                const hasGoodType: boolean = this._isDatNFileStorageType(lineParts[1]);
+                const preceedsIf: boolean = lineParts[1].toUpperCase().startsWith('IF_');
+                const isNoOtPasmOpcode: boolean = !this._isPasmInstruction(lineParts[0]);
+                if (hasGoodType || preceedsIf || isNoOtPasmOpcode) {
                     let newName = lineParts[0];
-                    this._logDAT('  -- newName=[' + newName + ']');
+                    const nameType: string = (hasGoodType) ? 'variable' : 'label'
+                    this._logDAT('  -- newName=[' + newName + '](' + nameType + ')');
                     this._setGlobalToken(newName, {
-                        tokenType: 'variable',
+                        tokenType: nameType,
                         tokenModifiers: []
                     })
-                } else if (!hasGoodType) {
-                    this._logDAT('  -- BAD DATA TYPE: [' + lineParts[1] + ']');
+                } else {
+                    if (!hasGoodType) {
+                        this._logDAT('  -- GetDatDecl BAD DATA TYPE');
+                    }
+                    if (!preceedsIf) {
+                        this._logDAT('  -- GetDatDecl No IF_ prefix');
+                    }
+                    if (!isNoOtPasmOpcode) {
+                        this._logDAT('  -- GetDatDecl is instruction! [' + lineParts[0] + ']');
+                    }
                 }
             }
         }
         else if (lineParts.length == 1) {
             // handle name declaration only line: [name 'comment]
             let newName = lineParts[0];
-            if (!this._isAlignType(newName)) {  // don't show ALIGNW/L they're not variable names
+            if (!this._isAlignType(newName) && !this._isPasmNonArgumentInstruction(newName)) {  // don't show ALIGNW/L they're not variable names
                 this._logDAT('  -- newName=[' + newName + ']');
                 this._setGlobalToken(newName, {
                     tokenType: 'variable',
@@ -1447,15 +1458,35 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             // process label/variable name
             const labelName: string = lineParts[0];
             this._logPASM('  -- labelName=[' + labelName + ']');
-            const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
-            tokenSet.push({
-                line: lineNumber,
-                startCharacter: 0,
-                length: labelName.length,
-                tokenType: labelType,
-                tokenModifiers: ['declaration']
-            });
-            haveLabel = true;
+            let referenceDetails: IRememberedToken | undefined = undefined;
+            if (this._isGlobalToken(labelName)) {
+                referenceDetails = this._getGlobalToken(labelName);
+                this._logPASM('  --  FOUND global name=[' + labelName + ']');
+            }
+            if (referenceDetails != undefined) {
+                const nameOffset = line.indexOf(labelName, currentOffset);
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: nameOffset,
+                    length: labelName.length,
+                    tokenType: referenceDetails.tokenType,
+                    tokenModifiers: referenceDetails.tokenModifiers
+                });
+                haveLabel = true;
+            }
+            else {
+                // FIXME: UNDONE maybe we shouldn't have this code?
+                // hrmf... no global type???? this should be a lebel
+                const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: 0,
+                    length: labelName.length,
+                    tokenType: labelType,
+                    tokenModifiers: ['declaration']
+                });
+                haveLabel = true;
+            }
         }
         if (!isDataDeclarationLine) {
             // process assembly code
@@ -2242,7 +2273,113 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return desiredToken
     }
 
+    private _isPasmInstruction(name: string): boolean
+    {
+        const pasmInstructions: string[] = [
+            'abs', 'add', 'addct1', 'addct2', 'addct3',
+            'addpix', 'adds', 'addsx', 'addx', 'akpin',
+            'allowi', 'altb', 'altd', 'altgb', 'altgn',
+            'altgw', 'alti', 'altr', 'alts', 'altsb',
+            'altsn', 'altsw', 'and', 'andn', 'augd',
+            'augs',
+            'bitc', 'bith', 'bitl', 'bitnc', 'bitnot',
+            'bitnz', 'bitrnd', 'bitz', 'blnpix', 'bmask',
+            'brk',
+            'call', 'calla', 'callb', 'calld', 'callpa',
+            'callpb', 'cmp', 'cmpm', 'cmpr', 'cmps',
+            'cmpsub', 'cmpsx', 'cmpx', 'cogatn', 'cogbrk', '',
+            'cogid', 'coginit', 'cogstop', 'crcbit', 'crcnib',
+            'decmod', 'decod', 'dirc', 'dirh', 'dirl',
+            'dirnc', 'dirnot', 'dirnz', 'dirrnd', 'dirz',
+            'djf', 'djnf', 'djnz', 'djz', 'drvc',
+            'drvh', 'drvl', 'drvnc', 'drvnot', 'drvnz',
+            'drvrnd', 'drvz',
+            'encod', 'execf',
+            'fblock', 'fge', 'fges', 'fle', 'fles',
+            'fltc', 'flth', 'fltl', 'fltnc', 'fltnot',
+            'fltnz', 'fltrnd', 'fltz',
+            'getbrk', 'getbyte', 'getbyte', 'getct', 'getnib',
+            'getptr', 'getqx', 'getqy', 'getrnd', 'getrnd',
+            'getscp', 'getword', 'getword', 'getxacc',
+            'hubset',
+            'ijnz', 'ijz', 'incmod',
+            'jatn', 'jct1', 'jct2', 'jct3', 'jfbw',
+            'jint', 'jmp', 'jmprel', 'jnatn', 'jnct1',
+            'jnct2', 'jnct3', 'jnfbw', 'jnint', 'jnpat',
+            'jnqmt', 'jnse1', 'jnse2', 'jnse3', 'jnse4',
+            'jnxfi', 'jnxmt', 'jnxrl', 'jnxro', 'jpat',
+            'jqmt', 'jse1', 'jse2', 'jse3', 'jse4', 'jxfi',
+            'jxmt', 'jxrl', 'jxro',
+            'loc', 'locknew', 'lockrel', 'lockret', 'locktry',
+            'mergeb', 'mergew', 'mixpix', 'modc', 'modcz',
+            'modz', 'mov', 'movbyts', 'mul', 'mulpix',
+            'muls', 'muxc', 'muxnc', 'muxnibs', 'muxnits',
+            'muxnz', 'muxq', 'muxz',
+            'neg', 'negc', 'negnc', 'negnz', 'negz',
+            'nixint1', 'nixint2', 'nixint3', 'nop', 'not',
+            'ones', 'or', 'outc', 'outh', 'outl',
+            'outnc', 'outnot', 'outnz', 'outrnd', 'outz',
+            'pollatn', 'pollct1', 'pollct2', 'pollct3', 'pollfbw',
+            'pollint', 'pollpat', 'pollqmt', 'pollse1',
+            'pollse2', 'pollse3', 'pollse4', 'pollxfi', 'pollxmt',
+            'pollxrl', 'pollxro', 'pop', 'popa', 'popb',
+            'push', 'pusha', 'pushb', 'qdiv', 'qexp',
+            'qfrac', 'qlog', 'qmul', 'qrotate', 'qsqrt',
+            'qvector',
+            'rcl', 'rcr', 'rczl', 'rczr', 'rdbyte',
+            'rdfast', 'rdlong', 'rdlut', 'rdpin', 'rdword',
+            'rep', 'resi0', 'resi1', 'resi2', 'resi3',
+            'ret', 'reta', 'retb', 'reti0', 'reti1',
+            'reti2', 'reti3', 'rev', 'rfbyte', 'rflong',
+            'rfvar', 'rfvars', 'rfword', 'rgbexp', 'rgbsqz',
+            'rol', 'rolbyte', 'rolbyte', 'rolnib', 'rolword',
+            'rolword', 'ror', 'rqpin',
+            'sal', 'sar', 'sca', 'scas', 'setbyte',
+            'setcfrq', 'setci', 'setcmod', 'setcq', 'setcy',
+            'setd', 'setdacs', 'setint1', 'setint2', 'setint3',
+            'setluts', 'setnib', 'setpat', 'setpiv', 'setpix',
+            'setq', 'setq2', 'setr', 'sets', 'setscp',
+            'setse1', 'setse2', 'setse3', 'setse4', 'setword',
+            'setxfrq', 'seussf', 'seussr', 'shl', 'shr',
+            'signx', 'skip', 'skipf', 'splitb', 'splitw',
+            'stalli', 'sub', 'subr', 'subs', 'subsx',
+            'subx', 'sumc', 'sumnc', 'sumnz', 'sumz',
+            'test', 'testb', 'testbn', 'testn', 'testp',
+            'testpn', 'tjf', 'tjnf', 'tjns', 'tjnz',
+            'tjs', 'tjv', 'tjz', 'trgint1', 'trgint2',
+            'trgint3', 'waitatn', 'waitct1', 'waitct2', 'waitct3',
+            'waitfbw', 'waitint', 'waitpat', 'waitse1', 'waitse2',
+            'waitse3', 'waitse4', 'waitx', 'waitxfi', 'waitxmt',
+            'waitxrl', 'waitxro', 'wfbyte', 'wflong', 'wfword',
+            'wmlong', 'wrbyte', 'wrc', 'wrfast', 'wrlong',
+            'wrlut', 'wrnc', 'wrnz', 'wrpin', 'wrword',
+            'wrz', 'wxpin', 'wypin',
+            'xcont', 'xinit', 'xor', 'xoro32', 'xstop', 'xzero',
+            'zerox',
+        ];
+        const instructionStatus = (pasmInstructions.indexOf(name.toLowerCase()) != -1);
+        return instructionStatus;
+    }
 
+    private _isPasmNonArgumentInstruction(name: string): boolean
+    {
+        const pasmNonArgumentInstructions: string[] = [
+            'nop', 'resi3', 'resi2', 'resi1', 'resi0',
+            'reti3', 'reti2', 'reti1', 'reti0', 'xstop',
+            'allowi', 'stalli', 'trgint1', 'trgint2', 'trgint3',
+            'nixint1', 'nixint2', 'nixint3',
+            'ret', 'reta', 'retb',
+            'pollint', 'pollct1', 'pollct2', 'pollct3', 'pollse1',
+            'pollse2', 'pollse3', 'pollse4', 'pollpat', 'pollfbw',
+            'pollxmt', 'pollxfi', 'pollxro', 'pollxrl', 'pollatn',
+            'pollqmt', 'waitint', 'waitct1', 'waitct2', 'waitct3',
+            'waitse1', 'waitse2', 'waitse3', 'waitse4', 'waitpat',
+            'waitfbw', 'waitxmt', 'waitxfi', 'waitxro', 'waitxrl',
+            'waitatn',
+        ];
+        const instructionStatus = (pasmNonArgumentInstructions.indexOf(name.toLowerCase()) != -1);
+        return instructionStatus;
+    }
 
     private _isPasmConditional(name: string): boolean
     {
