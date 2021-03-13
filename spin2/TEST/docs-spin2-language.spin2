@@ -1,0 +1,30 @@
+'' from page 3 & 4 of spin2 docs v35i
+
+
+' -----------------------------------------------------------------------------
+'' Constants
+' -----------------------------------------------------------------------------
+CON
+    1                       ' Decimal values use digits '0'..'9'
+    -150                    ' Underscores '_' are allowed after the first digit for placeholding
+    3_000_000
+
+    $1B                     ' Hex values start with '$' and use digits '0'..'9' and 'A'..'F'
+    $AA55                   ' Underscores '_' are allowed after the first digit for placeholding
+    $FFFF_FFFF
+
+    %%21                    ' Double binary values start with '%%' and use digits '0'..'3'
+    %%01_23               ' Underscores '_' are allowed after the first digit for placeholding
+    %%3333_2222_1111_0000
+
+    %0110                   ' Binary values start with '%' and use digits '0' and '1'
+    %1_1111_1000            ' Underscores '_' are allowed after the first digit for placeholding
+    %0001_0010_0011_0100
+
+
+    -1.0                    ' Float values use digits '0'..'9' and have a '.' and/or 'e' in them
+    1_250_000.0             ' Floats are encoded in IEEE-754 single-precision 32-bit format
+    1e9                     ' Underscores '_' are allowed after the first digit for placeholding
+    -1.23456e-7             ' Floats are not part of Spin2, but a library can offer floating-point functions
+
+"H"                         ' A single character in quotes resolves to a 7-bit ASCII value

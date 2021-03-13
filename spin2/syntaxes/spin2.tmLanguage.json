@@ -12,7 +12,7 @@
   "repository": {
     "array_index": {
       "name": "meta.array.index.spin2",
-      "match": "(\\[)(.*?)(\\])",
+      "match": "(\\[)(.*)?(\\])",
       "captures": {
         "1": {
           "name": "keyword.operator.spin2"
@@ -31,7 +31,7 @@
     },
     "binary_number": {
       "name": "constant.numeric.binary.spin2",
-      "match": "(%[01][01_]*)\\b",
+      "match": "(\\%[01][01_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base2.spin2"
@@ -132,7 +132,7 @@
     },
     "constant_operators": {
       "name": "keyword.operator.constant-math.spin2",
-      "match": "(?i)(=|/|*|+|-|//)"
+      "match": "(\\=|\\/|\\*|\\+|\\-|\\\\)"
     },
     "data_block": {
       "name": "meta.block.data.spin2",
@@ -205,7 +205,7 @@
           "match": "(?i)^(\\w+)\\b",
           "captures": {
             "1": {
-              "name": "variable.name.spin2"
+              "name": "variable.name.dat.spin2"
             }
           }
         },
@@ -213,7 +213,7 @@
           "match": "(?i)^(\\w+)\\s*(byte|word|long|res)(\\[.*\\])?\\b",
           "captures": {
             "1": {
-              "name": "variable.name.spin2"
+              "name": "variable.name.dat.spin2"
             },
             "2": {
               "name": "storage.type.spin2"
@@ -262,12 +262,16 @@
     },
     "decimal_number": {
       "name": "constant.numeric.decimal.spin2",
-      "match": "\\b([0-9][0-9_\\.]*)\\b",
-      "captures": {
-        "1": {
-          "name": "constant.numeric.base10.spin2"
+      "patterns": [
+        {
+          "name": "constant.numeric.base10.spin2",
+          "match": "\\b([\\-]*[0-9][0-9_]*\\.[0-9][0-9_]*)\\b"
+        },
+        {
+          "name": "constant.numeric.base10.spin2",
+          "match": "\\b([\\-]*[0-9][0-9_]*)\\b"
         }
-      }
+      ]
     },
     "directives_dat": {
       "name": "keyword.control.directive.spin2",
@@ -281,6 +285,27 @@
     "doc_line_comment": {
       "name": "comment.line.documentation.spin2",
       "match": "''.*$"
+    },
+    "float_number": {
+      "name": "constant.numeric.decimal.spin2",
+      "patterns": [
+        {
+          "name": "constant.numeric.float.spin2",
+          "match": "([\\-]*[0-9][0-9_]*[\\.]*[0-9][0-9_]*)\\b"
+        },
+        {
+          "name": "constant.numeric.float.spin2",
+          "match": "([\\-]*[0-9][0-9_]*\\.[0-9][0-9_]*)\\b"
+        },
+        {
+          "name": "constant.numeric.float.spin2",
+          "match": "([\\-]*[0-9][0-9_]*e[\\-]*[0-9][0-9_]*)\\b"
+        },
+        {
+          "name": "constant.numeric.float.spin2",
+          "match": "([\\-]*[0-9][0-9_]*\\.[0-9][0-9_]*e[\\-]*[0-9][0-9_]*)\\b"
+        }
+      ]
     },
     "hexadecimal_number": {
       "name": "constant.numeric.hexadecimal.spin2",
@@ -308,6 +333,9 @@
         },
         {
           "include": "#decimal_number"
+        },
+        {
+          "include": "#float_number"
         }
       ]
     },
@@ -380,6 +408,9 @@
         },
         {
           "include": "#pasm_storage_alignment"
+        },
+        {
+          "include": "#pasm_field_operations"
         }
       ]
     },
@@ -433,7 +464,7 @@
         },
         {
           "name": "constant.language.clock-register-names.spin2",
-          "match": "(?i)\\b(_rc(fast|slow)|_clkfreq|(_x(in|tl)freq))\\b"
+          "match": "(?i)\\b(_rc(fast|slow)|_clkfreq|clkfreq_|(_x(in|tl)freq))\\b"
         },
         {
           "name": "keyword.pasm.instruction.hub-ram.pasm2",
@@ -529,6 +560,9 @@
         },
         {
           "include": "#pasm_language_elements"
+        },
+        {
+          "include": "#pasm_field_operations"
         }
       ]
     },
@@ -582,7 +616,7 @@
     },
     "quaternary_number": {
       "name": "constant.numeric.quaternary.spin2",
-      "match": "\\b(%%[0-3][0-3_]*)\\b",
+      "match": "(\\%\\%[0-3][0-3_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base4.spin2"
@@ -590,6 +624,10 @@
       }
     },
     "spin_field_operations": {
+      "name": "keyword.operator.field.spin2",
+      "match": "(?i)\\b(ADDBITS|ADDPINS)\\b"
+    },
+    "pasm_field_operations": {
       "name": "keyword.operator.field.spin2",
       "match": "(?i)\\b(ADDBITS|ADDPINS)\\b"
     },
@@ -819,10 +857,16 @@
               "name": "storage.type.spin2"
             },
             "2": {
-              "name": "variable.name.spin2"
+              "name": "variable.name.var.spin2"
             },
-            "4": {
+            "3": {
               "patterns": [
+                {
+                  "include": "#number"
+                },
+                {
+                  "include": "#constants"
+                },
                 {
                   "include": "#array_index"
                 }

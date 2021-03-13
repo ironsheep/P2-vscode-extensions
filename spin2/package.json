@@ -3,7 +3,7 @@
     "displayName": "Spin2",
     "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
     "icon": "images/Propeller.ico",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "publisher": "IronSheepProductionsLLC",
     "repository": {
         "type": "git",
@@ -21,9 +21,11 @@
     "keywords": [
         "spin",
         "spin2",
+        "pasm",
+        "pasm2",
         "propeller",
         "propeller 2",
-        "propeller ii",
+        "propeller v2",
         "parallax"
     ],
     "license": "MIT",
@@ -45,9 +47,9 @@
                 "path": "./themes/isp-spin-theme.json"
             },
             {
-                "label": "Spin2 Cluso99",
-                "uiTheme": "hc-black",
-                "path": "./themes/spin-theme.json"
+                "label": "Spin2 Ironsheep Syntax",
+                "uiTheme": "vs-dark",
+                "path": "./themes/isp-spin-syntax-theme.json"
             }
         ],
         "grammars": [

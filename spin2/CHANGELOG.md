@@ -18,6 +18,42 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [0.3.3] 2021-03-??
+4th Release of Semantic Highlighting
+
+This represents further improvement in parsing
+
+### - What's new
+
+Theme adjustments:
+
+- Removed `Spin2 Cluso99` theme (by request)
+- Added `Spin2 Ironsheep Syntax` theme (primarily for extension developer use, disables Semantic highlighting)
+
+Semantic Fixes:
+
+- TBD
+
+Syntax Fixes:
+
+- BUGFIX improved variable index recognition - not missing them any more?
+- BUGFIX add missing `clkfreq_` constant
+
+### - Known Issues w/v0.3.2
+
+- Spin: Badly handles single line { comment }: see's names in them, no good
+- Spin: Badly handles strings (should be ignoring contents of them)
+- Spin: Badly handles marking multiple vars LHS of assignment
+- Incorrectly colors **built-in** constants (should be own color)
+- Fails to parse some debug() statements correctly
+- Does NOT handle multi-line enum declarations
+- Does NOT handle comma-delimited constant assignment
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic highlight: the 'modification' attribute is being over-applied
+- Semantic highlight: the 'modification' attribute should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [0.3.2] 2021-03-12
 3rd Release of Semantic Highlighting
 
@@ -29,7 +65,7 @@ Semantic Fixes:
 
 - BUGFIX spin is not case-sensitive... adjust so highlighting is also not!
 - Decision: not fixing: Does not handle the .label (local-scoped pasm labels) properly
-    -   works good enough to highlight properly
+    -   works well enough to highlight properly
 
 Syntax Fixes:
 
