@@ -29,10 +29,15 @@ Semantic Fixes:
 
 - BUGFIX spin is not case-sensitive... adjust so highlighting is also not!
 
+Syntax Fixes:
+
+- BUGFIX add missing `posx` and `negx` spin2 constants
+
 ### - Known Issues w/v0.3.2
 
 - Pasm: Does not handle the .label (local-scoped pasm labels) properly (:labels for P1, . for P2)
 - Spin: Badly handles strings (should be ignoring contents of them)
+- Spin: Badly handles marking multiple vars LHS of assignment
 - Incorrectly colors **built-in** constants (should be own color)
 - Fails to parse some debug() statements correctly
 - Does NOT handle multi-line enum declarations
@@ -74,6 +79,7 @@ Syntax Fixes:
 
 - Pasm: Does not handle the .label (local-scoped pasm labels) properly (:labels for P1, . for P2)
 - Spin: Badly handles strings (should be ignoring contents of them)
+- Spin: Badly handles marking multiple vars LHS of assignment
 - Incorrectly colors **built-in** constants (should be own color)
 - Fails to parse some debug() statements correctly
 - Does NOT handle multi-line enum declarations

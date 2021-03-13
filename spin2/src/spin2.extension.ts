@@ -820,7 +820,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const dataDeclNonCommentStr = this._getNonCommentLineRemainder(currentOffset, line);
         let lineParts: string[] = this._getNonWhiteLineParts(dataDeclNonCommentStr);
         // remember this object name so we can annotate a call to it
-        if (lineParts.length > 2) {
+        if (lineParts.length > 1) {
             if (this._isStorageType(lineParts[0])) {
                 // if we start with storage type, not name, ignore line!
             }
@@ -1741,7 +1741,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         let lineParts: string[] = this._getNonWhiteLineParts(dataDeclNonCommentStr);
         this._logVAR('- rptDataDeclLn lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
-        if (lineParts.length > 2) {
+        if (lineParts.length > 1) {
             if (this._isStorageType(lineParts[0])) {
                 // if we start with storage type, not name, ignore line!
             }

@@ -158,6 +158,12 @@ PUB allClockVariabless()
     clkfreq
     clkmode
 
+PUB allSpinConstants
+    TRUE
+    FALSE
+    POSX
+    NEGX
+
 PUB allnamedOperators()
     ABS
     ENCOD

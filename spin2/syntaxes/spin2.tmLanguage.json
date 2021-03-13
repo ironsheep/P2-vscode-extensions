@@ -92,7 +92,7 @@
     },
     "constants": {
       "name": "constant.language.spin2",
-      "match": "(?i)\\b(TRUE|FALSE)\\b"
+      "match": "(?i)\\b(TRUE|FALSE|(POS|NEG)X)\\b"
     },
     "constant_block": {
       "name": "meta.block.constant.spin2",

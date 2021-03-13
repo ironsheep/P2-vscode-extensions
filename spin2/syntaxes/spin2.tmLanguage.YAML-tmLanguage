@@ -60,7 +60,7 @@ repository:
         match: '(?i)\b(CHIPVER|_?CLKMODE|_?CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL[1-3]|PLL(1|2|4|8|16)X)\b'
     constants:
         name: constant.language.spin2
-        match: '(?i)\b(TRUE|FALSE)\b'
+        match: '(?i)\b(TRUE|FALSE|(POS|NEG)X)\b'
     constant_block:
         name: meta.block.constant.spin2
         begin: '(?i)^(CON)\b'
