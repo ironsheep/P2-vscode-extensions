@@ -18,7 +18,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [0.3.2] 2021-03-??
+## [0.3.2] 2021-03-12
 3rd Release of Semantic Highlighting
 
 This represents an overall improvement in parsing when there is less whitespace between things
@@ -28,6 +28,8 @@ This represents an overall improvement in parsing when there is less whitespace 
 Semantic Fixes:
 
 - BUGFIX spin is not case-sensitive... adjust so highlighting is also not!
+- Decision: not fixing: Does not handle the .label (local-scoped pasm labels) properly
+    -   works good enough to highlight properly
 
 Syntax Fixes:
 
@@ -35,7 +37,7 @@ Syntax Fixes:
 
 ### - Known Issues w/v0.3.2
 
-- Pasm: Does not handle the .label (local-scoped pasm labels) properly (:labels for P1, . for P2)
+- Spin: Badly handles single line { comment }: see's names in them, no good
 - Spin: Badly handles strings (should be ignoring contents of them)
 - Spin: Badly handles marking multiple vars LHS of assignment
 - Incorrectly colors **built-in** constants (should be own color)
@@ -45,6 +47,7 @@ Syntax Fixes:
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
+- Semantic highlight: the 'modification' attribute should use more than := as test!!!!
 - *I'm sure there are more issues...*
 
 

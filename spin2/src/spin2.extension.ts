@@ -2033,7 +2033,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = true;
+    private spinDebugLogEnabled: boolean = false;
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
