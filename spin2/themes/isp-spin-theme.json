@@ -254,5 +254,6 @@
         // style overrides
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
+        "*.declaration.static": { "fontStyle": "italic" }, // all declarations are bold
      }
 }

@@ -18,6 +18,31 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [0.3.2] 2021-03-??
+3rd Release of Semantic Highlighting
+
+This represents an overall improvement in parsing when there is less whitespace between things
+
+### - What's new
+
+Semantic Fixes:
+
+- BUGFIX spin is not case-sensitive... adjust so highlighting is also not!
+
+### - Known Issues w/v0.3.2
+
+- Pasm: Does not handle the .label (local-scoped pasm labels) properly (:labels for P1, . for P2)
+- Spin: Badly handles strings (should be ignoring contents of them)
+- Incorrectly colors **built-in** constants (should be own color)
+- Fails to parse some debug() statements correctly
+- Does NOT handle multi-line enum declarations
+- Does NOT handle comma-delimited constant assignment
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic highlight: the 'modification' attribute is being over-applied
+- *I'm sure there are more issues...*
+
+
 ## [0.3.1] 2021-03-09
 2nd Release of Semantic Highlighting
 
@@ -55,6 +80,8 @@ Syntax Fixes:
 - Does NOT handle comma-delimited constant assignment
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic the 'modification' attribute is being over-applied
+- Oops spin is not case-sensative... I need to adjust so highlighting is also not!
 - *I'm sure there are more issues...*
 
 
