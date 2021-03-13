@@ -851,7 +851,7 @@
           "include": "#pasm_storage_alignment"
         },
         {
-          "match": "(?i)\\b(byte|word|long)\\s*(\\w+)(\\[.*\\])?",
+          "match": "(?i)\\b(byte|word|long)\\s*(\\w+)(\\[.*\\])?(\\s*,\\s*(\\w+)(\\[.*\\])*)?",
           "captures": {
             "1": {
               "name": "storage.type.spin2"

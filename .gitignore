@@ -17,6 +17,7 @@ out/
 
 *.vsix
 *.zip
+*.lst
 
 
 *-REF*

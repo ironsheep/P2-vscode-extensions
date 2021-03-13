@@ -876,7 +876,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const isMultiDeclaration: boolean = remainingNonCommentLineStr.includes(',');
         let lineParts: string[] = this._getNonWhiteDataInitLineParts(remainingNonCommentLineStr);
         const hasGoodType: boolean = this._isStorageType(lineParts[0]);
-        this._logVAR('- GetVarDecl lineParts=[' + lineParts + ']');
+        this._logVAR('  -- lineParts=[' + lineParts + ']');
         let nameSet: string[] = [];
         if (hasGoodType && lineParts.length > 1) {
             if(!isMultiDeclaration) {
@@ -901,8 +901,17 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     })
                 }
             }
-        } else if (!hasGoodType) {
-            this._logVAR('  -- GetVarDecl BAD DATA TYPE: [' + lineParts[0] + ']');
+        } else if (!hasGoodType && lineParts.length > 0) {
+            for (let index = 0; index < lineParts.length; index++) {
+                const longVarName = lineParts[index];
+                if (longVarName.substr(0, 1).match(/[a-zA-Z_]/)) {
+                    this._logVAR('  -- GetVarDecl newName=[' + longVarName + ']');
+                    this._setGlobalToken(longVarName, {
+                        tokenType: 'variable',
+                        tokenModifiers: ['instance']
+                    })
+                }
+            }
         }
     }
 
@@ -1930,58 +1939,45 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         let currentOffset = this._skipWhite(line, startingOffset)
         const remainingNonCommentLineStr: string = this._getNonCommentLineRemainder(currentOffset, line);
         // get line parts - we only care about first one
-        let lineParts: string[]  = this._getNonWhiteLineParts(remainingNonCommentLineStr);
+        let lineParts: string[]  = this._getCommaDelimitedNonWhiteLineParts(remainingNonCommentLineStr);
         this._logVAR('  -- rptVarDecl lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
-        const hasArrayReference: boolean = (line.indexOf('[') != -1);
         const isMultiDeclaration: boolean = remainingNonCommentLineStr.includes(',');
+        const hasStorageType: boolean = (this._isStorageType(lineParts[0]));
         if (lineParts.length > 1) {
-            if (isMultiDeclaration) {
-                for (let index = 1; index < lineParts.length; index++) {
-                    const newName = lineParts[index].replace(',', '');
-                    if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
-                        this._logVAR('  -- newName=[' + newName + ']');
-                        const nameOffset: number = line.indexOf(newName, currentOffset)
-                        tokenSet.push({
-                            line: lineNumber,
-                            startCharacter: nameOffset,
-                            length: newName.length,
-                            tokenType: 'variable',
-                            tokenModifiers: ['declaration', 'instance']
-                        });
-                        this._setGlobalToken(newName, {
-                            tokenType: 'variable',
-                            tokenModifiers: ['instance']
-                        })
-                        currentOffset = nameOffset + newName.length;
+            const startIndex: number = (hasStorageType) ? 1 : 0;
+            for (let index = startIndex; index < lineParts.length; index++) {
+                let newName = lineParts[index];
+                const hasArrayReference: boolean = (newName.indexOf('[') != -1);
+                if (hasArrayReference) {
+                    // remove array suffix from name
+                    if (newName.includes('[')) {
+                        const nameParts: string[] = newName.split('[');
+                        newName = nameParts[0];
                     }
                 }
-            }
-            else {
-                let newName = lineParts[1];
-                // remove array suffix from name
-                if (newName.includes('[')) {
-                    const nameParts: string[] = newName.split('[');
-                    newName = nameParts[0];
+                if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
+                    this._logVAR('  -- newName=[' + newName + ']');
+                    const nameOffset: number = line.indexOf(newName, currentOffset)
+                    tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: nameOffset,
+                        length: newName.length,
+                        tokenType: 'variable',
+                        tokenModifiers: ['declaration', 'instance']
+                    });
+                    this._setGlobalToken(newName, {
+                        tokenType: 'variable',
+                        tokenModifiers: ['instance']
+                    })
+                    currentOffset = nameOffset + newName.length;
                 }
-                this._logVAR('  -- newName=[' + newName + ']');
-                const nameOffset :number = line.indexOf(newName, currentOffset)
-                tokenSet.push({
-                    line: lineNumber,
-                    startCharacter: nameOffset,
-                    length: newName.length,
-                    tokenType: 'variable',
-                    tokenModifiers: ['declaration', 'instance']
-                });
-                this._setGlobalToken(newName, {
-                    tokenType: 'variable',
-                    tokenModifiers: ['instance']
-                })
                 if (hasArrayReference) {
-                    const arrayOpenOffset: number = line.indexOf('[');
-                    const arrayCloseOffset: number = line.indexOf(']');
+                    // process name with array length value
+                    const arrayOpenOffset: number = line.indexOf('[', currentOffset);
+                    const arrayCloseOffset: number = line.indexOf(']', currentOffset);
                     const arrayReference: string = line.substr(arrayOpenOffset + 1, arrayCloseOffset - arrayOpenOffset - 1);
-                    const arrayReferenceParts: string[] = arrayReference.split(/[ \t\*]/)
+                    const arrayReferenceParts: string[] = arrayReference.split(/[ \t\*\+\<\>]/)
                     this._logVAR('  --  arrayReferenceParts=[' + arrayReferenceParts + ']');
                     for (let index = 0; index < arrayReferenceParts.length; index++) {
                         const referenceName = arrayReferenceParts[index];
@@ -2028,12 +2024,31 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 }
             }
         }
+        else {
+            // have single declaration per line
+            let newName = lineParts[0];
+            if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
+                this._logVAR('  -- newName=[' + newName + ']');
+                const nameOffset: number = line.indexOf(newName, currentOffset)
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: nameOffset,
+                    length: newName.length,
+                    tokenType: 'variable',
+                    tokenModifiers: ['declaration', 'instance']
+                });
+                this._setGlobalToken(newName, {
+                    tokenType: 'variable',
+                    tokenModifiers: ['instance']
+                })
+            }
+        }
         return tokenSet;
     }
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = false;
+    private spinDebugLogEnabled: boolean = true;
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
@@ -2091,8 +2106,6 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             this.spin2log.appendLine(message);
         }
     }
-
-
 
     private _isSectionStartLine(line: string): { isSectionStart: boolean, inProgressStatus: eParseState }  {
         // return T/F where T means our string starts a new section!
@@ -2175,6 +2188,15 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private _getNonWhiteLineParts(line: string): string[]
     {
         let lineParts: string[] | null = line.match(/[^ \t]+/g);
+        if (lineParts === null) {
+            lineParts = [];
+        }
+        return lineParts;
+    }
+
+    private _getCommaDelimitedNonWhiteLineParts(line: string): string[]
+    {
+        let lineParts: string[] | null = line.match(/[^ \t,]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
