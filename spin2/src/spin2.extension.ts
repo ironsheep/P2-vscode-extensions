@@ -631,17 +631,15 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     this._logPASM('- process DAT PASM line(' + i+1 + '):  trimmedLine=[' + trimmedLine + ']');
                     // in DAT sections we end with FIT or just next section
+                    const partialTokenSet: IParsedToken[] = this._reportLineOfDatPasmCode(i, 0, line)
+                    partialTokenSet.forEach(newToken => {
+                        tokenSet.push(newToken);
+                    });
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
                         currState = prePasmState;
                         this._logState('- scan ln:' + i+1 + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
-                    }
-                    else {
-                        const partialTokenSet: IParsedToken[] = this._reportLineOfDatPasmCode(i, 0, line)
-                        partialTokenSet.forEach(newToken => {
-                            tokenSet.push(newToken);
-                        });
                     }
                 }
             }
@@ -1733,7 +1731,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // get line parts - we only care about first one
         const dataDeclNonCommentStr = this._getNonCommentLineRemainder(currentOffset, line);
         let lineParts: string[] = this._getNonWhiteLineParts(dataDeclNonCommentStr);
-        //this._logVAR('- rptVarDecl lineParts=[' + lineParts + ']');
+        this._logVAR('- rptDataDeclLn lineParts=[' + lineParts + ']');
         // remember this object name so we can annotate a call to it
         if (lineParts.length > 2) {
             if (this._isStorageType(lineParts[0])) {
@@ -1796,14 +1794,20 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // process data declaration
         const dataValueInitStr = this._getNonCommentLineRemainder(startingOffset, line);
         if(dataValueInitStr.length > 1) {
-            let lineParts: string[] = this._getNonWhiteDataInitLineParts(dataValueInitStr);
-            const argumentStartIndex: number = (this._isDatStorageType(lineParts[0])) ? 1 : 2;
             if (showDebug) {
-                this._logMessage('  -- reportDataValueInit lineParts=[' + lineParts + ']');
+                this._logMessage('  -- reportDataValueInit dataValueInitStr=[' + dataValueInitStr + ']');
+            }
+            let lineParts: string[] = this._getNonWhiteDataInitLineParts(dataValueInitStr);
+            const argumentStartIndex: number = (this._isDatStorageType(lineParts[0])) ? 1 : 0;
+            if (showDebug) {
+                this._logMessage('  -- lineParts=[' + lineParts + ']');
             }
             // process remainder of line
             for (let index = argumentStartIndex; index < lineParts.length; index++) {
-                const possibleName = lineParts[index].replace(/[\(\)]/, '');
+                const possibleName = lineParts[index].replace(/[\(\)\@]/, '');
+                //if (showDebug) {
+                //    this._logMessage('  -- possibleName=[' + possibleName + ']');
+                //}
                 const currPossibleLen = possibleName.length;
                 if (currPossibleLen < 1) {
                     continue;
