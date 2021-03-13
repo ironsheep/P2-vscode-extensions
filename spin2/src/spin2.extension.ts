@@ -1013,6 +1013,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 // have a single return value name
                 localVarNames = [localVarStr];
             }
+            this._logSpin('  -- localVarNames=[' + localVarNames + ']');
             for (let index = 0; index < localVarNames.length; index++) {
                 const localVariableName = localVarNames[index].trim();
                 const localVariableOffset = line.indexOf(localVariableName, currentOffset);
@@ -1027,7 +1028,14 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 }
                 this._logSpin('  -- nameParts=[' + nameParts + ']');
                 for (let index = 0; index < nameParts.length; index++) {
-                    const localName = nameParts[index];
+                    let localName = nameParts[index];
+                    // have name similar to scratch[12]?
+                    if (localName.includes('[')) {
+                        // yes remove array suffix
+                        let localNameParts: string[] = localName.split('[');
+                        localName = localNameParts[0];
+                    }
+                    this._logSpin('  -- localName=[' + localName + ']');
                     const nameOffset = line.indexOf(localName, localVariableOffset);
                     if (index == nameParts.length - 1) {
                         // have name
@@ -1088,7 +1096,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (variableName.includes("[")) {
                     // NOTE this handles code: byte[pColor][2] := {value}
                     // have complex target name, parse in loop
-                    const variableNameParts: string[] = variableName.split(/[\[\]]/);
+                    const variableNameParts: string[] = variableName.split(/[\[\]\+\-]/);
                     this._logSpin('  -- Spin: variableNameParts=[' + variableNameParts + ']');
                     for (let index = 0; index < variableNameParts.length; index++) {
                         const variableNamePart = variableNameParts[index].replace('@','');
