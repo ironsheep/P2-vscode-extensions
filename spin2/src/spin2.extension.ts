@@ -1096,13 +1096,14 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (variableName.includes("[")) {
                     // NOTE this handles code: byte[pColor][2] := {value}
                     // have complex target name, parse in loop
-                    const variableNameParts: string[] = variableName.split(/[\[\]\+\-]/);
+                    const variableNameParts: string[] = variableName.split(/[ \t\[\]\+\-\(\)\<\>]/);
                     this._logSpin('  -- Spin: variableNameParts=[' + variableNameParts + ']');
+                    let haveModification: boolean = false;
                     for (let index = 0; index < variableNameParts.length; index++) {
                         const variableNamePart = variableNameParts[index].replace('@','');
                         const nameOffset = line.indexOf(variableNamePart, currentOffset);
                         if (variableNamePart.substr(0, 1).match(/[a-zA-Z_]/)) {
-                            this._logSpin('  -- variableNamePart=[' + variableNamePart + ', (' +nameOffset+ ')]');
+                            this._logSpin('  -- variableNamePart=[' + variableNamePart + ', (' + nameOffset + 1 + ')]');
                             if (this._isStorageType(variableNamePart)) {
                                 tokenSet.push({
                                     line: lineNumber,
@@ -1124,7 +1125,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 }
                                 if (referenceDetails != undefined) {
                                     let modificationArray: string[] = referenceDetails.tokenModifiers;
-                                    modificationArray.push('modification');
+                                    if (!haveModification) {
+                                        // place modification attribute on only 1st name
+                                        modificationArray.push('modification');
+                                        haveModification = true;
+                                    }
                                     if (referenceDetails != undefined) {
                                         tokenSet.push({
                                             line: lineNumber,
@@ -1190,7 +1195,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
             const assignmentRHSStr = this._getNonCommentLineRemainder(currentOffset, line);
             this._logSpin('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
-            let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|]/);
+            let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]/);
             // special code to handle case range strings:  [e.g., SEG_TOP..SEG_BOTTOM:]
             const isCaseValue: boolean = assignmentRHSStr.endsWith(':');
             if (isCaseValue && possNames[0].includes("..")) {
