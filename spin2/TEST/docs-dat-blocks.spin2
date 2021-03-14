@@ -34,7 +34,6 @@ FileDat     FILE  "Filename"            ' include binary file, FileDat is a byte
             ALIGNW                      ' word-align to hub by emitting a zero byte, if necessary
             ALIGNL                      ' long-align to hub by emitting 1 to 3 zero bytes, if necessary
 
-
 ' -----------------------------------------------------------------------------
 '' DAT: Data Pointers
 ' -----------------------------------------------------------------------------
