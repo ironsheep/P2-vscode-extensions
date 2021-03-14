@@ -113,7 +113,7 @@ pub another(place, i) : digit | value
 VAR
     long    testVar
 
-pub built_in_Methods1(NewCLKMODE, NewCLKFREQ, CogMask, value) : CogNum | lockNum
+pub built_in_Methods1(NewCLKMODE, NewCLKFREQ, CogMask, value) : CogNum | lockNum, Running, LockState, AtnFlag
 
     HUBSET(Value)
     CLKSET(NewCLKMODE, NewCLKFREQ)
@@ -179,7 +179,7 @@ pub built_in_Methods4(RegOrHubAddr, HubAddr)
     REGEXEC(HubAddr)
     REGLOAD(HubAddr)
 
-pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divisor) | x, y, rotx, roty
+pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divisor) | x, y, rotx, roty, quotient, Rnd
     '' Math Methods
     ' TODO: multi-return value not colored correctly!
     rotx, roty := ROTXY(x, y, angle32bit)

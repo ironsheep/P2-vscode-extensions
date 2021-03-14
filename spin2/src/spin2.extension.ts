@@ -1650,25 +1650,26 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 }
                 else {
                     // have simple target name
-                    const nameOffset = line.indexOf(variableName, currentOffset);
+                    const cleanedVariableName: string = variableName.replace(/[\(\)]/, '')
+                    const nameOffset = line.indexOf(cleanedVariableName, currentOffset);
                     let referenceDetails: IRememberedToken | undefined = undefined;
-                    if (this._isLocalToken(variableName)) {
-                        referenceDetails = this._getLocalToken(variableName);
-                        this._logSPIN('  --  FOUND local name=[' + variableName + ']');
+                    if (this._isLocalToken(cleanedVariableName)) {
+                        referenceDetails = this._getLocalToken(cleanedVariableName);
+                        this._logSPIN('  --  FOUND local name=[' + cleanedVariableName + ']');
                     }
-                    else if (this._isGlobalToken(variableName)) {
-                        referenceDetails = this._getGlobalToken(variableName);
-                        this._logSPIN('  --  FOUND globel name=[' + variableName + ']');
+                    else if (this._isGlobalToken(cleanedVariableName)) {
+                        referenceDetails = this._getGlobalToken(cleanedVariableName);
+                        this._logSPIN('  --  FOUND globel name=[' + cleanedVariableName + ']');
                     }
                     if (referenceDetails != undefined) {
                         let modificationArray: string[] = referenceDetails.tokenModifiers;
                         modificationArray.push('modification');
-                        this._logSPIN('  -- spin: simple variableName=[' + variableName + '](' + nameOffset + ')');
+                        this._logSPIN('  -- spin: simple variableName=[' + cleanedVariableName + '](' + nameOffset + ')');
                         if (referenceDetails != undefined) {
                             tokenSet.push({
                                 line: lineNumber,
-                                startCharacter: currentOffset,
-                                length: variableName.length,
+                                startCharacter: nameOffset,
+                                length: cleanedVariableName.length,
                                 tokenType: referenceDetails.tokenType,
                                 tokenModifiers: modificationArray
                             });
@@ -1676,12 +1677,12 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     }
                     else {
                         // we don't have name registered so just mark it
-                        if (!this._isSpinReservedWord(variableName)) {
-                            this._logSPIN('  --  MISSING name=[' + variableName + ']');
+                        if (!this._isSpinReservedWord(cleanedVariableName)) {
+                            this._logSPIN('  --  MISSING name=[' + cleanedVariableName + ']');
                             tokenSet.push({
                                 line: lineNumber,
-                                startCharacter: currentOffset,
-                                length: variableName.length,
+                                startCharacter: nameOffset,
+                                length: cleanedVariableName.length,
                                 tokenType: 'variable',
                                 tokenModifiers: ['modification', 'missingDeclaration']
                             });
@@ -1690,7 +1691,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 }
                 currentOffset = assignmentOffset + 2;   // skip to RHS of assignment
             }
-            const assignmentRHSStr = this._getNonCommentLineRemainder(currentOffset, line);
+            const assignmentRHSStr = this._getNonCommentLineRemainder(currentOffset, line).replace('..', ' ');
             this._logSPIN('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
             let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]/);
             // special code to handle case range strings:  [e.g., SEG_TOP..SEG_BOTTOM:]
