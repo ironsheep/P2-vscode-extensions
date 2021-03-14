@@ -30,13 +30,18 @@ Theme adjustments:
 - Removed `Spin2 Cluso99` theme (by request)
 - Added `Spin2 Ironsheep Syntax` theme (primarily for extension developer use, disables Semantic highlighting)
 
+**Note**: *Sould you wish, you can switch between the two ironsheep themes to show code with/without semantic highlighting*
+
 Semantic Fixes:
 
-- TBD
+- VAR declaration updates - parses all examples in spin2 doc
+- CON declaration updates - parses all examples in spin2 doc
 
 Syntax Fixes:
 
-- BUGFIX improved variable index recognition - not missing them any more?
+- BUGFIX improved variable index recognition - missing fewer of them now...
+- BUGFIX improved number recognition - recognizes all examples in spin2 doc
+- ENHANCEMENT added floating point number recognition
 - BUGFIX add missing `clkfreq_` constant
 
 ### - Known Issues w/v0.3.2
