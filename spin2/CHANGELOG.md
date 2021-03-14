@@ -25,24 +25,26 @@ This represents further improvement in parsing
 
 ### - What's new
 
-Theme adjustments:
+Theme Adjustments:
 
 - Removed `Spin2 Cluso99` theme (by request)
 - Added `Spin2 Ironsheep Syntax` theme (primarily for extension developer use, disables Semantic highlighting)
 
 **Note**: *Sould you wish, you can switch between the two ironsheep themes to show code with/without semantic highlighting*
 
-Semantic Fixes:
+Semantic Adjustments:
 
-- VAR declaration updates - parses all examples in spin2 doc
-- CON declaration updates - parses all examples in spin2 doc
+- Update: VAR declarations - parses all examples in spin2 doc
+- Update: CON declarations - parses all examples in spin2 doc
+- Addition: if variables are used but not (yet?) defined they'll be shown in RED
 
-Syntax Fixes:
+Syntax Adjustments:
 
 - BUGFIX improved variable index recognition - missing fewer of them now...
-- BUGFIX improved number recognition - recognizes all examples in spin2 doc
 - ENHANCEMENT added floating point number recognition
+- BUGFIX improved number recognition - recognizes asll examples in spin2 doc
 - BUGFIX add missing `clkfreq_` constant
+- BUGFIX add missing spin built-ins `getms()`, `QSIN()`, `QCOS()`
 
 ### - Known Issues w/v0.3.2
 

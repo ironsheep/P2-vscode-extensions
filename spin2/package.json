@@ -93,7 +93,11 @@
             {
                 "id": "instance",
                 "description": "Annotates a variable unique to an instance"
-              }
+            },
+            {
+                "id": "missingDeclaration",
+                "description": "Annotates a variable but no declaration found!"
+            }
         ],
         "semanticTokenScopes": [
             {

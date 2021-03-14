@@ -689,7 +689,7 @@
         },
         {
           "name": "keyword.spin.methods.timing.spin2",
-          "match": "(?i)\\b(GETSEC|(GET|POLL|WAIT)CT|WAIT(MS|US))\\b"
+          "match": "(?i)\\b(GET(SEC|MS)|(GET|POLL|WAIT)CT|WAIT(MS|US))\\b"
         },
         {
           "name": "constant.language.hub-variable-names.spin2",
@@ -709,7 +709,7 @@
         },
         {
           "name": "keyword.spin.methods.math.spin2",
-          "match": "(?i)\\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND)\\b"
+          "match": "(?i)\\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND|Q(SIN|COS))\\b"
         },
         {
           "name": "keyword.spin.methods.pasminterface.spin2",

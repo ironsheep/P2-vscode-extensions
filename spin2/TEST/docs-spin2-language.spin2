@@ -28,3 +28,232 @@ CON
     -1.23456e-7             ' Floats are not part of Spin2, but a library can offer floating-point functions
 
 "H"                         ' A single character in quotes resolves to a 7-bit ASCII value
+
+
+' -----------------------------------------------------------------------------
+'' Permanent Variables Spin2 Pg 6
+' -----------------------------------------------------------------------------
+
+CON
+
+   varName = CLKMODE
+   varName = CLKFREQ
+
+pub something()
+
+   varName = VARBASE
+   varName = PR0
+   varName = PR1
+   varName = PR2
+   varName = PR3
+   varName = PR4
+   varName = PR5
+   varName = PR6
+   varName = PR7
+   varName = DIRA
+   varName = DIRB
+   varName = OUTA
+   varName = OUTB
+   varName = INA
+   varName = INB
+
+DAT
+   varName mov a,IJMP3
+   varName mov a,IRET3
+   varName mov a,IJMP2
+   varName mov a,IRET2
+   varName mov a,IJMP1
+   varName mov a,IRET1
+
+   varName mov a,PA
+   varName mov a,PB
+   varName mov a,PTRA
+   varName mov a,PTRB
+
+   varName mov a,DIRA
+   varName mov a,DIRB
+   varName mov a,OUTA
+   varName mov a,OUTB
+   varName mov a,INA
+   varName mov a,INB
+
+
+' -----------------------------------------------------------------------------
+'' Pin Fields - Spin2 Pg 7
+' -----------------------------------------------------------------------------
+
+CON PinfieldCon = 50 ADDPINS 3
+BasePin = 5
+ExtraPins = 3
+
+pub something() | PinfieldVar
+    PinfieldVar := BasePin ADDPINS ExtraPins
+    PINLOW(%00000_000000)
+    PINLOW(%00000_111111)
+    PINLOW(%00011_100000)
+    PINLOW(%11111_001000)
+    PINLOW(19)
+    PINLOW(49..40)
+    PINLOW(11 ADDPINS 4)
+    PINLOW(PinfieldCon)
+    PINLOW(PinfieldVar)
+
+' -----------------------------------------------------------------------------
+'' Expressions - Spin2 Pg 7
+' -----------------------------------------------------------------------------
+
+pub another(place, i) : digit | value
+
+    value := BYTE[i++]
+    (digit := value / place // 10) OR place == 1
+    place /= 10
+    "0" + digit
+    PINREAD(17..12)
+
+VAR
+    long    testVar
+
+pub built_in_Methods1(NewCLKMODE, NewCLKFREQ, CogMask, value) : CogNum | lockNum
+
+    HUBSET(Value)
+    CLKSET(NewCLKMODE, NewCLKFREQ)
+    COGSPIN(CogNum, supportMethod(1,2), @stack)
+    COGINIT(CogNum, @driver_entry, @testVar)
+    COGSTOP(CogNum)
+    COGID() : CogNum
+    Running := COGCHK(CogNum)
+    LockNum := LOCKNEW()
+    LOCKRET(LockNum)
+    LockState := LOCKTRY(LockNum)
+    LOCKREL(LockNum)
+    LockState := LOCKCHK(LockNum)
+    COGATN(CogMask)
+    AtnFlag := POLLATN()
+    WAITATN()
+
+'
+PRI supportMethod()
+    ' called routine by COGSPIN
+
+DAT
+
+    org
+     ' called routine by COGINIT
+driver_entry   mov  ref,#PTRA
+
+    fit 497
+ref     res     1
+stack   byte    0[40]
+
+
+pub built_in_Methods2(MOde, XVal, Yval) | PinStates
+    '' Pin Methods
+    PINW(PinfieldCon, 0)
+    PINWRITE(PinfieldCon, $22)
+    PINL(PinfieldCon)
+    PINLOW(PinfieldCon)
+    PINH(PinfieldCon)
+    PINHIGH(PinfieldCon)
+    PINT(PinfieldCon)
+    PINTOGGLE(PinfieldCon)
+    PINF(PinfieldCon)
+    PINFLOAT(PinfieldCon)
+    PinStates := PINR(PinfieldCon)
+    PinStates := PINREAD(PinfieldCon)
+    PINSTART(PinfieldCon, Mode, Xval, Yval)
+    PINCLEAR(PinfieldCon)
+
+pub built_in_Methods3(Tick, Microseconds, milliseconds) | Count, Past, Seconds
+    '' Timing Methods
+    Count := GETCT()
+    Past := POLLCT(Tick)
+    WAITCT(Tick)
+    WAITUS(Microseconds)
+    WAITMS(Milliseconds)
+    Seconds := GETSEC()
+    Milliseconds := GETMS()
+
+pub built_in_Methods4(RegOrHubAddr, HubAddr)
+    '' PASM interfacing
+    CALL(RegOrHubAddr)
+    REGEXEC(HubAddr)
+    REGLOAD(HubAddr)
+
+pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divisor) | x, y, rotx, roty
+    '' Math Methods
+    ' TODO: multi-return value not colored correctly!
+    rotx, roty := ROTXY(x, y, angle32bit)
+    x, y := POLXY(length, angle32bit)
+    length, angle32bit := XYPOL(x, y)
+    y := QSIN(length, angle, twopi)
+    x := QCOS(length, angle, twopi)
+    quotient := MULDIV64(mult1,mult2,divisor)
+    Rnd := GETRND()
+
+pub built_in_Methods6(HubAddr, CogAddr, Dest, Source, count, value)
+    '' Memory Methods
+    GETREGS(HubAddr, CogAddr, Count)
+    SETREGS(HubAddr, CogAddr, Count)
+    BYTEMOVE(Dest, Source, Count)
+    WORDMOVE(Dest, Source, Count)
+    LONGMOVE(Dest, Source, Count)
+    BYTEFILL(Dest, Value, Count)
+    WORDFILL(Dest, Value, Count)
+    LONGFILL(Dest, Value, Count)
+
+pub built_in_Methods7(Addr, AddrA, AddrB) | Size, Match, StringAddress
+    '' String Methods
+    Size := STRSIZE(Addr)
+    Match := STRCOMP(AddrA,AddrB)
+    StringAddress := STRING("Text",9)
+
+Con
+#0,v2,v3
+
+pub built_in_Methods6(v1,  etc) | Value, Index
+    '' Index ↔ Value Methods
+    Value := LOOKUP(Index: v1, v2..v3, etc)
+    Value := LOOKUPZ(Index: v1, v2..v3, etc)
+    Index := LOOKDOWN(Value: v1, v2..v3, etc)
+    Index := LOOKDOWNZ(Value: v1, v2..v3, etc)
+
+
+' -----------------------------------------------------------------------------
+'' Using Methods - Spin2 Pg 7
+' -----------------------------------------------------------------------------
+
+pub using_methods1(ToStr, FromStr) | x
+    '' Methods that return single results
+    x := GETRND() +// 100 'Get a random number between 0 and 99
+    BYTEMOVE(ToStr, FromStr, STRSIZE(FromStr) + 1)
+
+pub using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) | x
+    '' Methods that return single results
+    x,y := SumPoints(POLXY(rho1,theta1), POLXY(rho2,theta2))
+
+    '' use underscore in lieu of a variable name
+    x,y := ROTXY(xin,yin,theta)     ' use both the x and y results
+    _,y := ROTXY(xin,yin,theta)     ' use only the y result
+    x,_ := ROTXY(xin,yin,theta)     ' use only the x result
+
+
+'...where...
+PRI SumPoints(x1, y1, x2, y2) : x, y
+    RETURN x1+x2, y1+y2
+
+
+' -----------------------------------------------------------------------------
+'' Abort - Spin2 Pg 12
+' -----------------------------------------------------------------------------
+PRI Sub1() : Error              ' Sub1 calls Sub2 with an ABORT trap
+    Error := \Sub2()            ' \ means call method and trap any ABORT
+    \Sub2()                     ' in this case, the ABORT value is ignored
+
+PRI Sub2()                      ' Sub2 calls Sub3
+    Sub3()                      ' Sub3 never returns here due to the ABORT
+    PINHIGH(0)                  ' PINHIGH never executes
+
+PRI Sub3() | ErrorCode          ' Sub3 ABORTs, returning to Sub1 with ErrorCode
+    ErrorCode := -1
+    ABORT ErrorCode             ' ABORT and return ErrorCode
+    PINLOW(0)                   ' PINLOW never executes

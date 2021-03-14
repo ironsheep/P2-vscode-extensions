@@ -198,7 +198,7 @@
 			"name": "spin methods",
 			"scope": ["keyword.spin.methods"],
 			"settings": {
-				"foreground": "#6d8ad3" // 5D83AC
+				"foreground": "#c1c07d" // 6d8ad3, 5D83AC
 			}
         },
         {
@@ -231,16 +231,16 @@
         "label.declaration": "#9a5849",     // pasm labels
         "variable": "#8bc4e3",     // class global variable
         "variable.modification": "#8bc4e3",     // class global variable
-        "variable.instance": "#69c8c1",     // instance global varable
-        "variable.modification.instance": "#69c8c1",     // instance global varable
-        "variable.declaration.instance": "#69c8c1",     // instance global varable
+        "variable.instance": "#64bfb9",     // instance global varable
+        "variable.modification.instance": "#64bfb9",     // instance global varable
+        "variable.declaration.instance": "#64bfb9",     // instance global varable
         "enumMember": "#a051a0",     // constants
         "enumMember.declaration": "#a051a0",     // constants
         "variable.readonly": "#a051a0",     // constants
         "variable.declaration.readonly": "#a051a0",     // constants
-        "variable.local": "#c1c07d",     // constants
-        "variable.modification.local": "#c1c07d",     // constants
-        "variable.declaration.local": "#c1c07d",     // constants
+        "variable.local": "#a0c1b8",     // constants
+        "variable.modification.local": "#a0c1b8",     // constants
+        "variable.declaration.local": "#a0c1b8",     // constants
         "returnValue.local": "#508b93",     // constants
         "returnValue.declaration.local": "#438e98",     // constants
         "method": "#7b9be4",     // constants
@@ -255,5 +255,9 @@
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
         "*.declaration.static": { "fontStyle": "italic" }, // all declarations are bold
+        "*.modification.missingDeclaration": {
+            "fontStyle": "bold",
+            "foreground": "#d83333"
+        }
      }
 }
