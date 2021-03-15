@@ -256,6 +256,8 @@ repository:
                 include: '#pasm_storage_alignment'
             -
                 include: '#pasm_field_operations'
+            -
+                include: '#pasm_only_instructions'
 
     pasm_storage_alignment:
         name: storage.modifier.spin2
@@ -295,7 +297,7 @@ repository:
                 match: '(?i)\b(W(C|Z|CZ)|AND(C|Z)|OR(C|Z)|XOR(C|Z))\b'
             -
                 name: constant.language.clock-register-names.spin2
-                match: '(?i)\b(_rc(fast|slow)|_clkfreq|clkfreq_|(_x(in|tl)freq))\b'
+                match: '(?i)\b(_rc(fast|slow)|_?clkfreq_?|(_x(in|tl)freq))\b'
             -
                 name: keyword.pasm.instruction.hub-ram.pasm2
                 match: '(?i)\b(POP(A|B)|PUSH(A|B)|WR(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG)\b'
@@ -313,7 +315,7 @@ repository:
                 match: '(?i)\b((DIR|DRV|OUT|FLT)(L|H|C|NC|Z|NZ|RND|NOT)|TESTPN?)\b'
             -
                 name: keyword.pasm.instruction.miscellaneous.pasm2
-                match: '(?i)\b(AUG(S|D)|GET(CT|RND)|NOP|POP|PUSH|SETQ2?|WAITX)\b'
+                match: '(?i)\b(AUG(S|D)|GET(CT|RND)|NOP|POP|PUSH|SETQ2?|WAITX|FVARS?)\b'
             -
                 name: keyword.pasm.instruction.pixel-mixer.pasm2
                 match: '(?i)\b((ADD|BLN|MIX|MUL|SET)PIX|SETPIV)\b'
@@ -341,6 +343,12 @@ repository:
             -
                 name: keyword.pasm.instruction.math-logic.pasm2
                 match: '(?i)\b(RO(L|R)|SA(L|R)|SCAS?|SET(R|S|D|BYTE|NIB|WORD)?|SEUSS(F|R)|SH(L|R)|SPLIT(B|W)|SUB(R|S|SX|X)?|SUM(N?C|N?Z)|TESTN?|TESTBN?|WR(N?C|N?Z)|XOR(O32)?)\b'
+    pasm_only_instructions:
+        name: meta.block.pasm.elements.spin2
+        patterns:
+             -
+                name: keyword.pasm.instruction.pasm-only.pasm2
+                match: '(?i)\b(ASMCLK)\b'
     pasm_language_inline:
         name: meta.block.pasm.language.inline.spin2
         begin: '(?i)\b(ORG)\b'
@@ -485,7 +493,7 @@ repository:
                 match: '\b(clkmode_|clkfreq_)\b'
             -
                 name: keyword.operator.unary.spin2
-                match: '(?i)\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\b'
+                match: '(?i)\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP|REG|AND)\b'
             -
                 name: keyword.operator.binary.spin2
                 match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)\b'

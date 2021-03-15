@@ -411,6 +411,9 @@
         },
         {
           "include": "#pasm_field_operations"
+        },
+        {
+          "include": "#pasm_only_instructions"
         }
       ]
     },
@@ -464,7 +467,7 @@
         },
         {
           "name": "constant.language.clock-register-names.spin2",
-          "match": "(?i)\\b(_rc(fast|slow)|_clkfreq|clkfreq_|(_x(in|tl)freq))\\b"
+          "match": "(?i)\\b(_rc(fast|slow)|_?clkfreq_?|(_x(in|tl)freq))\\b"
         },
         {
           "name": "keyword.pasm.instruction.hub-ram.pasm2",
@@ -488,7 +491,7 @@
         },
         {
           "name": "keyword.pasm.instruction.miscellaneous.pasm2",
-          "match": "(?i)\\b(AUG(S|D)|GET(CT|RND)|NOP|POP|PUSH|SETQ2?|WAITX)\\b"
+          "match": "(?i)\\b(AUG(S|D)|GET(CT|RND)|NOP|POP|PUSH|SETQ2?|WAITX|FVARS?)\\b"
         },
         {
           "name": "keyword.pasm.instruction.pixel-mixer.pasm2",
@@ -525,6 +528,15 @@
         {
           "name": "keyword.pasm.instruction.math-logic.pasm2",
           "match": "(?i)\\b(RO(L|R)|SA(L|R)|SCAS?|SET(R|S|D|BYTE|NIB|WORD)?|SEUSS(F|R)|SH(L|R)|SPLIT(B|W)|SUB(R|S|SX|X)?|SUM(N?C|N?Z)|TESTN?|TESTBN?|WR(N?C|N?Z)|XOR(O32)?)\\b"
+        }
+      ]
+    },
+    "pasm_only_instructions": {
+      "name": "meta.block.pasm.elements.spin2",
+      "patterns": [
+        {
+          "name": "keyword.pasm.instruction.pasm-only.pasm2",
+          "match": "(?i)\\b(ASMCLK)\\b"
         }
       ]
     },
@@ -733,7 +745,7 @@
         },
         {
           "name": "keyword.operator.unary.spin2",
-          "match": "(?i)\\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP)\\b"
+          "match": "(?i)\\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP|REG|AND)\\b"
         },
         {
           "name": "keyword.operator.binary.spin2",

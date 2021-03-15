@@ -255,7 +255,15 @@
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
         "*.declaration.static": { "fontStyle": "italic" }, // all declarations are bold
-        "*.modification.missingDeclaration": {
+        "*.modification.missingDeclaration": {  // missing assignment target
+            "fontStyle": "bold",
+            "foreground": "#d83333"
+        },
+        "*.readonly.missingDeclaration": {  // missing constant
+            "fontStyle": "bold",
+            "foreground": "#d83333"
+        },
+        "*.missingDeclaration": {   // missing variable
             "fontStyle": "bold",
             "foreground": "#d83333"
         }
