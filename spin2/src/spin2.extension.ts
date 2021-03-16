@@ -856,7 +856,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // find open paren
         currentOffset = line.indexOf('(', currentOffset);
         let nameLength = currentOffset - startNameOffset
-        const newName = line.substr(startNameOffset, nameLength);
+        const newName = line.substr(startNameOffset, nameLength).trim();
         const nameType: string = (isPrivate) ?  'private': 'public';
         this._logSPIN('  -- GetMethodDecl newName=[' + newName + '](' + nameType + ')');
         this.currentMethodName = newName;   // notify of latest method name so we can track inLine PASM symbols
@@ -1443,7 +1443,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const startNameOffset = currentOffset
         // find open paren - skipping past method name
         currentOffset = line.indexOf('(', currentOffset);
-        const methodName: string = line.substr(startNameOffset, currentOffset - startNameOffset);
+        const methodName: string = line.substr(startNameOffset, currentOffset - startNameOffset).trim();
         this.currentMethodName = methodName;   // notify of latest method name so we can track inLine PASM symbols
         // record definition of method
         const declModifiers: string[] = (isPrivate) ? ['declaration'] : ['declaration', 'static']
@@ -1460,7 +1460,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             tokenType: 'method',
             tokenModifiers: refModifiers
         })
-        this._logSPIN('-reportMethod: methodName=[' + methodName + ']');
+        this._logSPIN('-reportPubPriSig: methodName=[' + methodName + '](' + startNameOffset + ')');
         // -----------------------------------
         //   Parameters
         //
@@ -1525,8 +1525,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
             for (let index = 0; index < returnValueNames.length; index++) {
                 const returnValueName = returnValueNames[index].trim();
-                this._logSPIN('  -- returnValueName=[' + returnValueName + ']');
-                const nameOffset = line.indexOf(returnValueName, currentOffset + 1);
+                const nameOffset = line.indexOf(returnValueName, currentOffset);
+                this._logSPIN('  -- returnValueName=[' + returnValueName + '](' + nameOffset + ')');
                 tokenSet.push({
                     line: lineNumber,
                     startCharacter: nameOffset,
@@ -1582,8 +1582,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         let localNameParts: string[] = localName.split('[');
                         localName = localNameParts[0];
                     }
-                    this._logSPIN('  -- localName=[' + localName + ']');
                     const nameOffset = line.indexOf(localName, localVariableOffset);
+                    this._logSPIN('  -- localName=[' + localName + '](' + nameOffset + ')');
                     if (index == nameParts.length - 1) {
                         // have name
                         tokenSet.push({
@@ -1639,125 +1639,156 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 // -------------------------------------------
                 // have line assigning value to new constant
                 // -------------------------------------------
-                const variableName = line.substr(currentOffset, (assignmentOffset - 1) - currentOffset).trim()
-                if (variableName.includes("[")) {
-                    // NOTE this handles code: byte[pColor][2] := {value}
-                    // have complex target name, parse in loop
-                    const variableNameParts: string[] = variableName.split(/[ \t\[\]\+\-\(\)\<\>]/);
-                    this._logSPIN('  -- Spin: variableNameParts=[' + variableNameParts + ']');
-                    let haveModification: boolean = false;
-                    for (let index = 0; index < variableNameParts.length; index++) {
-                        const variableNamePart = variableNameParts[index].replace('@','');
-                        const nameOffset = line.indexOf(variableNamePart, currentOffset);
-                        if (variableNamePart.substr(0, 1).match(/[a-zA-Z_]/)) {
-                            this._logSPIN('  -- variableNamePart=[' + variableNamePart + ', (' + nameOffset + 1 + ')]');
-                            if (this._isStorageType(variableNamePart)) {
-                                tokenSet.push({
-                                    line: lineNumber,
-                                    startCharacter: nameOffset,
-                                    length: variableNamePart.length,
-                                    tokenType: 'storageType',
-                                    tokenModifiers: []
-                                });
+                const possibleVariableName = line.substr(currentOffset, (assignmentOffset - 1) - currentOffset).trim()
+                let varNameList: string[] = [possibleVariableName]
+                if (possibleVariableName.includes(",")) {
+                    varNameList = possibleVariableName.split(',');
+                }
+                else if(possibleVariableName.includes(" ")) {
+                    varNameList = this._getNonWhiteSpinLineParts(possibleVariableName);
+                }
+                this._logSPIN('  -- Spin: varNameList=[' + varNameList + ']');
+                for (let index = 0; index < varNameList.length; index++) {
+                    const variableName = varNameList[index];
+                    if (variableName.includes("[")) {
+                        // NOTE this handles code: byte[pColor][2] := {value}
+                        // have complex target name, parse in loop
+                        const variableNameParts: string[] = variableName.split(/[ \t\[\]\+\-\(\)\<\>]/);
+                        this._logSPIN('  -- Spin: [] variableNameParts=[' + variableNameParts + ']');
+                        let haveModification: boolean = false;
+                        for (let index = 0; index < variableNameParts.length; index++) {
+                            let variableNamePart = variableNameParts[index].replace('@', '');
+                            // secial case handle datar.[i] which leaves var name as 'darar.'
+                            if (variableNamePart.endsWith('.')) {
+                                variableNamePart = variableNamePart.substr(0, variableNamePart.length - 1);
                             }
-                            else {
-                                let referenceDetails: IRememberedToken | undefined = undefined;
-                                if (this._isLocalToken(variableNamePart)) {
-                                    referenceDetails = this._getLocalToken(variableNamePart);
-                                    this._logSPIN('  --  FOUND local name=[' + variableNamePart + ']');
-                                }
-                                else if (this._isGlobalToken(variableNamePart)) {
-                                    referenceDetails = this._getGlobalToken(variableNamePart);
-                                    this._logSPIN('  --  FOUND global name=[' + variableNamePart + ']');
-                                }
-                                if (referenceDetails != undefined) {
-                                    let modificationArray: string[] = referenceDetails.tokenModifiers;
-                                    if (!haveModification) {
-                                        // place modification attribute on only 1st name
-                                        modificationArray.push('modification');
-                                        haveModification = true;
-                                    }
+                            const nameOffset = line.indexOf(variableNamePart, currentOffset);
+                            if (variableNamePart.substr(0, 1).match(/[a-zA-Z_]/)) {
+                                this._logSPIN('  -- variableNamePart=[' + variableNamePart + ', (' + nameOffset + 1 + ')]');
+                                if (this._isStorageType(variableNamePart)) {
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: nameOffset,
                                         length: variableNamePart.length,
-                                        tokenType: referenceDetails.tokenType,
-                                        tokenModifiers: modificationArray
+                                        tokenType: 'storageType',
+                                        tokenModifiers: []
                                     });
                                 }
                                 else {
-                                    if (!this._isSpinReservedWord(variableNamePart)) {
-                                        // we don't have name registered so just mark it
-                                        this._logSPIN('  --  SPIN MISSING name=[' + variableNamePart + ']');
+                                    let referenceDetails: IRememberedToken | undefined = undefined;
+                                    if (this._isLocalToken(variableNamePart)) {
+                                        referenceDetails = this._getLocalToken(variableNamePart);
+                                        this._logSPIN('  --  FOUND local name=[' + variableNamePart + ']');
+                                    }
+                                    else if (this._isGlobalToken(variableNamePart)) {
+                                        referenceDetails = this._getGlobalToken(variableNamePart);
+                                        this._logSPIN('  --  FOUND global name=[' + variableNamePart + ']');
+                                    }
+                                    if (referenceDetails != undefined) {
+                                        let modificationArray: string[] = referenceDetails.tokenModifiers;
+                                        if (!haveModification) {
+                                            // place modification attribute on only 1st name
+                                            modificationArray.push('modification');
+                                            haveModification = true;
+                                        }
                                         tokenSet.push({
                                             line: lineNumber,
                                             startCharacter: nameOffset,
                                             length: variableNamePart.length,
-                                            tokenType: 'variable',
-                                            tokenModifiers: ['modification', 'missingDeclaration']
+                                            tokenType: referenceDetails.tokenType,
+                                            tokenModifiers: modificationArray
                                         });
+                                    }
+                                    else {
+                                        if (!this._isSpinReservedWord(variableNamePart)) {
+                                            // we don't have name registered so just mark it
+                                            this._logSPIN('  --  SPIN MISSING name=[' + variableNamePart + ']');
+                                            tokenSet.push({
+                                                line: lineNumber,
+                                                startCharacter: nameOffset,
+                                                length: variableNamePart.length,
+                                                tokenType: 'variable',
+                                                tokenModifiers: ['modification', 'missingDeclaration']
+                                            });
+                                        }
                                     }
                                 }
                             }
+                            currentOffset += variableNamePart.length + 1;
                         }
-                        currentOffset += variableNamePart.length + 1;
-                    }
-                }
-                else {
-                    // have simple target name
-                    const cleanedVariableName: string = variableName.replace(/[\(\)]/, '')
-                    const nameOffset = line.indexOf(cleanedVariableName, currentOffset);
-                    let referenceDetails: IRememberedToken | undefined = undefined;
-                    if (this._isLocalToken(cleanedVariableName)) {
-                        referenceDetails = this._getLocalToken(cleanedVariableName);
-                        this._logSPIN('  --  FOUND local name=[' + cleanedVariableName + ']');
-                    }
-                    else if (this._isGlobalToken(cleanedVariableName)) {
-                        referenceDetails = this._getGlobalToken(cleanedVariableName);
-                        this._logSPIN('  --  FOUND globel name=[' + cleanedVariableName + ']');
-                    }
-                    if (referenceDetails != undefined) {
-                        let modificationArray: string[] = referenceDetails.tokenModifiers;
-                        modificationArray.push('modification');
-                        this._logSPIN('  -- spin: simple variableName=[' + cleanedVariableName + '](' + nameOffset + ')');
-                        tokenSet.push({
-                            line: lineNumber,
-                            startCharacter: nameOffset,
-                            length: cleanedVariableName.length,
-                            tokenType: referenceDetails.tokenType,
-                            tokenModifiers: modificationArray
-                        });
                     }
                     else {
-                        // we don't have name registered so just mark it
-                        if (!this._isSpinReservedWord(cleanedVariableName)) {
-                            this._logSPIN('  --  SPIN MISSING name=[' + cleanedVariableName + ']');
-                            tokenSet.push({
-                                line: lineNumber,
-                                startCharacter: nameOffset,
-                                length: cleanedVariableName.length,
-                                tokenType: 'variable',
-                                tokenModifiers: ['modification', 'missingDeclaration']
-                            });
+                        // have simple target name, no []
+                        const cleanedVariableName: string = variableName.replace(/[ \t\(\)]/, '');
+                        const nameOffset = line.indexOf(cleanedVariableName, currentOffset);
+                        if (cleanedVariableName.substr(0, 1).match(/[a-zA-Z_]/)) {
+                            this._logSPIN('  --  SPIN cleanedVariableName=[' + cleanedVariableName + '](' + nameOffset + ')');
+                            let referenceDetails: IRememberedToken | undefined = undefined;
+                            if (this._isLocalToken(cleanedVariableName)) {
+                                referenceDetails = this._getLocalToken(cleanedVariableName);
+                                this._logSPIN('  --  FOUND local name=[' + cleanedVariableName + ']');
+                            }
+                            else if (this._isGlobalToken(cleanedVariableName)) {
+                                referenceDetails = this._getGlobalToken(cleanedVariableName);
+                                this._logSPIN('  --  FOUND globel name=[' + cleanedVariableName + ']');
+                            }
+                            if (referenceDetails != undefined) {
+                                let modificationArray: string[] = referenceDetails.tokenModifiers;
+                                modificationArray.push('modification');
+                                this._logSPIN('  -- spin: simple variableName=[' + cleanedVariableName + '](' + nameOffset + ')');
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: nameOffset,
+                                    length: cleanedVariableName.length,
+                                    tokenType: referenceDetails.tokenType,
+                                    tokenModifiers: modificationArray
+                                });
+                            }
+                            else if (cleanedVariableName == '_') {
+                                this._logSPIN('  --  SPIN built-in=[' + cleanedVariableName + ']');
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: nameOffset,
+                                    length: cleanedVariableName.length,
+                                    tokenType: 'variable',
+                                    tokenModifiers: ['modification', 'defaultLibrary']
+                                });
+                            }
+                            else {
+                                // we don't have name registered so just mark it
+                                if (!this._isSpinReservedWord(cleanedVariableName)) {
+                                    this._logSPIN('  --  SPIN MISSING name=[' + cleanedVariableName + ']');
+                                    tokenSet.push({
+                                        line: lineNumber,
+                                        startCharacter: nameOffset,
+                                        length: cleanedVariableName.length,
+                                        tokenType: 'variable',
+                                        tokenModifiers: ['modification', 'missingDeclaration']
+                                    });
+                                }
+                            }
                         }
                     }
                 }
-                currentOffset = assignmentOffset + 2;   // skip to RHS of assignment
             }
             const assignmentRHSStr = this._getNonCommentLineRemainder(currentOffset, line).replace('..', ' ');
+            currentOffset = line.indexOf(assignmentRHSStr, currentOffset)
             this._logSPIN('  -- assignmentRHSStr=[' + assignmentRHSStr + ']');
-            let possNames: string[] = assignmentRHSStr.split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]/);
+            let possNames: string[] = this._getNonWhiteSpinLineParts(assignmentRHSStr);
             // special code to handle case range strings:  [e.g., SEG_TOP..SEG_BOTTOM:]
-            const isCaseValue: boolean = assignmentRHSStr.endsWith(':');
-            if (isCaseValue && possNames[0].includes("..")) {
-                possNames = possNames[0].split("..");
-            }
+            //const isCaseValue: boolean = assignmentRHSStr.endsWith(':');
+            //if (isCaseValue && possNames[0].includes("..")) {
+            //    possNames = possNames[0].split("..");
+            //}
+            this._logSPIN('  -- possNames=[' + possNames + ']');
             for (let index = 0; index < possNames.length; index++) {
-                const possibleName = possNames[index];
-                const currPossibleLen = possibleName.length;
-                if (currPossibleLen < 1) {
-                    continue;
+                let possibleName = possNames[index];
+                // special code to handle case of var.[bitfield] leaving name a 'var.'
+                if (possibleName.endsWith('.')) {
+                    possibleName = possibleName.substr(0, possibleName.length - 1);
                 }
+                const currPossibleLen = possibleName.length;
+                currentOffset = line.indexOf(possibleName, currentOffset)
                 let possibleNameSet: string[] = [];
                 if (possibleName.substr(0, 1).match(/[a-zA-Z_]/)) {
                     this._logSPIN('  -- possibleName=[' + possibleName + ']');
@@ -2211,7 +2242,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = true;
+    private spinDebugLogEnabled: boolean = false;
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
@@ -2368,6 +2399,7 @@ private _getNonWhitePasmLineParts(line: string): string[]
 
     private _getNonWhiteSpinLineParts(line: string): string[]
     {
+        //                                     split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]/);
         let lineParts: string[] | null = line.match(/[^ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]+/g);
         if (lineParts === null) {
             lineParts = [];
@@ -2488,7 +2520,13 @@ private _getNonWhitePasmLineParts(line: string): string[]
     private _isSpinReservedWord(name: string): boolean
     {
         const spinInstructionsOfNote: string[] = [
-            'send', 'addpins', 'reg', 'float', 'round', 'trunc'
+            'send', 'addpins', 'reg', 'float', 'round', 'trunc',
+            'clkmode', 'clkfreq', 'lookdown', 'send',
+            'if', 'ifnot', 'elseif', 'elseifnot', 'else',
+            'while', 'repeat', 'until', 'from', 'to', 'step', 'next', 'quit',
+            'case', 'case_fast', 'other',
+            'true', 'false'
+
         ];
         const reservedStatus: boolean = (spinInstructionsOfNote.indexOf(name.toLowerCase()) != -1);
         return reservedStatus;
@@ -2500,7 +2538,7 @@ private _getNonWhitePasmLineParts(line: string): string[]
             //  EVENT_(INT|CT1|CT2|CT3|SE1|SE2|SE3|SE4|PAT|FBW|XMT|XFI|XRO|XRL|ATN|QMT)
             'ijmp1', 'ijmp2', 'ijmp3', 'iret1', 'iret2', 'iret3',
             'ptra', 'ptrb', 'addpins', 'clkfreq_', 'pa', 'pb', 'clkfreq', '_clkfreq','round', 'float', 'trunc',
-            'dira', 'dirb', 'ina', 'inb', 'outa', 'outb', 'fvar', 'addbits'
+            'dira', 'dirb', 'ina', 'inb', 'outa', 'outb', 'fvar', 'fvars', 'addbits', 'true', 'false'
             //'eventse1', 'eventse2', 'eventse3', 'eventse4',
             //'eventct1', 'eventct2', 'eventct3', 'eventct4',
             //'eventpat', 'eventfbw', 'eventxmt', 'eventxfi',

@@ -18,10 +18,10 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [0.3.3] 2021-03-??
+## [0.3.3] 2021-03-16
 4th Release of Semantic Highlighting
 
-This represents further improvement in parsing
+This represents a noticeable cleanup of parsing most existing code.
 
 ### - What's new
 
@@ -37,10 +37,14 @@ Semantic Adjustments:
 - Update: VAR declarations - parses all examples in spin2 doc
 - Update: CON declarations - parses all examples in spin2 doc
 - Update: parses all examples shipped with PNut (less `Spin2_interpreter.spin2`)
-- Addition: if variables are used but not (yet?) defined they'll be shown in RED
+- Update: now parses most of the P2 OBEX cleanly... still more to do tho'
+- NEW: if variables are used but not (yet?) defined they'll be shown in RED
 - BUGFIX: no longer marking vars within `{ }` single line comments
 - BUGFIX: now handles multi-line enum declarations
 - BUGFIX: now handles comma-delimited constant assignments
+- BUGFIX: most if not all embedded assignment (e.g., `until ((b := rxcheck()) >= 0)`) now correct
+- BUGFIX: most if not all shorter variable highlight is now working
+- BUGFIX: multiple assignment LHS of := now highlighted correctly
 
 Syntax Adjustments:
 
@@ -50,16 +54,14 @@ Syntax Adjustments:
 - BUGFIX add missing `clkfreq_`, `_clkfreq` constant
 - BUGFIX add missing `FVAR`, `FVARS` overrides
 - BUGFIX add missing `REG`, `AND` operators
-- BUGFIX add missing spin built-ins `getms()`, `QSIN()`, `QCOS()`
+- BUGFIX add missing spin built-ins `getms()`, `QSIN()`, `QCOS()`, `PINC()`
+- BUGFIX adjusted pub/pri to allow space before open paren
 
-### - Known Issues w/v0.3.2
+### - Known Issues w/v0.3.3
 - Pasm: doesn't recognize round(), float(), and trunc() as pasm operand
-- Spin: Badly handles embedded assignment (e.g., `until ((b := rxcheck()) >= 0)`)
-- Spin: Badly handles marking multiple vars LHS of assignment
 - Spin: Badly handles strings (should be ignoring contents of them)
 - Incorrectly colors **built-in** constants (should be own color)
 - Fails to parse some debug() statements correctly
-- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!

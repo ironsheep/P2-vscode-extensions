@@ -58,25 +58,26 @@ pub something()
    varName = INB
 
 DAT
-   varName mov a,IJMP3
-   varName mov a,IRET3
-   varName mov a,IJMP2
-   varName mov a,IRET2
-   varName mov a,IJMP1
-   varName mov a,IRET1
+   varName mov a7,IJMP3
+   varName mov a7,IRET3
+   varName mov a7,IJMP2
+   varName mov a7,IRET2
+   varName mov a7,IJMP1
+   varName mov a7,IRET1
 
-   varName mov a,PA
-   varName mov a,PB
-   varName mov a,PTRA
-   varName mov a,PTRB
+   varName mov a7,PA
+   varName mov a7,PB
+   varName mov a7,PTRA
+   varName mov a7,PTRB
 
-   varName mov a,DIRA
-   varName mov a,DIRB
-   varName mov a,OUTA
-   varName mov a,OUTB
-   varName mov a,INA
-   varName mov a,INB
+   varName mov a7,DIRA
+   varName mov a7,DIRB
+   varName mov a7,OUTA
+   varName mov a7,OUTB
+   varName mov a7,INA
+   varName mov a7,INB
 
+a7   long    0
 
 ' -----------------------------------------------------------------------------
 '' Pin Fields - Spin2 Pg 7
@@ -181,7 +182,6 @@ pub built_in_Methods4(RegOrHubAddr, HubAddr)
 
 pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divisor) | x, y, rotx, roty, quotient, Rnd
     '' Math Methods
-    ' TODO: multi-return value not colored correctly!
     rotx, roty := ROTXY(x, y, angle32bit)
     x, y := POLXY(length, angle32bit)
     length, angle32bit := XYPOL(x, y)
@@ -227,7 +227,7 @@ pub using_methods1(ToStr, FromStr) | x
     x := GETRND() +// 100 'Get a random number between 0 and 99
     BYTEMOVE(ToStr, FromStr, STRSIZE(FromStr) + 1)
 
-pub using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) | x
+pub using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) | x, y
     '' Methods that return single results
     x,y := SumPoints(POLXY(rho1,theta1), POLXY(rho2,theta2))
 
@@ -257,3 +257,32 @@ PRI Sub3() | ErrorCode          ' Sub3 ABORTs, returning to Sub1 with ErrorCode
     ErrorCode := -1
     ABORT ErrorCode             ' ABORT and return ErrorCode
     PINLOW(0)                   ' PINLOW never executes
+
+' -----------------------------------------------------------------------------
+'' Using Methods - Spin2 Pg 7
+' -----------------------------------------------------------------------------
+pub using_methods3(register, index, address, bitfield) | AnyVar
+
+    AnyVar                              ' Hub or permanent register variable
+    HubVar.WORD                         ' Hub variable with BYTE/WORD/LONG size override
+    BYTE[address]                       ' Hub BYTE/WORD/LONG by address
+    REG[register]                       ' Register, 'register' may be symbol declared in ORG section
+
+    AnyVar[index]                       ' Hub or permanent register variable with index
+    HubVar.BYTE[index]                  ' Hub variable with size override and index
+    LONG[address][index]                ' Hub BYTE/WORD/LONG by address with index
+    REG[register][index]                ' Register with index
+
+    AnyVar.[bitfield]                   ' Hub or permanent register variable with bitfield
+    HubVar.LONG.[bitfield]              ' Hub variable with size override and bitfield
+    WORD[address].[bitfield]            ' Hub BYTE/WORD/LONG by address with bitfield
+    REG[register].[bitfield]            ' Register with bitfield
+
+    AnyVar[index].[bitfield]            ' Hub or permanent register variable with index and bitfield
+    HubVar.BYTE[index].[bitfield]       ' Hub variable with size override, index, and bitfield
+    LONG[address][index].[bitfield]     ' Hub BYTE/WORD/LONG by address with index and bitfield
+    REG[register][index].[bitfield]     ' Register with index and bitfield
+
+dat
+    ORGH
+HubVar  long    0

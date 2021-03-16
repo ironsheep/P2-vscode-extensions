@@ -580,7 +580,7 @@
     },
     "private_block": {
       "name": "meta.block.private.spin2",
-      "begin": "(?i)^(PRI)\\s+(\\w+)\\((?:(.*))?\\)(?:\\s*\\:\\s*(\\w+))?",
+      "begin": "(?i)^(PRI)\\s+(\\w+)\\s*\\((?:(.*))?\\)(?:\\s*\\:\\s*(\\w+))?",
       "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
       "beginCaptures": {
         "1": {
@@ -604,7 +604,7 @@
     },
     "public_block": {
       "name": "meta.block.public.spin",
-      "begin": "(?i)^(PUB)\\s+(\\w+)\\((?:(.*))?\\)(?:\\s*\\:\\s*(\\w+))?",
+      "begin": "(?i)^(PUB)\\s+(\\w+)\\s*\\((?:(.*))?\\)(?:\\s*\\:\\s*(\\w+))?",
       "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
       "beginCaptures": {
         "1": {
@@ -693,7 +693,7 @@
         },
         {
           "name": "keyword.spin.methods.pin.spin2",
-          "match": "(?i)\\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\\b"
+          "match": "(?i)\\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|C|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\\b"
         },
         {
           "name": "keyword.spin.methods.memory.spin2",
