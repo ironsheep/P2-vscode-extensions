@@ -693,7 +693,7 @@
         },
         {
           "name": "keyword.spin.methods.pin.spin2",
-          "match": "(?i)\\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|C|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\\b"
+          "match": "(?i)\\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\\b"
         },
         {
           "name": "keyword.spin.methods.memory.spin2",

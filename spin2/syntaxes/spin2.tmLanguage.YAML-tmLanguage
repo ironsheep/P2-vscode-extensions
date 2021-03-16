@@ -454,7 +454,7 @@ repository:
                 match: '(?i)\b(COG(CHK|ID|INIT|SPIN|STOP)|(HUB|CLK)SET|LOCK(NEW|RET|TRY|REL|CHK)|(COG|POLL|WAIT)ATN)\b'
             -
                 name: keyword.spin.methods.pin.spin2
-                match: '(?i)\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|C|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\b'
+                match: '(?i)\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\b'
             -
                 name: keyword.spin.methods.memory.spin2
                 match: '(?i)\b((GET|SET)REGS|(BYTE|WORD|LONG)MOVE|(BYTE|WORD|LONG)FILL)\b'
