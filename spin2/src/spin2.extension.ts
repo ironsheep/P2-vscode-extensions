@@ -222,7 +222,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         if (this.spinDebugLogEnabled) {
             if (this.spin2log === undefined) {
                 //Create output channel
-                this.spin2log = vscode.window.createOutputChannel("Spin2 OUT");
+                this.spin2log = vscode.window.createOutputChannel("Spin2 DEBUG");
                 this._logMessage("Spin2 log started.");
             }
             else {
@@ -1168,7 +1168,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // process data declaration
         let currentOffset = this._skipWhite(line, startingOffset)
         const dataValueInitStr = this._getNonCommentLineRemainder(currentOffset, line);
-        if(dataValueInitStr.length > 1) {
+        if (dataValueInitStr.length > 1) {
             if (showDebug) {
                 this._logMessage('  -- reportDataValueInit dataValueInitStr=[' + dataValueInitStr + ']');
             }
@@ -1178,89 +1178,91 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 this._logMessage('  -- lineParts=[' + lineParts + ']');
             }
             // process remainder of line
-            for (let index = argumentStartIndex; index < lineParts.length; index++) {
-                const possibleName = lineParts[index].replace(/[\(\)\@]/, '');
-                //if (showDebug) {
-                //    this._logMessage('  -- possibleName=[' + possibleName + ']');
-                //}
-                const currPossibleLen = possibleName.length;
-                if (currPossibleLen < 1) {
-                    continue;
-                }
-                let possibleNameSet: string[] = [];
-                // the following allows '.' in names but  only when in DAT PASM code, not spin!
-                if (possibleName.substr(0, 1).match(/[a-zA-Z_]/) || (isDatPasm && possibleName.substr(0, 1).match(/[a-zA-Z_\.]/))) {
-                    if (showDebug) {
-                        this._logMessage('  -- possibleName=[' + possibleName + ']');
+            if (lineParts.length > 1) {
+                for (let index = argumentStartIndex; index < lineParts.length; index++) {
+                    const possibleName = lineParts[index].replace(/[\(\)\@]/, '');
+                    //if (showDebug) {
+                    //    this._logMessage('  -- possibleName=[' + possibleName + ']');
+                    //}
+                    const currPossibleLen = possibleName.length;
+                    if (currPossibleLen < 1) {
+                        continue;
                     }
-                    // does name contain a namespace reference?
-                    if (possibleName.includes('.') && !possibleName.startsWith('.') ) {
-                        possibleNameSet = possibleName.split('.');
-                    }
-                    else {
-                        possibleNameSet = [possibleName];
-                    }
-                    if (showDebug) {
-                        this._logMessage('  --  possibleNameSet=[' + possibleNameSet + ']');
-                    }
-                    const namePart = possibleNameSet[0];
-                    const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
-                    currentOffset = line.indexOf(searchString, currentOffset);
-                    let referenceDetails: IRememberedToken | undefined = undefined;
-                    if (allowLocal && this._isLocalToken(namePart)) {
-                        referenceDetails = this._getLocalToken(namePart);
+                    let possibleNameSet: string[] = [];
+                    // the following allows '.' in names but  only when in DAT PASM code, not spin!
+                    if (possibleName.substr(0, 1).match(/[a-zA-Z_]/) || (isDatPasm && possibleName.substr(0, 1).match(/[a-zA-Z_\.]/))) {
                         if (showDebug) {
-                            this._logMessage('  --  FOUND local name=[' + namePart + ']');
+                            this._logMessage('  -- possibleName=[' + possibleName + ']');
                         }
-                    }
-                    else if (this._isGlobalToken(namePart)) {
-                        referenceDetails = this._getGlobalToken(namePart);
+                        // does name contain a namespace reference?
+                        if (possibleName.includes('.') && !possibleName.startsWith('.')) {
+                            possibleNameSet = possibleName.split('.');
+                        }
+                        else {
+                            possibleNameSet = [possibleName];
+                        }
                         if (showDebug) {
-                            this._logMessage('  --  FOUND global name=[' + namePart + ']');
+                            this._logMessage('  --  possibleNameSet=[' + possibleNameSet + ']');
                         }
-                    }
-                    if (referenceDetails != undefined) {
-                        tokenSet.push({
-                            line: lineNumber,
-                            startCharacter: currentOffset,
-                            length: namePart.length,
-                            tokenType: referenceDetails.tokenType,
-                            tokenModifiers: referenceDetails.tokenModifiers
-                        });
-                    }
-                    else {
-                        if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isDatNFileStorageType(namePart)) {
+                        const namePart = possibleNameSet[0];
+                        const searchString: string = (possibleNameSet.length == 1) ? possibleNameSet[0] : possibleNameSet[0] + '.' + possibleNameSet[1]
+                        currentOffset = line.indexOf(searchString, currentOffset);
+                        let referenceDetails: IRememberedToken | undefined = undefined;
+                        if (allowLocal && this._isLocalToken(namePart)) {
+                            referenceDetails = this._getLocalToken(namePart);
                             if (showDebug) {
-                                this._logMessage('  --  DAT MISSING name=[' + namePart + ']');
+                                this._logMessage('  --  FOUND local name=[' + namePart + ']');
                             }
+                        }
+                        else if (this._isGlobalToken(namePart)) {
+                            referenceDetails = this._getGlobalToken(namePart);
+                            if (showDebug) {
+                                this._logMessage('  --  FOUND global name=[' + namePart + ']');
+                            }
+                        }
+                        if (referenceDetails != undefined) {
                             tokenSet.push({
                                 line: lineNumber,
                                 startCharacter: currentOffset,
                                 length: namePart.length,
+                                tokenType: referenceDetails.tokenType,
+                                tokenModifiers: referenceDetails.tokenModifiers
+                            });
+                        }
+                        else {
+                            if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isDatNFileStorageType(namePart)) {
+                                if (showDebug) {
+                                    this._logMessage('  --  DAT MISSING name=[' + namePart + ']');
+                                }
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: currentOffset,
+                                    length: namePart.length,
+                                    tokenType: 'variable',
+                                    tokenModifiers: ['missingDeclaration']
+                                });
+                            }
+                        }
+                        if (possibleNameSet.length > 1) {
+                            // we have .constant namespace suffix
+                            // this can NOT be a method name it can only be a constant name
+                            const referenceOffset = line.indexOf(searchString, currentOffset);
+                            const constantPart: string = possibleNameSet[1];
+                            if (showDebug) {
+                                this._logMessage('  --  FOUND external constantPart=[' + constantPart + ']');
+                            }
+                            const nameOffset = line.indexOf(constantPart, referenceOffset)
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: nameOffset,
+                                length: constantPart.length,
                                 tokenType: 'variable',
-                                tokenModifiers: ['missingDeclaration']
+                                tokenModifiers: ['readonly']
                             });
                         }
                     }
-            if (possibleNameSet.length > 1) {
-                        // we have .constant namespace suffix
-                        // this can NOT be a method name it can only be a constant name
-                        const referenceOffset = line.indexOf(searchString, currentOffset);
-                        const constantPart: string = possibleNameSet[1];
-                        if (showDebug) {
-                            this._logMessage('  --  FOUND external constantPart=[' + constantPart + ']');
-                        }
-                        const nameOffset = line.indexOf(constantPart, referenceOffset)
-                        tokenSet.push({
-                            line: lineNumber,
-                            startCharacter: nameOffset,
-                            length: constantPart.length,
-                            tokenType: 'variable',
-                            tokenModifiers: ['readonly']
-                        });
-                    }
+                    currentOffset += currPossibleLen + 1;
                 }
-                currentOffset += currPossibleLen + 1;
             }
         }
         return tokenSet;
@@ -2242,7 +2244,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = false;
+    private spinDebugLogEnabled: boolean = true;
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
@@ -2372,7 +2374,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonWhiteDataInitLineParts(line: string): string[]
     {
-        let lineParts: string[] | null = line.match(/[^ \t\,\[\]\(\)\+\-\/\<\>\|\*\@]+/g);
+        const nonEqualsLine: string = this._removeQuotedStrings(line);
+        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\[\]\(\)\+\-\/\<\>\|\*\@]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
@@ -2381,7 +2384,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonWhiteCONLineParts(line: string): string[]
     {
-        let lineParts: string[] | null = line.match(/[^  \t\(\)\*\+\-\/\>\<]+/g);
+        const nonEqualsLine: string = this._removeQuotedStrings(line);
+        let lineParts: string[] | null = nonEqualsLine.match(/[^  \t\(\)\*\+\-\/\>\<]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
@@ -2390,7 +2394,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
 private _getNonWhitePasmLineParts(line: string): string[]
     {
-        let lineParts: string[] | null = line.match(/[^ \t\,\(\)\<\>\+\*\&\|\-\\\#\@\/]+/g);
+        const nonEqualsLine: string = this._removeQuotedStrings(line);
+        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\<\>\+\*\&\|\-\\\#\@\/]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
@@ -2400,11 +2405,42 @@ private _getNonWhitePasmLineParts(line: string): string[]
     private _getNonWhiteSpinLineParts(line: string): string[]
     {
         //                                     split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]/);
-        let lineParts: string[] | null = line.match(/[^ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]+/g);
+        const nonEqualsLine: string = this._removeQuotedStrings(line);
+        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
         return lineParts;
+    }
+
+    private _removeQuotedStrings(line: string) : string
+    {
+        //this._logMessage('- RQS line [' + line + ']');
+        let trimmedLine: string = line;
+        this._logMessage('- RQS line [' + line + ']');
+        const doubleQuote: string = '"';
+        let quoteStartOffset: number = -1;
+        while ((quoteStartOffset = trimmedLine.indexOf(doubleQuote)) != -1) {
+            // code block to be executed
+            const quoteEndOffset: number = trimmedLine.indexOf(doubleQuote, quoteStartOffset + 1);
+            this._logMessage('-          pre[' + line + ']');
+            if (quoteEndOffset != -1) {
+                const badElement = trimmedLine.substr(quoteStartOffset, quoteEndOffset - quoteStartOffset + 1);
+                this._logMessage('- badElement=[' + badElement + ']');
+                trimmedLine.replace(badElement, '')
+                this._logMessage('-         post[' + trimmedLine + ']');
+            }
+            else {
+                break;
+            }
+        }
+
+        if (line.length != trimmedLine.length) {
+            this._logMessage('- RQS line [' + line + ']');
+            this._logMessage('-          [' + trimmedLine + ']');
+        }
+
+        return trimmedLine;
     }
 
     private _getNonWhiteLineParts(line: string): string[]
