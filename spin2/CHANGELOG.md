@@ -8,17 +8,46 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
-- Finish 1st draft of Semantic Highlight by adding inline and non-inline pasm support
-- Finish Semantic Highlight of debug() statements
+- Finish initial Semantic Highlight by prioving all public forms (P2 Obex, PNut distrib) are correct.
 - working on fixes to known issues
 
 Possible next additions:
 
-- Adding operators so they can be colored is harder... so, not right away...
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [0.3.4] 2021-03-17
+
+5th Release of Semantic Highlighting
+
+This adds quoted-string avoidance when looking for names and their use.
+
+Theme Adjustments:
+
+- Darkened storage type color slightly.
+
+Semantic Adjustments:
+
+- BUGFIX Spin: now ignores contents of strings
+- BUGFIX Spin: debug() statements should now be parsing correctly
+
+Syntax Adjustments:
+
+- BUGFIX removed invalid instruction `pinc` (older form of pinclear, no longer legal)
+- BUGFIX added recognition of `BYTE|WORD|LONG` within spin statements
+
+### - Known Issues w/v0.3.4
+
+- Pasm: doesn't recognize round(), float(), and trunc() as pasm operand
+- Incorrectly colors **built-in** constants (should be own color)
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic highlight: the 'modification' attribute is being over-applied
+- Semantic highlight: the 'modification' attribute should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
+
 ## [0.3.3] 2021-03-16
+
 4th Release of Semantic Highlighting
 
 This represents a noticeable cleanup of parsing most existing code.

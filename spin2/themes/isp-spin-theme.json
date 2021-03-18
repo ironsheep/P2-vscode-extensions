@@ -149,7 +149,7 @@
             "name": "storage types",
             "scope": ["storage.type"],
             "settings": {
-				"foreground": "#468a9d"
+				"foreground": "#3b7585"
 			}
         },
         {

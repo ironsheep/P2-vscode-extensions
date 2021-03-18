@@ -447,6 +447,9 @@ repository:
             -
                 include: '#cog_register_names'
             -
+                name: storage.type.pasm.spin2
+                match: '(?i)\b(BYTE|WORD|LONG)\b'
+            -
                 name: keyword.control.flow.spin2
                 match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
             -
