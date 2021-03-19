@@ -1,3 +1,7 @@
+con
+
+SBUS_RX = 1
+
 obj
 
     sbus    : "sbus.spin2"

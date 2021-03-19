@@ -16,6 +16,46 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.0.0] 2021-03-18
+
+The Official Release of Semantic Highlighting
+
+In this release we clean things up a bit more, we deliver unknown name hightlighted in brighter red, and **herein** we report on the state of testing against various code-sets.
+
+**NOTE:** _with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile.  The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols._
+
+Semantic Adjustments:
+
+- NEW FEATURE! **Unknown names** in the file are now hightlighted with noticable bright red
+- BUGFIX: pasm - repaired variable/label hightlight when short names
+- BUGFIX: by default the compiler treats the first lines in file as being in CON, this highlighter does now as well.
+- BUGFIX: recognize round(), float(), and trunc() in DAT, CON and PUB/PRI
+- BUGFIX: built-in constants should now be colored correctly
+
+Syntax Adjustments:
+
+- BUGFIX: adjusted built-in symbol recognition, now independent of case
+- BUGFIX: added missing, newly added to PNut, `DEBUG_*` variables
+
+### - Known Issues w/v1.0.0
+
+- debug() statements that don't use double-quoted strings currently can't be parsed
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
+### REPORT: Source code shipped with PNut
+
+- **LIMITATIONs**: all highlighting is working with the exception of:
+ - FILE `Spin2_interpreter.spin2` - breaks the syntax highlighter, but the sematic highlighter works.
+ - (meaning pasm instruction names, built-in names, conditions, etc. are not highlighted)
+ - All files with debug() statements that don't use double-quoted strings can't be parsed correctly
+
+### REPORT: Source code shipped in P2 OBEX
+
+- For all P2 Obex files, highlighting is working with the exception of:
+ -  FILE `Parktransformation.spin2` I'm checking the Chip as to why this is.
+
 ## [0.3.4] 2021-03-17
 
 5th Release of Semantic Highlighting
@@ -38,13 +78,13 @@ Syntax Adjustments:
 
 ### - Known Issues w/v0.3.4
 
+- debug() statements that don't use double-quoted strings just can't be parsed
 - Pasm: doesn't recognize round(), float(), and trunc() as pasm operand
 - Incorrectly colors **built-in** constants (should be own color)
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
 - *I'm sure there are more issues...*
-
 
 ## [0.3.3] 2021-03-16
 
@@ -87,6 +127,7 @@ Syntax Adjustments:
 - BUGFIX adjusted pub/pri to allow space before open paren
 
 ### - Known Issues w/v0.3.3
+
 - Pasm: doesn't recognize round(), float(), and trunc() as pasm operand
 - Spin: Badly handles strings (should be ignoring contents of them)
 - Incorrectly colors **built-in** constants (should be own color)
@@ -97,6 +138,7 @@ Syntax Adjustments:
 - *I'm sure there are more issues...*
 
 ## [0.3.2] 2021-03-12
+
 3rd Release of Semantic Highlighting
 
 This represents an overall improvement in parsing when there is less whitespace between things
@@ -128,8 +170,8 @@ Syntax Fixes:
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
 - *I'm sure there are more issues...*
 
-
 ## [0.3.1] 2021-03-09
+
 2nd Release of Semantic Highlighting
 
 ### - What's new
@@ -173,6 +215,7 @@ Syntax Fixes:
 
 
 ## [0.3.0] 2021-03-07
+
 Preview Release of Semantic Highlighting
 
 - Spin2: Initial Semantic Highlighting support (partial: Spin only, no Pasm)

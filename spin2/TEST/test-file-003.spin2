@@ -32,15 +32,15 @@ DAT
                 _xinfreq
                 _xtlfreq
 
-        
+
                 ' alignment
                 ALIGNL
                 ALIGNW
 
                 BYTE
-                WORD 
-                LONG 
-                 
+                WORD
+                LONG
+
                 BYTE    name[23]
 
                 ' assembly start
@@ -155,7 +155,7 @@ DAT
                 DRVRND
                 DRVZ
                 ENCOD
-                EXECF  
+                EXECF
                 FBLOCK
                 FGE
                 FGES
@@ -177,8 +177,8 @@ DAT
                 GETPTR
                 GETQX
                 GETQY
-                GETRND  
-                GETRND          
+                GETRND
+                GETRND
                 GETSCP
                 GETWORD
                 GETWORD
@@ -369,7 +369,7 @@ DAT
                 SHR
                 SIGNX
                 SKIP
-                SKIPF  
+                SKIPF
                 SPLITB
                 SPLITW
                 STALLI
@@ -440,61 +440,63 @@ DAT
     ' flag write controls
     WC | WZ | WCZ
     XORC | XORZ
-    ORC | ORZ 
-    ANDC | ANDZ  
+    ORC | ORZ
+    ANDC | ANDZ
 
     ' instruction conditionals
-    _RET_         
-    IF_NC_AND_NZ  
-    IF_NZ_AND_NC  
-    IF_A          
-    IF_00         
-    IF_NC_AND_Z   
-    IF_Z_AND_NC   
-    IF_01         
-    IF_NC         
-    IF_AE         
-    IF_0X         
-    IF_C_AND_NZ   
-    IF_NZ_AND_C   
-    IF_10         
-    IF_NZ         
-    IF_NE         
-    IF_X0         
-    IF_C_NE_Z     
-    IF_Z_NE_C     
-    IF_DIFF       
-    IF_NC_OR_NZ   
-    IF_NZ_OR_NC   
-    IF_NOT_11     
-    IF_C_AND_Z    
-    IF_Z_AND_C    
-    IF_11         
-    IF_C_EQ_Z     
-    IF_Z_EQ_C     
-    IF_SAME       
-    IF_Z          
-    IF_E          
-    IF_X1         
-    IF_NC_OR_Z    
-    IF_Z_OR_NC    
-    IF_NOT_10     
-    IF_C          
-    IF_B          
-    IF_1X         
-    IF_C_OR_NZ    
-    IF_NZ_OR_C    
-    IF_NOT_01     
-    IF_C_OR_Z     
-    IF_Z_OR_C     
-    IF_BE         
-    IF_NOT_00     
+    _RET_        
+    IF_NC_AND_NZ 
+    IF_NZ_AND_NC 
+    IF_A         
+    IF_00
+    IF_NC_AND_Z  
+    IF_Z_AND_NC  
+    IF_01        
+    IF_NC        
+    IF_AE        
+    IF_0X        
+    IF_C_AND_NZ  
+    IF_NZ_AND_C  
+    IF_10        
+    IF_NZ        
+    IF_NE        
+    IF_X0        
+    IF_C_NE_Z    
+    IF_Z_NE_C    
+    IF_DIFF      
+    IF_NC_OR_NZ  
+    IF_NZ_OR_NC  
+    IF_NOT_11    
+    IF_C_AND_Z   
+    IF_Z_AND_C   
+    IF_11        
+    IF_C_EQ_Z    
+    IF_Z_EQ_C    
+    IF_SAME      
+    IF_Z         
+    IF_E         
+    IF_X1        
+    IF_NC_OR_Z   
+    IF_Z_OR_NC   
+    IF_NOT_10    
+    IF_C         
+    IF_B         
+    IF_1X        
+    IF_C_OR_NZ   
+    IF_NZ_OR_C   
+    IF_NOT_01    
+    IF_C_OR_Z    
+    IF_Z_OR_C    
+    IF_BE        
+    IF_NOT_00    
 
                 FIT
 
 DAT { instructions by group }
 
                 ORG
+                ORGH
+                ORGF
                 CALL            ' Branch
                 CALL            ' Branch
                 CALLA           ' Branch
@@ -532,7 +534,7 @@ DAT { instructions by group }
 
                 SKIP    ' Branch
                 SKIPF   ' Branch
-                
+
                 TJF       ' Branch
                 TJNF      ' Branch
                 TJNS      ' Branch
@@ -1001,7 +1003,7 @@ DAT { instructions by group }
             P_TT_10
             P_TT_11
             P_USB_PAIR
-            
+
 ' symbols that are used to setup streamers
         X_16P_2DAC8_WFWORD
         X_16P_4DAC4_WFWORD

@@ -194,7 +194,81 @@ PUB allnamedOperators()
     ROUND
     TRUNC
 
-
+PUB allDebugMethods()
+    ' conditionals
+    IF
+    IFNOT
+    ' String Output *
+    ZSTR
+    LSTR
+    ' Unsigned Decimal
+    UDEC
+    UDEC_BYTE
+    UDEC_WORD
+    UDEC_LONG
+    UDEC_REG_ARRAY
+    UDEC_BYTE_ARRAY
+    UDEC_WORD_ARRAY
+    UDEC_LONG_ARRAY
+    ' Signed Decimal
+    SDEC
+    SDEC_BYTE
+    SDEC_WORD
+    SDEC_LONG
+    SDEC_REG_ARRAY
+    SDEC_BYTE_ARRAY
+    SDEC_WORD_ARRAY
+    SDEC_LONG_ARRAY
+    ' Hexadecimal Output, unsigned *
+    UHEX
+    UHEX_BYTE
+    UHEX_WORD
+    UHEX_LONG
+    UHEX_REG_ARRAY
+    UHEX_BYTE_ARRAY
+    UHEX_WORD_ARRAY
+    UHEX_LONG_ARRAY
+    ' Hexadecimal Output, signed *
+    SHEX
+    SHEX_BYTE
+    SHEX_WORD
+    SHEX_LONG
+    SHEX_REG_ARRAY
+    SHEX_BYTE_ARRAY
+    SHEX_WORD_ARRAY
+    SHEX_LONG_ARRAY
+    ' Binary Output, unsigned *
+    UBIN
+    UBIN_BYTE
+    UBIN_WORD
+    UBIN_LONG
+    UBIN_REG_ARRAY
+    UBIN_BYTE_ARRAY
+    UBIN_WORD_ARRAY
+    UBIN_LONG_ARRAY
+    ' Binary Output, signed *
+    SBIN
+    SBIN_BYTE
+    SBIN_WORD
+    SBIN_LONG
+    SBIN_REG_ARRAY
+    SBIN_BYTE_ARRAY
+    SBIN_WORD_ARRAY
+    SBIN_LONG_ARRAY
+    ' DEBUG constants
+    DEBUG_COGS
+    DEBUG_DELAY
+    DEBUG_PIN
+    DEBUG_BAUD
+    DEBUG_TIMESTAMP
+    DEBUG_LOG_SIZE
+    DEBUG_LEFT
+    DEBUG_TOP
+    DEBUG_WIDTH
+    DEBUG_HEIGHT
+    DEBUG_DISPLAY_LEFT
+    DEBUG_DISPLAY_TOP
+    DEBUG_WINDOWS_OFF
 
 PUB allFlowControl()
     ABORT
@@ -214,6 +288,7 @@ PUB allFlowControl()
     TO
     UNTIL
     WHILE
+    RETURN
 
 
 PUB allSmartPinAliases()
