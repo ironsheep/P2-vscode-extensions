@@ -20,15 +20,15 @@ Possible next additions:
 
 The Official Release of Semantic Highlighting
 
-In this release we clean things up a bit more, we deliver unknown name hightlighted in brighter red, and **herein** we report on the state of testing against various code-sets.
+In this release we clean things up a bit more, we deliver unknown name highlighting in brighter red, and **herein** we report on the state of testing against various code-sets.
 
 **NOTE:** _with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile.  The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols._
 
 Semantic Adjustments:
 
-- NEW FEATURE! **Unknown names** in the file are now hightlighted with noticable bright red
+- NEW FEATURE! **Unknown names** in the file are now highlighted with noticable bright red
 - BUGFIX: pasm - repaired variable/label hightlight when short names
-- BUGFIX: by default the compiler treats the first lines in file as being in CON, this highlighter does now as well.
+- BUGFIX: by default the compiler treats the first lines in the file as being in CON, this highlighter does now as well.
 - BUGFIX: recognize round(), float(), and trunc() in DAT, CON and PUB/PRI
 - BUGFIX: built-in constants should now be colored correctly
 
