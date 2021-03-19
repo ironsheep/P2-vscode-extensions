@@ -10,6 +10,13 @@ This document is being developed over time as I prove a working environment for 
 
 I'm also expecting to document building and download with various tools such as Flexspin, download with direct attached boards via USB, download via Wifi with the Wx boards attached to our development board, with more compilers as they come ready for multi-platform use, etc.
 
+```
+Latest Updates:
+19 Feb 2021
+- Adjust flexspin options in tasks file to generate more errors and to generate consistent file paths in error messages
+- Add section presenting configuration for running flexspin on Raspberry Pi's
+```
+
 ### VSCode development of P2 Projects
 
 By choosing to adopt the Custom Tasks described in this document along with the keybindings your work flow is now quite sweet.
@@ -129,6 +136,8 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             "command": "/Applications/Flexprop/bin/flexspin.mac",
             "args": [
                 "-2",
+                "-Wabs-paths",
+                "-Wmax-errors=99",
                 "${fileBasename}"
             ],
             "problemMatcher": {
@@ -157,6 +166,8 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             "command": "/Applications/Flexprop/bin/flexspin.mac",
             "args": [
                 "-2",
+                "-Wabs-paths",
+                "-Wmax-errors=99",
                 "jm_p2-es_matrix_control_demo.spin"
             ],
             "problemMatcher": {
@@ -203,13 +214,7 @@ This provides the commands to be run for:
 - CompileTopP2 - Compile the top-file of this project
 - DownloadP2 - Download the binary to our connected P2  [cmd-shift-D -if keybindings are added.]
 
-As written download will always be preceeded by a CompileTop.
-
-*Behavior Note: The task problem matchers now use 'autoDetect' so we can handle Flexspin's mix of relative and absolute file specifications within error messages.*
-
-TODO: *the compiler as driven by the compileP2 task stops on first error. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
-
-**NEWs** (26 Feb) A fix is coming in an upcoming FlexProp release which will allow us to show many more errors from a single compile.
+As written, download will always be preceeded by a CompileTop.
 
 NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
 
@@ -307,6 +312,8 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             },
             "args": [
                 "-2",
+                "-Wabs-paths",
+                "-Wmax-errors=99",
                 "${fileBasename}"
             ],
             "problemMatcher": {
@@ -338,6 +345,8 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             },
             "args": [
                 "-2",
+                "-Wabs-paths",
+                "-Wmax-errors=99",
                 "jm_p2-es_matrix_control_demo.spin"
             ],
             "problemMatcher": {
@@ -387,13 +396,7 @@ This provides the commands to be run for:
 - CompileTopP2 - Compile the top-file of this project
 - DownloadP2 - Download the binary to our connected P2  [ctrl-shift-D -if keybindings are added.]
 
-As written download will always be preceeded by a CompileTop.
-
-*Behavior Note: The task problem matchers now use 'autoDetect' so we can handle Flexspin's mix of relative and absolute file specifications within error messages.*
-
-TODO: *the compiler as driven by the compileP2 task stops before reporting all errors. I am unable to locate option to generate all errors before stop so I [filed an issue](https://github.com/totalspectrum/spin2cpp/issues/116) requesting one if it's not present.*
-
-**NEWs** (26 Feb) A fix is coming in an upcoming FlexProp release which will allow us to show many more errors from a single compile.
+As written, download will always be preceeded by a CompileTop.
 
 NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
 
@@ -423,9 +426,225 @@ Contents I used for file: **keybindings.json**:
 *NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
 
 
-## P2 Code Development with FlexProp on Raspbery Pi
+## P2 Code Development with FlexProp on Raspberry Pi
 
-... coming soon! ...
+To complete your setup so you can use FlexProp on your Raspberry Pi under VScode you'll need to install FlexProp and then:
+
+One time:
+
+- Install a common keybinding (works accross all your P2 projects)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
+    - "Error Lens" which adds the compile errors messages to the associated line of code
+    - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+
+For each P2 Project:
+
+- Install a tasks.json file in each of your P2 projects
+    - Make sure your path to the compiler of your choice is correct
+    - Make sure the name of your top-level file is correctly placed in your compileTop task  
+    
+### The Rasperry Pi OS
+
+On my raspberry Pi's I run **rspios** as distributed by [raspberrypi.org](https://www.raspberrypi.org/) from the [downloads page](https://www.raspberrypi.org/software/operating-systems)
+
+I tend to want the best performance from my gear so on my RPi-3's and RPi-4's I tend to run the 64bit raspios.
+
+I've been doing this for quite a while and have a small farm of RPi's. I tend to place the image on a uSD card and then boot from it initially with a keyboard and screen attached.  I then "welcome" my new machine to my network and time zone and give it a hostname unique and generally fortelling of this purpose of this new RPi.  I also end up running the classic update sequence to ensure my new machine has the latest software available as well as all the latest security patches:
+
+```bash
+# my update process which I run each time when I first log into my machine after a bit of time away
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade
+```
+
+After the new RPi can boot and automatically attach to my network I then remove the screen and keyboard.  I run most my RPi's remotely and "headless" (meaning no screen/keyboard attached.)
+
+### FlexProp install specifics: Raspberry Pi
+
+Installing the FlexProp toolset on the Raspberry Pi (*raspos, or any debian derivative, Ubuntu, etc.*) is a breeze when you follow [Eric's instructions that just work!](https://github.com/totalspectrum/flexprop#building-from-source)
+
+In my case, I used Eric's suggestion to instruct the build/install process to install to /opt/flexprop. When you get to the build step in his instructions use:
+
+ ```bash
+ $ make install INSTALL=/opt/flexprop
+ ```
+
+If you choose to install flexprop in a different location, you will need to modify your `tasks.json` file by changing the `/opt/flexprop/bin` path to your own install path.  The three lines are: 
+
+- "command": "/opt/flexprop/bin/flexspin",  (in the "compileP2" task)
+- "command": "/opt/flexprop/bin/flexspin",  (in the "compileTopP2" task)
+- "command": "/opt/flexprop/bin/loadp2",    (in the "downloadP2" task)
+
+Simply replace `/opt/flexprop/` in each of these lines with your own install path (the folder containing the bin folder).
+
+### Top-Level file project specifics
+
+In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
+
+When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
+
+In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
+
+In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin"
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+
+### Add custom tasks for compileP2, compileTopP2, and downloadP2
+
+In your project folder create a directory named ".vscode" (if it's not already there.)
+
+In this new directory create a "tasks.json" file containing the following contents.
+
+**NOTE** *three OSes are supported by VScode task files: "osx", "linux", and "windows".
+I have mostly mac machines so I use the defult for OSX forms and I provide overrides for "windows" and "linux" forms.*
+
+Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
+
+```json
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compileP2",
+            "type": "shell",
+    		  "osx": {
+                "command": "/Applications/Flexprop/bin/flexspin.mac",
+    		  },
+    		  "windows": {
+                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\flexspin.exe",
+    		  },            
+    		  "linux": {
+                "command": "/opt/flexprop/bin/flexspin",
+    		  },
+            "args": [
+                "-2",
+                "-Wabs-paths",
+                "-Wmax-errors=99",
+                "${fileBasename}"
+            ],
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "compileTopP2",
+            "type": "shell",
+            "osx": {
+                "command": "/Applications/Flexprop/bin/flexspin.mac",
+            },
+            "windows": {
+                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\flexspin.exe",
+            },
+            "linux": {
+                "command": "/opt/flexprop/bin/flexspin",
+            },
+            "args": [
+                "-2",
+                "-Wabs-paths",
+                "-Wmax-errors=99",
+                "jm_p2-es_matrix_control_demo.spin"
+            ],
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+        },
+        {
+            "label": "downloadP2",
+            "type": "shell",
+            "osx": {
+                "command": "/Applications/Flexprop/bin/loadp2.mac",
+            },
+            "windows": {
+                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\loadp2.exe",
+            },
+            "linux": {
+                "command": "/opt/flexprop/bin/loadp2",
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+            "args": [
+                "-b230400",
+                "${fileBasenameNoExtension}.binary",
+                "-t"
+            ],
+            "dependsOn": [
+                "compileTopP2"
+            ]
+        }
+    ]
+}
+```
+
+This provides the commands to be run for:
+
+- CompileP2 - Compile current file  [ctrl-shift-B]
+- CompileTopP2 - Compile the top-file of this project
+- DownloadP2 - Download the binary to our connected P2  [ctrl-shift-D -if keybindings are added.]
+
+As written, download will always be preceeded by a CompileTop.
+
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
+
+### Add Keyboard Shortcut for the Download task
+
+This is the keybinding I used for mapping download to a key sequence.
+
+You get to this file by:
+
+1. Opening the Keyboard shortcuts list [ctrl-K, ctrl-S or Menu: Code->Preferences->Keyboard Shortcuts]
+2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
+
+Contents I used for file: **keybindings.json**:
+
+```json
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "ctrl+shift+d",
+        "command": "workbench.action.tasks.runTask",
+        "args": "downloadP2"
+    }
+
+]
+```
+
+*NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
+
 
 ## P2 Code Development with PNut on Windows
 
