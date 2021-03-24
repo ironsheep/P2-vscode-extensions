@@ -39,6 +39,7 @@ Syntax Adjustments:
 
 ### - Known Issues w/v1.0.0
 
+- Syntax missing `recv` symbol (but has `send`)
 - debug() statements that don't use double-quoted strings currently can't be parsed
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
