@@ -16,6 +16,23 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.0.1] 2021-03-??
+
+Minor update to fix missing things
+
+Syntax Adjustments:
+
+- BUGFIX: add missing `recv` symbol
+
+
+### - Known Issues w/v1.0.1
+
+- debug() statements that don't use double-quoted strings currently can't be parsed
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
+
 ## [1.0.0] 2021-03-18
 
 The Official Release of Semantic Highlighting
