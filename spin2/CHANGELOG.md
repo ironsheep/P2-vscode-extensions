@@ -8,26 +8,27 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
-- Finish initial Semantic Highlight by prioving all public forms (P2 Obex, PNut distrib) are correct.
-- working on fixes to known issues
+- Add support for "debug() statements NOT using strings" - new debug() shorthand support
+- Investigate and possibly add unique coloring for method pointers
+- work on fixes to any reported issues
 
 Possible next additions:
 
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.0.1] 2021-03-??
+## [1.0.1] 2021-03-30
 
 Minor update to fix missing things
 
 Syntax Adjustments:
 
-- BUGFIX: add missing `recv` symbol
+- BUGFIX: add missing `recv` symbol support
 
 
 ### - Known Issues w/v1.0.1
 
-- debug() statements that don't use double-quoted strings currently can't be parsed
+- debug() statements that don't use double-quoted strings currently are not parsed correctly
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - *I'm sure there are more issues...*

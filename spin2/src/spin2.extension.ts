@@ -2828,7 +2828,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             'lockret', 'locktry', 'longfill', 'longmove', 'lookdown', 'lookdownz', 'lookup', 'lookupz',
             'muldiv64', 'pinclear', 'pinf', 'pinfloat', 'pinh', 'pinhigh', 'pinl', 'pinlow', 'pinr', 'pinread',
             'pinstart', 'pint', 'pintoggle', 'pinw', 'pinwrite', 'pollatn',
-            'pollct', 'polxy', 'rdpin', 'regexec', 'regload', 'rotxy', 'rqpin', 'send', 'setregs', 'strcomp',
+            'pollct', 'polxy', 'rdpin', 'regexec', 'regload', 'rotxy', 'rqpin', 'send', 'recv', 'setregs', 'strcomp',
             'string', 'strsize', 'waitatn', 'waitct', 'waitms', 'waitus', 'wordfill', 'wordmove', 'wrpin',
             'wxpin', 'wypin', 'xypol'
         ];

@@ -727,7 +727,7 @@
         },
         {
           "name": "keyword.spin.methods.special.spin2",
-          "match": "(?i)\\bSEND\\b"
+          "match": "(?i)\\b(SEND|RECV)\\b"
         },
         {
           "name": "keyword.spin.methods.index.spin2",

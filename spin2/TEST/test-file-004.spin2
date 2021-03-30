@@ -61,6 +61,7 @@ PUB allSpinLanguageParts()
     POLLCT
     POLXY
     RDPIN
+    RECV
     REGEXEC
     REGLOAD
     ROTXY
@@ -158,7 +159,7 @@ PUB allClockVariabless()
     clkfreq
     clkmode
 
-PUB allSpinConstants
+PUB allSpinConstants()
     TRUE
     FALSE
     POSX

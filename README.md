@@ -19,10 +19,10 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 
 ## Features
 - **Syntax highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols
-- Initial limited **Semantic Highlighting** now working (continued work in progress)
+- **Semantic Highlighting** for both Spin2 and Pasm2 now fully working
 - File navigation from **Outline View**
 - Works with your favorite VSCode themes
-- Offers companion Theme (my development theme, mostly for refence so one can see what can be themed in support of Spin2)
+- Offers companion Theme (Two themes: Syntax+Semantic, and Syntax only - mostly used during semantic highlighting development)
 
 ### Up next
 - Build and Download support (using external compiler(s) and download tool(s)) - *Still figuring this out but follow along with me as I drop HOW-TOs in [Configuring Tasks](TASKS.md)*
