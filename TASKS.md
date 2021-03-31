@@ -4,14 +4,18 @@
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE)
 
+
 ##Automating Build and Download to our P2 development boards
 
-This document is being developed over time as I prove a working environment for each of my target platforms.  I'm expecting to document building on Windows, MacOS, and RaspberryPiOS.
+This document is being developed over time as I prove a working environment for each of my target platforms.  I'm expecting to document building on **Windows**, **MacOS**, and **RaspiOS** (the Raspberry Pi OS).
 
-I'm also expecting to document building and download with various tools such as Flexspin, download with direct attached boards via USB, download via Wifi with the Wx boards attached to our development board, with more compilers as they come ready for multi-platform use, etc.
+I'm also expecting to document building and download with various tools such as FlexProp, PNut, download with direct attached boards via USB, download via Wifi with the Wx boards attached to our development board, with more compilers as they come ready for multi-platform use, etc.
 
 ```
 Latest Updates:
+31 Mar 2021
+- Add PATH setting information so our task.json files can have no expectation as to where tools are installed. See: "Setting paths for your P2 Compilers/Tools"
+- BUGFIX: Correct the download to RAM tasks
 19 Feb 2021
 - Adjust flexspin options in tasks file to generate more errors and to generate consistent file paths in error messages
 - Add section presenting configuration for running flexspin on Raspberry Pi's
@@ -31,7 +35,7 @@ Iterate until your project works as desired:
 - Make changes to file(s)
 - Compile the files to see if they compile cleanly (cmd-shift-B) on which ever file you are editing
 - Once the files compile cleanly
-- Download and test (cmd-shift-D) [if you use keybinds shown in examples on this page]
+- Download and test (cmd-shift-D) [if you use keybindings shown in examples on this page]
 
 ### Being consistent in your machine configuration
 
@@ -39,10 +43,51 @@ I have mostly macs for development but I also have a Windows machine and a numbe
 
 - **Synchronize your VSCode settings and extensions** automatically by installing and using the **Settings Sync** VScode extension. Any changes you make to one machine then will be sync'd to your other VScode machines.
 
-- **Be very consistent in where you install tools** for each type of OS.  (e.g., for all Windows machines make sure you install say, flexprop, in the same location on each Windows machine.) By being consitant you tasks will run no matter which machine your are running on.  This is because tasks have some hard-coded or path-specific information in them which then needs to work everywhere you run.
-    - all like operating systems should have a specific tool installed in the same location on each. (e.g., all Windows machines have Flexspin installed in one location, all macOS machines have FlexSpin installed in a different location that on Windows but it is the same location across all Macs, etc.)
+- **Be very consistent in where you install tools** for each type of OS.  (e.g., for all Windows machines make sure you install say, flexprop, in the same location on each Windows machine.) By being consistant your tasks will run no matter which machine your are running on. 
+There is nothing worse than trying to remember where you installed a specific tool on the machine you are currently logged into. Because you install say FlexProp in the same place on all your Raspberry Pi's you will know where to find it no matter which RPi you are logged in to.
 
-**TODO** *Ensure we are setting up envinronment paths to tools so shells can locate the binaries without path information. This would allow us to remove some path-specifics from our task definitions.*
+    - All like operating systems should have a specific tool installed in the same location on each. (e.g., all Windows machines have Flexspin installed in one location, all macOS machines have FlexSpin installed in a different location that on Windows but it is the same location across all Macs, etc.)
+    - During installation of a tool on a machine, finish the process by configuring the PATH to the tool so that terminals/consoles can access the tool by name. This allows VSCode to run the tool from its build tasks.json file without needing to know where the tool is installed!  On Windows machines this is done by editing the User Environment from within the Settings Application. On Mac's and Linux machines (RPi's) this is done by editing the shell configuration file (e.g., Bash you edit the ~/.bashrc file)
+
+
+### Setting paths for your P2 Compilers/Tools
+
+#### OS: Windows
+
+On windows the search path for programs is maintained by the **Windows Settings App.**  Open Window Settings and search for "environment" and you should see two choices: "**Edit the system environement variables**" and "**Edit enviroment variables for your account**".  If you want the tools to work for all users on this Windows machine then adjust the PATH values by editing the system environement variables.  If, instead, you only need the tools to work for your account then edit the enviroment variables for your account.
+
+**NOTE** *the above is referring to **Windows 10** settings names. On earlier versions of Windows the concept is the same. Locate the environment values and make the appropriate changes.*
+
+#### OS: MacOS
+
+On MacOS this is really shell dependent. I tend to stick with [Bash](https://www.gnu.org/software/bash/manual/html_node/Introduction.html) as I've used it for many 10s of years now.  [zsh](https://scriptingosx.com/2019/06/moving-to-zsh/) (ZShell) is the new shell on the block (*well, new to mac's not a new shell*.) I avoided moving to it but the concepts are the same.
+
+On my Macs I install the flexprop folder into my /Applications folder.  I then edit my .bash_profile and add the following line.  (*I have multiple lines such as this for various tools I've installed.*)
+
+```bash
+export PATH=${PATH}:/Applications/Flexprop/bin
+```
+
+From here on when I start new terminal windows or VSCode they can now get to the FlexProp binaries by name without using the path to them.
+
+#### OS: RaspiOS
+
+On my raspberry Pi's I run [**rspios**](https://www.raspberrypi.org/software/operating-systems) which is a Debain GNU Linux derived distribution. [Fun! See [The Periodic Table of Liux Distros](https://distrowatch.com/dwres.php?resource=family-tree)]
+
+So, as you might have guessed, I use Bash here too.  On RPi I tend to install special tools from others, as well as those I make, under /opt.  So, in the case of FlexProp I install it on all my RPis into `/opt/flexprop/`.
+
+Unlike my Macs which have .bash_profile, my RPis have, instead, a .profile file.  So here I edit the RPi ~/.profile.  I'm using the pattern for "optionally installed tools" so that I can sync this .profile between my many RPi's.
+
+I edit my ~/.profile and add the path to FlexProp.  (*I have multiple groups of lines such as this for various tools I've installed.*)
+
+```bash
+# set PATH so it includes optional install of flexprop/bin if it exists
+if [ -d "/opt/flexprop/bin" ] ; then
+    PATH="$PATH:/opt/flexprop/bin"
+fi
+```
+
+From here on when I start new terminal windows or VSCode they can now get to the FlexProp binaries by name without using the path to them.
 
 
 ## Tasks in VScode
@@ -67,11 +112,14 @@ We'll configure our compileP2 task to be the default.
 
 We'll add a downloadP2 task and assign command-shift-D to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result.
 
-TODO: we need to ensure download doesn't proceed if compile fails
+
+**TODO1**: We need to ensure download doesn't proceed if compile fails
+
+**TODO2**: We actually need two download tasks: (1) download to RAM, (2) download to FLASH.
 
 #### More Advanced building
 
-We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
+**TODO**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
 
 ## P2 Code Development with FlexProp on macOS
 
@@ -94,13 +142,13 @@ For each P2 Project:
 
 The FlexProp toolset does not have a standard installed location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
 
-In my case, on my Mac's, I install the folder at /Applications/Flexprop. Yours will likely be different.  If it is different you will need to modify your `tasks.json` file.  The three lines are: 
+In my case, on my Mac's, I install the folder at /Applications/Flexprop and I've set the PATH to point to the /Applications/Flexprop/bin directory.  Depending on how you obtained the FlexProp install finle you may have bin/flexspin or bin/flexspin.mac and likewise bin/loadp2 or bin/loadp2.mac.  This tasks.json file shows me using the .mac suffixes. If your install doesn't have them then you will need to modify your `tasks.json` file.  The three lines are: 
 
-- "command": "{installPath}/bin/flexspin.mac",  (in the "compileP2" task)
-- "command": "{installPath}/bin/flexspin.mac",  (in the "compileTopP2" task)
-- "command": "{installPath}/bin/loadp2.mac",    (in the "downloadP2" task)
+- "command": "flexspin.mac",  (in the "compileP2" task)
+- "command": "flexspin.mac",  (in the "compileTopP2" task)
+- "command": "loadp2.mac",    (in the "downloadP2" task)
 
-Simply replace {installPath} with your own install path (the folder containing the bin folder).
+Simply remove the .mac suffix if your install doesn't have these files.
 
 ### Top-Level file project specifics
 
@@ -114,7 +162,13 @@ In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+And you'll have to customize the DownloadP2 task (shown below) to name your projects binary file.
+
+In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_demo.binary"
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
@@ -133,7 +187,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
         {
             "label": "compileP2",
             "type": "shell",
-            "command": "/Applications/Flexprop/bin/flexspin.mac",
+            "command": "flexspin.mac",
             "args": [
                 "-2",
                 "-Wabs-paths",
@@ -163,7 +217,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
         {
             "label": "compileTopP2",
             "type": "shell",
-            "command": "/Applications/Flexprop/bin/flexspin.mac",
+            "command": "flexspin.mac",
             "args": [
                 "-2",
                 "-Wabs-paths",
@@ -189,7 +243,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
         {
             "label": "downloadP2",
             "type": "shell",
-            "command": "/Applications/Flexprop/bin/loadp2.mac",
+            "command": "loadp2.mac",
             "problemMatcher": [],
             "presentation": {
                 "panel": "new",
@@ -197,7 +251,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             },
             "args": [
                 "-b230400",
-                "${fileBasenameNoExtension}.binary",
+                "jm_p2-es_matrix_control_demo.binary",
                 "-t"
             ],
             "dependsOn": [
@@ -262,15 +316,7 @@ For each P2 Project:
 
 ### FlexProp install specifics: Windows
 
-The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
-
-In my case, on my Windows machine, I installed the folder at C:\\Users\\smmor\\ProgramFiles\\flexprop. Yours will be different.  You will need to modify your `tasks.json` file.  The three lines are: 
-
-- "command": "{installPath}\\bin\\flexspin.exe",  (in the "compileP2" task)
-- "command": "{installPath}\\bin\\flexspin.exe",  (in the "compileTopP2" task)
-- "command": "{installPath}\\bin\\loadp2.exe",    (in the "downloadP2" task)
-
-Simply replace {installPath} with your own install path (the folder containing the bin folder).
+The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you added a new PATH element in your windows settings app. to point to the FlexProp bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 ### Top-Level file project specifics
 
@@ -284,7 +330,13 @@ In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+And you'll have to customize the DownloadP2 task (shown below) to name your projects binary file.
+
+In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_demo.binary"
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
@@ -306,9 +358,9 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "compileP2",
             "type": "shell",
-            "command": "/Applications/Flexprop/bin/flexspin.mac",
+            "command": "flexspin.mac",
             "windows": {
-                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\flexspin.exe",
+                "command": "flexspin.exe",
             },
             "args": [
                 "-2",
@@ -339,9 +391,9 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "compileTopP2",
             "type": "shell",
-            "command": "/Applications/Flexprop/bin/flexspin.mac",
+            "command": "flexspin.mac",
             "windows": {
-                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\flexspin.exe",
+                "command": "flexspin.exe",
             },
             "args": [
                 "-2",
@@ -368,9 +420,9 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "downloadP2",
             "type": "shell",
-            "command": "/Applications/Flexprop/bin/loadp2.mac",
+            "command": "loadp2.mac",
             "windows": {
-                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\loadp2.exe",
+                "command": "loadp2.exe",
             },
             "problemMatcher": [],
             "presentation": {
@@ -379,7 +431,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             },
             "args": [
                 "-b230400",
-                "${fileBasenameNoExtension}.binary",
+                "jm_p2-es_matrix_control_demo.binary",
                 "-t"
             ],
             "dependsOn": [
@@ -469,13 +521,6 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
  $ make install INSTALL=/opt/flexprop
  ```
 
-If you choose to install flexprop in a different location, you will need to modify your `tasks.json` file by changing the `/opt/flexprop/bin` path to your own install path.  The three lines are: 
-
-- "command": "/opt/flexprop/bin/flexspin",  (in the "compileP2" task)
-- "command": "/opt/flexprop/bin/flexspin",  (in the "compileTopP2" task)
-- "command": "/opt/flexprop/bin/loadp2",    (in the "downloadP2" task)
-
-Simply replace `/opt/flexprop/` in each of these lines with your own install path (the folder containing the bin folder).
 
 ### Top-Level file project specifics
 
@@ -489,7 +534,13 @@ In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the compileTopP2  task to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+And you'll have to customize the DownloadP2 task (shown below) to name your projects binary file.
+
+In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_demo.binary"
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
@@ -512,13 +563,13 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             "label": "compileP2",
             "type": "shell",
     		  "osx": {
-                "command": "/Applications/Flexprop/bin/flexspin.mac",
+                "command": "flexspin.mac",
     		  },
     		  "windows": {
-                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\flexspin.exe",
+                "command": "flexspin.exe",
     		  },            
     		  "linux": {
-                "command": "/opt/flexprop/bin/flexspin",
+                "command": "flexspin",
     		  },
             "args": [
                 "-2",
@@ -550,13 +601,13 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             "label": "compileTopP2",
             "type": "shell",
             "osx": {
-                "command": "/Applications/Flexprop/bin/flexspin.mac",
+                "command": "flexspin.mac",
             },
             "windows": {
-                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\flexspin.exe",
+                "command": "flexspin.exe",
             },
             "linux": {
-                "command": "/opt/flexprop/bin/flexspin",
+                "command": "flexspin",
             },
             "args": [
                 "-2",
@@ -584,13 +635,13 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             "label": "downloadP2",
             "type": "shell",
             "osx": {
-                "command": "/Applications/Flexprop/bin/loadp2.mac",
+                "command": "loadp2.mac",
             },
             "windows": {
-                "command": "C:\\Users\\smmor\\ProgramFiles\\flexprop\\bin\\loadp2.exe",
+                "command": "loadp2.exe",
             },
             "linux": {
-                "command": "/opt/flexprop/bin/loadp2",
+                "command": "loadp2",
             },
             "problemMatcher": [],
             "presentation": {
@@ -599,7 +650,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             },
             "args": [
                 "-b230400",
-                "${fileBasenameNoExtension}.binary",
+                "jm_p2-es_matrix_control_demo.binary",
                 "-t"
             ],
             "dependsOn": [
