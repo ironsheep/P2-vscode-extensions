@@ -790,7 +790,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "command": "pnut_shell.bat"
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin22"
+                "jm_p2-es_matrix_control_demo.spin2"
                 "-c"
             ],
             "problemMatcher": {
@@ -831,7 +831,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "focus": true
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin22",
+                "jm_p2-es_matrix_control_demo.spin2",
                 "-r"
             ]
         },
@@ -857,7 +857,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "focus": true
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin22",
+                "jm_p2-es_matrix_control_demo.spin2",
                 "-f"
             ]
         }
