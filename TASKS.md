@@ -135,8 +135,8 @@ One time:
 For each P2 Project:
 
 - Install a tasks.json file in each of your P2 projects
-    - Make sure your path to the compiler of your choice is correct
-    - Make sure the name of your top-level file is correctly placed in your compileTop task  
+    - Make sure the names of your compiler and loader binaries are correct
+    - Make sure the name of your top-level file is correctly placed in your compileTop and download tasks
 
 ### FlexProp install specifics: macOS
 
@@ -299,7 +299,7 @@ Contents I used for file: **keybindings.json**:
 
 ## P2 Code Development with FlexProp on Windows
 
-To complete your setup so you can use FlexProp on your mac under VScode you'll need to install FlexProp and then:
+To complete your setup so you can use FlexProp on your Windows machine under VScode you'll need to install FlexProp and then:
 
 One time:
 
@@ -311,8 +311,7 @@ One time:
 For each P2 Project:
 
 - Install a tasks.json file in each of your P2 projects
-    - Make sure your path to the compiler of your choice is correct
-    - Make sure the name of your top-level file is correctly placed in your compileTop task  
+    - Make sure the name of your top-level file is correctly placed in your compileTop and download tasks
 
 ### FlexProp install specifics: Windows
 
@@ -492,8 +491,8 @@ One time:
 For each P2 Project:
 
 - Install a tasks.json file in each of your P2 projects
-    - Make sure your path to the compiler of your choice is correct
-    - Make sure the name of your top-level file is correctly placed in your compileTop task  
+    - Make sure the name of your top-level file is correctly placed in your compileTop and download tasks
+
     
 ### The Rasperry Pi OS
 
@@ -700,7 +699,212 @@ Contents I used for file: **keybindings.json**:
 
 ## P2 Code Development with PNut on Windows
 
-... coming soon! ...
+To complete your setup so you can use PNut on your Windows machine under VScode you'll need to install PNut and then:
+
+One time:
+
+- Install a common keybinding (works accross all your P2 projects)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
+    - "Error Lens" which adds the compile errors messages to the associated line of code
+    - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+
+For each P2 Project:
+
+- Install a tasks.json file in each of your P2 projects
+    - Make sure the name of your top-level file is correctly placed in your compileTop, download and flash tasks
+
+
+### PNut install specifics: Windows
+
+The PNut compiler/debug tool does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the PNUt directory when you installed PNut.  These tasks now just expect to be able to reference the batch file by name and it will run.
+
+### Top-Level file project specifics
+
+In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
+
+When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
+
+In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
+
+In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+And you'll have to customize the downloadP2 and flashP2 tasks (shown below) to name your projects top-level file.
+
+In this example our DownloadP2 and flashP2 tasks are downloading "jm\_p2-es\_matrix\_control\_demo.spin2"
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file for both tasks.
+
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+
+### Add custom tasks for compileP2, compileTopP2, downloadP2, and flashP2
+
+In your project folder create a directory named ".vscode" (if it's not already there.)
+
+In this new directory create a "tasks.json" file containing the following contents.
+
+Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
+
+```json
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compileP2",
+            "type": "shell",
+            "windows": {
+                "command": "pnut_shell.bat"
+            },
+            "args": [
+                "${fileBasename}",
+                "-c"
+            ],
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s*(warning|error):\\s*(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "compileTopP2",
+            "type": "shell",
+            "windows": {
+                "command": "pnut_shell.bat"
+            },
+            "args": [
+                "jm_p2-es_matrix_control_demo.spin2"
+                "-c"
+            ],
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "downloadP2",
+            "type": "shell",
+            "windows": {
+                "command": "pnut_shell.bat"
+            },
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+            "args": [
+                "jm_p2-es_matrix_control_demo.spin2",
+                "-r"
+            ]
+        },
+        {
+            "label": "flashP2",
+            "type": "shell",
+            "windows": {
+                "command": "pnut_shell.bat"
+            },
+            "problemMatcher": {
+                "owner": "Spin2",
+                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "panel": "new",
+                "focus": true
+            },
+            "args": [
+                "jm_p2-es_matrix_control_demo.spin2",
+                "-f"
+            ]
+        }
+    ]
+}
+```
+
+This provides the commands to be run for:
+
+- CompileP2 - Compile current file  [ctrl-shift-B]
+- CompileTopP2 - Compile the top-file (and all included files) of this project
+- DownloadP2 - Compile the top-file and Download the program to our connected P2  [ctrl-shift-D -if keybindings are added.]
+- FlashP2 - Compile the top-file, Download and write the program to flash on our connected P2  [ctrl-shift-F -if keybindings are added.]
+
+**NOTE** for PNut a download is also a compile so these download and flash tasks do not depend upon the CompleTopP2 task!
+
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
+
+### Add Keyboard Shortcut for the Download task
+
+This is the keybinding I used for mapping download to a key sequence.
+
+You get to this file by:
+
+1. Opening the Keyboard shortcuts list [ctrl-K, ctrl-S or Menu: Code->Preferences->Keyboard Shortcuts]
+2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
+
+Contents I used for file: **keybindings.json**:
+
+```json
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "ctrl+shift+d",
+        "command": "workbench.action.tasks.runTask",
+        "args": "downloadP2"
+    },
+    {
+        "key": "ctrl+shift+f",
+        "command": "workbench.action.tasks.runTask",
+        "args": "flashP2"
+    }
+
+]
+```
+
+*NOTE: if you change the label values in our tasks, more specifically the downloadP2 or flashP2 tasks, then this file has to be changed as well!*
+
 
 ## License
 
