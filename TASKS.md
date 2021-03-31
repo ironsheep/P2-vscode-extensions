@@ -5,7 +5,7 @@
 [![License][license-shield]](LICENSE)
 
 
-##Automating Build and Download to our P2 development boards
+## Automating Build and Download to our P2 development boards
 
 This document is being developed over time as I prove a working environment for each of my target platforms.  I'm expecting to document building on **Windows**, **MacOS**, and **RaspiOS** (the Raspberry Pi OS).
 
@@ -142,13 +142,13 @@ For each P2 Project:
 
 The FlexProp toolset does not have a standard installed location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
 
-In my case, on my Mac's, I install the folder at /Applications/Flexprop and I've set the PATH to point to the /Applications/Flexprop/bin directory.  Depending on how you obtained the FlexProp install finle you may have bin/flexspin or bin/flexspin.mac and likewise bin/loadp2 or bin/loadp2.mac.  This tasks.json file shows me using the .mac suffixes. If your install doesn't have them then you will need to modify your `tasks.json` file.  The three lines are: 
+In my case, on my Mac's, I install the folder at /Applications/Flexprop and I've [set the PATH](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-macos) to point to the /Applications/Flexprop/bin directory.  Depending on how you obtained the FlexProp install file you may have bin/flexspin or bin/flexspin.mac and likewise bin/loadp2 or bin/loadp2.mac.  This tasks.json file shows the .mac suffixes. If your install doesn't have them then you will need to modify your `tasks.json` file.  The three lines are: 
 
 - "command": "flexspin.mac",  (in the "compileP2" task)
 - "command": "flexspin.mac",  (in the "compileTopP2" task)
 - "command": "loadp2.mac",    (in the "downloadP2" task)
 
-Simply remove the .mac suffix if your install doesn't have these files.
+Simply remove the .mac suffix if your install doesn't have files with the .mac suffix.
 
 ### Top-Level file project specifics
 
@@ -316,7 +316,7 @@ For each P2 Project:
 
 ### FlexProp install specifics: Windows
 
-The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you added a new PATH element in your windows settings app. to point to the FlexProp bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
+The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the FlexProp bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 ### Top-Level file project specifics
 
@@ -520,7 +520,8 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
  ```bash
  $ make install INSTALL=/opt/flexprop
  ```
-
+ 
+Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the FlexProp bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 ### Top-Level file project specifics
 
@@ -549,7 +550,7 @@ In your project folder create a directory named ".vscode" (if it's not already t
 In this new directory create a "tasks.json" file containing the following contents.
 
 **NOTE** *three OSes are supported by VScode task files: "osx", "linux", and "windows".
-I have mostly mac machines so I use the defult for OSX forms and I provide overrides for "windows" and "linux" forms.*
+I have mostly mac machines so I use the defult for OSX forms and I provide overrides for "windows" and "linux" forms.  However, in the folloing file I simply explicitly declared all three OSes.*
 
 Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
 
