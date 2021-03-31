@@ -14,6 +14,7 @@ I'm also expecting to document building and download with various tools such as 
 ```
 Latest Updates:
 31 Mar 2021
+- Add PNut on Windows section of document
 - Add PATH setting information so our task.json files can have no expectation as to where tools are installed. See: "Setting paths for your P2 Compilers/Tools"
 - BUGFIX: Correct the download to RAM tasks
 19 Feb 2021
@@ -158,7 +159,7 @@ When we request a download the automation will first compile the top-level proje
 
 In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
 
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin"
+In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
@@ -168,7 +169,7 @@ In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
@@ -222,7 +223,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
                 "-2",
                 "-Wabs-paths",
                 "-Wmax-errors=99",
-                "jm_p2-es_matrix_control_demo.spin"
+                "jm_p2-es_matrix_control_demo.spin2"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -325,7 +326,7 @@ When we request a download the automation will first compile the top-level proje
 
 In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
 
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin"
+In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
@@ -335,7 +336,7 @@ In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
@@ -398,7 +399,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "-2",
                 "-Wabs-paths",
                 "-Wmax-errors=99",
-                "jm_p2-es_matrix_control_demo.spin"
+                "jm_p2-es_matrix_control_demo.spin2"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -530,7 +531,7 @@ When we request a download the automation will first compile the top-level proje
 
 In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
 
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin"
+In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
@@ -540,7 +541,7 @@ In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
 
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
@@ -613,7 +614,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "-2",
                 "-Wabs-paths",
                 "-Wmax-errors=99",
-                "jm_p2-es_matrix_control_demo.spin"
+                "jm_p2-es_matrix_control_demo.spin2"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -736,7 +737,7 @@ In this example our DownloadP2 and flashP2 tasks are downloading "jm\_p2-es\_mat
 
 You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file for both tasks.
 
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin".*
+**WARNING**: *If you forget to alter the **compileTopP2**, **downloadP2** or the **flashP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, downloadP2, and flashP2
 
@@ -789,7 +790,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "command": "pnut_shell.bat"
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin2"
+                "jm_p2-es_matrix_control_demo.spin22"
                 "-c"
             ],
             "problemMatcher": {
@@ -830,7 +831,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "focus": true
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin2",
+                "jm_p2-es_matrix_control_demo.spin22",
                 "-r"
             ]
         },
@@ -856,7 +857,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "focus": true
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin2",
+                "jm_p2-es_matrix_control_demo.spin22",
                 "-f"
             ]
         }
@@ -872,6 +873,10 @@ This provides the commands to be run for:
 - FlashP2 - Compile the top-file, Download and write the program to flash on our connected P2  [ctrl-shift-F -if keybindings are added.]
 
 **NOTE** for PNut a download is also a compile so these download and flash tasks do not depend upon the CompleTopP2 task!
+
+**NOTE2** these downloadP2 and flashP2 tasks do NOT enable debug support. The option `-r` is run without debug while `-rd` is run with debug. Likewise, the option `-f` is compile and flash without debug while `-fd` is compile and flash with debug.  Please adjust these values in the task `args:` sections to your need (using debug or not)
+
+**TODO** let's make debug a custom VSCode setting and use the setting in this script to enable/disable debug compilation/use??
 
 NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
 
