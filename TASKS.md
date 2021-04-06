@@ -15,6 +15,7 @@ I'm also expecting to document building and download with various tools such as 
 Latest Updates:
 05 Apr 2021 
 - Add notes for enabling connection of PropPlug to Raspberry Pi
+- Add port specfication to loadp2 when run on RPi
 31 Mar 2021
 - Add PNut on Windows section of document
 - Add PATH setting information so our task.json files can have no expectation as to where tools are installed. See: "Setting paths for your P2 Compilers/Tools"
@@ -123,27 +124,6 @@ We'll add a downloadP2 task and assign command-shift-D to it. It will depend upo
 #### More Advanced building
 
 **TODO**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
-
-## Using the Parallax PropPlug on Raspbery Pi's
-
-The Parallax PropPlug has a custom parallax VID:PID USB pair and as such is not, by default recognized by raspiOS when you first plug in the PropPlug.
-
-The fix is to add a custom udev rules file as decribed in [FTDI Technical Note 101](https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_101_Customising_FTDI_VID_PID_In_Linux(FT_000081).pdf)
-
-I added the file **/etc/udev/rules.d/99-usbftdi.rules**
-
-```bash
-$ sudo vi /etc/udev/rules.d/99-usbftdi.rules
-```
-and then added the content:
-
-```bash
-# For FTDI FT232 & FT245 USB devices with Vendor ID = 0x0403, Product ID = 0xabc
-SYSFS{idProduct}==”6001”, SYSFS{idVendor}==”0403”, RUN+=”/sbin/modprobe –q ftdi- sio product=0x6001 vendor=0x0403”
-```
-
-After this file was saved, I rebooted the RPi.  After this when I plugged in the PropPlug I saw /dev/ttyUSB0 appear as my PropPlug
-
 
 ## P2 Code Development with FlexProp on macOS
 
@@ -506,7 +486,7 @@ Contents I used for file: **keybindings.json**:
 To complete your setup so you can use FlexProp on your Raspberry Pi under VScode you'll need to install FlexProp and then:
 
 One time:
-
+- Enable USB PropPlug recognition on RPi
 - Install a common keybinding (works accross all your P2 projects)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
     - "Error Lens" which adds the compile errors messages to the associated line of code
@@ -534,6 +514,26 @@ $ sudo apt-get dist-upgrade
 
 After the new RPi can boot and automatically attach to my network I then remove the screen and keyboard.  I run most my RPi's remotely and "headless" (meaning no screen/keyboard attached.)
 
+## Using the Parallax PropPlug on Raspbery Pi's
+
+The Parallax PropPlug has a custom parallax VID:PID USB pair and as such is not, by default, recognized by raspiOS when you first plug in the PropPlug.
+
+The fix is to add a custom udev rules file as decribed in [FTDI Technical Note 101](https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_101_Customising_FTDI_VID_PID_In_Linux(FT_000081).pdf)
+
+I added the file **/etc/udev/rules.d/99-usbftdi.rules**
+
+```bash
+$ sudo vi /etc/udev/rules.d/99-usbftdi.rules
+```
+and then added the content:
+
+```bash
+# For FTDI FT232 & FT245 USB devices with Vendor ID = 0x0403, Product ID = 0x6001
+SYSFS{idProduct}==”6001”, SYSFS{idVendor}==”0403”, RUN+=”/sbin/modprobe –q ftdi- sio product=0x6001 vendor=0x0403”
+```
+
+After this file was saved, I rebooted the RPi.  After the RPi came back up I plugged in the PropPlug I saw /dev/ttyUSB0 appear as my PropPlug.  
+
 ### FlexProp install specifics: Raspberry Pi
 
 Installing the FlexProp toolset on the Raspberry Pi (*raspos, or any debian derivative, Ubuntu, etc.*) is a breeze when you follow [Eric's instructions that just work!](https://github.com/totalspectrum/flexprop#building-from-source)
@@ -543,7 +543,7 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
  ```bash
  $ make install INSTALL=/opt/flexprop
  ```
- 
+
 Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the FlexProp bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 ### Top-Level file project specifics
@@ -675,7 +675,8 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             "args": [
                 "-b230400",
                 "jm_p2-es_matrix_control_demo.binary",
-                "-t"
+                "-t",
+                "-p/dev/ttyUSB0"
             ],
             "dependsOn": [
                 "compileTopP2"
