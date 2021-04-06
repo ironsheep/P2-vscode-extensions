@@ -13,6 +13,8 @@ I'm also expecting to document building and download with various tools such as 
 
 ```
 Latest Updates:
+05 Apr 2021 
+- Add notes for enabling connection of PropPlug to Raspberry Pi
 31 Mar 2021
 - Add PNut on Windows section of document
 - Add PATH setting information so our task.json files can have no expectation as to where tools are installed. See: "Setting paths for your P2 Compilers/Tools"
@@ -121,6 +123,27 @@ We'll add a downloadP2 task and assign command-shift-D to it. It will depend upo
 #### More Advanced building
 
 **TODO**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
+
+## Using the Parallax PropPlug on Raspbery Pi's
+
+The Parallax PropPlug has a custom parallax VID:PID USB pair and as such is not, by default recognized by raspiOS when you first plug in the PropPlug.
+
+The fix is to add a custom udev rules file as decribed in [FTDI Technical Note 101](https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_101_Customising_FTDI_VID_PID_In_Linux(FT_000081).pdf)
+
+I added the file **/etc/udev/rules.d/99-usbftdi.rules**
+
+```bash
+$ sudo vi /etc/udev/rules.d/99-usbftdi.rules
+```
+and then added the content:
+
+```bash
+# For FTDI FT232 & FT245 USB devices with Vendor ID = 0x0403, Product ID = 0xabc
+SYSFS{idProduct}==”6001”, SYSFS{idVendor}==”0403”, RUN+=”/sbin/modprobe –q ftdi- sio product=0x6001 vendor=0x0403”
+```
+
+After this file was saved, I rebooted the RPi.  After this when I plugged in the PropPlug I saw /dev/ttyUSB0 appear as my PropPlug
+
 
 ## P2 Code Development with FlexProp on macOS
 
