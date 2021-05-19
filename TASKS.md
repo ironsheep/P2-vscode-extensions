@@ -13,6 +13,9 @@ I'm also expecting to document building and download with various tools such as 
 
 ```
 Latest Updates:
+28 Apr 2021
+- convert tasks.json files to use settings.json file which now contains our toplevel filename
+- update narrative herein to describe our new settings.json file
 05 Apr 2021 
 - Add notes for enabling connection of PropPlug to Raspberry Pi
 - Add port specfication to loadp2 when run on RPi
@@ -125,6 +128,36 @@ We'll add a downloadP2 task and assign command-shift-D to it. It will depend upo
 
 **TODO**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
 
+### Adding our notion of Top-level file to our tasks
+
+In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task a DownloadP2 download task, and in some cases a FlashP2 task.
+
+When we request a download or flash the automation will first compile the top-level project source which produces a new binary. It is this new binary that will be downloaded/flashed.
+
+We have multiple tasks that need to know the name of our top-level file. So we add a new settings file with a topLevel value to our project:
+
+**.vscode/settings.json** file contains the following contents:
+
+```json
+{
+   "topLevel": "jm_p2-es_matrix_control_demo",
+}
+
+```
+
+Once we have this file in place, then our `tasks.json` file can access this value using the form: `${config:topLevel}`
+
+
+Now our CompileTopP2 task can create the toplevel filename using  `${config:topLevel}.spin2`
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+And our DownloadP2 task can reference the binary file using `${config:topLevel}.binary`
+
+**NOTE** the PNut flasher is special in that it wants the .spin2 filename not a .binary filename so you'll see `${config:topLevel}.spin2` being used in the PNut FlashP2 task.
+
+
+
 ## P2 Code Development with FlexProp on macOS
 
 To complete your setup so you can use FlexProp on your mac under VScode you'll need to install FlexProp and then:
@@ -138,9 +171,10 @@ One time:
 
 For each P2 Project:
 
-- Install a tasks.json file in each of your P2 projects
+- Install a tasks.json file
     - Make sure the names of your compiler and loader binaries are correct
-    - Make sure the name of your top-level file is correctly placed in your compileTop and download tasks
+- Install a settings.json file
+    - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 ### FlexProp install specifics: macOS
 
@@ -154,33 +188,25 @@ In my case, on my Mac's, I install the folder at /Applications/Flexprop and I've
 
 Simply remove the .mac suffix if your install doesn't have files with the .mac suffix.
 
-### Top-Level file project specifics
-
-In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
-
-When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
-
-In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
-
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-And you'll have to customize the DownloadP2 task (shown below) to name your projects binary file.
-
-In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_demo.binary"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
 
-In this new directory create a "tasks.json" file containing the following contents.
+In this new directory create a **.vscode/settings.json** file containing the following contents.
 
-Here is a project-specific file for macOS: `.vscode/tasks.json`
+```json
+{
+   "topLevel": "jm_p2-es_matrix_control_demo",
+}
+
+```
+
+*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
+
+In this new directory create a **.vscode/tasks.json** file containing the following contents.
+
+Here is a project-specific file we can use on macOS: `.vscode/tasks.json` but it really supports all three of our OS'es.
 
 ```json
 {
@@ -191,7 +217,15 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
         {
             "label": "compileP2",
             "type": "shell",
-            "command": "flexspin.mac",
+    		  "osx": {
+                "command": "flexspin.mac",
+    		  },
+    		  "windows": {
+                "command": "flexspin.exe",
+    		  },
+    		  "linux": {
+                "command": "flexspin",
+    		  },
             "args": [
                 "-2",
                 "-Wabs-paths",
@@ -200,7 +234,7 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}/src"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -221,12 +255,20 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
         {
             "label": "compileTopP2",
             "type": "shell",
-            "command": "flexspin.mac",
+            "osx": {
+                "command": "flexspin.mac",
+            },
+            "windows": {
+                "command": "flexspin.exe",
+            },
+            "linux": {
+                "command": "flexspin",
+            },
             "args": [
                 "-2",
                 "-Wabs-paths",
                 "-Wmax-errors=99",
-                "jm_p2-es_matrix_control_demo.spin2"
+                "${config:topLevel}.spin2"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -247,17 +289,31 @@ Here is a project-specific file for macOS: `.vscode/tasks.json`
         {
             "label": "downloadP2",
             "type": "shell",
-            "command": "loadp2.mac",
+            "args": [
+                "-b230400",
+                "${config:topLevel}.binary",
+                "-t"
+            ],
+            "osx": {
+                "command": "loadp2.mac",
+            },
+            "windows": {
+                "command": "loadp2.exe",
+            },
+            "linux": {
+                "command": "loadp2",
+                "args": [
+                    "-b230400",
+                    "${config:topLevel}.binary",
+                    "-t",
+                    "-p/dev/ttyUSB0"
+                ],
+            },
             "problemMatcher": [],
             "presentation": {
                 "panel": "new",
                 "focus": true
             },
-            "args": [
-                "-b230400",
-                "jm_p2-es_matrix_control_demo.binary",
-                "-t"
-            ],
             "dependsOn": [
                 "compileTopP2"
             ]
@@ -274,7 +330,7 @@ This provides the commands to be run for:
 
 As written, download will always be preceeded by a CompileTop.
 
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
 
 ### Add Keyboard Shortcut for the Download task
 
@@ -314,43 +370,34 @@ One time:
 
 For each P2 Project:
 
-- Install a tasks.json file in each of your P2 projects
-    - Make sure the name of your top-level file is correctly placed in your compileTop and download tasks
+- Install a tasks.json file
+    - Make sure the names of your compiler and loader binaries are correct
+- Install a settings.json file
+    - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 ### FlexProp install specifics: Windows
 
 The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the FlexProp bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
 
-### Top-Level file project specifics
-
-In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
-
-When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
-
-In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
-
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-And you'll have to customize the DownloadP2 task (shown below) to name your projects binary file.
-
-In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_demo.binary"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
 
-In this new directory create a "tasks.json" file containing the following contents.
+In this new directory create a **.vscode/settings.json** file containing the following contents.
 
-**NOTE** *three OSes are supported by VScode task files: "osx", "linux", and "windows".
-I have mostly mac machines so I use the defult for OSX forms and I provide overrides for "windows" and "linux" forms.*
+```json
+{
+   "topLevel": "jm_p2-es_matrix_control_demo",
+}
 
-Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
+```
+
+*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
+
+In this new directory create a **.vscode/tasks.json** file containing the following contents.
+
+Here is a project-specific file we can use on Windows: `.vscode/tasks.json` but it really supports all three of our OS'es.
 
 ```json
 {
@@ -361,10 +408,15 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "compileP2",
             "type": "shell",
-            "command": "flexspin.mac",
-            "windows": {
+    		  "osx": {
+                "command": "flexspin.mac",
+    		  },
+    		  "windows": {
                 "command": "flexspin.exe",
-            },
+    		  },
+    		  "linux": {
+                "command": "flexspin",
+    		  },
             "args": [
                 "-2",
                 "-Wabs-paths",
@@ -373,7 +425,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}/src"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -394,15 +446,20 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "compileTopP2",
             "type": "shell",
-            "command": "flexspin.mac",
+            "osx": {
+                "command": "flexspin.mac",
+            },
             "windows": {
                 "command": "flexspin.exe",
+            },
+            "linux": {
+                "command": "flexspin",
             },
             "args": [
                 "-2",
                 "-Wabs-paths",
                 "-Wmax-errors=99",
-                "jm_p2-es_matrix_control_demo.spin2"
+                "${config:topLevel}.spin2"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -423,26 +480,38 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "downloadP2",
             "type": "shell",
-            "command": "loadp2.mac",
+            "args": [
+                "-b230400",
+                "${config:topLevel}.binary",
+                "-t"
+            ],
+            "osx": {
+                "command": "loadp2.mac",
+            },
             "windows": {
                 "command": "loadp2.exe",
+            },
+            "linux": {
+                "command": "loadp2",
+                "args": [
+                    "-b230400",
+                    "${config:topLevel}.binary",
+                    "-t",
+                    "-p/dev/ttyUSB0"
+                ],
             },
             "problemMatcher": [],
             "presentation": {
                 "panel": "new",
                 "focus": true
             },
-            "args": [
-                "-b230400",
-                "jm_p2-es_matrix_control_demo.binary",
-                "-t"
-            ],
             "dependsOn": [
                 "compileTopP2"
             ]
         }
     ]
 }
+
 ```
 
 This provides the commands to be run for:
@@ -453,7 +522,7 @@ This provides the commands to be run for:
 
 As written, download will always be preceeded by a CompileTop.
 
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
 
 ### Add Keyboard Shortcut for the Download task
 
@@ -494,8 +563,10 @@ One time:
 
 For each P2 Project:
 
-- Install a tasks.json file in each of your P2 projects
-    - Make sure the name of your top-level file is correctly placed in your compileTop and download tasks
+- Install a tasks.json file
+    - Make sure the names of your compiler and loader binaries are correct
+- Install a settings.json file
+    - Make sure the name of your top-level file is correctly placed in this settings.json file
 
     
 ### The Rasperry Pi OS
@@ -546,36 +617,25 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
 
 Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the FlexProp bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
 
-### Top-Level file project specifics
-
-In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
-
-When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
-
-In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
-
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-And you'll have to customize the DownloadP2 task (shown below) to name your projects binary file.
-
-In this example our DownloadP2 task is downloading "jm\_p2-es\_matrix\_control\_demo.binary"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-**WARNING**: *If you forget to alter the **compileTopP2** or the **downloadP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
 
-In this new directory create a "tasks.json" file containing the following contents.
+In this new directory create a **.vscode/settings.json** file containing the following contents.
 
-**NOTE** *three OSes are supported by VScode task files: "osx", "linux", and "windows".
-I have mostly mac machines so I use the defult for OSX forms and I provide overrides for "windows" and "linux" forms.  However, in the folloing file I simply explicitly declared all three OSes.*
+```json
+{
+   "topLevel": "jm_p2-es_matrix_control_demo",
+}
 
-Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
+```
+
+*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
+
+In this new directory create a **.vscode/tasks.json** file containing the following contents.
+
+Here is a project-specific file we can use on raspiOS: `.vscode/tasks.json` but it really supports all three of our OS'es.
 
 ```json
 {
@@ -591,7 +651,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
     		  },
     		  "windows": {
                 "command": "flexspin.exe",
-    		  },            
+    		  },
     		  "linux": {
                 "command": "flexspin",
     		  },
@@ -603,7 +663,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             ],
             "problemMatcher": {
                 "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}"],
+                "fileLocation": ["autoDetect", "${workspaceFolder}/src"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -637,7 +697,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "-2",
                 "-Wabs-paths",
                 "-Wmax-errors=99",
-                "jm_p2-es_matrix_control_demo.spin2"
+                "${config:topLevel}.spin2"
             ],
             "problemMatcher": {
                 "owner": "Spin2",
@@ -658,6 +718,11 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
         {
             "label": "downloadP2",
             "type": "shell",
+            "args": [
+                "-b230400",
+                "${config:topLevel}.binary",
+                "-t"
+            ],
             "osx": {
                 "command": "loadp2.mac",
             },
@@ -666,18 +731,18 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
             },
             "linux": {
                 "command": "loadp2",
+                "args": [
+                    "-b230400",
+                    "${config:topLevel}.binary",
+                    "-t",
+                    "-p/dev/ttyUSB0"
+                ],
             },
             "problemMatcher": [],
             "presentation": {
                 "panel": "new",
                 "focus": true
             },
-            "args": [
-                "-b230400",
-                "jm_p2-es_matrix_control_demo.binary",
-                "-t",
-                "-p/dev/ttyUSB0"
-            ],
             "dependsOn": [
                 "compileTopP2"
             ]
@@ -694,7 +759,9 @@ This provides the commands to be run for:
 
 As written, download will always be preceeded by a CompileTop.
 
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
+
+NOTE2: loadp2 on linux requires the specification of our usb device so you see in this file in the task "downloadP2" we, for linux, see us specifying that loadp2 should use port `/dev/ttyUSB0`.
 
 ### Add Keyboard Shortcut for the Download task
 
@@ -735,41 +802,35 @@ One time:
 
 For each P2 Project:
 
-- Install a tasks.json file in each of your P2 projects
-    - Make sure the name of your top-level file is correctly placed in your compileTop, download and flash tasks
+-- Install a tasks.json file
+    - Make sure the names of your compiler and loader binaries are correct (we use the .bat file to run PNut, we don't refer to PNut.exe directly!
+- Install a settings.json file
+    - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 
 ### PNut install specifics: Windows
 
 The PNut compiler/debug tool does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the PNUt directory when you installed PNut.  These tasks now just expect to be able to reference the batch file by name and it will run.
 
-### Top-Level file project specifics
-
-In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task.
-
-When we request a download the automation will first compile the top-level project source and its includes producing a new binary. It is this new binary that will be downloaded.
-
-In order to make this work you'll have to customize the CompileTopP2 task (shown below) to name your projects top-level file.
-
-In this example our CompileTopP2 task is compiling "jm\_p2-es\_matrix\_control\_demo.spin2"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-And you'll have to customize the downloadP2 and flashP2 tasks (shown below) to name your projects top-level file.
-
-In this example our DownloadP2 and flashP2 tasks are downloading "jm\_p2-es\_matrix\_control\_demo.spin2"
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file for both tasks.
-
-**WARNING**: *If you forget to alter the **compileTopP2**, **downloadP2** or the **flashP2** tasks to use your filename the downloadP2 invocation of compileTopP2 will simply report an error that it cant find the file named "jm\_p2-es\_matrix\_control\_demo.spin2".*
 
 ### Add custom tasks for compileP2, compileTopP2, downloadP2, and flashP2
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
 
-In this new directory create a "tasks.json" file containing the following contents.
+In this new directory create a **.vscode/settings.json** file containing the following contents.
 
-Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
+```json
+{
+   "topLevel": "jm_p2-es_matrix_control_demo",
+}
+
+```
+
+*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
+
+In this new directory create a **.vscode/tasks.json** file containing the following contents.
+
+Here is a project-specific file for Windows: **.vscode/tasks.json**
 
 ```json
 {
@@ -814,7 +875,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "command": "pnut_shell.bat"
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin2"
+                "${config:topLevel}.spin2"
                 "-c"
             ],
             "problemMatcher": {
@@ -855,7 +916,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "focus": true
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin2",
+                "${config:topLevel}.spin2",
                 "-r"
             ]
         },
@@ -881,7 +942,7 @@ Here is a project-specific file for macOS/Windows: **.vscode/tasks.json**
                 "focus": true
             },
             "args": [
-                "jm_p2-es_matrix_control_demo.spin2",
+                "${config:topLevel}.spin2",
                 "-f"
             ]
         }
@@ -902,7 +963,7 @@ This provides the commands to be run for:
 
 **TODO** let's make debug a custom VSCode setting and use the setting in this script to enable/disable debug compilation/use??
 
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This task must be customized for each project by configuring the file basename specified in the "args" section of CompileTopP2 task.
+NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
 
 ### Add Keyboard Shortcut for the Download task
 
