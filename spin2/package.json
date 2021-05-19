@@ -3,7 +3,7 @@
     "displayName": "Spin2",
     "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
     "icon": "images/Propeller.ico",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "publisher": "IronSheepProductionsLLC",
     "repository": {
         "type": "git",
@@ -87,8 +87,8 @@
         ],
         "semanticTokenModifiers": [
             {
-              "id": "local",
-              "description": "Annotates a symbol that is declared local to a method"
+                "id": "local",
+                "description": "Annotates a symbol that is declared local to a method"
             },
             {
                 "id": "instance",
@@ -101,12 +101,16 @@
         ],
         "semanticTokenScopes": [
             {
-              "scopes": {
-                "returnValue": ["meta.returntype.spin"],
-                "storageType": ["storage.type.pasm.spin2"]
-              }
+                "scopes": {
+                    "returnValue": [
+                        "meta.returntype.spin"
+                    ],
+                    "storageType": [
+                        "storage.type.pasm.spin2"
+                    ]
+                }
             }
-          ]
+        ]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && npm run compile:grammar",

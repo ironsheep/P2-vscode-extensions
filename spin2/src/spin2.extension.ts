@@ -1409,7 +1409,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 });
                             }
                             else {
-                                if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isBuiltinReservedWord(namePart)) {
+                                if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isBuiltinReservedWord(namePart) && !this._iDebugMethod(namePart)) {
                                     this._logPASM('  --  DAT Pasm MISSING name=[' + namePart + '](' + nameOffset + 1 + ')');
                                     tokenSet.push({
                                         line: lineNumber,

@@ -17,6 +17,21 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.1.0] 2021-05-19
+
+Minor update to fix incorrect highlighting
+
+Syntax Adjustments:
+
+- BUGFIX: correct highlighting of debug() functions in DAT section pasm code
+
+### - Known Issues w/v1.1.0
+
+- debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- _I'm sure there are more issues..._
+
 ## [1.0.1] 2021-03-30
 
 Minor update to fix missing things
@@ -25,14 +40,12 @@ Syntax Adjustments:
 
 - BUGFIX: add missing `recv` symbol support
 
-
 ### - Known Issues w/v1.0.1
 
 - debug() statements that don't use double-quoted strings currently are not parsed correctly
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
-
+- _I'm sure there are more issues..._
 
 ## [1.0.0] 2021-03-18
 
@@ -40,7 +53,7 @@ The Official Release of Semantic Highlighting
 
 In this release we clean things up a bit more, we deliver unknown name highlighting in brighter red, and **herein** we report on the state of testing against various code-sets.
 
-**NOTE:** _with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile.  The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols._
+**NOTE:** _with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile. The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols._
 
 Semantic Adjustments:
 
@@ -61,19 +74,19 @@ Syntax Adjustments:
 - debug() statements that don't use double-quoted strings currently can't be parsed
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ### REPORT: Source code shipped with PNut
 
 - **LIMITATIONs**: all highlighting is working with the exception of:
- - FILE `Spin2_interpreter.spin2` - breaks the syntax highlighter, but the sematic highlighter works.
- - (meaning pasm instruction names, built-in names, conditions, etc. are not highlighted)
- - All files with debug() statements that don't use double-quoted strings can't be parsed correctly
+- FILE `Spin2_interpreter.spin2` - breaks the syntax highlighter, but the sematic highlighter works.
+- (meaning pasm instruction names, built-in names, conditions, etc. are not highlighted)
+- All files with debug() statements that don't use double-quoted strings can't be parsed correctly
 
 ### REPORT: Source code shipped in P2 OBEX
 
 - For all P2 Obex files, highlighting is working with the exception of:
- -  FILE `Parktransformation.spin2` I'm checking the Chip as to why this is.
+- FILE `Parktransformation.spin2` I'm checking the Chip as to why this is.
 
 ## [0.3.4] 2021-03-17
 
@@ -103,7 +116,7 @@ Syntax Adjustments:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.3] 2021-03-16
 
@@ -118,7 +131,7 @@ Theme Adjustments:
 - Removed `Spin2 Cluso99` theme (by request)
 - Added `Spin2 Ironsheep Syntax` theme (primarily for extension developer use, disables Semantic highlighting)
 
-**Note**: *Should you wish, you can switch between the two ironsheep themes to show code with or without semantic highlighting*
+**Note**: _Should you wish, you can switch between the two ironsheep themes to show code with or without semantic highlighting_
 
 Semantic Adjustments:
 
@@ -154,7 +167,7 @@ Syntax Adjustments:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.2] 2021-03-12
 
@@ -168,7 +181,7 @@ Semantic Fixes:
 
 - BUGFIX spin is not case-sensitive... adjust so highlighting is also not!
 - Decision: not fixing: Does not handle the .label (local-scoped pasm labels) properly
-    -   works well enough to highlight properly
+  - works well enough to highlight properly
 
 Syntax Fixes:
 
@@ -183,11 +196,11 @@ Syntax Fixes:
 - Fails to parse some debug() statements correctly
 - Does NOT handle multi-line enum declarations
 - Does NOT handle comma-delimited constant assignment
-- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.1] 2021-03-09
 
@@ -202,9 +215,9 @@ Syntax Fixes:
 Semantic Fixes:
 
 - BUGFIX recognize comma separated var declarations (names after first name)
-- BUGFIX Repaired identification of constant assignment from constant of external object 
+- BUGFIX Repaired identification of constant assignment from constant of external object
 - BUGFIX cleaned up couple of minor OUTLINE issues (false detections, missing comments)
-- BUGFIX recognize range-value symbols in case statement (e.g., SEG\_TOP..SEG_BOTTOM:)
+- BUGFIX recognize range-value symbols in case statement (e.g., SEG_TOP..SEG_BOTTOM:)
 - BUGFIX repair recognizer for assignment LHS: (eg., `byte[pColor][2] := {value}`)
 - BUGFIX identify storage types in method's local variable list
 - BUGFIX recognize method calls to indexed objects
@@ -226,12 +239,11 @@ Syntax Fixes:
 - Fails to parse some debug() statements correctly
 - Does NOT handle multi-line enum declarations
 - Does NOT handle comma-delimited constant assignment
-- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic the 'modification' attribute is being over-applied
 - Oops spin is not case-sensative... I need to adjust so highlighting is also not!
-- *I'm sure there are more issues...*
-
+- _I'm sure there are more issues..._
 
 ## [0.3.0] 2021-03-07
 
@@ -258,9 +270,9 @@ Preview Release of Semantic Highlighting
 - Does NOT handle multi-line enum declarations
 - Does NOT handle comma-delimited constant assignment
 - Does NOT recognize method calls to indexed objects
-- Fails to properly identify location of shorter variable name when is found within longer name earler in line...  
+- Fails to properly identify location of shorter variable name when is found within longer name earler in line...
 - Syntax highlight of DAT section sometimes failes... RES and FIT not colored correctly
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.2.2] 2020-11-30
 
