@@ -21,7 +21,7 @@ Possible next additions:
 
 Minor update to fix incorrect highlighting
 
-Syntax Adjustments:
+Semantic Adjustments:
 
 - BUGFIX: correct highlighting of debug() functions in DAT section pasm code
 
