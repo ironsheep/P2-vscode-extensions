@@ -8,14 +8,35 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 
 Work to appear in upcoming releases:
 
-- Add support for "debug() statements NOT using strings" - new debug() shorthand support
+- Work on fixes to any reported issues
 - Investigate and possibly add unique coloring for method pointers
-- work on fixes to any reported issues
+- Add support for "debug() statements NOT using strings" - new debug() shorthand support
 
 Possible next additions:
 
+- Add tabbing to user defined tabstops as found in Propeller Tool
+- Add code reformatting aligning columns to user defined tabstops
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.2.0] 2021-12-xx
+
+Minor Update - Bugfixes and Catch up with Spin2 Language updates inclu. DEBUG methods and constants
+
+Syntax/Semantic Adjustments:
+
+- NEW: add latest round of new Spin2/Pasm2/Debug methods & constants
+- BUGFIX: previously seen files no-longer affect semantic highlight of current file
+- BUGFIX: symbol-names starting with PUB,PRI,CON,DAT,etc. are no longer confusing parser
+- BUGFIX: RES and FIT coloring is working better
+
+### - Known Issues w/v1.2.0
+
+- debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
 
 ## [1.1.0] 2021-05-19
 

@@ -205,7 +205,7 @@
 			"name": "pasm storage modifiers",
 			"scope": ["storage.modifier"],
 			"settings": {
-				"foreground": "#4a4dae"
+				"foreground": "#7172ac"
 			}
         },
         {
