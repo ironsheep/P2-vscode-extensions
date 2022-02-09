@@ -9,26 +9,29 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 Work to appear in upcoming releases:
 
 - Work on fixes to any reported issues
-- Investigate and possibly add unique coloring for method pointers
-- Add support for "debug() statements NOT using strings" - new debug() shorthand support
+- Add tabbing to user defined tabstops as found in Propeller Tool
 
 Possible next additions:
 
-- Add tabbing to user defined tabstops as found in Propeller Tool
 - Add code reformatting aligning columns to user defined tabstops
+- Investigate and possibly add unique coloring for method pointers
+- Add support for "debug() statements NOT using strings" - new debug() shorthand support
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.2.0] 2021-12-xx
+## [1.2.0] 2022-02-xx
 
-Minor Update - Bugfixes and Catch up with Spin2 Language updates inclu. DEBUG methods and constants
+Highlighting Update - Bugfixes and Catch up with Spin2 Language updates inclu. new DEBUG methods and constants
 
 Syntax/Semantic Adjustments:
 
 - NEW: add latest round of new Spin2/Pasm2/Debug methods & constants
+- NEW: directives that shouldn't be used in inline-pasm are now highlighted with bright red color
+- BUGFIX: added missing: four pasm if_ conditionals, one spin2 method name
+- BUGFIX: parser now recognizes mulitplying constant values correctly
 - BUGFIX: previously seen files no-longer affect semantic highlight of current file
 - BUGFIX: symbol-names starting with PUB,PRI,CON,DAT,etc. are no longer confusing parser
-- BUGFIX: RES and FIT coloring is working better
+- BUGFIX: RES and FIT coloring is working
 
 ### - Known Issues w/v1.2.0
 

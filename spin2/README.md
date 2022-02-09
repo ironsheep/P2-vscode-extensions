@@ -31,7 +31,7 @@ _Hint:_ Configure the OUTLINE panel to "Sort by Position" to reflect the order i
 We are working on fixes to the following issues we've seen during our testing. However, they are not major enough to prevent this release.
 
 - Some line comments are not properly colored
-- Multiple return values are not properly colored
+- Occasionally [byte|word|long] storage types are not properly colored
 
 ## Reporting Issues
 

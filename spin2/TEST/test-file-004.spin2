@@ -19,6 +19,13 @@ PUB null()
 
     '' This is NOT a top level object
 
+CON
+
+    FLOAT
+    ROUND
+    TRUNC
+
+
 PUB allSpinLanguageParts()
 ' core spin verbs
     AKPIN
@@ -81,6 +88,7 @@ PUB allSpinLanguageParts()
     WXPIN
     WYPIN
     XYPOL
+    NAN
 
 PUB allHubVariableNames()
     CLKFREQ
@@ -190,10 +198,6 @@ PUB allnamedOperators()
     AND
     OR
     XOR
-    ' Float Operations
-    FLOAT
-    ROUND
-    TRUNC
 
 PUB allDebugMethods()
     ' conditionals
@@ -202,6 +206,10 @@ PUB allDebugMethods()
     ' String Output *
     ZSTR
     LSTR
+    ' Float
+    FDEC
+    FDEC_REG_ARRAY
+    FDEC_ARRAY
     ' Unsigned Decimal
     UDEC
     UDEC_BYTE
@@ -256,10 +264,16 @@ PUB allDebugMethods()
     SBIN_BYTE_ARRAY
     SBIN_WORD_ARRAY
     SBIN_LONG_ARRAY
+    ' Miscellaneous
+    DLY
+    PC_KEY
+    PC_MOUSE
     ' DEBUG constants
+    DOWNLOAD_BAUD
     DEBUG_COGS
     DEBUG_DELAY
-    DEBUG_PIN
+    DEBUG_PIN_TX
+    DEBUG_PIN_RX
     DEBUG_BAUD
     DEBUG_TIMESTAMP
     DEBUG_LOG_SIZE
@@ -270,6 +284,7 @@ PUB allDebugMethods()
     DEBUG_DISPLAY_LEFT
     DEBUG_DISPLAY_TOP
     DEBUG_WINDOWS_OFF
+
 
 PUB allFlowControl()
     ABORT

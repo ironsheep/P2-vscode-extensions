@@ -110,6 +110,13 @@
 			}
         },
 		{
+			"name": "Control",
+			"scope": ["keyword.control.include"],
+			"settings": {
+				"foreground": "#c659bd" // c586c0, cccc44
+			}
+        },
+		{
 			"name": "Cog Register",
 			"scope": ["variable.language.cog.register"],
 			"settings": {
