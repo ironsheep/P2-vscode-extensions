@@ -63,8 +63,8 @@ repository:
         match: '(?i)\b(TRUE|FALSE|(POS|NEG)X)\b'
     constant_block:
         name: meta.block.constant.spin2
-        begin: '(?i)^(CON)\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        begin: '(?i)^(CON)(\s+|\s*$)'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '0':
                 name: keyword.block.con.spin2
@@ -90,8 +90,8 @@ repository:
         match: '(\=|\/|\*|\+|\-|\\)'
     data_block:
         name: meta.block.data.spin2
-        begin: '(?i)^(DAT)\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        begin: '(?i)^(DAT)(\s+|\s*$)'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '0':
                 name: keyword.block.dat.spin2
@@ -107,15 +107,15 @@ repository:
             -
                 include: '#debug_functions'
             -
-                include: '#directives_dat'
+                include: '#includes_dat'
             -
                 include: '#array_index'
             -
                 include: '#pasm_language'
     data_block_hold:
         name: meta.block.data.spin2
-        begin: '(?i)^(DAT)\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        begin: '(?i)^(DAT)(\s+|\s*$)'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '0':
                 name: keyword.block.dat.spin2
@@ -159,18 +159,18 @@ repository:
                         ]}
     debug_functions:
         name: support.function.debug.methods.spin2
-        match: '(?i)\b((S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(BAUD|COGS|DELAY|DISPLAY_LEFT|DISPLAY_TOP|ENABLE|HEIGHT|LEFT|LOG_SIZE|PIN|TIMESTAMP|TOP|WIDTH|WINDOWS_OFF)|DLY)\b'
+        match: '(?i)\b(FDEC(_ARRAY|_REG_ARRAY)?|(S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(BAUD|COGS|DELAY|DISPLAY_LEFT|DISPLAY_TOP|ENABLE|HEIGHT|LEFT|LOG_SIZE|PIN_TX|PIN_RX|TIMESTAMP|TOP|WIDTH|WINDOWS_OFF)|DLY|PC_(KEY|MOUSE)|DOWNLOAD_BAUD)\b'
     decimal_number:
         name: constant.numeric.decimal.spin2
         patterns:
              -
                 name: constant.numeric.base10.spin2
-                match: '\b([\-]*[0-9][0-9_]*\.[0-9][0-9_]*)\b'
+                match: '(?i)\b(-?[0-9][0-9_]*\.[0-9][0-9_]*)\b'
              -
                 name: constant.numeric.base10.spin2
-                match: '\b([\-]*[0-9][0-9_]*)\b'
-    directives_dat:
-        name: keyword.control.directive.spin2
+                match: '(?i)\b(-?[0-9][0-9_]*)\b'
+    includes_dat:
+        name: keyword.control.include.spin2
         match: '(?i)\bFILE\b'
     doc_block_comment:
         name: comment.block.documentation.spin2
@@ -217,8 +217,8 @@ repository:
                 include: '#float_number'
     object_block:
         name: meta.block.object.spin2
-        begin: '(?i)^(OBJ)\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        begin: '(?i)^(OBJ)(\s+|\s*$)'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '0':
                 name: keyword.block.obj.spin2
@@ -292,10 +292,10 @@ repository:
                 match: '(?i)\b((RD|WR)FAST|FBLOCK|GETPTR|RFVARS?|RF(BYTE|WORD|LONG)|WF(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG|POP(A|B)|PUSH(A|B))\b'
             -
                 name: keyword.pasm.control.instruction-conditionals.pasm2
-                match: '(?i)\b(_RET_|IF_(0|1)(0|1|X)|IF_(A|B)E?|IF_N?(C|Z|E)|IF_N?C_(AND|OR)_N?Z|IF_C_(EQ|NE)_Z|IF_(DIFF|SAME)|IF_NOT_(0|1)(0|1)|IF_N?Z_(AND|OR)_N?C|IF_Z_(EQ|NE)_C|IF_X(0|1))\b'
+                match: '(?i)\b(_RET_|IF_(0|1)(0|1|X)|IF_(A|B)E?|IF_(DIFF|SAME)|IF_(G|L)(E|T)|IF_C_(AND|OR)_N?Z|IF_C_(EQ|NE)_Z|IF_N?(C|Z|E)|IF_NC_(AND|OR)_N?Z|IF_NOT_(0|1)(0|1)|IF_NZ_(AND|OR)_N?C|IF_X(0|1)|IF_Z_(AND|OR)_N?C|IF_Z_(EQ|NE)_C)\b'
             -
                 name: keyword.pasm.control.instruction-effects.pasm2
-                match: '(?i)\b(W(C|Z|CZ)|AND(C|Z)|OR(C|Z)|XOR(C|Z))\b'
+                match: '(?i)\b(W(C|Z|CZ)|(AND|OR|XOR)(C|Z))\b'
             -
                 name: constant.language.clock-register-names.spin2
                 match: '(?i)\b(_rc(fast|slow)|_?clkfreq_?|(_x(in|tl)freq))\b'
@@ -352,8 +352,8 @@ repository:
                 match: '(?i)\b(ASMCLK)\b'
     pasm_language_inline:
         name: meta.block.pasm.language.inline.spin2
-        begin: '(?i)\b(ORG)\b'
-        end: '(?i)\b(END)\b'
+        begin: '(?i)\b(ORG)(\s+|\s*$)'
+        end: '(?i)\b(END)(\s+|\s*$)'
         beginCaptures:
             '1':
                 name: storage.modifier.spin2
@@ -380,7 +380,7 @@ repository:
     private_block:
         name: meta.block.private.spin2
         begin: '(?i)^(PRI)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '1':
                 name: keyword.block.pri.spin2
@@ -396,7 +396,7 @@ repository:
     public_block:
         name: meta.block.public.spin
         begin: '(?i)^(PUB)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '1':
                 name: keyword.block.pub.spin2
@@ -466,10 +466,10 @@ repository:
                 match: '(?i)\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\b'
             -
                 name: keyword.spin.methods.memory.spin2
-                match: '(?i)\b((GET|SET)REGS|(BYTE|WORD|LONG)MOVE|(BYTE|WORD|LONG)FILL)\b'
+                match: '(?i)\b((GET|SET)REGS|(BYTE|WORD|LONG)MOVE|(BYTE|WORD|LONG)FILL|(BYTE|WORD)FIT)\b'
             -
                 name: keyword.spin.methods.timing.spin2
-                match: '(?i)\b(GET(SEC|MS)|(GET|POLL|WAIT)CT|WAIT(MS|US))\b'
+                match: '(?i)\b(POLLCT|GET(SEC|MS|CT)|WAIT(MS|US|CT))\b'
             -
                 name: constant.language.hub-variable-names.spin2
                 match: '(?i)\b(VARBASE|CLK(MODE|FREQ))\b'
@@ -481,10 +481,10 @@ repository:
                 match: '(?i)\b(SEND|RECV)\b'
             -
                 name: keyword.spin.methods.index.spin2
-                match: '(?i)\b(LOOK(UPZ?|DOWNZ?))\b'
+                match: '(?i)\b(LOOK(UP|DOWN)Z?)\b'
             -
                 name: keyword.spin.methods.math.spin2
-                match: '(?i)\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND|Q(SIN|COS))\b'
+                match: '(?i)\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND|Q(SIN|COS)|NAN)\b'
             -
                 name: keyword.spin.methods.pasminterface.spin2
                 match: '(?i)\b(CALL|REG(EXEC|LOAD))\b'
@@ -502,7 +502,7 @@ repository:
                 match: '(?i)\b(clkmode_|clkfreq_)\b'
             -
                 name: keyword.operator.unary.spin2
-                match: '(?i)\b(!!|NOT|!|-|ABS|ENCOD|DECOD|BMASK|ONES|SQRT|QLOG|QEXP|REG|AND)\b'
+                match: '(?i)\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\b'
             -
                 name: keyword.operator.binary.spin2
                 match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)\b'
@@ -572,8 +572,8 @@ repository:
         end: '"'
     variable_block:
         name: meta.block.variable.spin2
-        begin: '(?i)^(VAR)\b'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b'
+        begin: '(?i)^(VAR)(\s+|\s*$)'
+        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
             '0':
                 name: keyword.block.var.spin2

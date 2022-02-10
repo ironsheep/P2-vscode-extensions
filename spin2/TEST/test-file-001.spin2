@@ -32,17 +32,17 @@ CON EnableFlow = 8
     j = ROUND(4000.0 / QuarPi)  ' float to integer
 
 CON { enumerations }
-    #0,a,b,c,d 
+    #0,a,b,c,d
     #1,e,f,g,h
     #-1[-1],m,n,p   ' m=-1, n=-2, p=-3 (start=-1, step=-1)
 
-    #16   
-    q 
+    #16
+    q
     r[0]
-    s 
-    t 
-    u[2] 
-    v 
+    s
+    t
+    u[2]
+    v
     w
 
 CON     e0,e1,e2    ' e0=0, e1=1, e2=2
@@ -64,6 +64,7 @@ VAR CogNum  ' the default variable size is LONG.
     WORD    CurrentCycle        ' word variable
     WORD    Cycles[200]         ' word variable array (200 words)
     WORD    e,f[5],g,h[10]      ' command separated declarations
+    WORD    i[1],j,k,l[92]      ' command separated declarations
 
     LONG    values              ' long variable
     LONG    values[15]          ' long variable array (15 longs)

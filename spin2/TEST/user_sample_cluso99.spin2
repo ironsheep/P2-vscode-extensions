@@ -1,5 +1,33 @@
+CON
+ DISK_BUFF = $1000
+
+DAT  { hub data }
+
+    mbox_copy  long    0
+    mbox_command  long    0
+    mbox_status  long    0
+    mbox_command  long    0
+
+    rx long    0
+
+    str_sd_err  byte    "ERROR",0
+    msg00       byte    "",0
+
+    orgh
+_hubTxStr   mov rx,#1
+            ret
+
+_hubTx   mov rx,#1
+            ret
+
+_hubTxCR   mov rx,#1
+            ret
+
+_hubMonitor   mov rx,#1
+            ret
+
 PUB sample_spin()
-    org 
+    org
 '+-----------------------------------------------------------------------------+
 go_command  mov     priv_bufad,   ##DISK_BUFF         ' ensure correct hub buffer
             setq    #3-1
@@ -38,4 +66,16 @@ print_msg   mov     lmm_lp2,    lmm_lc      wz  ' copy message#
 .found      call    #\_hubTxStr                 ' print message#
             RET                             wcz ' & restore flags
 '+-----------------------------------------------------------------------------+
+tmp  byte   0
+
+lmm_x long    0
+lmm_p long    0
+lmm_lp2 long    0
+lmm_lc long    0
+
+priv_bufad      res 1
+priv_copy       res 1
+priv_command    res 1
+priv_status     res 1
+
     end

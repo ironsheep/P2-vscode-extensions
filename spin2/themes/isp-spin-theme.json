@@ -100,7 +100,8 @@
 			"name": "Invalid",
 			"scope": ["invalid"],
 			"settings": {
-				"foreground": "#ff0000"
+				"foreground": "#ff0000",
+				"fontStyle":  "bold"
 			}
 		},
 		{
@@ -108,6 +109,13 @@
 			"scope": ["keyword.control"],
 			"settings": {
 				"foreground": "#b57bb0" // c586c0, cccc44
+			}
+        },
+		{
+			"name": "Control",
+			"scope": ["keyword.control.include"],
+			"settings": {
+				"foreground": "#c659bd" // c586c0, cccc44
 			}
         },
 		{
@@ -205,7 +213,7 @@
 			"name": "pasm storage modifiers",
 			"scope": ["storage.modifier"],
 			"settings": {
-				"foreground": "#4a4dae"
+				"foreground": "#7172ac"
 			}
         },
         {
@@ -266,6 +274,11 @@
         "*.missingDeclaration": {   // missing variable
             "fontStyle": "bold",
             "foreground": "#d83333"
-        }
+        },
+        "*.illegalUse": {   // keywords/variables in bad places
+            "foreground": "#ff0000",
+            "fontStyle":  "bold"
+        },
+
      }
 }

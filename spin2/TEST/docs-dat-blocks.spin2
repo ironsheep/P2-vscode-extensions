@@ -43,7 +43,7 @@ Str1    BYTE    "Gorillas",0
 Str2    BYTE    "Chimpanzees",0
 Str3    BYTE    "Humanzees",0
 StrList WORD    @Str0                   ' in Spin2, these are offsets of strings relative to start of object
-        WORD    @Str1                   ' in Spin2, @@StrList[i] will return address of Str0..Str3 for i = 0..3
+        WORD    @Str1                   ' in Spin2, @@StrList[i] or @@WORD[@Str0][i] will return address of Str0..Str3 for i = 0..3
         WORD    @Str2                   ' in PASM-only programs, these are absolute addresses of strings
         WORD    @Str3                   ' (use of WORD supposes offsets/addresses are under 64KB)
 
@@ -84,11 +84,11 @@ IncPins     MOV     DIRA,#$FF   ' In Spin2, IncPins is the 'MOV' instruction (lo
 Loop        ADD     OUTA,#1     ' In Spin2, @IncPins is the hub address of the 'MOV' instruction
             JMP     #Loop       ' In PASM, Loop is the hub address ($00404) of the 'ADD' instruction
 
-ORGH                            ' set hub-exec mode, hub origin = $00400, origin limit
-ORGH $1000                      ' set hub-exec mode, hub origin = $01000, origin limit
-ORGH $FC000,$FC800              ' set hub-exec mode, hub origin = $FC000, origin limit
+    ORGH                            ' set hub-exec mode, hub origin = $00400, origin limit
+    ORGH $1000                      ' set hub-exec mode, hub origin = $01000, origin limit
+    ORGH $FC000,$FC800              ' set hub-exec mode, hub origin = $FC000, origin limit
 
-FIT $2000                       ' test to make sure hub address has not exceeded $2000
+    FIT $2000                       ' test to make sure hub address has not exceeded $2000
 
 
 ' -----------------------------------------------------------------------------
@@ -103,6 +103,7 @@ FIT $2000                       ' test to make sure hub address has not exceeded
 DAT         ORGH                'set hub-exec mode and set origin to $400
             ORGH $FC000         'set hub-exec mode and set origin to $FC000
 
+binaryInclu FILE "exampleBinaryData"
 
 ' -----------------------------------------------------------------------------
 '' DAT: Hub-exec Code differences: Pasm-Only Programs

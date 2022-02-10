@@ -36,48 +36,55 @@ CON
 
 CON
 
-   varName = CLKMODE
-   varName = CLKFREQ
+   CON_NAME = CLKMODE
+   CON_NAME = CLKFREQ
 
 pub something()
 
-   varName = VARBASE
-   varName = PR0
-   varName = PR1
-   varName = PR2
-   varName = PR3
-   varName = PR4
-   varName = PR5
-   varName = PR6
-   varName = PR7
-   varName = DIRA
-   varName = DIRB
-   varName = OUTA
-   varName = OUTB
-   varName = INA
-   varName = INB
+   CON_NAME = VARBASE
+   CON_NAME = PR0
+   CON_NAME = PR1
+   CON_NAME = PR2
+   CON_NAME = PR3
+   CON_NAME = PR4
+   CON_NAME = PR5
+   CON_NAME = PR6
+   CON_NAME = PR7
+   CON_NAME = DIRA
+   CON_NAME = DIRB
+   CON_NAME = OUTA
+   CON_NAME = OUTB
+   CON_NAME = INA
+   CON_NAME = INB
 
 DAT
-   varName mov a7,IJMP3
-   varName mov a7,IRET3
-   varName mov a7,IJMP2
-   varName mov a7,IRET2
-   varName mov a7,IJMP1
-   varName mov a7,IRET1
+    org
 
-   varName mov a7,PA
-   varName mov a7,PB
-   varName mov a7,PTRA
-   varName mov a7,PTRB
+lblName mov a7,IJMP3
+lblName mov a7,IRET3
+lblName mov a7,IJMP2
+lblName mov a7,IRET2
+lblName mov a7,IJMP1
+lblName mov a7,IRET1
 
-   varName mov a7,DIRA
-   varName mov a7,DIRB
-   varName mov a7,OUTA
-   varName mov a7,OUTB
-   varName mov a7,INA
-   varName mov a7,INB
+lblName mov a7,PA
+lblName mov a7,PB
+lblName mov a7,PTRA
+lblName mov a7,PTRB
+
+lblName mov a7,DIRA
+lblName mov a7,DIRB
+lblName mov a7,OUTA
+lblName mov a8,OUTB
+lblName mov a7,INA
+lblName mov a7,INB
+    ret
 
 a7   long    0
+a8   res    1
+
+   fit
+
 
 ' -----------------------------------------------------------------------------
 '' Pin Fields - Spin2 Pg 7
@@ -216,6 +223,7 @@ pub built_in_Methods6(v1,  etc) | Value, Index
     Value := LOOKUPZ(Index: v1, v2..v3, etc)
     Index := LOOKDOWN(Value: v1, v2..v3, etc)
     Index := LOOKDOWNZ(Value: v1, v2..v3, etc)
+    index := NAN()
 
 
 ' -----------------------------------------------------------------------------
@@ -235,6 +243,15 @@ pub using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) 
     x,y := ROTXY(xin,yin,theta)     ' use both the x and y results
     _,y := ROTXY(xin,yin,theta)     ' use only the y result
     x,_ := ROTXY(xin,yin,theta)     ' use only the x result
+
+DAT
+    mywords   byte 0[4]
+
+pub mySillySpecialCase()
+
+    BYTE[@mywords][1], BYTE[@mywords][1] := myfuncRet2()
+
+PRI myfuncRet2() : val1, val2
 
 
 '...where...
