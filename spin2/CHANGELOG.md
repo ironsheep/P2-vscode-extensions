@@ -25,13 +25,13 @@ Highlighting Update - Bugfixes and Catch up with Spin2 Language updates inclu. n
 
 Syntax/Semantic Adjustments:
 
-- NEW: add latest round of new Spin2/Pasm2/Debug methods & constants
+- NEW: add new Spin2/Pasm2/Debug methods & constants which were added since our last release 
 - NEW: directives that shouldn't be used in inline-pasm are now highlighted with bright red color
-- BUGFIX: parser no-longer expects pasm2 labels to be in 1st column
+- BUGFIX: parser no longer expects pasm2 labels to be in the 1st column
 - BUGFIX: added missing: four pasm if_ conditionals, one spin2 method name
-- BUGFIX: parser now recognizes mulitplying constant values correctly
-- BUGFIX: previously seen files no-longer affect semantic highlight of current file
-- BUGFIX: symbol-names starting with PUB,PRI,CON,DAT,etc. are no longer confusing parser
+- BUGFIX: parser now parses multiplying of constant values correctly
+- BUGFIX: previously seen files no longer affect the semantic highlighting of the current file
+- BUGFIX: symbol-names starting with PUB, PRI, CON, DAT, etc. are no longer confusing parser
 - BUGFIX: RES and FIT coloring is working
 
 ### - Known Issues w/v1.2.0
