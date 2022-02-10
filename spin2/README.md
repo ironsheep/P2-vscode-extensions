@@ -13,7 +13,7 @@ Both Spin2 and Pasm2 are now completely supported - including streamer and smart
 ## Feature: Semantic Highlighting
 
 Spin2 and Pasm2 are now supported and will be improving over the next couple of releases.
-See the **ChangeLog** for detailed status.
+See the **[ChangeLog](https://github.com/ironsheep/P2-vscode-extensions/blob/main/spin2/CHANGELOG.md)** for detailed status.
 
 ## Feature: Code Outline
 

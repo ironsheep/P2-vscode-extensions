@@ -19,7 +19,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.2.0] 2022-02-xx
+## [1.2.0] 2022-02-09
 
 Highlighting Update - Bugfixes and Catch up with Spin2 Language updates inclu. new DEBUG methods and constants
 
@@ -27,6 +27,7 @@ Syntax/Semantic Adjustments:
 
 - NEW: add latest round of new Spin2/Pasm2/Debug methods & constants
 - NEW: directives that shouldn't be used in inline-pasm are now highlighted with bright red color
+- BUGFIX: parser no-longer expects pasm2 labels to be in 1st column
 - BUGFIX: added missing: four pasm if_ conditionals, one spin2 method name
 - BUGFIX: parser now recognizes mulitplying constant values correctly
 - BUGFIX: previously seen files no-longer affect semantic highlight of current file
