@@ -1268,7 +1268,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             });
                         }
                         else {
-                            if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isDatNFileStorageType(namePart) && !this._isBuiltinReservedWord(namePart)) {
+                            if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isDatNFileStorageType(namePart) && !this._isBinaryOperator(namePart) && !this._isBuiltinReservedWord(namePart)) {
                                 if (showDebug) {
                                     this._logMessage('  --  DAT rDvdc MISSING name=[' + namePart + ']');
                                 }
@@ -2909,7 +2909,14 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const reservedStatus: boolean = (spinInstructionsOfNote.indexOf(name.toLowerCase()) != -1);
         return reservedStatus;
     }
-
+    private _isBinaryOperator(name: string): boolean {
+        const binaryOperationsOfNote: string[] = [
+            'sar', 'ror', 'rol', 'rev', 'zerox',
+            'signx', 'sca', 'scas', 'frac'
+        ];
+        const reservedStatus: boolean = (binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1);
+        return reservedStatus;
+    }
     private _isSpinBuiltinMethod(name: string): boolean {
         const spinMethodNames: string[] = [
             'akpin', 'bytefill', 'bytemove', 'call', 'clkset', 'cogatn', 'cogchk', 'cogid', 'coginit', 'cogspin',

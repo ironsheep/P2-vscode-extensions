@@ -112,51 +112,8 @@ repository:
                 include: '#array_index'
             -
                 include: '#pasm_language'
-    data_block_hold:
-        name: meta.block.data.spin2
-        begin: '(?i)^(DAT)(\s+|\s*$)'
-        end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
-        beginCaptures:
-            '0':
-                name: keyword.block.dat.spin2
-        patterns:
             -
-                include: '#comment'
-            -
-                include: '#constants'
-            -
-                include: '#string'
-            -
-                include: '#number'
-            -
-                include: '#debug_functions'
-            -
-                include: '#array_index'
-            -
-                include: '#pasm_language'
-            -
-                match: '^(\w+)\b'
-                captures:
-                    '1': {name: variable.name.dat.spin2}
-            -
-                match: '(?i)^(\w+)\s*(byte|word|long|res)(\[.*\])?\b'
-                captures:
-                    '1': {name: variable.name.dat.spin2}
-                    '2': {name: storage.type.spin2}
-                    '3': {patterns: [
-                        {include: '#number'},
-                        {include: '#constants'},
-                        {include: '#array_index'}
-                        ]}
-            -
-                match: '(?i)^\s*(byte|word|long|res)(\[.*\])?'
-                captures:
-                    '1': {name: storage.type.spin2}
-                    '2': {patterns: [
-                        {include: '#number'},
-                        {include: '#constants'},
-                        {include: '#array_index'}
-                        ]}
+                include: '#dat_binary_operators'
     debug_functions:
         name: support.function.debug.methods.spin2
         match: '(?i)\b(FDEC(_ARRAY|_REG_ARRAY)?|(S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(BAUD|COGS|DELAY|DISPLAY_LEFT|DISPLAY_TOP|ENABLE|HEIGHT|LEFT|LOG_SIZE|PIN_TX|PIN_RX|TIMESTAMP|TOP|WIDTH|WINDOWS_OFF)|DLY|PC_(KEY|MOUSE)|DOWNLOAD_BAUD)\b'
@@ -392,7 +349,7 @@ repository:
                 name: meta.return-type.spin
         patterns:
             -
-                include: '#spin_language_tiny'
+                include: '#spin_language'
     public_block:
         name: meta.block.public.spin
         begin: '(?i)^(PUB)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
@@ -408,7 +365,7 @@ repository:
                 name: meta.return-type.spin
         patterns:
             -
-                include: '#spin_language_tiny'
+                include: '#spin_language'
     quaternary_number:
         name: constant.numeric.quaternary.spin2
         match: '(\%\%[0-3][0-3_]*)\b'
@@ -427,7 +384,10 @@ repository:
     pasm_float_operators:
         name: keyword.operator.float.spin2
         match: '(?i)\b(FLOAT|ROUND|TRUNC)\b'
-    spin_language_tiny:
+    dat_binary_operators:
+        name: keyword.operator.binary.pasm2
+        match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC)\b'
+    spin_language:
         name: meta.block.spin.language.spin2
         patterns:
             -
@@ -454,7 +414,7 @@ repository:
                 include: '#cog_register_names'
             -
                 name: storage.type.pasm.spin2
-                match: '(?i)\b(BYTE|WORD|LONG)\b'
+                match: '(?i)\b(BYTE|WORD|BYTEFIT|WORDFIT|LONG)\b'
             -
                 name: keyword.control.flow.spin2
                 match: '(?i)\b(IF|ELSEIF|ELSEIFNOT|ELSE|IFNOT|CASE|CASE_FAST|OTHER|REPEAT|FROM|TO|STEP|UNTIL|WHILE|NEXT|QUIT|RETURN|ABORT)\b'
@@ -466,7 +426,7 @@ repository:
                 match: '(?i)\b(PIN(W|WRITE|L|LOW|H|HIGH|T|TOGGLE|F|FLOAT|R|READ|START|CLEAR)|(WR|WX|WY|AK|RD|RQ)PIN)\b'
             -
                 name: keyword.spin.methods.memory.spin2
-                match: '(?i)\b((GET|SET)REGS|(BYTE|WORD|LONG)MOVE|(BYTE|WORD|LONG)FILL|(BYTE|WORD)FIT)\b'
+                match: '(?i)\b((GET|SET)REGS|(BYTE|WORD|LONG)MOVE|(BYTE|WORD|LONG)FILL)\b'
             -
                 name: keyword.spin.methods.timing.spin2
                 match: '(?i)\b(POLLCT|GET(SEC|MS|CT)|WAIT(MS|US|CT))\b'
@@ -587,7 +547,7 @@ repository:
             -
                 include: "#pasm_storage_alignment"
             -
-                match: '(?i)\b(byte|word|long)\s*(\w+)(\[.*\])?(\s*,\s*(\w+)(\[.*\])*)?'
+                match: '(?i)\b(byte|word|bytefit|wordfit|long)\s*(\w+)(\[.*\])?(\s*,\s*(\w+)(\[.*\])*)?'
                 captures:
                     '1': {name: storage.type.spin2}
                     '2': {name: variable.name.var.spin2}

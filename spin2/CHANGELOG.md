@@ -19,6 +19,18 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.2.1] 2022-02-16
+
+Minor Highlighting Update - Repair highlighting of binary operators in DAT data declarations
+
+### - Known Issues w/v1.2.1
+
+- debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
+
 ## [1.2.0] 2022-02-09
 
 Highlighting Update - Bugfixes and Catch up with Spin2 Language updates inclu. new DEBUG methods and constants

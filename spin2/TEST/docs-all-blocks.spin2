@@ -6,6 +6,10 @@ OBJ vga : "VGA_640x480_text_80x40"  ' instantiate vga object
 
 VAR time, i                         ' declare object-wide variables
 
+DAT
+hall_angles	long	0			'forward-direction table
+    long    0 frac 6	'%001
+
 PUB go()
     vga.start(8)
 
