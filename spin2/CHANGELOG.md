@@ -19,6 +19,19 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.2.2] 2022-02-17
+
+Minor Highlighting Update - Repair highlighting of binary operators in DAT data declarations
+(missed a case, fixed now)
+
+### - Known Issues w/v1.2.2
+
+- debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
+
 ## [1.2.1] 2022-02-16
 
 Minor Highlighting Update - Repair highlighting of binary operators in DAT data declarations
@@ -37,7 +50,7 @@ Highlighting Update - Bugfixes and Catch up with Spin2 Language updates inclu. n
 
 Syntax/Semantic Adjustments:
 
-- NEW: add new Spin2/Pasm2/Debug methods & constants which were added since our last release 
+- NEW: add new Spin2/Pasm2/Debug methods & constants which were added since our last release
 - NEW: directives that shouldn't be used in inline-pasm are now highlighted with bright red color
 - BUGFIX: parser no longer expects pasm2 labels to be in the 1st column
 - BUGFIX: added missing: four pasm if_ conditionals, one spin2 method name
@@ -161,7 +174,7 @@ Syntax Adjustments:
 
 This represents a noticeable cleanup of parsing most existing code.
 
-### - What's new
+### - What's new in v0.3.3
 
 Theme Adjustments:
 
@@ -212,7 +225,7 @@ Syntax Adjustments:
 
 This represents an overall improvement in parsing when there is less whitespace between things
 
-### - What's new
+### - What's new in v0.3.2
 
 Semantic Fixes:
 
@@ -243,7 +256,7 @@ Syntax Fixes:
 
 2nd Release of Semantic Highlighting
 
-### - What's new
+### - What's new in v0.3.1
 
 - Theme: Entire theme moved to pastel-like colors, less shocking, closer to commercial quality
 
