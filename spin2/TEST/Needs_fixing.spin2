@@ -21,7 +21,7 @@ DAT		org
 		setq	#gtzl_base		'launch Goertzel
 		coginit	#16,##@pgm_gtzl
 
-		debug(`scope_xy xy size 200 range 1000 samples 200 dotsize 5 'Goertzel' `dly(#200))
+		debug(`scope_xy xy size 200 range 1000 samples 200 dotsize 5 'Goertzel' `dly(#200))     ' <----   debug() in DAT pasm allowed!
 
 .loop		debug(`xy `sdec_long_array_(#$00000,#2) `dly(#5))
 		jmp	 #.loop
