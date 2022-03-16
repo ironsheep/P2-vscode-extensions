@@ -123,7 +123,7 @@
           "include": "#number"
         },
         {
-          "include": "#con_float_operators"
+          "include": "#float_operators"
         },
         {
           "include": "#spin_field_operations"
@@ -333,7 +333,7 @@
           "include": "#pasm_only_instructions"
         },
         {
-          "include": "#pasm_float_operators"
+          "include": "#float_operators"
         }
       ]
     },
@@ -497,7 +497,7 @@
           "include": "#pasm_field_operations"
         },
         {
-          "include": "#pasm_float_operators"
+          "include": "#float_operators"
         }
       ]
     },
@@ -566,11 +566,7 @@
       "name": "keyword.operator.field.spin2",
       "match": "(?i)\\b(ADDBITS|ADDPINS)\\b"
     },
-    "con_float_operators": {
-      "name": "keyword.operator.float.spin2",
-      "match": "(?i)\\b(FLOAT|ROUND|TRUNC)\\b"
-    },
-    "pasm_float_operators": {
+    "float_operators": {
       "name": "keyword.operator.float.spin2",
       "match": "(?i)\\b(FLOAT|ROUND|TRUNC)\\b"
     },
@@ -598,6 +594,9 @@
         },
         {
           "include": "#spin_field_operations"
+        },
+        {
+          "include": "#float_operators"
         },
         {
           "include": "#debug_functions"

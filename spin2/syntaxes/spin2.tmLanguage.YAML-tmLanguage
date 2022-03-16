@@ -82,7 +82,7 @@ repository:
             -
                 include: '#number'
             -
-                include: '#con_float_operators'
+                include: '#float_operators'
             -
                 include: '#spin_field_operations'
     constant_operators:
@@ -216,7 +216,7 @@ repository:
             -
                 include: '#pasm_only_instructions'
             -
-                include: '#pasm_float_operators'
+                include: '#float_operators'
     pasm_storage_alignment:
         name: storage.modifier.spin2
         match: '(?i)\b(ALIGN(W|L))\b'
@@ -333,7 +333,7 @@ repository:
             -
                 include: '#pasm_field_operations'
             -
-                include: '#pasm_float_operators'
+                include: '#float_operators'
     private_block:
         name: meta.block.private.spin2
         begin: '(?i)^(PRI)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
@@ -373,15 +373,12 @@ repository:
             '1':
                 name: constant.numeric.base4.spin2
     spin_field_operations:
-                name: keyword.operator.field.spin2
-                match: '(?i)\b(ADDBITS|ADDPINS)\b'
+        name: keyword.operator.field.spin2
+        match: '(?i)\b(ADDBITS|ADDPINS)\b'
     pasm_field_operations:
-                name: keyword.operator.field.spin2
-                match: '(?i)\b(ADDBITS|ADDPINS)\b'
-    con_float_operators:
-        name: keyword.operator.float.spin2
-        match: '(?i)\b(FLOAT|ROUND|TRUNC)\b'
-    pasm_float_operators:
+        name: keyword.operator.field.spin2
+        match: '(?i)\b(ADDBITS|ADDPINS)\b'
+    float_operators:
         name: keyword.operator.float.spin2
         match: '(?i)\b(FLOAT|ROUND|TRUNC)\b'
     dat_binary_operators:
@@ -402,6 +399,8 @@ repository:
                 include: '#string'
             -
                 include: '#spin_field_operations'
+            -
+                include: '#float_operators'
             -
                 include: '#debug_functions'
             -

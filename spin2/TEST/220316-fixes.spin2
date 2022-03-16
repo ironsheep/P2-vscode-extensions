@@ -1,6 +1,6 @@
 ' code examples that are not highlighting correctly
 '
-'  Mybe don't fix the following until debug() support is added
+'  Fix the following until debug() support is added (lutcolors shouldn't be red!)
 PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i
   image_address += lut_offset
   debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))

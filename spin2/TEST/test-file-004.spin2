@@ -199,6 +199,11 @@ PUB allnamedOperators()
     OR
     XOR
 
+    FLOAT
+    ROUND
+    TRUNC
+
+
 PUB allDebugMethods()
     ' conditionals
     IF

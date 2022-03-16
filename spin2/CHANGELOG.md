@@ -19,6 +19,23 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.2.3] 2022-03-16
+
+Minor Highlighting Update 
+
+- Repair highlighting of float operators used in spin2
+- Repair coloring of constant names used in array declarations
+- Minor update to debug() statements: (1) allow in pasm, (2) don't flag unknown names within debug()
+- Repair recognition of org on DAT lines
+
+### - Known Issues w/v1.2.3
+
+- debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
+
 ## [1.2.2] 2022-02-17
 
 Minor Highlighting Update - Repair highlighting of binary operators in DAT data declarations
