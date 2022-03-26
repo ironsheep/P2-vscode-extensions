@@ -1,0 +1,13 @@
+' code examples that are not highlighting correctly
+'
+CON
+
+  PIN_POT_IN = 0
+  PIN_LED_GRN = 1
+
+PUB senseLoop()
+'' the real main loop
+    dira.[1..0] := %10
+    repeat
+        outa.[PIN_LED_GRN] := ina.[PIN_POT_IN]  ' INA BAD!!!
+        waitms(10)

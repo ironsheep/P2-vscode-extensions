@@ -1,0 +1,22 @@
+' code examples that are not highlighting correctly
+'
+PUB oscilloscope() | chanA, chanB
+'' TASK: display oscilloscope waveforms
+
+    debug(`scope Scope1 pos 100 0 size 800 600 linesize 6)
+    debug(`Scope1 'Analog Input' 0 3300 250 0 %1111 red)
+    debug(`Scope1 'Digital Output' 0 3300 250 300 %1111 green)
+    debug(`Scope1 samples 16 trigger -1)
+    debug(`term Term1 pos 914 71 size 30 1 textsize 20 color red)
+    debug(`term Term2 pos 914 0 size 30 1 textsize 20 color green)
+
+    repeat
+        'chanA := analog[CHAN_A_IDX].read()
+        'chanB := analog[CHAN_B_IDX].read()
+
+        debug(`Term1 0)
+        debug(`Term2 0)
+        debug(`Term1 'Pin 0 = ' '`(chanA)' ' *0.001V')
+        debug(`Term2 'Pin 1 = ' '`(chanB)' ' *0.001V')
+        debug(`Scope1 `(chanA) `(chanB))
+        waitms(20)
