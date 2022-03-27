@@ -159,7 +159,7 @@ repository:
                 name: constant.numeric.base16.spin2
     line_comment:
         name: comment.line.spin2
-        match: '''.*$'
+        match: '''(?:.(?:!''))+$'
     number:
         patterns:
             -
