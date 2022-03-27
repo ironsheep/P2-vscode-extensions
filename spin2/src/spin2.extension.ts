@@ -127,7 +127,8 @@ const legend = (function () {
         'comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
         'type', 'struct', 'class', 'interface', 'enum', 'typeParameter', 'function',
         'method', 'macro', 'variable', 'parameter', 'property', 'label', 'enumMember',
-        'event', 'returnValue', 'storageType'
+        'event', 'returnValue', 'storageType', 'colorName',
+        'displayType', 'displayName', 'setupParameter', 'feedParameter'
     ];
     tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 
@@ -176,6 +177,33 @@ enum eParseState {
     inMultiLineDocComment,
     inNothing
 }
+
+enum eDebugDisplayType {
+    Unknown = 0,
+    ddtLogic,
+    ddtScope,
+    ddtScopeXY,
+    ddtFFT,
+    ddtSpectro,
+    ddtPlot,
+    ddtTerm,
+    ddtBitmap,
+    ddtMidi
+}
+
+// map of display-type to etype'
+const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
+        ['logic', eDebugDisplayType.ddtLogic],
+        ['scope', eDebugDisplayType.ddtScope],
+        ['scope_xy', eDebugDisplayType.ddtScopeXY],
+        ['fft', eDebugDisplayType.ddtFFT],
+        ['spectro', eDebugDisplayType.ddtSpectro],
+        ['plot', eDebugDisplayType.ddtPlot],
+        ['term', eDebugDisplayType.ddtTerm],
+        ['bitmap', eDebugDisplayType.ddtBitmap],
+        ['midi', eDebugDisplayType.ddtMidi]
+    ]);
+
 class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
     async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
         // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
@@ -194,6 +222,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private localPasmTokensByMethodName = new Map<string, Map<string, IRememberedToken>>();
     private conEnumInProgress: boolean = false;
 
+    // map of display-name to etype'
+    private debugDisplays = new Map<string, eDebugDisplayType>();
+
     private currentMethodName: string = "";
 
     private _encodeTokenType(tokenType: string): number {
@@ -211,6 +242,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         this.localPasmTokensByMethodName.clear();
         this.conEnumInProgress = false;
         this.currentMethodName = "";
+        this.debugDisplays.clear();
     }
 
     private _encodeTokenModifiers(strTokenModifiers: string[]): number {
@@ -406,6 +438,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     }
                     else {
                         this._getSPIN_PasmDeclaration(0, line)
+                        // scan SPIN-Inline-Pasm line for debug() display declaration
+                        this._getDebugDisplay_Declaration(0, line)
                     }
                 }
             }
@@ -421,6 +455,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     }
                     else {
                         this._getDAT_PasmDeclaration(0, line)
+                        // scan DAT-Pasm line for debug() display declaration
+                        this._getDebugDisplay_Declaration(0, line)
                     }
                 }
             }
@@ -435,6 +471,12 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         currState = eParseState.inPasmInline;
                         // and ignore rest of this line
                     }
+                    else {
+                        // scan SPIN2 line for debug() display declaration
+                        this._getDebugDisplay_Declaration(0, line)
+                    }
+
+
                 }
             }
         }
@@ -710,6 +752,13 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         currState = eParseState.inPasmInline;
                         // and ignore rest of this line
                     }
+                    else if (trimmedLine.toLowerCase().startsWith('debug(')) {
+                        const partialTokenSet: IParsedToken[] = this._reportDebugStatement(i, 0, line)
+                        partialTokenSet.forEach(newToken => {
+                            this._logSPIN('=> SPIN: ' + this._tokenString(newToken, line));
+                            tokenSet.push(newToken);
+                        });
+                    }
                     else {
                         const partialTokenSet: IParsedToken[] = this._reportSPIN_Code(i, 0, line)
                         partialTokenSet.forEach(newToken => {
@@ -949,6 +998,31 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         tokenType: 'variable',
                         tokenModifiers: ['instance']
                     })
+                }
+            }
+        }
+    }
+
+    private _getDebugDisplay_Declaration(startingOffset: number, line: string): void {
+        // locate and collect debug() display user names and types
+        //
+        // HAVE    debug(`{displayType} {displayName} ......)            ' comment
+        let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        const datPasmStatementStr = this._getNonDocCommentLineRemainder(currentOffset, line);
+        if (datPasmStatementStr.toLowerCase().startsWith('debug(`')) {
+            const lineParts: string[] = this._getDebugNonWhiteLineParts(datPasmStatementStr);
+            //this._logDEBUG('  -- debug(...) lineParts=[' + lineParts + ']');
+            if (lineParts.length >= 3) {
+                const displayType: string = lineParts[1];
+                if (displayType.startsWith('`')) {
+                    const newDisplayType: string = displayType.substring(1, displayType.length);
+                    //this._logDEBUG('  --- debug(...) newDisplayType=[' + newDisplayType + ']');
+                    if (this._isDebugDisplayType(newDisplayType)) {
+                        const newDisplayName: string = lineParts[2];
+                        //this._logDEBUG('  --- debug(...) newDisplayType=[' + newDisplayType + '], newDisplayName=[' + newDisplayName + ']');
+                        this._setUserDebugDisplay(newDisplayType, newDisplayName);
+                    }
                 }
             }
         }
@@ -1320,6 +1394,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // handle name in 1 column
         const firstName: string = (lineParts.length > 0) ? lineParts[0] : "";
         const bIsDebugLine: boolean = (firstName.toLowerCase() == "debug") ? true : false;
+        if (bIsDebugLine) {
+            return this._reportDebugStatement(lineNumber, startingOffset, line);
+        }
         let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[0]);
         const isDataDeclarationLine: boolean = (lineParts.length > 1 && haveLabel && this._isDatStorageType(lineParts[1])) ? true : false;
         // TODO: REWRITE this to handle "non-label" line with unknown op-code!!!!
@@ -1665,7 +1742,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         });
                                     }
                                 }
-                        }
+                            }
                         }
                     }
                     const nameOffset = line.indexOf(localName, localVariableOffset);
@@ -1771,7 +1848,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                             tokenModifiers: []
                                         });
                                         */
-                                   }
+                                    }
                                 }
                                 this._logSPIN('  -- variableNamePart=[' + variableNamePart + '](' + nameOffset + 1 + ')');
                                 if (this._isStorageType(variableNamePart)) {
@@ -1847,9 +1924,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         tokenModifiers: []
                                     });
                                     */
-                               }
+                                }
                             }
-                        let referenceDetails: IRememberedToken | undefined = undefined;
+                            let referenceDetails: IRememberedToken | undefined = undefined;
                             if (this._isLocalToken(cleanedVariableName)) {
                                 referenceDetails = this._getLocalToken(cleanedVariableName);
                                 this._logSPIN('  --  FOUND local name=[' + cleanedVariableName + ']');
@@ -2058,6 +2135,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const inLinePasmRHSStr = this._getNonCommentLineRemainder(currentOffset, line);
         const lineParts: string[] = this._getNonWhitePasmLineParts(inLinePasmRHSStr);
         this._logPASM('  -- reportInLinePasmDecl lineParts=[' + lineParts + ']');
+        const firstName: string = (lineParts.length > 0) ? lineParts[0] : "";
+        const bIsDebugLine: boolean = (firstName.toLowerCase() == "debug") ? true : false;
+        if (bIsDebugLine) {
+            return this._reportDebugStatement(lineNumber, startingOffset, line);
+        }
         // handle name in 1 column
         let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[0]);
         const isDataDeclarationLine: boolean = (lineParts.length > 1 && haveLabel && this._isDatStorageType(lineParts[1])) ? true : false;
@@ -2237,6 +2319,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         return tokenSet;
     }
+
 
     private _reportOBJ_DeclarationLine(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
@@ -2435,6 +2518,188 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return tokenSet;
     }
 
+    private _reportDebugStatement(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
+        const tokenSet: IParsedToken[] = [];
+        // locate and collect debug() display user names and types
+        //
+        // HAVE    debug(`{displayType} {displayName} ......)            ' comment
+        let currentOffset = this._skipWhite(line, startingOffset)
+        // get line parts - we only care about first one
+        const debugStatementStr = this._getDebugStatement(currentOffset, line);
+        const bContainsTicStrings: boolean = (debugStatementStr.indexOf('\'') != -1) ? true : false;
+        this._logDEBUG('-- DEBUG line(' + lineNumber + ') debugStatementStr=[' + debugStatementStr + ']');
+        if (debugStatementStr.toLowerCase().startsWith('debug(`')) {
+            const lineParts: string[] = this._getDebugNonWhiteLineParts(debugStatementStr);
+            this._logDEBUG(' -- debug() lineParts=[' + lineParts + ']');
+            if (lineParts.length >= 2) {
+                const displayType: string = lineParts[1];
+                if (displayType.startsWith('`')) {
+                    const typeOffset: number = line.indexOf(displayType, currentOffset) + 1 // plus 1 to get past back-tic
+                    const newDisplayType: string = displayType.substring(1, displayType.length);
+                    let bHaveInstantiation = this._isDebugDisplayType(newDisplayType);
+                    if (bHaveInstantiation) {
+                        // -------------------------------------
+                        // process Debug() display instantiation
+                        //
+                        // (0a) register type use
+                        this._logDEBUG('  -- debug() newDisplayType=[' + newDisplayType + ']');
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: typeOffset,
+                            length: newDisplayType.length,
+                            tokenType: 'displayType',
+                            tokenModifiers: ['reference', 'defaultLibrary']
+                        });
+                        // (0b) register userName use
+                        const newDisplayName: string = lineParts[2];
+                        const userNameOffset: number = line.indexOf(newDisplayName, currentOffset)
+                        this._logDEBUG('  -- debug() newDisplayName=[' + newDisplayName + ']');
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: userNameOffset,
+                            length: newDisplayName.length,
+                            tokenType: 'displayName',
+                            tokenModifiers: ['declaration' ]
+                        });
+                        // (1) highlight parameter names
+                        //   (3) if contains strings, mark numbers too
+                        let eDisplayType: eDebugDisplayType = this._getDebugDisplayType(newDisplayType);
+                        const firstParamIdx: number = 3; // [0]=debug [1]=`{type}, [2]={userName}
+                        for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
+                            const newParameter: string = lineParts[idx];
+                            const bIsParameterName: boolean = this._isNameWithTypeInstantiation(newParameter, eDisplayType);
+                            if (bIsParameterName) {
+                                this._logDEBUG('  -- debug() newParam=[' + newParameter + ']');
+                                const nameOffset: number = line.indexOf(newParameter, currentOffset)
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: nameOffset,
+                                    length: newParameter.length,
+                                    tokenType: 'setupParameter',
+                                    tokenModifiers: ['reference','defaultLibrary']
+                                });
+                            }
+                            else {
+                                const bIsColorName: boolean = this._isDebugColorName(newParameter);
+                                if (bIsColorName) {
+                                    this._logDEBUG('  -- debug() newColor=[' + newParameter + ']');
+                                    const nameOffset: number = line.indexOf(newParameter, currentOffset)
+                                    tokenSet.push({
+                                        line: lineNumber,
+                                        startCharacter: nameOffset,
+                                        length: newParameter.length,
+                                        tokenType: 'colorName',
+                                        tokenModifiers: ['reference','defaultLibrary']
+                                    });
+                                }
+                                else if(bContainsTicStrings) {
+                                    // add token if this is numeric literal
+
+                                }
+                            }
+                        }
+                        // (2) highlight strings
+                        // FIXME: UNDONE handle back-tic parens in strings
+                        const tokenStringSet: IParsedToken[] = this._getTokensForDebugString(lineNumber, line, debugStatementStr);
+                        tokenStringSet.forEach(newToken => {
+                            tokenSet.push(newToken);
+                        });
+                    }
+                    else {
+                        let bHaveFeed = this._isKnownDebugDisplay(newDisplayType);
+                        if (bHaveFeed) {
+                            // -------------------------------------
+                            // process Debug() display feed
+                            //
+                            // (0) register UserName use
+                            this._logDEBUG('  -- debug() displayName=[' + newDisplayType + ']');
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: typeOffset,
+                                length: newDisplayType.length,
+                                tokenType: 'displayName',
+                                tokenModifiers: ['reference']
+                            });
+                             // (1) highlight parameter names
+                            let eDisplayType: eDebugDisplayType = this._getUserDebugDisplayType(newDisplayType);
+                            const firstParamIdx: number = 2; // [0]=debug [1]=`{userName}
+                            for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
+                                const newParameter: string = lineParts[idx];
+                                this._logDEBUG('  -- debug() ?check? [' + newParameter + ']');
+                                const bIsParameterName: boolean = this._isNameWithTypeFeed(newParameter, eDisplayType)
+                                if (bIsParameterName) {
+                                    this._logDEBUG('  -- debug() newParam=[' + newParameter + ']');
+                                    const nameOffset: number = line.indexOf(newParameter, currentOffset)
+                                    tokenSet.push({
+                                        line: lineNumber,
+                                        startCharacter: nameOffset,
+                                        length: newParameter.length,
+                                        tokenType: 'feedParameter',
+                                        tokenModifiers: ['reference','defaultLibrary']
+                                    });
+                                }
+                                else {
+                                    const bIsColorName: boolean = this._isDebugColorName(newParameter);
+                                    if (bIsColorName) {
+                                        this._logDEBUG('  -- debug() newColor=[' + newParameter + ']');
+                                        const nameOffset: number = line.indexOf(newParameter, currentOffset)
+                                        tokenSet.push({
+                                            line: lineNumber,
+                                            startCharacter: nameOffset,
+                                            length: newParameter.length,
+                                            tokenType: 'colorName',
+                                            tokenModifiers: ['reference','defaultLibrary']
+                                        });
+                                    }
+                                    else if(bContainsTicStrings) {
+                                        // add token if this is numeric literal
+
+                                    }
+                                }
+                            }
+                            // (2) highlight strings
+                            // FIXME: UNDONE handle back-tic parens in strings
+                            const tokenStringSet: IParsedToken[] = this._getTokensForDebugString(lineNumber, line, debugStatementStr);
+                            tokenStringSet.forEach(newToken => {
+                                tokenSet.push(newToken);
+                            });
+                        }
+                    }
+                }
+                else {
+                    // -------------------------------------
+                    // process non-display debug statement
+                }
+            }
+
+        }
+        return tokenSet;
+    }
+
+    private _getTokensForDebugString(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
+        const tokenSet: IParsedToken[] = [];
+        // find all strings in debug() statement but for now just do first...
+        const currentOffset: number = line.indexOf(debugStatementStr);
+        const stringStartOffset: number = debugStatementStr.indexOf('\'');
+        if (stringStartOffset != -1) {
+            const stringEndOffset: number = debugStatementStr.indexOf('\'', stringStartOffset + 1);
+            if (stringEndOffset != -1) {
+                const debugStr: string = debugStatementStr.substring(stringStartOffset, stringEndOffset + 1);
+                this._logDEBUG('  -- debug() newString=[' + debugStr + ']');
+                const strOffset: number = line.indexOf(debugStr, currentOffset)
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: strOffset,
+                    length: debugStr.length,
+                    tokenType: 'string',
+                    tokenModifiers: ['quoted','single']
+                });
+            }
+        }
+
+        return tokenSet;
+    }
+
     /*
     private _possiblyMarkBrokenSingleLineComment(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
         //
@@ -2473,12 +2738,13 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = false;    // WARNING disable before commit
+    private spinDebugLogEnabled: boolean = true;    // WARNING disable before commit
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
     private showDAT: boolean = true;
     private showVAR: boolean = true;
+    private showDEBUG: boolean = true;
     private showPasmCode: boolean = true;
     private showState: boolean = true;
     private logTokenDiscover: boolean = true;
@@ -2539,6 +2805,14 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
     }
 
+    private _logDEBUG(message: string): void {
+        if (this.showDEBUG) {
+            this._logMessage(message)
+        }
+    }
+
+
+
     private _isSectionStartLine(line: string): { isSectionStart: boolean, inProgressStatus: eParseState } {
         // return T/F where T means our string starts a new section!
         let startStatus: boolean = false;
@@ -2581,8 +2855,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     }
 
     private _getNonInlineCommentLine(line: string): string {
-       // NEW remove {comment} and {{comment}} single-line elements too
-       let nonInlineCommentStr: string = line;
+        // NEW remove {comment} and {{comment}} single-line elements too
+        let nonInlineCommentStr: string = line;
         // TODO: UNDONE make this into loop to find all single line {} or {{}} comments
         const startDoubleBraceOffset: number = nonInlineCommentStr.indexOf('{{');
         if (startDoubleBraceOffset != -1) {
@@ -2640,8 +2914,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             if (singleLineMultiBeginOffset != -1) {
                 const singleLineMultiEndOffset: number = nonCommentRHSStr.indexOf("}", singleLineMultiBeginOffset);
                 if (singleLineMultiEndOffset != -1) {
-                    const oneLineMultiCOmment: string = nonCommentRHSStr.substr(singleLineMultiBeginOffset, singleLineMultiEndOffset - singleLineMultiBeginOffset + 1);
-                    nonCommentRHSStr = nonCommentRHSStr.replace(oneLineMultiCOmment, '').trim();
+                    const oneLineMultiComment: string = nonCommentRHSStr.substr(singleLineMultiBeginOffset, singleLineMultiEndOffset - singleLineMultiBeginOffset + 1);
+                    nonCommentRHSStr = nonCommentRHSStr.replace(oneLineMultiComment, '').trim();
                 }
             }
         }
@@ -2654,6 +2928,85 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         //}
         return nonCommentRHSStr;
     }
+
+    private _getDebugStatement(startingOffset: number, line: string): string {
+        let currentOffset: number = this._skipWhite(line, startingOffset);
+        let debugNonCommentStr: string = line;
+        let openParenOffset: number = line.indexOf("(", currentOffset);
+        let closeParenOffset: number = this._indexOfMatchingCloseParen(line, openParenOffset);
+        if (line.length - startingOffset > 0 && openParenOffset != -1 && closeParenOffset != -1) {
+            // have scope of debug line - remove trailing comment, trim it and return it
+            let commentOffset: number = line.indexOf("'", closeParenOffset + 1);
+            if (commentOffset != -1) {
+                // have trailing comment remove it
+                const nonCommentEOL: number = (commentOffset != -1) ? commentOffset - 1 : line.length - 1;
+                debugNonCommentStr = line.substring(currentOffset, nonCommentEOL).trim();
+            }
+            else {
+                debugNonCommentStr = line.substring(currentOffset).trim();
+            }
+        }
+        else if (line.length - startingOffset == 0 || openParenOffset == -1) {
+            // if we don't have open paren - erase entire line
+            debugNonCommentStr = "";
+        }
+        //if (line.length != debugNonCommentStr.length) {
+        //    this._logMessage('  -- DS line [' + line.substring(startingOffset) + ']');
+        //    this._logMessage('  --         [' + debugNonCommentStr + ']');
+        //}
+        return debugNonCommentStr;
+    }
+
+    private _indexOfMatchingCloseParen(line: string, openParenOffset: number): number {
+        let desiredCloseOffset: number = -1;
+        let nestingDepth: number = 1;
+        for (let offset = openParenOffset+1; offset < line.length; offset++) {
+            if (line.substring(offset, offset + 1) == "(") {
+                nestingDepth++;
+            }
+            else if (line.substring(offset, offset + 1) == ")") {
+                nestingDepth--;
+                if (nestingDepth == 0) {
+                    // we closed the inital open
+                    desiredCloseOffset = offset;
+                    break;  // done, get outta here
+                }
+            }
+        }
+        // this._logMessage('  -- iomcp line=[' + line + ']');
+        // this._logMessage('  --       open=(' + openParenOffset + '), close=(' + desiredCloseOffset + ')');
+        return desiredCloseOffset;
+    }
+
+    private _getNonDocCommentLineRemainder(startingOffset: number, line: string): string {
+        let nonDocCommentRHSStr: string = line;
+        //this._logMessage('  -- gnclr ofs=' + startingOffset + '[' + line + '](' + line.length + ')');
+        // TODO: UNDONE make this into loop to find first ' not in string
+        if (line.length - startingOffset > 0) {
+            const nonCommentEOL: number = line.length - 1;
+            //this._logMessage('- gnclr startingOffset=[' + startingOffset + '], currentOffset=[' + currentOffset + ']');
+            nonDocCommentRHSStr = line.substr(startingOffset, nonCommentEOL - startingOffset + 1).trim();
+            //this._logMessage('- gnclr nonCommentRHSStr=[' + startingOffset + ']');
+
+            const singleLineMultiBeginOffset: number = nonDocCommentRHSStr.indexOf("{", startingOffset);
+            if (singleLineMultiBeginOffset != -1) {
+                const singleLineMultiEndOffset: number = nonDocCommentRHSStr.indexOf("}", singleLineMultiBeginOffset);
+                if (singleLineMultiEndOffset != -1) {
+                    const oneLineMultiComment: string = nonDocCommentRHSStr.substr(singleLineMultiBeginOffset, singleLineMultiEndOffset - singleLineMultiBeginOffset + 1);
+                    nonDocCommentRHSStr = nonDocCommentRHSStr.replace(oneLineMultiComment, '').trim();
+                }
+            }
+        }
+        else if (line.length - startingOffset == 0) {
+            nonDocCommentRHSStr = "";
+        }
+        //if (line.substr(startingOffset).length != nonCommentRHSStr.length) {
+        //    this._logMessage('  -- NCLR line [' + line.substr(startingOffset) + ']');
+        //    this._logMessage('  --           [' + nonCommentRHSStr + ']');
+        //}
+        return nonDocCommentRHSStr;
+    }
+
 
     private _getNonWhiteDataInitLineParts(line: string): string[] {
         const nonEqualsLine: string = this._removeQuotedStrings(line);
@@ -2733,12 +3086,58 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return lineParts;
     }
 
+    private _getDebugNonWhiteLineParts(line: string): string[] {
+        let lineParts: string[] | null = line.match(/[^ \t\(\)]+/g);
+        if (lineParts === null) {
+            lineParts = [];
+        }
+        return lineParts;
+    }
+
     private _getCommaDelimitedNonWhiteLineParts(line: string): string[] {
         let lineParts: string[] | null = line.match(/[^ \t,]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
         return lineParts;
+    }
+
+    private _setUserDebugDisplay(typeName: string, userName: string): void {
+        //this._logTokenSet('  DBG _setUserDebugDisplay(' + typeName + ', ' + userName + ')');
+        if (!this._isKnownDebugDisplay(userName)) {
+            let eDisplayType: eDebugDisplayType = this._getDebugDisplayType(typeName);
+            this.debugDisplays.set(userName.toLowerCase(), eDisplayType);
+            this._logTokenSet('  -- NEW-DDsply ' + userName.toLowerCase() + '=[' + eDisplayType + ' : ' + typeName.toLowerCase() + ']');
+        }
+        else {
+            this._logMessage("ERROR: _setNewDebugDisplay() display exists [" + userName + "]")
+        }
+    }
+
+    private _getUserDebugDisplayType(possibleUserName: string): eDebugDisplayType {
+        let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
+        if (this._isKnownDebugDisplay(possibleUserName)) {
+            const possibleType: eDebugDisplayType | undefined = this.debugDisplays.get(possibleUserName.toLowerCase());
+            desiredType = possibleType || eDebugDisplayType.Unknown;
+        }
+        return desiredType;
+    }
+
+
+    private _getDebugDisplayType(typeName: string): eDebugDisplayType {
+        let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
+        if (debugTypeForDisplay.has(typeName.toLowerCase())) {
+            const possibleType: eDebugDisplayType | undefined = debugTypeForDisplay.get(typeName.toLowerCase());
+            desiredType = possibleType || eDebugDisplayType.Unknown;
+        }
+       // this._logTokenSet('  DBG _getDebugDisplayType(' + typeName + ') = ' + desiredType);
+        return desiredType
+    }
+
+    private _isKnownDebugDisplay(possibleUserName: string): boolean {
+        const foundStatus: boolean = this.debugDisplays.has(possibleUserName.toLowerCase());
+        //this._logTokenSet('  DBG _isKnownDebugDisplay(' + possibleUserName + ') = ' + foundStatus);
+        return foundStatus;
     }
 
     private _isKnownToken(tokenName: string): boolean {
@@ -2840,6 +3239,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         return desiredToken
     }
+
     private _isBuiltinReservedWord(name: string): boolean {
         // streamer constants, smart-pin constants
         const builtinNamesOfNote: string[] = [
@@ -2905,7 +3305,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             'shex_long_array', 'ubin', 'ubin_byte', 'ubin_word', 'ubin_long', 'ubin_reg_array',
             'ubin_byte_array', 'ubin_word_array', 'ubin_long_array', 'sbin', 'sbin_byte', 'sbin_word',
             'sbin_long', 'sbin_reg_array', 'sbin_byte_array', 'sbin_word_array', 'sbin_long_array',
-            'fdec','fdec_array','fdec_reg_array'
+            'fdec', 'fdec_array', 'fdec_reg_array'
         ];
         const searchName: string = (name.endsWith('_')) ? name.substr(0, name.length - 1) : name;
         const reservedStatus: boolean = (debugMethodOfNote.indexOf(searchName.toLowerCase()) != -1);
@@ -3184,6 +3584,120 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return returnStatus;
     }
 
+    // ---------------- new deug() support ----------------
+    //  updated: 26 Mar 2022  - (as of Spin2 v35s)
+    //  debug() statements for special displays support the following
+    //    logic     - Logic analyzer with single and multi-bit labels, 1..32 channels, can trigger on pattern
+    //      DECLARATION
+    //          TITLE 'string'  POS left top SAMPLES 4_to_2048 SPACING 2_to_32 RATE 1_to_2048 LINESIZE 1_to_7
+    //            TEXTSIZE 6_to_200 COLOR back_color {grid_color} 'name' {1_to_32 {color}} packed_data_mode HIDEXY
+    //      FEED
+    //    scope     - Oscilloscope with 1..8 channels, can trigger on level with hysteresis
+    //    scope_xy  - XY oscilloscope with 1..8 channels, persistence of 0..512 samples, polar mode, log scale mode
+    //    fft       - Fast Fourier Transform with 1..8 channels, 4..2048 points, windowed results, log scale mode
+    //    spectro   - Spectrograph with 4..2048-point FFT, windowed results, phase-coloring, and log scale mode
+    //    plot      - General-purpose plotter with cartesian and polar modes
+    //    term      - Text terminal with up to 300 x 200 characters, 6..200 point font size, 4 simultaneous color schemes
+    //    bitmap    - Bitmap, 1..2048 x 1..2048 pixels, 1/2/4/8/16/32-bit pixels with 19 color systems, 15 direction/autoscroll modes, independent X and Y pixel size of 1..256
+    //    midi      - Piano keyboard with 1..128 keys, velocity depiction, variable screen scale
+    // ----------------------------------------------------
+    private _isDebugDisplayType(name: string): boolean {
+        const debugDisplayTypes: string[] = [
+            'logic', 'scope', 'scope_xy', 'fft', 'spectro',
+            'plot', 'term', 'bitmap', 'midi',
+        ];
+        const bDisplayTypeStatus: boolean = (debugDisplayTypes.indexOf(name.toLowerCase()) != -1);
+        return bDisplayTypeStatus;
+    }
+
+    private _isNameWithTypeInstantiation(newParameter : string, displayType : eDebugDisplayType): boolean {
+        var nameStatus: boolean = false;
+        switch (displayType) {
+            case eDebugDisplayType.ddtTerm:
+                nameStatus = this._isDebugTermDeclarationParam(newParameter);
+                break;
+            case eDebugDisplayType.ddtScope:
+                nameStatus = this._isDebugScopeDeclarationParam(newParameter);
+                break;
+            default:
+                break;
+        }
+        return nameStatus;
+    }
+
+    private _isNameWithTypeFeed(newParameter : string, displayType : eDebugDisplayType): boolean {
+        var nameStatus: boolean = false;
+        switch (displayType) {
+            case eDebugDisplayType.ddtTerm:
+                nameStatus = this._isDebugTermFeedParam(newParameter);
+                break;
+            case eDebugDisplayType.ddtScope:
+                nameStatus = this._isDebugScopeFeedParam(newParameter);
+                break;
+            default:
+                break;
+        }
+        this._logDEBUG('  -- _isNameWithTypeFeed(' + newParameter +  ', ' + displayType + ') = ' + nameStatus);
+        return nameStatus;
+    }
+
+    // each type has decl and feed parameter-name check methods
+    // Debug Display: TERM declaration
+    private _isDebugTermDeclarationParam(name: string): boolean {
+        const debugTermDeclTypes: string[] = [
+            'title', 'pos', 'size', 'textsize', 'color',
+            'backcolor', 'update', 'hidexy',
+        ];
+        const bTermDeclParamStatus: boolean = (debugTermDeclTypes.indexOf(name.toLowerCase()) != -1);
+        return bTermDeclParamStatus;
+    }
+
+    // Debug Display: TERM feed
+    private _isDebugTermFeedParam(name: string): boolean {
+        const debugTermFeedTypes: string[] = [
+            'clear', 'update', 'save', 'close',
+        ];
+        const bTermFeedParamStatus: boolean = (debugTermFeedTypes.indexOf(name.toLowerCase()) != -1);
+        return bTermFeedParamStatus;
+    }
+
+    // Debug Display: SCOPE declaration
+    private _isDebugScopeDeclarationParam(name: string): boolean {
+        const debugScopeDeclTypes: string[] = [
+            'title', 'pos', 'size', 'samples', 'rate',
+            'dotsize', 'linesize', 'textsize', 'color',
+            'packed_data_mode', 'hidexy',
+        ];
+        const bScopeDeclParamStatus: boolean = (debugScopeDeclTypes.indexOf(name.toLowerCase()) != -1);
+        return bScopeDeclParamStatus;
+    }
+
+    // Debug Display: SCOPE feed
+    private _isDebugScopeFeedParam(name: string): boolean {
+        const debugScopeFeedTypes: string[] = [
+            'trigger', 'holdoff', 'samples',
+            'clear', 'save', 'window', 'close',
+        ];
+        const bScopeFeedParamStatus: boolean = (debugScopeFeedTypes.indexOf(name.toLowerCase()) != -1);
+        return bScopeFeedParamStatus;
+    }
+
+    // color names for use in debug
+    //   BLACK / WHITE or ORANGE / BLUE / GREEN / CYAN / RED / MAGENTA / YELLOW / GREY
+    private _isDebugColorName(name: string): boolean {
+        const debugColorNames: string[] = [
+            'black', 'white', 'orange', 'blue',
+            'green', 'cyan', 'red', 'magenta',
+            'yellow', 'grey',
+        ];
+        const bColorNameStatus: boolean = (debugColorNames.indexOf(name.toLowerCase()) != -1);
+        return bColorNameStatus;
+    }
+
+    //
+    // ----------------------------------------------------
+
+
     private _skipWhite(line: string, currentOffset: number): number {
         let firstNonWhiteIndex: number = currentOffset;
         for (let index = currentOffset; index < line.length; index++) {
@@ -3198,7 +3712,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private _tokenString(aToken: IParsedToken, line: string): string {
         let varName: string = line.substr(aToken.startCharacter, aToken.length)
         let desiredInterp: string = '  -- token=[ln:' + aToken.line + ',ofs:' + aToken.startCharacter +
-            ',len:' + aToken.length + ' ['+ varName +'](' + aToken.tokenType + '[' + aToken.tokenModifiers + '])]';
+            ',len:' + aToken.length + ' [' + varName + '](' + aToken.tokenType + '[' + aToken.tokenModifiers + '])]';
         return desiredInterp;
     }
 

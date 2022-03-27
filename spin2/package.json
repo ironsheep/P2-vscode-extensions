@@ -3,7 +3,7 @@
     "displayName": "Spin2",
     "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
     "icon": "images/Propeller.ico",
-    "version": "1.2.3",
+    "version": "1.3.0",
     "publisher": "IronSheepProductionsLLC",
     "repository": {
         "type": "git",
@@ -78,6 +78,31 @@
                 "id": "storageType",
                 "superType": "type",
                 "description": "A built-in storage type"
+            },
+            {
+                "id": "displayType",
+                "superType": "enumMember",
+                "description": "A built-in type of debug display"
+            },
+            {
+                "id": "displayName",
+                "superType": "label",
+                "description": "user name for debug display"
+            },
+            {
+                "id": "setupParameter",
+                "superType": "parameter",
+                "description": "A built-in debug display intantiation parameter name"
+            },
+            {
+                "id": "feedParameter",
+                "superType": "parameter",
+                "description": "A built-in debug display feed parameter name"
+            },
+            {
+                "id": "colorName",
+                "superType": "enumMember",
+                "description": "A built-in debug display color name"
             }
         ],
         "semanticTokenModifiers": [{

@@ -15,9 +15,24 @@ Possible next additions:
 
 - Add code reformatting aligning columns to user defined tabstops
 - Investigate and possibly add unique coloring for method pointers
-- Add support for "debug() statements NOT using strings" - new debug() shorthand support
+- Finish support for "debug() statements NOT using strings" - new debug() shorthand support
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.3.0] 2022-03-29
+
+debug() Highlighting Update 
+
+- NEW add initial highlighting support for debug() **term** and **scope** displays
+
+
+### - Known Issues w/v1.3.0
+
+- some debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
 
 ## [1.2.3] 2022-03-16
 

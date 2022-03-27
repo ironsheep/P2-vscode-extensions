@@ -235,6 +235,7 @@
         // method parts: name (parameters) : returnValues | localVariables
         //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
         // colors
+        "string": "#ba4343",     // pasm labels
         "label": "#9a5849",     // pasm labels
         "label.declaration": "#9a5849",     // pasm labels
         "variable": "#8bc4e3",     // class global variable
@@ -259,6 +260,12 @@
         "parameter.declaration.readonly": "#b68ce3",     // constants
         "namespace": "#6a66b3",     // objects (old: 7A81FF) (new:5d60a0)
         "namespace.declaration": "#6a66b3",     // objects
+        "colorName": "#8a5ea3",     // debug() display userName
+        "displayType": "#b37746",     // debug() display type
+        "displayName": "#5d59a0",     // debug() display userName
+        "displayName.declaration": "#5d59a0",     // debug() display userName
+        "setupParameter": "#aaac61",     // debug() display type
+        "feedParameter": "#b4a666",     // debug() display type
         // style overrides
         "*.static": { "fontStyle": "italic" }, // all static names are italic
         "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
