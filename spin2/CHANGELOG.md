@@ -24,7 +24,7 @@ Possible next additions:
 Initial Release of debug()-display **Highlight** and **Validation**
 
 - NEW add initial highlighting support for all debug() displays (Logic, Scope, Scope_XY, FFT, Spectro, Plot, Term, Bitmap, and Midi)
-- Unique colors within debug statement for: termType, displayName, keywords, and colors
+- Unique colors within debug statement for: displayType, displayName, keywords, and colors
 - Validation: when a keyword is not legal for the display or is spelled incorrectly then is colored bright red
 - Moved single comment out of syntax into semantic highlighting so we can have single-quoted strings in our debug statements.  (*Syntax highlighting is not context aware, so entire tail of a debug() statement was incorectly rendered as a comment*)
 
@@ -39,7 +39,7 @@ Initial Release of debug()-display **Highlight** and **Validation**
 
 ### - Known Issues w/v1.3.0
 
-- Sadly, The single-quote comment now being handled as semantic (vs. sintactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be darked within our trailing line comments. *We have don't have a fix for this yet.*
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
