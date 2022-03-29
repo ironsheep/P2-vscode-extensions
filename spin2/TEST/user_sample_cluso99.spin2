@@ -79,3 +79,5 @@ priv_command    res 1
 priv_status     res 1
 
     end
+
+' this is just past last line...

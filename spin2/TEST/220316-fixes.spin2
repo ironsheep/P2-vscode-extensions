@@ -1,9 +1,9 @@
 ' code examples that are not highlighting correctly
 '
-'  Fix the following until debug() support is added (lutcolors shouldn't be red!)
-PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i
+'  Fix the following until debug() support is added
+PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i,
   image_address += lut_offset
-  debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
+  debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))   ' <-- (lutcolors SHOULD be red!)
   image_address += lut_size << 2 - 4
   repeat image_longs
     debug(``#(letter) `uhex_(long[image_address += 4]))
@@ -23,7 +23,7 @@ DAT		org
 
 		debug(`scope_xy xy size 200 range 1000 samples 200 dotsize 5 'Goertzel' `dly(#200))     ' <----   debug() in DAT pasm allowed!
 
-.loop		debug(`xy `sdec_long_array_(#$00000,#2) `dly(#5))
+.loop		debug(`xy `sdec_long_array_(#$00000,#2) `dly(#5))       ' AUGH debug() can have label!!!
 		jmp	 #.loop
 
 DAT		org
@@ -52,6 +52,6 @@ CON
     DBG_MAX_VARS_IN_GROUP = 7
 
 VAR
-    long    pNamesAr[DBG_GROUPS_CT * DBG_MAX_VARS_IN_GROUP]     ' <--- BAD Coloring!
+    long    pNamesAr[DBG_GROUPS_CT * DBG_MAX_VARS_IN_GROUP]     ' <--- FIXED Coloring!
     long    pValsAr[DBG_GROUPS_CT*DBG_MAX_VARS_IN_GROUP]
 ' ---------------------------------------------------

@@ -235,7 +235,8 @@
         // method parts: name (parameters) : returnValues | localVariables
         //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
         // colors
-        "string": "#ba4343",     // pasm labels
+        "string": "#ba4343",     // debug() strings
+        "comment": "#538054",     // single line non-doc comments
         "label": "#9a5849",     // pasm labels
         "label.declaration": "#9a5849",     // pasm labels
         "variable": "#8bc4e3",     // class global variable

@@ -68,7 +68,7 @@
     },
     "cog_register_names": {
       "name": "constant.language.cog-register-names.spin2",
-      "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|OUT(A|B)|IN(A|B))\\b"
+      "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|IN(A|B)|OUT(A|B))\\b"
     },
     "comment": {
       "patterns": [
@@ -235,7 +235,7 @@
     },
     "line_comment": {
       "name": "comment.line.spin2",
-      "match": "'(?:.(?!'))+$"
+      "match": "^[ \t]*'.*$"
     },
     "number": {
       "patterns": [

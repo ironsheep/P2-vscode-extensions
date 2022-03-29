@@ -78,7 +78,7 @@ var
 
 
 pub tester()
-pub tester()
+pub tester() | k, bend_state
 'pri tester()
 'pri tester()
 
@@ -1360,8 +1360,3 @@ data
 dat a
  dat a
 dat
-
-
-
-
-
