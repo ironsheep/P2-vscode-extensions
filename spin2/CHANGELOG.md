@@ -21,14 +21,25 @@ Possible next additions:
 
 ## [1.3.0] 2022-03-29
 
-debug() Highlighting Update 
+Initial Release of debug()-display **Highlight** and **Validation**
 
-- NEW add initial highlighting support for debug() **term** and **scope** displays
+- NEW add initial highlighting support for all debug() displays (Logic, Scope, Scope_XY, FFT, Spectro, Plot, Term, Bitmap, and Midi)
+- Unique colors within debug statement for: termType, displayName, keywords, and colors
+- Validation: when a keyword is not legal for the display or is spelled incorrectly then is colored bright red
+- Moved single comment out of syntax into semantic highlighting so we can have single-quoted strings in our debug statements.  (*Syntax highlighting is not context aware, so entire tail of a debug() statement was incorectly rendered as a comment*)
+
+### Initial limitations
+- The runtime calulation of display name is not supported, yet. (*In an upcoming release you'll be able to specify the preferred display type for validation of each of these statements.*)
+- The following **example runtime forms** will be handled by the new directive when released:
+  - debug(**\`zstr_(displayName)** lutcolors `uhex_long_array_(image_address, lut_size))
+  - debug(**\`lstr_(displayName, len)** lutcolors `uhex_long_array_(image_address, lut_size))
+  - debug(**\`#(letter)** lutcolors `uhex_long_array_(image_address, lut_size))
+
 
 
 ### - Known Issues w/v1.3.0
 
-- some debug() statements that don't use double-quoted strings currently are not parsed correctly
+- Sadly, The single-quote comment now being handled as semantic (vs. sintactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be darked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)

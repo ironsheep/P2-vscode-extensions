@@ -32,6 +32,7 @@ We are working on fixes to the following issues we've seen during our testing. H
 
 - Some line comments are not properly colored
 - Occasionally [byte|word|long] storage types are not properly colored
+- Occasionally some pasm code escapes coloring.  We're trying to understand this.
 
 ## Reporting Issues
 

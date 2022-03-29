@@ -250,7 +250,7 @@ PUB go() | i
 
 PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i
   image_address += lut_offset
-  {-* VSCode-Spin2: validate debug()-display: bitmap,fft  *-}
+  {-* VSCode-Spin2: nextline debug()-display: bitmap,fft  *-}
   debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
   image_address += lut_size << 2 - 4
   repeat image_longs
