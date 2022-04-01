@@ -19,6 +19,34 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.3.1] 2022-03-31
+
+Finish debug()-display **Highlight** and **Validation**
+
+- Adds new directive support for validating debug() display lines which use runtime display names
+- Fix highlighting of debug() statements within in-line pasm
+- Fix label on ORG directive
+- Fix highlighting of ORGH directive
+
+### NOTEs v1.3.1
+
+- this adds support for the new Spin2 Extension directive:
+  - {-* VSCode-Spin2: nextline debug()-display: {displayType}  *-}
+  - Where: {displayType} should be one of [Logic, Scope, Scope_XY, FFT, Spectro, Plot, Term, Bitmap, and Midi]
+- The following **runtime forms** can now be handled by preceeding them with this new directive:
+  - debug(**\`zstr_(displayName)** lutcolors `uhex_long_array_(image_address, lut_size))
+  - debug(**\`lstr_(displayName, len)** lutcolors `uhex_long_array_(image_address, lut_size))
+  - debug(**\`#(letter)** lutcolors `uhex_long_array_(image_address, lut_size))
+
+### - Known Issues w/v1.3.1
+
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
+
+
 ## [1.3.0] 2022-03-29
 
 Initial Release of debug()-display **Highlight** and **Validation**
@@ -28,7 +56,7 @@ Initial Release of debug()-display **Highlight** and **Validation**
 - Validation: when a keyword is not legal for the display or is spelled incorrectly then is colored bright red
 - Moved single comment out of syntax into semantic highlighting so we can have single-quoted strings in our debug statements.  (*Syntax highlighting is not context aware, so entire tail of a debug() statement was incorectly rendered as a comment*)
 
-### Initial limitations
+### Initial limitations v1.3.0
 - The runtime calulation of display name is not supported, yet. (*In an upcoming release you'll be able to specify the preferred display type for validation of each of these statements.*)
 - The following **example runtime forms** will be handled by the new directive when released:
   - debug(**\`zstr_(displayName)** lutcolors `uhex_long_array_(image_address, lut_size))

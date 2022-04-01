@@ -161,6 +161,7 @@ interface IFilteredStrings {
     lineParts: string[];
 }
 
+
 //const this.globalTokens = new Map<string, IRememberedToken>();
 //const this.localTokens = new Map<string, IRememberedToken>();
 
@@ -191,6 +192,17 @@ enum eDebugDisplayType {
     ddtBitmap,
     ddtMidi
 }
+
+enum eSpin2Directive {
+    Unknown = 0,
+    s2dDebugDisplayForLine,
+}
+interface ISpin2Directive {
+    lineNumber: number;
+    displayType: string;
+    eDisplayType: eDebugDisplayType;
+}
+
 
 // map of display-type to etype'
 const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
@@ -225,6 +237,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     // map of display-name to etype'
     private debugDisplays = new Map<string, eDebugDisplayType>();
+    // list of directives found in file
+    private fileDirectives: ISpin2Directive[] = [];
 
     private currentMethodName: string = "";
 
@@ -246,6 +260,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         this.conEnumInProgress = false;
         this.currentMethodName = "";
         this.debugDisplays.clear();
+        this.fileDirectives = [];
     }
 
     private _encodeTokenModifiers(strTokenModifiers: string[]): number {
@@ -314,7 +329,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
             else if (sectionStatus.isSectionStart) {
                 currState = sectionStatus.inProgressStatus;
-                this._logState('- scan ln:' + i + 1 + ' currState=[' + currState + ']');
+                this._logState('- scan ln:'+ (i + 1) + ' currState=[' + currState + ']');
                 // ID the remainder of the line
                 if (currState == eParseState.inPub || currState == eParseState.inPri) {
                     // process PUB/PRI method signature
@@ -334,10 +349,10 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         if (trimmedNonCommentLine.toUpperCase().includes("ORG")) { // ORG, ORGF, ORGH
                             const nonStringLine: string = this._removeDoubleQuotedStrings(trimmedNonCommentLine);
                             if (nonStringLine.toUpperCase().includes("ORG")) {
-                                this._logPASM('- (' + i + 1 + '): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
+                                this._logPASM('- ('+ (i + 1) + '): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
                                 prePasmState = currState;
                                 currState = eParseState.inDatPasm;
-                                // and ignore rest of this line
+                                this._getDAT_Declaration(0, line)   // let's get possible label on this ORG statement
                                 continue;
                             }
                         }
@@ -386,7 +401,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 let openingOffset = line.indexOf('{');
                 const closingOffset = line.indexOf('}', openingOffset + 1);
                 if (closingOffset != -1) {
-                    // is single line comment, just ignore it Let Syntax highlighting do this
+                    // is single line comment, we can have Spin2 Directive in here
+                    this._getSpin2_Directive(i, 0, line)
                 }
                 else {
                     // is open of multiline comment
@@ -408,10 +424,10 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         if (trimmedLine.toUpperCase().includes("ORG")) { // ORG, ORGF, ORGH
                             const nonStringLine: string = this._removeDoubleQuotedStrings(trimmedLine);
                             if (nonStringLine.toUpperCase().includes("ORG")) {
-                                this._logPASM('- (' + i + 1 + '): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
+                                this._logPASM('- ('+ (i + 1) + '): pre-scan DAT line trimmedLine=[' + trimmedLine + '] now Dat PASM');
                                 prePasmState = currState;
                                 currState = eParseState.inDatPasm;
-                                // and ignore rest of this line
+                                this._getDAT_Declaration(0, line)   // let's get possible label on this ORG statement
                                 continue;
                             }
                         }
@@ -436,9 +452,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
-                        this._logPASM('- (' + i + 1 + '): pre-scan SPIN PASM line trimmedLine=[' + trimmedLine + ']');
+                        this._logPASM('- ('+ (i + 1) + '): pre-scan SPIN PASM line trimmedLine=[' + trimmedLine + ']');
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i + 1 + ' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:'+ (i + 1) + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -453,9 +469,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
-                        this._logPASM('- (' + i + 1 + '): pre-scan DAT PASM line trimmedLine=[' + trimmedLine + ']');
+                        this._logPASM('- ('+ (i + 1) + '): pre-scan DAT PASM line trimmedLine=[' + trimmedLine + ']');
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i + 1 + ' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:'+ (i + 1) + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -471,7 +487,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 if (trimmedLine.length > 0) {
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {  // Only ORG, not ORGF or ORGH
-                        this._logPASM('- (' + i + 1 + '): pre-scan PUB/PRI line trimmedLine=[' + trimmedLine + ']');
+                        this._logPASM('- ('+ (i + 1) + '): pre-scan PUB/PRI line trimmedLine=[' + trimmedLine + ']');
                         prePasmState = currState;
                         currState = eParseState.inPasmInline;
                         // and ignore rest of this line
@@ -529,7 +545,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
             else if (sectionStatus.isSectionStart) {
                 currState = sectionStatus.inProgressStatus;
-                this._logState('  -- ln:' + i + 1 + ' currState=[' + currState + ']');
+                this._logState('  -- ln:'+ (i + 1) + ' currState=[' + currState + ']');
                 // ID the section name
                 // DON'T mark the section literal, Syntax highlighting does this well!
 
@@ -558,21 +574,30 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     if (line.length > 3) {
                         if (trimmedLine.length > 6) {
                             const nonCommentLineRemainder: string = this._getNonCommentLineRemainder(0, trimmedLine);
-                            let orgOffset: number = nonCommentLineRemainder.toUpperCase().indexOf("ORG"); // ORG, ORGF, ORGH
+                            let orgStr: string = "ORGH";
+                            let orgOffset: number = nonCommentLineRemainder.toUpperCase().indexOf(orgStr); // ORGH
+                            if (orgOffset == -1) {
+                                orgStr = "ORGF";
+                                orgOffset = nonCommentLineRemainder.toUpperCase().indexOf(orgStr); // ORGF
+                                if (orgOffset == -1) {
+                                    orgStr = "ORG";
+                                    orgOffset = nonCommentLineRemainder.toUpperCase().indexOf(orgStr); // ORG
+                                }
+                            }
                             if (orgOffset != -1) {
                                 // let's double check this is NOT in quoted string
                                 const nonStringLine: string = this._removeDoubleQuotedStrings(nonCommentLineRemainder);
-                                orgOffset = nonStringLine.toUpperCase().indexOf("ORG"); // ORG, ORGF, ORGH
+                                orgOffset = nonStringLine.toUpperCase().indexOf(orgStr); // ORG, ORGF, ORGH
                             }
                             if (orgOffset != -1) {
-                                this._logPASM('- (' + i + 1 + '): scan DAT line nonCommentLineRemainder=[' + nonCommentLineRemainder + ']');
+                                this._logPASM('- ('+ (i + 1) + '): scan DAT line nonCommentLineRemainder=[' + nonCommentLineRemainder + ']');
 
                                 // process remainder of ORG line
                                 const nonCommentOffset = line.indexOf(nonCommentLineRemainder, 0);
-                                // lineNumber, currentOffset, line, allowLocalVarStatus, this.showPasmCode ZZZZZZZZZZZZ
+                                // lineNumber, currentOffset, line, allowLocalVarStatus, this.showPasmCode
                                 const allowLocalVarStatus: boolean = false;
                                 const NOT_DAT_PASM: boolean = false;
-                                const partialTokenSet: IParsedToken[] = this._reportDAT_ValueDeclarationCode(i, nonCommentOffset + orgOffset + 3, line, allowLocalVarStatus, this.showDAT, NOT_DAT_PASM);
+                                const partialTokenSet: IParsedToken[] = this._reportDAT_ValueDeclarationCode(i, nonCommentOffset + orgOffset + orgStr.length, line, allowLocalVarStatus, this.showDAT, NOT_DAT_PASM);
                                 partialTokenSet.forEach(newToken => {
                                     tokenSet.push(newToken);
                                 });
@@ -649,7 +674,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inCon) {
                 // process a line in a constant section
                 if (trimmedLine.length > 0) {
-                    this._logCON('- process CON line(' + i + 1 + '):  trimmedLine=[' + trimmedLine + ']');
+                    this._logCON('- process CON line('+ (i + 1) + '):  trimmedLine=[' + trimmedLine + ']');
                     const partialTokenSet: IParsedToken[] = this._reportCON_DeclarationLine(i, 0, line)
                     partialTokenSet.forEach(newToken => {
                         tokenSet.push(newToken);
@@ -659,13 +684,22 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inDat) {
                 // process a line in a data section
                 if (trimmedLine.length > 0) {
-                    this._logDAT('- process DAT line(' + i + 1 + '): trimmedLine=[' + trimmedLine + ']');
+                    this._logDAT('- process DAT line('+ (i + 1) + '): trimmedLine=[' + trimmedLine + ']');
                     const nonCommentLineRemainder: string = this._getNonCommentLineRemainder(0, trimmedLine);
-                    let orgOffset: number = nonCommentLineRemainder.toUpperCase().indexOf("ORG"); // ORG, ORGF, ORGH
+                    let orgStr: string = "ORGH";
+                    let orgOffset: number = nonCommentLineRemainder.toUpperCase().indexOf(orgStr); // ORGH
+                    if (orgOffset == -1) {
+                        orgStr = "ORGF";
+                        orgOffset = nonCommentLineRemainder.toUpperCase().indexOf(orgStr); // ORGF
+                        if (orgOffset == -1) {
+                            orgStr = "ORG";
+                            orgOffset = nonCommentLineRemainder.toUpperCase().indexOf(orgStr); // ORG
+                        }
+                    }
                     if (orgOffset != -1) {
                         // let's double check this is NOT in quoted string
                         const nonStringLine: string = this._removeDoubleQuotedStrings(nonCommentLineRemainder);
-                        orgOffset = nonStringLine.toUpperCase().indexOf("ORG"); // ORG, ORGF, ORGH
+                        orgOffset = nonStringLine.toUpperCase().indexOf(orgStr); // ORG, ORGF, ORGH
                     }
                     if (orgOffset != -1) {
                         // process remainder of ORG line
@@ -673,7 +707,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         // lineNumber, currentOffset, line, allowLocalVarStatus, this.showPasmCode
                         const allowLocalVarStatus: boolean = false;
                         const NOT_DAT_PASM: boolean = false;
-                        const partialTokenSet: IParsedToken[] = this._reportDAT_ValueDeclarationCode(i, nonCommentOffset + orgOffset + 3, line, allowLocalVarStatus, this.showDAT, NOT_DAT_PASM);
+                        const partialTokenSet: IParsedToken[] = this._reportDAT_ValueDeclarationCode(i, nonCommentOffset + orgOffset + orgStr.length, line, allowLocalVarStatus, this.showDAT, NOT_DAT_PASM);
                         partialTokenSet.forEach(newToken => {
                             tokenSet.push(newToken);
                         });
@@ -693,7 +727,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inVar) {
                 // process a line in a variable data section
                 if (trimmedLine.length > 0) {
-                    this._logVAR('- process VAR line(' + i + 1 + '):  trimmedLine=[' + trimmedLine + ']');
+                    this._logVAR('- process VAR line('+ (i + 1) + '):  trimmedLine=[' + trimmedLine + ']');
                     const partialTokenSet: IParsedToken[] = this._reportVAR_DeclarationLine(i, 0, line)
                     partialTokenSet.forEach(newToken => {
                         tokenSet.push(newToken);
@@ -703,7 +737,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inObj) {
                 // process a line in an object section
                 if (trimmedLine.length > 0) {
-                    this._logOBJ('- process OBJ line(' + i + 1 + '):  trimmedLine=[' + trimmedLine + ']');
+                    this._logOBJ('- process OBJ line('+ (i + 1) + '):  trimmedLine=[' + trimmedLine + ']');
                     const partialTokenSet: IParsedToken[] = this._reportOBJ_DeclarationLine(i, 0, line)
                     partialTokenSet.forEach(newToken => {
                         this._logOBJ('=> OBJ: ' + this._tokenString(newToken, line));
@@ -714,7 +748,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inDatPasm) {
                 // process DAT section pasm (assembly) lines
                 if (trimmedLine.length > 0) {
-                    this._logPASM('- process DAT PASM line(' + i + 1 + '):  trimmedLine=[' + trimmedLine + ']');
+                    this._logPASM('- process DAT PASM line('+ (i + 1) + '):  trimmedLine=[' + trimmedLine + ']');
                     // in DAT sections we end with FIT or just next section
                     const partialTokenSet: IParsedToken[] = this._reportDAT_PasmCode(i, 0, line)
                     partialTokenSet.forEach(newToken => {
@@ -723,7 +757,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i + 1 + ' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:'+ (i + 1) + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                 }
@@ -731,11 +765,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inPasmInline) {
                 // process pasm (assembly) lines
                 if (trimmedLine.length > 0) {
-                    this._logPASM('- process SPIN2 PASM line(' + i + 1 + '):  trimmedLine=[' + trimmedLine + ']');
+                    this._logPASM('- process SPIN2 PASM line('+ (i + 1) + '):  trimmedLine=[' + trimmedLine + ']');
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
                         currState = prePasmState;
-                        this._logState('- scan ln:' + i + 1 + ' POP currState=[' + currState + ']');
+                        this._logState('- scan ln:'+ (i + 1) + ' POP currState=[' + currState + ']');
                         // and ignore rest of this line
                     }
                     else {
@@ -750,7 +784,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             else if (currState == eParseState.inPub || currState == eParseState.inPri) {
                 // process a method def'n line
                 if (trimmedLine.length > 0) {
-                    this._logSPIN('- process SPIN2 line(' + i + 1 + '): trimmedLine=[' + trimmedLine + ']');
+                    this._logSPIN('- process SPIN2 line('+ (i + 1) + '): trimmedLine=[' + trimmedLine + ']');
                     const lineParts: string[] = trimmedLine.split(/[ \t]/);
                     if (lineParts.length > 0 && lineParts[0].toUpperCase() == "ORG") {  // Only ORG not ORGF, ORGH
                         prePasmState = currState;
@@ -776,6 +810,25 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         this._checkTokenSet(tokenSet);
         return tokenSet;
+    }
+
+    private _getSpin2_Directive(lineNumber: number, startingOffset: number, line: string): void {
+        // HAVE {-* VSCode-Spin2: nextline debug()-display: bitmap  *-}
+        // (only this one so far)
+        if (line.toLowerCase().indexOf("{-* vscode-spin2:") != -1) {
+            this._logMessage('- _getSpin2_Directive: ofs:' + startingOffset + ', [' + line + '](' + lineNumber + ')');
+            // have possible directive
+            let currentOffset: number = this._skipWhite(line, startingOffset);
+            // get line parts - we only care about first one
+            let lineParts: string[] = line.substring(currentOffset).toLowerCase().split(/[ \t,]/).filter(element => element);
+            this._logMessage('  -- lineParts(' + lineParts.length + ')=[' + lineParts + ']');
+            if (lineParts.length > 4 && lineParts[3] == "debug()-display:") {
+                for (let index = 4; index < lineParts.length - 1; index++) {
+                    const displayType: string = lineParts[index];
+                    this._recordDisplayTypeForLine(displayType, lineNumber + 1);
+                }
+            }
+        }
     }
 
     private _getCON_Declaration(startingOffset: number, line: string): void {
@@ -1897,7 +1950,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         });
                                     }
                                     else {
-                                        if (!this._isSpinReservedWord(variableNamePart) && !this._isBuiltinReservedWord(variableNamePart) && !this._iDebugMethod(variableNamePart)) {
+                                        if (!this._isSpinReservedWord(variableNamePart) && !this._isBuiltinReservedWord(variableNamePart) && !this._iDebugMethod(variableNamePart) &&!this._isSpinBuiltinMethod(variableNamePart)) {
                                             // we don't have name registered so just mark it
                                             this._logSPIN('  --  SPIN MISSING varname=[' + variableNamePart + '](' + nameOffset + 1 + ')');
                                             tokenSet.push({
@@ -2147,7 +2200,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const lineParts: string[] = this._getNonWhitePasmLineParts(inLinePasmRHSStr);
         this._logPASM('  -- reportInLinePasmDecl lineParts=[' + lineParts + ']');
         const firstName: string = (lineParts.length > 0) ? lineParts[0] : "";
-        const bIsAlsoDebugLine: boolean = (firstName.toLowerCase() == "debug") ? true : false;
+        const secondName: string = (lineParts.length > 1) ? lineParts[1] : "";
+        const bIsAlsoDebugLine: boolean = (firstName.toLowerCase() == "debug" || secondName.toLowerCase() == "debug") ? true : false;
         if (bIsAlsoDebugLine) {
             const partialTokenSet: IParsedToken[] = this._reportDebugStatement(lineNumber, startingOffset, line);
             partialTokenSet.forEach(newToken => {
@@ -2155,11 +2209,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 tokenSet.push(newToken);
             });
         }
-        // handle name in 1 column
-        let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[0]);
+        // handle name in as first part of line...
+        // (process label/variable name (but 'debug' of debug() is NOT a label!))
+        let haveLabel: boolean = (this._isDatOrPasmLabel(lineParts[0]) && lineParts[0].toLowerCase() != "debug");
         const isDataDeclarationLine: boolean = (lineParts.length > 1 && haveLabel && this._isDatStorageType(lineParts[1])) ? true : false;
         if (haveLabel) {
-            // process label/variable name
             const labelName: string = lineParts[0];
             this._logPASM('  -- labelName=[' + labelName + ']');
             const labelType: string = (isDataDeclarationLine) ? 'variable' : 'label';
@@ -2172,6 +2226,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 tokenModifiers: ['declaration']
             });
             haveLabel = true;
+        }
+        if (bIsAlsoDebugLine) {
+            // this line is [{label}] debug() ' comment
+            //  no more to do so exit!
+            return tokenSet;
         }
         if (!isDataDeclarationLine) {
             // process assembly code
@@ -2571,11 +2630,16 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             let symbolOffset: number = currentOffset;
             if (lineParts.length >= 2) {
                 const displayType: string = lineParts[1];
-                if (displayType.startsWith('`') && displayType.startsWith('``') == false) {
+                if (displayType.startsWith('`')) {
                     symbolOffset = line.indexOf(displayType, symbolOffset) + 1 // plus 1 to get past back-tic
                     const newDisplayType: string = displayType.substring(1, displayType.length);
-                    let bHaveInstantiation = this._isDebugDisplayType(newDisplayType);
+                    let displayTestName: string = (lineParts[1] == "`") ? lineParts[1] + lineParts[2] : lineParts[1];
+                    displayTestName = displayTestName.toLowerCase().replace(/ \t/g, '');
+                    const isRuntimeNamed: boolean = (displayTestName.startsWith('``') || displayTestName.startsWith('`zstr') || displayTestName.startsWith('`lstr'));
+                    this._logDEBUG(' -- debug() displayTestName=[' + displayTestName + '], isRuntimeNamed=' + isRuntimeNamed);
+                    let bHaveInstantiation = this._isDebugDisplayType(newDisplayType) && !isRuntimeNamed;
                     if (bHaveInstantiation) {
+                        this._logDEBUG('  -- debug() --- PROCESSING Instantiation');
                         // -------------------------------------
                         // process Debug() display instantiation
                         //   **    debug(`{displayType} {displayName} ......)
@@ -2674,45 +2738,63 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             symbolOffset += newParameter.length;
                         }
                         // (2) highlight strings
-                        // FIXME: UNDONE handle back-tic parens in strings
-                        const tokenStringSet: IParsedToken[] = this._getTokensForDebugString(lineNumber, line, debugStatementStr);
+                        const tokenStringSet: IParsedToken[] = this._reportDebugStrings(lineNumber, line, debugStatementStr);
                         tokenStringSet.forEach(newToken => {
                             tokenSet.push(newToken);
                         });
                     }
                     else {
                         // -------------------------------------
-                        // process Debug() display feed
+                        // process Debug() display feed/instantiation
                         //   **    debug(`{(displayName} {displayName} {...}} ......)
+                        //   **    debug(`zstr_(displayName) lutcolors `uhex_long_array_(image_address, lut_size))
+                        //   **    debug(`lstr_(displayName, len) lutcolors `uhex_long_array_(image_address, lut_size))
+                        //   **    debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
                         //  NOTE: 1 or more display names!!!
                         //  FIXME: Chip: how do we validate types when multiple displays! (of diff types)??
+                        //    Chip: "only types common to all"!
                         let displayName: string = newDisplayType;
                         let bHaveFeed = this._isKnownDebugDisplay(displayName);
+                        if (isRuntimeNamed) {
+                            bHaveFeed = true;
+                        }
                         // handle 1st display here
+                        let firstParamIdx: number = 0;  // value NOT used
                         if (bHaveFeed) {
-                            let firstParamIdx: number = 1; // [0]=debug [1]=`{userName}
-                            do {
-                                // (0) register UserName use
-                                this._logDEBUG('  -- debug() displayName=[' + displayName + ']');
-                                tokenSet.push({
-                                    line: lineNumber,
-                                    startCharacter: symbolOffset,
-                                    length: displayName.length,
-                                    tokenType: 'displayName',
-                                    tokenModifiers: ['reference']
-                                });
-                                symbolOffset += displayName.length + 1;
-                                if (firstParamIdx < lineParts.length) {
-                                    firstParamIdx++;
-                                    displayName = lineParts[firstParamIdx];
-                                    bHaveFeed = this._isKnownDebugDisplay(displayName);
+                            this._logDEBUG('  -- debug() --- PROCESSING feed');
+                            if (isRuntimeNamed) {
+                                firstParamIdx = (displayName == "`" || displayName == "``") ? 2 : 1; // [0]=`debug` [1]=`runtimeName, [2]... symbols
+                            }
+                            else {
+                                firstParamIdx = 1; // [0]=debug [1]=`{userName}[[, {userName}], ...]
+                                // handle one or more names!
+                                do {
+                                    // (0) register UserName use
+                                    this._logDEBUG('  -- debug() displayName=[' + displayName + ']');
+                                    tokenSet.push({
+                                        line: lineNumber,
+                                        startCharacter: symbolOffset,
+                                        length: displayName.length,
+                                        tokenType: 'displayName',
+                                        tokenModifiers: ['reference']
+                                    });
+                                    symbolOffset += displayName.length + 1;
+                                    if (firstParamIdx < lineParts.length) {
+                                        firstParamIdx++;
+                                        displayName = lineParts[firstParamIdx];
+                                        bHaveFeed = this._isKnownDebugDisplay(displayName);
+                                    }
+                                    else {
+                                        bHaveFeed = false;
+                                    }
+                                } while (bHaveFeed)
                                 }
-                                else {
-                                    bHaveFeed = false;
-                                }
-                            } while (bHaveFeed)
                              // (1) highlight parameter names (NOTE: based on first display type, only)
                             let eDisplayType: eDebugDisplayType = this._getUserDebugDisplayType(newDisplayType);
+                            if (isRuntimeNamed) {
+                                // override bad display type with directive if present
+                                eDisplayType = this._getDisplayTypeForLine(lineNumber);
+                            }
                             let newParameter: string = "";
                             for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
                                 newParameter = lineParts[idx];
@@ -2788,8 +2870,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 symbolOffset += newParameter.length;
                             }
                             // (2) highlight strings
-                            // FIXME: UNDONE handle back-tic parens in strings
-                            const tokenStringSet: IParsedToken[] = this._getTokensForDebugString(lineNumber, line, debugStatementStr);
+                            const tokenStringSet: IParsedToken[] = this._reportDebugStrings(lineNumber, line, debugStatementStr);
                             tokenStringSet.forEach(newToken => {
                                 tokenSet.push(newToken);
                             });
@@ -2797,6 +2878,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     }
                 }
                 else {
+                    this._logDEBUG('  -- debug() --- PROCESSING non-display (other)');
                     // -------------------------------------
                     // process non-display debug statement
                     const firstParamIdx: number = 0; // no prefix to skip
@@ -2846,8 +2928,13 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 });
                             }
                         }
+                        symbolOffset += newParameter.length;
                     }
-                    symbolOffset += newParameter.length;
+                    // (2) highlight strings
+                    const tokenStringSet: IParsedToken[] = this._reportDebugStrings(lineNumber, line, debugStatementStr);
+                    tokenStringSet.forEach(newToken => {
+                        tokenSet.push(newToken);
+                    });
                 }
             }
         }
@@ -2856,8 +2943,21 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         return tokenSet;
     }
+    private _reportDebugStrings(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
+        // debug statements typically have single or double quoted strings.  Let's color either if/when found!
+        const tokenSet: IParsedToken[] = [];
+        let tokenStringSet: IParsedToken[] = this._reportDebugSglQuoteStrings(lineNumber, line, debugStatementStr);
+        tokenStringSet.forEach(newToken => {
+            tokenSet.push(newToken);
+        });
+        tokenStringSet = this._reportDebugDblQuoteStrings(lineNumber, line, debugStatementStr);
+        tokenStringSet.forEach(newToken => {
+            tokenSet.push(newToken);
+        });
+        return tokenSet;
+}
 
-    private _getTokensForDebugString(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
+    private _reportDebugSglQuoteStrings(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
         // find all strings in debug() statement but for now just do first...
         let currentOffset: number = line.indexOf(debugStatementStr);
@@ -2942,10 +3042,135 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             }
         }
         if (nextString.length > 0) {
-            this._logDEBUG('  -- debug() nextString=[' + nextString + '](' + nextString.length + ')');
+            this._logDEBUG('  -- debug() gsqs nextString=[' + nextString + '](' + nextString.length + ')');
         }
         return nextString;
     }
+
+    private _reportDebugDblQuoteStrings(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
+        const tokenSet: IParsedToken[] = [];
+        // find all strings in debug() statement but for now just do first...
+        let currentOffset: number = line.indexOf(debugStatementStr);
+        let nextStringOffset: number = 0;
+        let nextString: string = ""
+        do {
+            nextString = this._getDoubleQuotedString(nextStringOffset, debugStatementStr);
+            if (nextString.length > 0) {
+                nextStringOffset = debugStatementStr.indexOf(nextString, nextStringOffset)
+                const chrBackTic: string = "`";
+                const bStringContainssBackTic: boolean = (nextString.indexOf(chrBackTic) != -1);
+                if (bStringContainssBackTic) {
+                    // add special handling for '`()' this case
+                    //this._logMessage('- BackTic nextString=[' + nextString + '] line=[' + line + ']');
+                    const chrCloseParen: string = ")";
+                    let searchOffset: number = 0;   // value doesn't matter
+                    let lineStrOffset: number = line.indexOf(nextString, currentOffset);
+                    let backTicOffset: number = 0;   // value doesn't matter
+                    while ((backTicOffset = nextString.indexOf(chrBackTic, searchOffset)) != -1) {
+                        const leftStr = nextString.substring(0, backTicOffset);
+                        // record the left edge string
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: lineStrOffset,
+                            length: leftStr.length,
+                            tokenType: 'string',
+                            tokenModifiers: ['quoted', 'double']
+                        });
+                        //this._logMessage('  -- leftStr=[' + leftStr + '] lineStrOffset=[' + lineStrOffset + ']');
+                        const closeParenOffset: number = nextString.indexOf(chrCloseParen, backTicOffset);
+                        //this._logMessage('  -- backTicOffset=[' + backTicOffset + '] closeParenOffset=[' + closeParenOffset + ']');
+                        if (closeParenOffset != -1) {
+                            searchOffset = closeParenOffset;
+                            const nextBackTicOffset: number = nextString.indexOf(chrBackTic, searchOffset);
+                            const rightStringEndOffset: number = (nextBackTicOffset != -1) ? nextBackTicOffset - 1 : nextString.length - 1;
+                            const rightStr = nextString.substring(closeParenOffset + 1, rightStringEndOffset + 1);
+                            let rightStrOffset: number  = lineStrOffset + closeParenOffset + 1;
+                            const leftOffset: number = closeParenOffset + 1;
+                            //this._logMessage('  -- rightStr=(' + rightStrOffset + ')[' + rightStr + '] leftOffset=[' + leftOffset + '] rightStringEndOffset=[' + rightStringEndOffset + ']');
+                            // record the right edge string
+                            tokenSet.push({
+                                line: lineNumber,
+                                startCharacter: rightStrOffset,
+                                length: rightStr.length,
+                                tokenType: 'string',
+                                tokenModifiers: ['quoted', 'double']
+                            });
+                            searchOffset = closeParenOffset + leftStr.length + 1;
+                        }
+                        else {
+                            break;  // no close paren?  get outta here...
+                        }
+                    }
+                }
+                else {
+                    const strOffset: number = line.indexOf(nextString, currentOffset)
+                    //this._logMessage('  -- str=(' + strOffset + ')[' + nextString + ']');
+                    tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: strOffset,
+                        length: nextString.length,
+                        tokenType: 'string',
+                        tokenModifiers: ['quoted', 'double']
+                    });
+                }
+                currentOffset += nextString.length + 1;
+                nextStringOffset += nextString.length + 1;
+            }
+        } while(nextString.length > 0)
+
+        return tokenSet;
+    }
+
+
+    private _getDoubleQuotedString(currentOffset: number, searchText: string): string {
+        let nextString: string = "";
+        const chrDoubleQuote: string = '"';
+        const stringStartOffset: number = searchText.indexOf(chrDoubleQuote, currentOffset);
+        if (stringStartOffset != -1) {
+            this._logDEBUG('  -- _getDoubleQuotedString(' + currentOffset + ', [' + searchText + '])');
+            const stringEndOffset: number = searchText.indexOf(chrDoubleQuote, stringStartOffset + 1);
+            if (stringEndOffset != -1) {
+                nextString = searchText.substring(stringStartOffset, stringEndOffset + 1);
+            }
+        }
+        if (nextString.length > 0) {
+            this._logDEBUG('  -- debug() gdqs nextString=[' + nextString + '](' + nextString.length + ')');
+        }
+        return nextString;
+    }
+
+    private _recordDisplayTypeForLine(displayType: string, lineNbr: number): void {
+        //this._logMessage('  -- line#' + lineNbr + ', displayType=[' + displayType + ']');
+        const newDirective: ISpin2Directive = {
+            lineNumber: lineNbr,
+            displayType: displayType,
+            eDisplayType: this._getDebugDisplayType(displayType),
+        };
+        this._logMessage('=> Add DIRECTIVE: ' + this._directiveString(newDirective));
+        this.fileDirectives.push(newDirective);
+    }
+
+    private _getDisplayTypeForLine(lineNumber: number): eDebugDisplayType {
+        let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
+        let maxLineBefore: number = 0;
+        let desiredDirective: ISpin2Directive;
+        for (let index = 0; index < this.fileDirectives.length; index++) {
+            const currDirective: ISpin2Directive = this.fileDirectives[index];
+            this._logMessage('  -- hunt:' + lineNumber + ', ln=' + currDirective.lineNumber + ', typ=' + currDirective.displayType + '(' + currDirective.eDisplayType + ')');
+            if (currDirective.lineNumber <= lineNumber) {
+                if (currDirective.lineNumber > maxLineBefore) {
+                    desiredDirective = currDirective;
+                    desiredType = currDirective.eDisplayType;
+                    maxLineBefore = currDirective.lineNumber;
+                }
+            }
+        }
+        if (desiredType != eDebugDisplayType.Unknown) {
+            this._logMessage('  -- directive for line#' + lineNumber + ': ' + desiredType);
+        }
+        return desiredType;
+    }
+
 
     /*
     private _possiblyMarkBrokenSingleLineComment(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
@@ -2985,7 +3210,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = true;    // WARNING disable before commit
+    private spinDebugLogEnabled: boolean = false;    // WARNING disable before commit
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;
@@ -3395,8 +3620,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getDebugNonWhiteLineParts(line: string): string[] {
         // FIXME: undone we need to grow this to omit most strings from returned list
-        const nonStringLine: string = this._removeDebugSingleQuotedStrings(line);
-        let lineParts: string[] | null = nonStringLine.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)\!\?\~]+/g);
+        const nonSglStringLine: string = this._removeDebugSingleQuotedStrings(line);
+        const nonDblStringLine: string = this._removeDoubleQuotedStrings(nonSglStringLine);
+        let lineParts: string[] | null = nonDblStringLine.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)\!\?\~]+/g);
         //let lineParts: string[] | null = line.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)]+/g);
         if (lineParts === null) {
             lineParts = [];
@@ -4326,6 +4552,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             ',len:' + aToken.length + ' [' + varName + '](' + aToken.tokenType + '[' + aToken.tokenModifiers + '])]';
         return desiredInterp;
     }
+    private _directiveString(aDirective: ISpin2Directive): string {
+        let desiredInterp: string = '  -- directive=[ln:' + aDirective.lineNumber + ',typ:' + aDirective.displayType + '[' + aDirective.eDisplayType + '])]';
+        return desiredInterp;
+    }
+
 
     private _checkTokenSet(tokenSet: IParsedToken[]): void {
         this._logMessage('\n---- Checking ' + tokenSet.length + ' tokens. ----');
