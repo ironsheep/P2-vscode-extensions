@@ -135,7 +135,7 @@ repository:
         end: '}}'
     doc_line_comment:
         name: comment.line.documentation.spin2
-        match: '''''.*$'
+        match: "''.*$"
     float_number:
         name: constant.numeric.decimal.spin2
         patterns:
@@ -159,7 +159,7 @@ repository:
                 name: constant.numeric.base16.spin2
     line_comment:
         name: comment.line.spin2
-        match: "^[ \t]*'.*$"
+        match: "^[ \t]*'[^'].*$"
     number:
         patterns:
             -

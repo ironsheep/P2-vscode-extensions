@@ -235,7 +235,7 @@
     },
     "line_comment": {
       "name": "comment.line.spin2",
-      "match": "^[ \t]*'.*$"
+      "match": "^[ \t]*'[^'].*$"
     },
     "number": {
       "patterns": [

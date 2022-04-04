@@ -18,6 +18,23 @@ Possible next additions:
 - Finish support for "debug() statements NOT using strings" - new debug() shorthand support
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+- 
+## [1.3.2] 2022-04-04
+
+Improve debug()-display **Highlight** for older style with double-quoted strings
+
+- Fix highlighting of debug() statements containing double-quoted strings
+- Fix object references in DAT-PASM and debug() statements containing double-quoted strings
+- Fix highlight of comments starting with '' (two single-quotes) 
+
+### - Known Issues w/v1.3.2
+
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- _I'm sure there are more issues..._
+
 
 ## [1.3.1] 2022-03-31
 

@@ -2610,7 +2610,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const commentRHSStrOffset: number = currentOffset + debugStatementStr.length;
         const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
         if (commentOffset != -1) {
-            const newToken: IParsedToken = {
+            const newToken: IParsedToken = {    // XYZZY
                 line: lineNumber,
                 startCharacter: commentOffset,
                 length: line.length - commentOffset + 1,
@@ -2890,42 +2890,51 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             continue;
                         }
                         symbolOffset = line.indexOf(newParameter, symbolOffset); // walk this past each
-                        this._logDEBUG('  -- ?check? [' + newParameter + ']');
-                        let referenceDetails: IRememberedToken | undefined = undefined;
-                        if (this._isLocalPasmTokenForMethod(this.currentMethodName, newParameter)) {
-                            referenceDetails = this._getLocalPasmTokenForMethod(this.currentMethodName, newParameter);
-                            this._logPASM('  --  FOUND local PASM name=[' + newParameter + ']');
+                        // does name contain a namespace reference?
+                        let bHaveObjReference: boolean = false;
+                        if (newParameter.includes('.')) {
+                            // go register object reference!
+                            bHaveObjReference = this._reportObjectReference(newParameter, lineNumber, startingOffset, line, tokenSet);
                         }
-                        else if (this._isLocalToken(newParameter)) {
-                            referenceDetails = this._getLocalToken(newParameter);
-                            this._logPASM('  --  FOUND local name=[' + newParameter + ']');
-                        }
-                        else if (this._isGlobalToken(newParameter)) {
-                            referenceDetails = this._getGlobalToken(newParameter);
-                            this._logPASM('  --  FOUND global name=[' + newParameter + ']');
-                        }
-                        if (referenceDetails != undefined) {
-                            //this._logPASM('  --  Debug() colorize name=[' + newParameter + ']');
-                            tokenSet.push({
-                                line: lineNumber,
-                                startCharacter: symbolOffset,
-                                length: newParameter.length,
-                                tokenType: referenceDetails.tokenType,
-                                tokenModifiers: referenceDetails.tokenModifiers
-                            });
-                        }
-                        else {
-                            // handle unknown-name case
-                            const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                            if (paramIsSymbolName && !this._iDebugMethod(newParameter) && this._isBinaryOperator(newParameter) && this._isUnaryOperator(newParameter)) {
-                                this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
+                        if(!bHaveObjReference) {
+                            this._logDEBUG('  -- ?check? [' + newParameter + ']');
+
+                            let referenceDetails: IRememberedToken | undefined = undefined;
+                            if (this._isLocalPasmTokenForMethod(this.currentMethodName, newParameter)) {
+                                referenceDetails = this._getLocalPasmTokenForMethod(this.currentMethodName, newParameter);
+                                this._logPASM('  --  FOUND local PASM name=[' + newParameter + ']');
+                            }
+                            else if (this._isLocalToken(newParameter)) {
+                                referenceDetails = this._getLocalToken(newParameter);
+                                this._logPASM('  --  FOUND local name=[' + newParameter + ']');
+                            }
+                            else if (this._isGlobalToken(newParameter)) {
+                                referenceDetails = this._getGlobalToken(newParameter);
+                                this._logPASM('  --  FOUND global name=[' + newParameter + ']');
+                            }
+                            if (referenceDetails != undefined) {
+                                //this._logPASM('  --  Debug() colorize name=[' + newParameter + ']');
                                 tokenSet.push({
                                     line: lineNumber,
                                     startCharacter: symbolOffset,
                                     length: newParameter.length,
-                                    tokenType: 'setupParameter',
-                                    tokenModifiers: ['illegalUse']
+                                    tokenType: referenceDetails.tokenType,
+                                    tokenModifiers: referenceDetails.tokenModifiers
                                 });
+                            }
+                            else {
+                                // handle unknown-name case
+                                const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
+                                if (paramIsSymbolName && !this._iDebugMethod(newParameter) && this._isBinaryOperator(newParameter) && this._isUnaryOperator(newParameter)) {
+                                    this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
+                                    tokenSet.push({
+                                        line: lineNumber,
+                                        startCharacter: symbolOffset,
+                                        length: newParameter.length,
+                                        tokenType: 'setupParameter',
+                                        tokenModifiers: ['illegalUse']
+                                    });
+                                }
                             }
                         }
                         symbolOffset += newParameter.length;
@@ -2943,19 +2952,92 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         return tokenSet;
     }
+
+    private _reportObjectReference(dotReference: string, lineNumber: number, startingOffset: number, line: string, tokenSet: IParsedToken[]): boolean {
+        this._logDEBUG('  --  rOr dotReference=[' + dotReference + ']');
+        let possibleNameSet: string[] = [];
+        let bGeneratedReference: boolean = false;
+        if (dotReference.includes('.')) {
+            const symbolOffset: number = line.indexOf(dotReference, startingOffset); // walk this past each
+            possibleNameSet = dotReference.split('.');
+            const namePart = possibleNameSet[0];
+            let referenceDetails: IRememberedToken | undefined = undefined;
+            if (this._isGlobalToken(namePart)) {
+                referenceDetails = this._getGlobalToken(namePart);
+                this._logPASM('  --  FOUND global name=[' + namePart + ']');
+            }
+            if (referenceDetails != undefined) {
+                //this._logPASM('  --  Debug() colorize name=[' + newParameter + ']');
+                bGeneratedReference = true;
+                tokenSet.push({
+                    line: lineNumber,
+                    startCharacter: symbolOffset,
+                    length: namePart.length,
+                    tokenType: referenceDetails.tokenType,
+                    tokenModifiers: referenceDetails.tokenModifiers
+                });
+                if (possibleNameSet.length > 1) {
+                    // we have .constant namespace suffix
+                    // determine if this is method has '(' or constant name
+                    const refPart = possibleNameSet[1];
+                    const referenceOffset = line.indexOf(refPart, symbolOffset + namePart.length + 1);
+                    let isMethod: boolean = false;
+                    if (line.substr(referenceOffset + refPart.length, 1) == '(') {
+                        isMethod = true;
+                    }
+                    const constantPart: string = possibleNameSet[1];
+                    if (this._isStorageType(constantPart)) {
+                        // FIXME: UNDONE remove when syntax see this correctly
+                        const nameOffset: number = line.indexOf(constantPart, referenceOffset + refPart.length + 1);
+                        this._logSPIN('  --  rOr rhs storageType=[' + constantPart + '](' + nameOffset + 1 + ')');
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: nameOffset,
+                            length: constantPart.length,
+                            tokenType: 'storageType',
+                            tokenModifiers: []
+                        });
+                    }
+                    else {
+                        const tokenTypeID: string = (isMethod) ? 'method' : 'variable';
+                        const tokenModifiers: string[] = (isMethod) ? [] : ['readonly'];
+                        this._logSPIN('  --  rOr rhs constant=[' + constantPart + '](' + referenceOffset + 1 + ') (' + tokenTypeID + ')');
+                        tokenSet.push({
+                            line: lineNumber,
+                            startCharacter: referenceOffset,
+                            length: refPart.length,
+                            tokenType: tokenTypeID,
+                            tokenModifiers: tokenModifiers
+                        });
+                    }
+                }
+            }
+        }
+        return bGeneratedReference;
+    }
+
+
     private _reportDebugStrings(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
         // debug statements typically have single or double quoted strings.  Let's color either if/when found!
         const tokenSet: IParsedToken[] = [];
-        let tokenStringSet: IParsedToken[] = this._reportDebugSglQuoteStrings(lineNumber, line, debugStatementStr);
+        let tokenStringSet: IParsedToken[] = this._reportDebugDblQuoteStrings(lineNumber, line, debugStatementStr);
         tokenStringSet.forEach(newToken => {
             tokenSet.push(newToken);
         });
-        tokenStringSet = this._reportDebugDblQuoteStrings(lineNumber, line, debugStatementStr);
-        tokenStringSet.forEach(newToken => {
-            tokenSet.push(newToken);
-        });
+        let bNeedSingleQuoteProcessing: boolean = true;
+        if (tokenStringSet.length > 0) {
+            // see if we have sgl quites outside if dbl-quote strings
+            const nonStringLine: string = this._removeDoubleQuotedStrings(debugStatementStr);
+            bNeedSingleQuoteProcessing = (nonStringLine.indexOf("'") != -1);
+        }
+        if (bNeedSingleQuoteProcessing) {
+            tokenStringSet = this._reportDebugSglQuoteStrings(lineNumber, line, debugStatementStr);
+            tokenStringSet.forEach(newToken => {
+                tokenSet.push(newToken);
+            });
+        }
         return tokenSet;
-}
+    }
 
     private _reportDebugSglQuoteStrings(lineNumber: number, line: string, debugStatementStr: string): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
@@ -3363,8 +3445,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
        const nonCommentLHSStr = this._getNonCommentLineRemainder(currentOffset, line);
        // now record the comment if we have one
        const commentRHSStrOffset: number = currentOffset + nonCommentLHSStr.length;
-       const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
-       if (commentOffset != -1) {
+        const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
+        const bHaveDocComment: boolean = (line.indexOf("''", commentOffset) != -1);
+       if (commentOffset != -1 && !bHaveDocComment) {   // XYZZY
            const newToken: IParsedToken = {
                line: lineNumber,
                startCharacter: commentOffset,
@@ -3520,7 +3603,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonWhitePasmLineParts(line: string): string[] {
         const nonEqualsLine: string = this._removeDoubleQuotedStrings(line);
-        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\<\>\+\*\&\|\-\\\#\@\/]+/g);
+        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\[\]\<\>\+\*\&\|\-\\\#\@\/]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
@@ -3619,10 +3702,13 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
 
     private _getDebugNonWhiteLineParts(line: string): string[] {
-        // FIXME: undone we need to grow this to omit most strings from returned list
-        const nonSglStringLine: string = this._removeDebugSingleQuotedStrings(line);
-        const nonDblStringLine: string = this._removeDoubleQuotedStrings(nonSglStringLine);
-        let lineParts: string[] | null = nonDblStringLine.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)\!\?\~]+/g);
+        // remove douple and then any single quotes string from display list
+        //this._logMessage('  -- gdnwlp raw-line [' + line + ']');
+        const nonDblStringLine: string = this._removeDoubleQuotedStrings(line);
+        //this._logMessage('  -- gdnwlp nonDblStringLine [' + nonDblStringLine + ']');
+        const nonSglStringLine: string = this._removeDebugSingleQuotedStrings(nonDblStringLine);
+        //this._logMessage('  -- gdnwlp nonSglStringLine [' + nonSglStringLine + ']');
+        let lineParts: string[] | null = nonSglStringLine.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)\!\?\~]+/g);
         //let lineParts: string[] | null = line.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)]+/g);
         if (lineParts === null) {
             lineParts = [];
