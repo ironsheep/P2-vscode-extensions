@@ -1129,7 +1129,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         });
                     }
                     else {
-                        this._logCON('  --  CON ERROR[CODE] missed recording declaration!!! name=[' + constantName + ']');
+                        this._logCON('  --  CON ERROR[CODE] missed recording declaration! name=[' + constantName + ']');
                         tokenSet.push({
                             line: lineNumber,
                             startCharacter: nameOffset,
@@ -1461,7 +1461,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[0]);
         const isDataDeclarationLine: boolean = (lineParts.length > 1 && haveLabel && this._isDatStorageType(lineParts[1])) ? true : false;
-        // TODO: REWRITE this to handle "non-label" line with unknown op-code!!!!
+        // TODO: REWRITE this to handle "non-label" line with unknown op-code!
         if (haveLabel) {
             // process label/variable name - starting in column 0
             const labelName: string = lineParts[0];
@@ -1492,7 +1492,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         line: lineNumber,
                         startCharacter: nameOffset,
                         length: labelName.length,
-                        tokenType: 'variable',   // color this offender!!
+                        tokenType: 'variable',   // color this offender!
                         tokenModifiers: ['illegalUse']
                     });
                     haveLabel = true;
@@ -2371,7 +2371,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             line: lineNumber,
                             startCharacter: nameOffset,
                             length: nameOrDirective.length,
-                            tokenType: 'variable',   // color this offender!!
+                            tokenType: 'variable',   // color this offender!
                             tokenModifiers: ['illegalUse']
                         });
                     }
@@ -2722,7 +2722,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                     else {
                                         // handle unknown-name case
                                         const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                        if (paramIsSymbolName && this._iDebugMethod(newParameter) == false) {
+                                        if (paramIsSymbolName && this._iDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1) {
                                             this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
@@ -2750,7 +2750,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         //   **    debug(`zstr_(displayName) lutcolors `uhex_long_array_(image_address, lut_size))
                         //   **    debug(`lstr_(displayName, len) lutcolors `uhex_long_array_(image_address, lut_size))
                         //   **    debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
-                        //  NOTE: 1 or more display names!!!
+                        //  NOTE: 1 or more display names!
                         //  FIXME: Chip: how do we validate types when multiple displays! (of diff types)??
                         //    Chip: "only types common to all"!
                         let displayName: string = newDisplayType;
@@ -2854,7 +2854,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         else {
                                             // handle unknown-name case
                                             const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                            if (paramIsSymbolName && this._iDebugMethod(newParameter) == false) {
+                                            if (paramIsSymbolName && this._iDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1) {
                                                 this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
                                                 tokenSet.push({
                                                     line: lineNumber,
@@ -3050,46 +3050,65 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             if (nextString.length > 0) {
                 nextStringOffset = debugStatementStr.indexOf(nextString, nextStringOffset)
                 const chrBackTic: string = "`";
+                const chrCloseParen: string = ")";
                 const bStringContainssBackTic: boolean = (nextString.indexOf(chrBackTic) != -1);
                 if (bStringContainssBackTic) {
                     // add special handling for '`()' this case
-                    //this._logMessage('- BackTic nextString=[' + nextString + '] line=[' + line + ']');
-                    const chrCloseParen: string = ")";
+                    //
+                    // EX #1: '`{!!}(P_GAIN)'                           - emit two strings, each just a tic
+                    // EX #2" 'enc=`(encVal), extra'                    - emit two strings
+                    // EX #3: 'FwdEnc=`{!!}(encVal)'                    - emit two strings, leading and trailing(just a tic)
+                    // EX #4: 'FwdEnc=`{!!}(encVal), dty=`{!!}(duty)'   - emit three strings: leading, middle, and trailing(just a tic)
+                    //    where {!!} is optional and is one of [$,%,#]
+                    //
+                    // - for each backtic string ends at chrBackTic, record it
+                    // - skip to close paren (string starts after close paren)
+                    this._logMessage('- rdsqs nextString=[' + nextString + '] line=[' + line + ']');
                     let searchOffset: number = 0;   // value doesn't matter
+                    let currStrOffset: number = 0;   // we start at zero!
                     let lineStrOffset: number = line.indexOf(nextString, currentOffset);
-                    let backTicOffset: number = 0;   // value doesn't matter
-                    while ((backTicOffset = nextString.indexOf(chrBackTic, searchOffset)) != -1) {
-                        const leftStr = nextString.substring(0, backTicOffset);
+                    let backTicOffset: number = nextString.indexOf(chrBackTic, searchOffset);
+                    while (backTicOffset != -1) {
+                        const currStr = nextString.substring(currStrOffset, backTicOffset);
+                        this._logDEBUG('  --  rdsqs currStr=[' + currStr + '](' + lineStrOffset  + ')');
                         // record the left edge string
                         tokenSet.push({
                             line: lineNumber,
                             startCharacter: lineStrOffset,
-                            length: leftStr.length,
+                            length: currStr.length,
                             tokenType: 'string',
                             tokenModifiers: ['quoted', 'single']
                         });
-                        //this._logMessage('  -- leftStr=[' + leftStr + '] lineStrOffset=[' + lineStrOffset + ']');
-                        const closeParenOffset: number = nextString.indexOf(chrCloseParen, backTicOffset);
-                        //this._logMessage('  -- backTicOffset=[' + backTicOffset + '] closeParenOffset=[' + closeParenOffset + ']');
+                        currStrOffset += currStr.length;
+                        lineStrOffset += currStr.length;
+                        //this._logMessage('  -- currStr=[' + currStr + '] lineStrOffset=[' + lineStrOffset + ']');
+                        const closeParenOffset: number = nextString.indexOf(chrCloseParen, backTicOffset + 2);  // +2 is past open paren
                         if (closeParenOffset != -1) {
-                            searchOffset = closeParenOffset;
-                            const nextBackTicOffset: number = nextString.indexOf(chrBackTic, searchOffset);
-                            const rightStringEndOffset: number = (nextBackTicOffset != -1) ? nextBackTicOffset - 1 : nextString.length - 1;
-                            const rightStr = nextString.substring(closeParenOffset + 1, rightStringEndOffset + 1);
-                            let rightStrOffset: number  = lineStrOffset + closeParenOffset + 1;
-                            const leftOffset: number = closeParenOffset + 1;
-                            //this._logMessage('  -- rightStr=(' + rightStrOffset + ')[' + rightStr + '] leftOffset=[' + leftOffset + '] rightStringEndOffset=[' + rightStringEndOffset + ']');
-                            // record the right edge string
-                            tokenSet.push({
-                                line: lineNumber,
-                                startCharacter: rightStrOffset,
-                                length: rightStr.length,
-                                tokenType: 'string',
-                                tokenModifiers: ['quoted', 'single']
-                            });
-                            searchOffset = closeParenOffset + leftStr.length + 1;
+                            const ticParenLen: number = closeParenOffset - backTicOffset + 1;
+                            //this._logMessage('  --  rdsqs closeParenOffset=[' + closeParenOffset + '], backTicOffset=[' + backTicOffset + '], ticParenLen=[' + ticParenLen + ']');
+                            backTicOffset = nextString.indexOf(chrBackTic, closeParenOffset);
+                            lineStrOffset += ticParenLen;
+                            // if we have another back-tic...
+                            if (backTicOffset != -1) {
+                                // had this string to front string processing
+                                currStrOffset += ticParenLen;
+                            }
+                            else {
+                                const rightStr = nextString.substring(closeParenOffset + 1, nextString.length);
+                                this._logDEBUG('  --  rdsqs rightStr=[' + rightStr + '](' + lineStrOffset + ')');
+                                // record the right edge string
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: lineStrOffset,
+                                    length: rightStr.length,
+                                    tokenType: 'string',
+                                    tokenModifiers: ['quoted', 'single']
+                                });
+                                searchOffset = closeParenOffset + currStr.length + 1;
+                            }
                         }
                         else {
+                            this._logDEBUG('  --  rdsqs  ERROR missing close paren!');
                             break;  // no close paren?  get outta here...
                         }
                     }
@@ -3164,11 +3183,11 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         if (closeParenOffset != -1) {
                             searchOffset = closeParenOffset;
                             const nextBackTicOffset: number = nextString.indexOf(chrBackTic, searchOffset);
-                            const rightStringEndOffset: number = (nextBackTicOffset != -1) ? nextBackTicOffset - 1 : nextString.length - 1;
-                            const rightStr = nextString.substring(closeParenOffset + 1, rightStringEndOffset + 1);
+                            const currStrEndOffset: number = (nextBackTicOffset != -1) ? nextBackTicOffset - 1 : nextString.length - 1;
+                            const rightStr = nextString.substring(closeParenOffset + 1, currStrEndOffset + 1);
                             let rightStrOffset: number  = lineStrOffset + closeParenOffset + 1;
                             const leftOffset: number = closeParenOffset + 1;
-                            //this._logMessage('  -- rightStr=(' + rightStrOffset + ')[' + rightStr + '] leftOffset=[' + leftOffset + '] rightStringEndOffset=[' + rightStringEndOffset + ']');
+                            //this._logMessage('  -- rightStr=(' + rightStrOffset + ')[' + rightStr + '] leftOffset=[' + leftOffset + '] currStrEndOffset=[' + currStrEndOffset + ']');
                             // record the right edge string
                             tokenSet.push({
                                 line: lineNumber,

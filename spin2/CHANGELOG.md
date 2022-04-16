@@ -15,30 +15,42 @@ Possible next additions:
 
 - Add code reformatting aligning columns to user defined tabstops
 - Investigate and possibly add unique coloring for method pointers
-- Finish support for "debug() statements NOT using strings" - new debug() shorthand support
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
-- 
-## [1.3.2] 2022-04-04
 
-Improve debug()-display **Highlight** for older style with double-quoted strings
+## [1.3.4] 2022-04-16
 
-- Fix highlighting of debug() statements containing double-quoted strings
-- Fix object references in DAT-PASM and debug() statements containing double-quoted strings
-- Fix highlight of comments starting with '' (two single-quotes) 
+### Improve debug()-display Highlight for new style with single-quoted strings
 
-### - Known Issues w/v1.3.2
+- Fix case where there are multiple `() sets in one string
+
+### - Known Issues w/v1.3.4
 
 - Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
+## [1.3.2] 2022-04-04
+
+### Improve debug()-display Highlight for older style with double-quoted strings
+
+- Fix highlighting of debug() statements containing double-quoted strings
+- Fix object references in DAT-PASM and debug() statements containing double-quoted strings
+- Fix highlight of comments starting with '' (two single-quotes)
+
+### - Known Issues w/v1.3.2
+
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- *I'm sure there are more issues...*
 
 ## [1.3.1] 2022-03-31
 
-Finish debug()-display **Highlight** and **Validation**
+### Finish debug()-display Highlight and Validation
 
 - Adds new directive support for validating debug() display lines which use runtime display names
 - Fix highlighting of debug() statements within in-line pasm
@@ -57,12 +69,11 @@ Finish debug()-display **Highlight** and **Validation**
 
 ### - Known Issues w/v1.3.1
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
-
+- *I'm sure there are more issues...*
 
 ## [1.3.0] 2022-03-29
 
@@ -74,25 +85,24 @@ Initial Release of debug()-display **Highlight** and **Validation**
 - Moved single comment out of syntax into semantic highlighting so we can have single-quoted strings in our debug statements.  (*Syntax highlighting is not context aware, so entire tail of a debug() statement was incorectly rendered as a comment*)
 
 ### Initial limitations v1.3.0
+
 - The runtime calulation of display name is not supported, yet. (*In an upcoming release you'll be able to specify the preferred display type for validation of each of these statements.*)
 - The following **example runtime forms** will be handled by the new directive when released:
   - debug(**\`zstr_(displayName)** lutcolors `uhex_long_array_(image_address, lut_size))
   - debug(**\`lstr_(displayName, len)** lutcolors `uhex_long_array_(image_address, lut_size))
   - debug(**\`#(letter)** lutcolors `uhex_long_array_(image_address, lut_size))
 
-
-
 ### - Known Issues w/v1.3.0
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.2.3] 2022-03-16
 
-Minor Highlighting Update 
+Minor Highlighting Update
 
 - Repair highlighting of float operators used in spin2
 - Repair coloring of constant names used in array declarations
@@ -105,7 +115,7 @@ Minor Highlighting Update
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.2.2] 2022-02-17
 
@@ -118,7 +128,7 @@ Minor Highlighting Update - Repair highlighting of binary operators in DAT data 
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.2.1] 2022-02-16
 
@@ -130,7 +140,7 @@ Minor Highlighting Update - Repair highlighting of binary operators in DAT data 
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.2.0] 2022-02-09
 
@@ -153,7 +163,7 @@ Syntax/Semantic Adjustments:
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.1.0] 2021-05-19
 
@@ -168,7 +178,7 @@ Semantic Adjustments:
 - debug() statements that don't use double-quoted strings currently are not parsed correctly
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.0.1] 2021-03-30
 
@@ -183,7 +193,7 @@ Syntax Adjustments:
 - debug() statements that don't use double-quoted strings currently are not parsed correctly
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [1.0.0] 2021-03-18
 
@@ -191,7 +201,7 @@ The Official Release of Semantic Highlighting
 
 In this release we clean things up a bit more, we deliver unknown name highlighting in brighter red, and **herein** we report on the state of testing against various code-sets.
 
-**NOTE:** _with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile. The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols._
+**NOTE:** *with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile. The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols.*
 
 Semantic Adjustments:
 
@@ -212,7 +222,7 @@ Syntax Adjustments:
 - debug() statements that don't use double-quoted strings currently can't be parsed
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ### REPORT: Source code shipped with PNut
 
@@ -254,7 +264,7 @@ Syntax Adjustments:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [0.3.3] 2021-03-16
 
@@ -269,7 +279,7 @@ Theme Adjustments:
 - Removed `Spin2 Cluso99` theme (by request)
 - Added `Spin2 Ironsheep Syntax` theme (primarily for extension developer use, disables Semantic highlighting)
 
-**Note**: _Should you wish, you can switch between the two ironsheep themes to show code with or without semantic highlighting_
+**Note**: *Should you wish, you can switch between the two ironsheep themes to show code with or without semantic highlighting*
 
 Semantic Adjustments:
 
@@ -305,7 +315,7 @@ Syntax Adjustments:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [0.3.2] 2021-03-12
 
@@ -338,7 +348,7 @@ Syntax Fixes:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [0.3.1] 2021-03-09
 
@@ -381,7 +391,7 @@ Syntax Fixes:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic the 'modification' attribute is being over-applied
 - Oops spin is not case-sensative... I need to adjust so highlighting is also not!
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [0.3.0] 2021-03-07
 
@@ -410,7 +420,7 @@ Preview Release of Semantic Highlighting
 - Does NOT recognize method calls to indexed objects
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...
 - Syntax highlight of DAT section sometimes failes... RES and FIT not colored correctly
-- _I'm sure there are more issues..._
+- *I'm sure there are more issues...*
 
 ## [0.2.2] 2020-11-30
 
