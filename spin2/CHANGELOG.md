@@ -18,6 +18,22 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.3.5] 2022-04-20
+
+### Improve debug() single quote string parsing and misc. fixes
+
+- Don't flag keywords within single quote strings
+- Recognize float operators in more locations
+- Recognize debug methods in more correct manner
+
+### - Known Issues w/v1.3.5
+
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
+- *I'm sure there are more issues...*
+
 ## [1.3.4] 2022-04-16
 
 ### Improve debug()-display Highlight for new style with single-quoted strings
@@ -26,7 +42,7 @@ Possible next additions:
 
 ### - Known Issues w/v1.3.4
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)

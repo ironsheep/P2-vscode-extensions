@@ -1177,7 +1177,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 });
                             }
                             else {
-                                if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._iDebugMethod(namePart)) {
+                                if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart) && !this._isDebugSymbol(namePart)) {
                                     this._logCON('  --  CON MISSING name=[' + namePart + ']');
                                     tokenSet.push({
                                         line: lineNumber,
@@ -1570,7 +1570,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             }
                             else {
                                 // we use bIsDebugLine in next line so we don't flag debug() arguments!
-                                if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isPasmConditional(namePart) && !this._isBinaryOperator(namePart) && !this._isBuiltinReservedWord(namePart) && !this._iDebugMethod(namePart) && !bIsAlsoDebugLine) {
+                                if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isPasmConditional(namePart) && !this._isBinaryOperator(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart) && !bIsAlsoDebugLine) {
                                     this._logPASM('  --  DAT Pasm MISSING name=[' + namePart + '](' + nameOffset + 1 + ')');
                                     tokenSet.push({
                                         line: lineNumber,
@@ -1794,7 +1794,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                     });
                                 }
                                 else {
-                                    if (!this._isSpinReservedWord(namedIndexPart) && !this._isSpinBuiltinMethod(namedIndexPart) && !this._isBuiltinReservedWord(namedIndexPart) && !this._iDebugMethod(namedIndexPart)) {
+                                    if (!this._isSpinReservedWord(namedIndexPart) && !this._isSpinBuiltinMethod(namedIndexPart) && !this._isBuiltinReservedWord(namedIndexPart) && !this._isDebugMethod(namedIndexPart) && !this._isDebugSymbol(namedIndexPart)) {
                                         // we don't have name registered so just mark it
                                         this._logSPIN('  --  SPIN MISSING varname=[' + namedIndexPart + '](' + nameOffset + 1 + ')');
                                         tokenSet.push({
@@ -1950,7 +1950,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         });
                                     }
                                     else {
-                                        if (!this._isSpinReservedWord(variableNamePart) && !this._isBuiltinReservedWord(variableNamePart) && !this._iDebugMethod(variableNamePart) &&!this._isSpinBuiltinMethod(variableNamePart)) {
+                                        if (!this._isSpinReservedWord(variableNamePart) && !this._isBuiltinReservedWord(variableNamePart) && !this._isDebugMethod(variableNamePart) && !this._isDebugSymbol(variableNamePart) && !this._isSpinBuiltinMethod(variableNamePart)) {
                                             // we don't have name registered so just mark it
                                             this._logSPIN('  --  SPIN MISSING varname=[' + variableNamePart + '](' + nameOffset + 1 + ')');
                                             tokenSet.push({
@@ -2026,7 +2026,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             }
                             else {
                                 // we don't have name registered so just mark it
-                                if (!this._isSpinReservedWord(cleanedVariableName) && !this._isSpinBuiltinMethod(cleanedVariableName) && !this._isBuiltinReservedWord(cleanedVariableName) && !this._iDebugMethod(cleanedVariableName)) {
+                                if (!this._isSpinReservedWord(cleanedVariableName) && !this._isSpinBuiltinMethod(cleanedVariableName) && !this._isBuiltinReservedWord(cleanedVariableName) && !this._isDebugMethod(cleanedVariableName)&& !this._isDebugSymbol(cleanedVariableName)) {
                                     this._logSPIN('  --  SPIN MISSING cln name=[' + cleanedVariableName + '](' + nameOffset + 1 + ')');
                                     tokenSet.push({
                                         line: lineNumber,
@@ -2120,7 +2120,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             });
                         }
                         // we use bIsDebugLine in next line so we don't flag debug() arguments!
-                        else if (!this._isSpinReservedWord(namePart) && !this._isSpinBuiltinMethod(namePart) && !this._isBuiltinReservedWord(namePart) && !this._iDebugMethod(namePart) && !bIsDebugLine) {
+                        else if (!this._isSpinReservedWord(namePart) && !this._isSpinBuiltinMethod(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart) && !bIsDebugLine) {
                             // NO DEBUG FOR ELSE, most of spin control elements come through here!
                             //else {
                             //    this._logSPIN('  -- UNKNOWN?? name=[' + namePart + '] - name-get-breakage??');
@@ -2315,7 +2315,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 else {
                                     // we don't have name registered so just mark it
                                     if (namePart != ".") {  // odd special case!
-                                        if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._iDebugMethod(namePart)) {
+                                        if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart)) {
                                             this._logPASM('  --  SPIN Pasm MISSING name=[' + namePart + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
@@ -2453,7 +2453,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             }
                             else {
                                 // we don't have name registered so just mark it
-                                if (!this._isSpinReservedWord(nameReference) && !this._isBuiltinReservedWord(nameReference) && !this._iDebugMethod(nameReference)) {
+                                if (!this._isSpinReservedWord(nameReference) && !this._isBuiltinReservedWord(nameReference) && !this._isDebugMethod(nameReference)) {
                                     this._logOBJ('  --  OBJ MISSING name=[' + nameReference + ']');
                                     tokenSet.push({
                                         line: lineNumber,
@@ -2545,7 +2545,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                     }
                                     else {
                                         // we don't have name registered so just mark it
-                                        if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._iDebugMethod(namePart)) {
+                                        if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart)) {
                                             this._logVAR('  --  VAR Add MISSING name=[' + namePart + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
@@ -2722,8 +2722,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                     else {
                                         // handle unknown-name case
                                         const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                        if (paramIsSymbolName && this._iDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1) {
-                                            this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
+                                        if (paramIsSymbolName && !this._isDebugMethod(newParameter) && newParameter.indexOf("`") == -1 && !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {        // xyzzy
+                                            this._logDEBUG('  -- debug() 1 unkParam=[' + newParameter + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
                                                 startCharacter: symbolOffset,
@@ -2854,8 +2854,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         else {
                                             // handle unknown-name case
                                             const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                            if (paramIsSymbolName && this._iDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1) {
-                                                this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
+                                            if (paramIsSymbolName && this._isDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1&& !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {        // xyzzy
+                                                this._logDEBUG('  -- debug() 2 unkParam=[' + newParameter + ']');
                                                 tokenSet.push({
                                                     line: lineNumber,
                                                     startCharacter: symbolOffset,
@@ -2925,8 +2925,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             else {
                                 // handle unknown-name case
                                 const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                if (paramIsSymbolName && !this._iDebugMethod(newParameter) && this._isBinaryOperator(newParameter) && this._isUnaryOperator(newParameter)) {
-                                    this._logDEBUG('  -- debug() unkParam=[' + newParameter + ']');
+                                if (paramIsSymbolName && !this._isDebugMethod(newParameter) && !this._isBinaryOperator(newParameter) && !this._isUnaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {        // xyzzy
+                                    this._logDEBUG('  -- debug() 3 unkParam=[' + newParameter + ']');
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: symbolOffset,
@@ -3063,14 +3063,14 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     //
                     // - for each backtic string ends at chrBackTic, record it
                     // - skip to close paren (string starts after close paren)
-                    this._logMessage('- rdsqs nextString=[' + nextString + '] line=[' + line + ']');
+                    //this._logMessage('- rdsqs nextString=[' + nextString + '] line=[' + line + ']');
                     let searchOffset: number = 0;   // value doesn't matter
                     let currStrOffset: number = 0;   // we start at zero!
                     let lineStrOffset: number = line.indexOf(nextString, currentOffset);
                     let backTicOffset: number = nextString.indexOf(chrBackTic, searchOffset);
                     while (backTicOffset != -1) {
                         const currStr = nextString.substring(currStrOffset, backTicOffset);
-                        this._logDEBUG('  --  rdsqs currStr=[' + currStr + '](' + lineStrOffset  + ')');
+                        //this._logDEBUG('  --  rdsqs currStr=[' + currStr + '](' + lineStrOffset  + ')');
                         // record the left edge string
                         tokenSet.push({
                             line: lineNumber,
@@ -3095,7 +3095,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             }
                             else {
                                 const rightStr = nextString.substring(closeParenOffset + 1, nextString.length);
-                                this._logDEBUG('  --  rdsqs rightStr=[' + rightStr + '](' + lineStrOffset + ')');
+                                //this._logDEBUG('  --  rdsqs rightStr=[' + rightStr + '](' + lineStrOffset + ')');
                                 // record the right edge string
                                 tokenSet.push({
                                     line: lineNumber,
@@ -3681,29 +3681,57 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     }
 
     private _removeDebugSingleQuotedStrings(line: string, showDebug: boolean = true): string {
+        // remove single-quoted strings from keyword processing
+        //  Ex #1:   ' a string '
+        //  Ex #2:   ' a string up to [`(var)]
+        //  Ex #3:   [)] a string after var'
+        //  Ex #4:   [)] a string up to another [`(var)]
         //this._logMessage('- RQS line [' + line + ']');
         let trimmedLine: string = line;
         //this._logMessage('  -- trim line [' + trimmedLine + ']');
-        const singleQuote: string = "'";
-        let searchOffset: number = 0;   // value doesn't matter
-        let quoteStartOffset: number = 0;   // value doesn't matter
+        const chrSingleQuote: string = "'";
+        const chrBackTic: string = "`";
+        const chrCloseParen: string = ")";
+        let quoteStartOffset: number = trimmedLine.indexOf(chrSingleQuote, 0);
         let didRemove: boolean = false;
-        while ((quoteStartOffset = trimmedLine.indexOf(singleQuote, searchOffset)) != -1) {
-            const quoteEndOffset: number = trimmedLine.indexOf(singleQuote, quoteStartOffset + 1);
+        while (quoteStartOffset != -1) {
+            let bHaveBackTic: boolean = false;
+            const quoteEndOffset: number = trimmedLine.indexOf(chrSingleQuote, quoteStartOffset + 1);
             //this._logMessage('  -- quoteStartOffset=[' + quoteStartOffset + '] quoteEndOffset=[' + quoteEndOffset + ']');
             if (quoteEndOffset != -1) {
-                const badElement = trimmedLine.substr(quoteStartOffset, quoteEndOffset - quoteStartOffset + 1);
-                searchOffset = quoteStartOffset + badElement.length + 1;
-                //this._logMessage('  -- badElement=[' + badElement + ']');
-                if (badElement.indexOf('`') != -1) {
-                    // string has back-tic, don't remove it!
+                let badElement: string = trimmedLine.substr(quoteStartOffset, quoteEndOffset - quoteStartOffset + 1);
+                const backTicOffset: number = trimmedLine.indexOf(chrBackTic, quoteStartOffset);
+                //this._logMessage('  -- RdsQS backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
+                if (backTicOffset != -1 && backTicOffset < quoteEndOffset) {
+                    bHaveBackTic = true;
+                    badElement = trimmedLine.substr(quoteStartOffset, backTicOffset - quoteStartOffset);
+                    if (badElement.length > 0) {
+                        // badElement = badElement.replace(chrBackTic, '');    // remove bacTicks
+                    }
+                    //this._logMessage('  -- RdsQS 2 backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
                 }
-                else {
-                    trimmedLine = trimmedLine.replace(badElement, '#'.repeat(badElement.length));
-                    if (showDebug) { }  // comment out this line, uncomment next to show debug
-                    //didRemove = (showDebug) ? true : false;
+                //this._logMessage('  -- RdsQS badElement=[' + badElement + ']');
+                trimmedLine = trimmedLine.replace(badElement, '#'.repeat(badElement.length));
+                didRemove = (showDebug) ? true : false;
+                //this._logMessage('  -- RdsQS post[' + trimmedLine + ']');
+                // FIXME: add missing handling of #3 and #4 cases
+                if (bHaveBackTic) {
+                    const closeParenOffset: number = trimmedLine.indexOf(chrCloseParen, backTicOffset + 1);
+                    if (closeParenOffset != -1) {
+                        // let's skip to triling string
+                        quoteStartOffset = closeParenOffset + 1;
+                        if (quoteStartOffset < quoteEndOffset) {
+                            badElement = trimmedLine.substr(quoteStartOffset, quoteEndOffset - quoteStartOffset + 1);
+                            //this._logMessage('  -- RdsQS rhs quoteStartOffset=[' + quoteStartOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
+                            trimmedLine = trimmedLine.replace(badElement, '#'.repeat(badElement.length));
+                            if (showDebug) {
+                                didRemove = true;
+                            }
+                            this._logMessage('  -- RdsQS rhs post[' + trimmedLine + ']');
+                        }
+                    }
                 }
-                //this._logMessage('-         post[' + trimmedLine + ']');
+                quoteStartOffset = trimmedLine.indexOf(chrSingleQuote, quoteEndOffset + 1);
             }
             else {
                 break;  // we don't handle a single double-quote
@@ -3724,9 +3752,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         // remove douple and then any single quotes string from display list
         //this._logMessage('  -- gdnwlp raw-line [' + line + ']');
         const nonDblStringLine: string = this._removeDoubleQuotedStrings(line);
-        //this._logMessage('  -- gdnwlp nonDblStringLine [' + nonDblStringLine + ']');
-        const nonSglStringLine: string = this._removeDebugSingleQuotedStrings(nonDblStringLine);
-        //this._logMessage('  -- gdnwlp nonSglStringLine [' + nonSglStringLine + ']');
+        this._logMessage('  -- gdnwlp nonDblStringLine=[' + nonDblStringLine + ']');
+        const nonSglStringLine: string = this._removeDebugSingleQuotedStrings(nonDblStringLine, false);
+        this._logMessage('  -- gdnwlp nonSglStringLine=[' + nonSglStringLine + ']');
         let lineParts: string[] | null = nonSglStringLine.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)\!\?\~]+/g);
         //let lineParts: string[] | null = line.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)]+/g);
         if (lineParts === null) {
@@ -3933,11 +3961,6 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             'event_atn', 'event_ct1', 'event_ct2', 'event_ct3', 'event_fbw', 'event_int', 'event_pat',
             'event_qmt', 'event_se1', 'event_se2', 'event_se3', 'event_se4', 'event_xfi', 'event_xmt',
             'event_xrl', 'event_xro',
-            // debug() support FIXME: should these debug things be here?
-            'debug_cogs', 'debug_delay', 'debug_pin_tx', 'debug_pin_rx', 'debug_baud', 'debug_timestamp', 'debug_log_size',
-            'debug_left', 'debug_top', 'debug_width', 'debug_height', 'debug_display_left',
-            'debug_display_top', 'debug_windows_off', 'debug', 'dly', 'ifnot', 'if', 'download_baud',
-            'pc_key', 'pc_mouse',
             //
             'pr0', 'pr1', 'pr2', 'pr3', 'pr4', 'pr5', 'pr6', 'pr7', 'ijmp1', 'ijmp2', 'ijmp3', 'iret1',
             'iret2', 'iret3', 'pa', 'pb', 'ptra', 'ptrb', 'dira', 'dirb', 'outa', 'outb', 'ina', 'inb',
@@ -3946,7 +3969,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return reservedStatus;
     }
 
-    private _iDebugMethod(name: string): boolean {
+    private _isDebugMethod(name: string): boolean {
         const debugMethodOfNote: string[] = [
             'zstr', 'lstr', 'udec', 'udec_byte', 'udec_word', 'udec_long', 'udec_reg_array', 'udec_byte_array',
             'udec_word_array', 'udec_long_array', 'sdec', 'sdec_byte', 'sdec_word', 'sdec_long', 'sdec_reg_array',
@@ -3956,10 +3979,22 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             'shex_long_array', 'ubin', 'ubin_byte', 'ubin_word', 'ubin_long', 'ubin_reg_array',
             'ubin_byte_array', 'ubin_word_array', 'ubin_long_array', 'sbin', 'sbin_byte', 'sbin_word',
             'sbin_long', 'sbin_reg_array', 'sbin_byte_array', 'sbin_word_array', 'sbin_long_array',
-            'fdec', 'fdec_array', 'fdec_reg_array'
+            'fdec', 'fdec_array', 'fdec_reg_array', 'dly', 'pc_key', 'pc_mouse', 'if', 'ifnot'
         ];
         const searchName: string = (name.endsWith('_')) ? name.substr(0, name.length - 1) : name;
         const reservedStatus: boolean = (debugMethodOfNote.indexOf(searchName.toLowerCase()) != -1);
+        return reservedStatus;
+    }
+
+    private _isDebugSymbol(name: string): boolean {
+        const debugSymbolOfNote: string[] = [
+            // debug overridable CONSTANTS
+            'download_baud', 'debug_cogs', 'debug_delay', 'debug_pin_tx', 'debug_pin_rx', 'debug_baud', 'debug_timestamp', 'debug_log_size',
+            'debug_left', 'debug_top', 'debug_width', 'debug_height', 'debug_display_left',
+            'debug_display_top', 'debug_windows_off'
+        ];
+        const searchName: string = (name.endsWith('_')) ? name.substr(0, name.length - 1) : name;
+        const reservedStatus: boolean = (debugSymbolOfNote.indexOf(searchName.toLowerCase()) != -1);
         return reservedStatus;
     }
 
@@ -3993,12 +4028,21 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const reservedStatus: boolean = (binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1);
         return reservedStatus;
     }
+
     private _isUnaryOperator(name: string): boolean {
         const unaryOperationsOfNote: string[] = [
             'not', 'abs', 'fabs', 'encod', 'decod',
             'bmask', 'ones', 'sqrt', 'fsqrt', 'qlog', 'qexp'
         ];
         const reservedStatus: boolean = (unaryOperationsOfNote.indexOf(name.toLowerCase()) != -1);
+        return reservedStatus;
+    }
+
+    private _isFloatConversion(name: string): boolean {
+        const floatConversionOfNote: string[] = [
+            'float', 'round', 'trunc'
+        ];
+        const reservedStatus: boolean = (floatConversionOfNote.indexOf(name.toLowerCase()) != -1);
         return reservedStatus;
     }
 
