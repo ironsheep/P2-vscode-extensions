@@ -14,9 +14,8 @@ Here's the list I find really helpful:
 | Hex Editor | code work | view and edit binary files || peacock | many open contexts at same time | for coloring open workspaces |
 | TODO Highlight | code work | brightly mark significant pending work in your code<br>**wayou.vscode-todo-highlight** |
 | Settings Sync | code work | when you run vscode from multiple machines, keep extensions and settings all in sync!<br>**shan.code-settings-sync**|
-| Bracket Pair Colorizer 2 | code work | colorizes matching brackets, paranthesis, etc.<br> **coenraads.bracket-pair-colorizer-2** |
 | Explorer Exclude| code work | Enable hiding of file types within File Explorer panel<br>**redvanworkshop.explorer-exclude-vscode-extension**|
-
+| Version Lens | typescript, javascript, npm projects, etc.| annotates your project dependancies with latest versions and up-to-date status for each<br>**pflannery.vscode-versionlens** |
 Then, here are some more specialized Extensions I, and others of us, like to use:
 
 | Name | Context | Description |
@@ -26,7 +25,6 @@ Then, here are some more specialized Extensions I, and others of us, like to use
 | GitHub Markdown Preview | Publishing to GitHub | EXPANSION PACK: Github markdown preview, emojiis, checkboxes, yaml preamble<br>**bierner.github-markdown-preview** |
 | Git Lens | working with git | git command support and built-in help<br>**eamodio.gitlens** |
 | Docker | development environment in virtual containers | provide means to work with vscode workspaces/development environments in docker containers<br>**ms-azuretools.vscode-docker** |
-| Version Lens | typescript, javascript, npm projects, etc.| annotates your project dependancies with latest versions and up-to-date status for each<br>**pflannery.vscode-versionlens** |
 | CodeTour | authoring tours of your code | document areas of your code for follow-on developers<br>**vsls-contrib.codetour** |
 | Polacode | authoring documentation | polaroid for your code: create screen shots of your code<br>**pnp.polacode** |
 | PrintCode | code work | Print code from within VSCode<br>**nobuhito.printcode** |
