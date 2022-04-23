@@ -22,10 +22,10 @@ Possible next additions:
 
 ### Improve debug() highlight methods and named operators correctly - misc fixes
 
-- NEW single-quote comments on section name (DAT,VAR, OBJ, and CON) lines now show up in outline (was just braces)
-- Now highlights method names and named operators within debug statements
+- NEW single-quote comments on section name (DAT, VAR, OBJ, and CON) lines now show up in the outline (was just brace comments)
+- Now highlights method names and named operators within debug() statements
 - Improved number, number-base recognition
-- Improved highlighting of array sizes when multiple arrays declared on single line
+- Improved highlighting of array sizes when multiple arrays are declared on single line
 - Improved highlighting of array-of-objects declaration
 - Finally addresses the "Occasional issues with highlighting of enum leading constant"
 
