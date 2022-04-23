@@ -1,9 +1,9 @@
 '' from page 3 of spin2 docs v35i
 
 OBJ vga     : "VGA_Driver"      ' instantiate "VGA_Driver.spin2" as "vga"
-    mouse   : "USB_Mouse"     ' instantiate "USB_Mouse.spin2" as "mouse"
-    v[16]   : "VocalSynth"    ' instantiate an array of 16 objects
-                            ' ..v[0] through v[15]
+    mouse   : "USB_Mouse"       ' instantiate "USB_Mouse.spin2" as "mouse"
+    v[16]   : "VocalSynth"      ' instantiate an array of 16 objects
+                                ' ..v[0] through v[15]
 DAT
 
 chkBffr     long    0[vga.MAX_BUFFER_LEN]

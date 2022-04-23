@@ -51,7 +51,9 @@ class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider
                     const lineParts: string[] = linePrefix.split(/[ \t]/)
                     linePrefix = (lineParts.length > 0) ? lineParts[0].toUpperCase() : "";
                     // the only form of comment we care about here is block comment after section name (e.g., "CON { text }")
+                    //  NEW and let's add the use of ' comment too
                     const openBraceOffset: number = line.text.indexOf('{');
+                    const singleQuoteOffset: number = line.text.indexOf("'");
                     if (openBraceOffset != -1) {
                         commentOffset = openBraceOffset;
                         const closeBraceOffset: number = line.text.indexOf('}', openBraceOffset + 1);
@@ -59,6 +61,11 @@ class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider
                             lineHasComment = true;
                             commentLength = closeBraceOffset - openBraceOffset + 1;
                         }
+                    }
+                    else if (singleQuoteOffset != -1) {
+                        commentOffset = singleQuoteOffset;
+                        lineHasComment = true;
+                        commentLength = line.text.length - singleQuoteOffset + 1;
                     }
                 }
 
@@ -160,10 +167,6 @@ interface IFilteredStrings {
     lineNoQuotes: string;
     lineParts: string[];
 }
-
-
-//const this.globalTokens = new Map<string, IRememberedToken>();
-//const this.localTokens = new Map<string, IRememberedToken>();
 
 enum eParseState {
     Unknown = 0,
@@ -702,12 +705,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         orgOffset = nonStringLine.toUpperCase().indexOf(orgStr); // ORG, ORGF, ORGH
                     }
                     if (orgOffset != -1) {
-                        // process remainder of ORG line
-                        const nonCommentOffset = line.indexOf(nonCommentLineRemainder, 0);
-                        // lineNumber, currentOffset, line, allowLocalVarStatus, this.showPasmCode
-                        const allowLocalVarStatus: boolean = false;
-                        const NOT_DAT_PASM: boolean = false;
-                        const partialTokenSet: IParsedToken[] = this._reportDAT_ValueDeclarationCode(i, nonCommentOffset + orgOffset + orgStr.length, line, allowLocalVarStatus, this.showDAT, NOT_DAT_PASM);
+                        // process ORG line allowing label to be present
+                        const partialTokenSet: IParsedToken[] = this._reportDAT_DeclarationLine(i, 0, line)
                         partialTokenSet.forEach(newToken => {
                             tokenSet.push(newToken);
                         });
@@ -1281,7 +1280,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         tokenModifiers: referenceDetails.tokenModifiers
                     });
                 }
-                else {
+                else if(!this._isReservedPasmSymbols(newName)) {
                     this._logDAT('  --  DAT rDdl MISSING name=[' + newName + ']');
                     tokenSet.push({
                         line: lineNumber,
@@ -1332,6 +1331,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
     private _reportDAT_ValueDeclarationCode(lineNumber: number, startingOffset: number, line: string, allowLocal: boolean, showDebug: boolean, isDatPasm: boolean): IParsedToken[] {
         const tokenSet: IParsedToken[] = [];
         //this._logMessage(' DBG _reportDAT_ValueDeclarationCode(#' + lineNumber + ', ofs=' + startingOffset + ')');
+        this._logDAT('- process ValueDeclaration line('+ (lineNumber + 1) + '): line=[' + line + ']');
 
         // process data declaration
         let currentOffset: number = this._skipWhite(line, startingOffset);
@@ -1401,7 +1401,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             });
                         }
                         else {
-                            if (!this._isPasmReservedWord(namePart) && !this._isPasmInstruction(namePart) && !this._isDatNFileStorageType(namePart) && !this._isBinaryOperator(namePart) && !this._isUnaryOperator(namePart) && !this._isBuiltinReservedWord(namePart)) {
+                            if (!this._isPasmReservedWord(namePart) && !this._isReservedPasmSymbols(namePart) && !this._isPasmInstruction(namePart) && !this._isDatNFileStorageType(namePart) && !this._isBinaryOperator(namePart) && !this._isUnaryOperator(namePart) && !this._isBuiltinReservedWord(namePart)) {
                                 if (showDebug) {
                                     this._logMessage('  --  DAT rDvdc MISSING name=[' + namePart + ']');
                                 }
@@ -2610,7 +2610,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const commentRHSStrOffset: number = currentOffset + debugStatementStr.length;
         const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
         if (commentOffset != -1) {
-            const newToken: IParsedToken = {    // XYZZY
+            const newToken: IParsedToken = {
                 line: lineNumber,
                 startCharacter: commentOffset,
                 length: line.length - commentOffset + 1,
@@ -2722,7 +2722,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                     else {
                                         // handle unknown-name case
                                         const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                        if (paramIsSymbolName && !this._isDebugMethod(newParameter) && newParameter.indexOf("`") == -1 && !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {        // xyzzy
+                                        if (paramIsSymbolName && !this._isDebugMethod(newParameter) && newParameter.indexOf("`") == -1 && !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) && !this._isFloatConversion(newParameter) && !this._isSpinBuiltinMethod(newParameter) && !this._isBuiltinReservedWord(newParameter)) {        // 1 xyzzy
                                             this._logDEBUG('  -- debug() 1 unkParam=[' + newParameter + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
@@ -2853,8 +2853,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         }
                                         else {
                                             // handle unknown-name case
-                                            const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                            if (paramIsSymbolName && this._isDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1&& !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {        // xyzzy
+                                            const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;       // 2 xyzzy
+                                            if (paramIsSymbolName && this._isDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1 && !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) &&
+                                                !this._isFloatConversion(newParameter) && !this._isSpinBuiltinMethod(newParameter) && !this._isBuiltinReservedWord(newParameter)) {
                                                 this._logDEBUG('  -- debug() 2 unkParam=[' + newParameter + ']');
                                                 tokenSet.push({
                                                     line: lineNumber,
@@ -2924,8 +2925,8 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             }
                             else {
                                 // handle unknown-name case
-                                const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
-                                if (paramIsSymbolName && !this._isDebugMethod(newParameter) && !this._isBinaryOperator(newParameter) && !this._isUnaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {        // xyzzy
+                                const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;        // 3 xyzzy
+                                if (paramIsSymbolName && !this._isDebugMethod(newParameter) && !this._isBinaryOperator(newParameter) && !this._isUnaryOperator(newParameter) && !this._isFloatConversion(newParameter)) {
                                     this._logDEBUG('  -- debug() 3 unkParam=[' + newParameter + ']');
                                     tokenSet.push({
                                         line: lineNumber,
@@ -3272,43 +3273,6 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         return desiredType;
     }
 
-
-    /*
-    private _possiblyMarkBrokenSingleLineComment(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
-        //
-        //  this is an override to fix the lack of the syntax parser to recognize single line comments when there is more than one ' marker in the line.
-        //
-        const tokenSet: IParsedToken[] = [];
-        //skip Past Whitespace
-        if ((line.length - startingOffset) > 2) {
-            let startLineDocCommentOffset: number = line.indexOf("''");
-            if (startLineDocCommentOffset == -1) {
-                let startLineCommentOffset: number = line.indexOf("'");
-                if (startLineCommentOffset != -1) {
-                    const nonStringLine = this._removeDoubleQuotedStrings(line);
-                    startLineCommentOffset = nonStringLine.indexOf("'");
-                    if (startLineCommentOffset != -1) {
-                        // we have our first outside of a string
-                        let secondLineCommentOffset: number = nonStringLine.indexOf("'", startLineCommentOffset + 1);
-                        if (secondLineCommentOffset != -1 && secondLineCommentOffset - startLineCommentOffset > 1) {
-                            this._logMessage('- pmbslc 2c! nonStringLine=[' + nonStringLine + '](' + startLineCommentOffset + ',' + secondLineCommentOffset + ')');
-                            // we have a second this line needs help!
-                            tokenSet.push({
-                                line: lineNumber,
-                                startCharacter: startLineCommentOffset,
-                                length: line.substr(startLineCommentOffset).length,
-                                tokenType: 'comment',
-                                tokenModifiers: []
-                            });
-                        }
-                    }
-                }
-            }
-        }
-        return tokenSet;
-    }
-    */
-
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
     private spinDebugLogEnabled: boolean = false;    // WARNING disable before commit
@@ -3466,7 +3430,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
        const commentRHSStrOffset: number = currentOffset + nonCommentLHSStr.length;
         const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
         const bHaveDocComment: boolean = (line.indexOf("''", commentOffset) != -1);
-       if (commentOffset != -1 && !bHaveDocComment) {   // XYZZY
+       if (commentOffset != -1 && !bHaveDocComment) {
            const newToken: IParsedToken = {
                line: lineNumber,
                startCharacter: commentOffset,
@@ -3700,7 +3664,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             //this._logMessage('  -- quoteStartOffset=[' + quoteStartOffset + '] quoteEndOffset=[' + quoteEndOffset + ']');
             if (quoteEndOffset != -1) {
                 let badElement: string = trimmedLine.substr(quoteStartOffset, quoteEndOffset - quoteStartOffset + 1);
-                const backTicOffset: number = trimmedLine.indexOf(chrBackTic, quoteStartOffset);
+                let backTicOffset: number = trimmedLine.indexOf(chrBackTic, quoteStartOffset);
                 //this._logMessage('  -- RdsQS backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
                 if (backTicOffset != -1 && backTicOffset < quoteEndOffset) {
                     bHaveBackTic = true;
@@ -3714,10 +3678,16 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 trimmedLine = trimmedLine.replace(badElement, '#'.repeat(badElement.length));
                 didRemove = (showDebug) ? true : false;
                 //this._logMessage('  -- RdsQS post[' + trimmedLine + ']');
-                // FIXME: add missing handling of #3 and #4 cases
+                // handle  #3 and #4 cases
                 if (bHaveBackTic) {
                     const closeParenOffset: number = trimmedLine.indexOf(chrCloseParen, backTicOffset + 1);
-                    if (closeParenOffset != -1) {
+                    // have case #2?
+                    backTicOffset = trimmedLine.indexOf(chrBackTic, closeParenOffset);
+                    if (backTicOffset != -1) {
+                        // we have another backtic, just return to top of loop
+                        quoteStartOffset = closeParenOffset + 1;
+                    }
+                    else if (closeParenOffset != -1) {
                         // let's skip to triling string
                         quoteStartOffset = closeParenOffset + 1;
                         if (quoteStartOffset < quoteEndOffset) {
@@ -3727,11 +3697,12 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             if (showDebug) {
                                 didRemove = true;
                             }
-                            this._logMessage('  -- RdsQS rhs post[' + trimmedLine + ']');
+                            //this._logMessage('  -- RdsQS rhs post[' + trimmedLine + ']');
                         }
+                        // finished this quote pair, find start of next possible pair
+                        quoteStartOffset = trimmedLine.indexOf(chrSingleQuote, quoteEndOffset + 1);
                     }
                 }
-                quoteStartOffset = trimmedLine.indexOf(chrSingleQuote, quoteEndOffset + 1);
             }
             else {
                 break;  // we don't handle a single double-quote
@@ -4223,6 +4194,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         let haveLabelStatus: boolean = name.substr(0, 1).match(/[a-zA-Z_\.\:]/) ? true : false;
         if (haveLabelStatus) {
             if (this._isDatNFileStorageType(name)) {
+                haveLabelStatus = false;
+            }
+            else if (name.toLowerCase() == 'dat') {
                 haveLabelStatus = false;
             }
             else if (this._isReservedPasmSymbols(name)) {

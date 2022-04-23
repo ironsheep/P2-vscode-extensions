@@ -132,6 +132,13 @@
 				"foreground": "#b567ae" // aaaa66
 			}
 		},
+        {
+			"name": "Operator",
+			"scope": ["keyword.pasm.operators"],
+			"settings": {
+				"foreground": "#b567ae" // aaaa66
+			}
+		},
 		{
 			"name": "Other",
 			"scope": ["keyword.other"],

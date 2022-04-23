@@ -18,6 +18,24 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.3.6] 2022-04-22
+
+### Improve debug() highlight methods and named operators correctly - misc fixes
+
+- NEW single-quote comments on section name (DAT,VAR, OBJ, and CON) lines now show up in outline (was just braces)
+- Now highlights method names and named operators within debug statements
+- Improved number, number-base recognition
+- Improved highlighting of array sizes when multiple arrays declared on single line
+- Improved highlighting of array-of-objects declaration
+- Finally addresses the "Occasional issues with highlighting of enum leading constant"
+
+### - Known Issues w/v1.3.6
+
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [1.3.5] 2022-04-20
 
 ### Improve debug() single quote string parsing and misc. fixes
@@ -28,7 +46,7 @@ Possible next additions:
 
 ### - Known Issues w/v1.3.5
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)

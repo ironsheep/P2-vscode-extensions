@@ -429,6 +429,8 @@ DAT
   o     long 0
 
 
+' NOTE in DAT section data declaration or debugg() context use operator coloring NOT PASM instru coloring!
+
   'TD__,uD__
   debug(udec(@m))
 '  debug(udec(@@i))       'Not allowed in PASM
@@ -671,4 +673,4 @@ DAT
   long FLOAT(m)
   long ROUND(a)
   long TRUNC(a)
-  long NAN(m)            'Not allowed in tables (should be RED)
+  long NAN(m)            ' Not allowed in tables (should be RED)

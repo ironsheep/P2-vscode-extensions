@@ -14,7 +14,7 @@ CON
     $FFFF_FFFF
 
     %%21                    ' Double binary values start with '%%' and use digits '0'..'3'
-    %%01_23               ' Underscores '_' are allowed after the first digit for placeholding
+    %%01_23                 ' Underscores '_' are allowed after the first digit for placeholding
     %%3333_2222_1111_0000
 
     %0110                   ' Binary values start with '%' and use digits '0' and '1'
@@ -27,7 +27,7 @@ CON
     1e9                     ' Underscores '_' are allowed after the first digit for placeholding
     -1.23456e-7             ' Floats are not part of Spin2, but a library can offer floating-point functions
 
-"H"                         ' A single character in quotes resolves to a 7-bit ASCII value
+    "H"                     ' A single character in quotes resolves to a 7-bit ASCII value
 
 
 ' -----------------------------------------------------------------------------
@@ -303,4 +303,5 @@ pub using_methods3(register, index, address, bitfield) | AnyVar
 dat
     ORGH
 HubVar  long    0
+reg long 1
     FIT

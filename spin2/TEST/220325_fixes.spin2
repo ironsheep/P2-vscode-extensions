@@ -15,7 +15,7 @@ PUB senseLoop()
         waitms(10)
 
 '  --------------------
-CON
+CON ' new coment type
     MAXCOGS = 8
 
 DAT
@@ -146,11 +146,11 @@ repeat iii from 0 to 7
   word[base+32*iii+26]:=2
   long [base+32*iii+8]:=@null | $C0000000
 
-cog:=coginit(16,@audio,@channel1)   ' <--- label on ORG not identified
+cog:=coginit(16,@audio,@channel1)   ' <--- label on OxRG not identified
 waitms(100)
 return cog,base
 
-dat         ' <-- dont understand why this DAT not syntax colored...!!!
+dat         ' <-- This DAT not syntax colored due to OxRG in comment above!!!
 
 audio       org     0
             mov     ptrb,#0             ' A tail pointer for the buffer

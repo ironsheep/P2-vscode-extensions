@@ -12,7 +12,7 @@
   "repository": {
     "array_index": {
       "name": "meta.array.index.spin2",
-      "match": "(\\[)(.*)?(\\])",
+      "match": "(?i)\\b(\\[)(.*)?(\\])\\b",
       "captures": {
         "1": {
           "name": "keyword.operator.spin2"
@@ -182,11 +182,11 @@
       "patterns": [
         {
           "name": "constant.numeric.base10.spin2",
-          "match": "(?i)\\b(-?[0-9][0-9_]*\\.[0-9][0-9_]*)\\b"
+          "match": "([\\-][0-9][0-9_]*)\\b"
         },
         {
           "name": "constant.numeric.base10.spin2",
-          "match": "(?i)\\b(-?[0-9][0-9_]*)\\b"
+          "match": "\\b([0-9][0-9_]*)\\b"
         }
       ]
     },
@@ -208,19 +208,11 @@
       "patterns": [
         {
           "name": "constant.numeric.float.spin2",
-          "match": "([\\-]*[0-9][0-9_]*[\\.]*[0-9][0-9_]*)\\b"
+          "match": "([+\\-]?(?:0|[1-9][0-9_]*)(?:\\.[0-9]+)(?:[eE][+\\-]?[0-9]+)?)\\b"
         },
         {
           "name": "constant.numeric.float.spin2",
-          "match": "([\\-]*[0-9][0-9_]*\\.[0-9][0-9_]*)\\b"
-        },
-        {
-          "name": "constant.numeric.float.spin2",
-          "match": "([\\-]*[0-9][0-9_]*e[\\-]*[0-9][0-9_]*)\\b"
-        },
-        {
-          "name": "constant.numeric.float.spin2",
-          "match": "([\\-]*[0-9][0-9_]*\\.[0-9][0-9_]*e[\\-]*[0-9][0-9_]*)\\b"
+          "match": "([+\\-]?(?:0|[1-9][0-9_]*)(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+))\\b"
         }
       ]
     },
@@ -249,10 +241,10 @@
           "include": "#hexadecimal_number"
         },
         {
-          "include": "#decimal_number"
+          "include": "#float_number"
         },
         {
-          "include": "#float_number"
+          "include": "#decimal_number"
         }
       ]
     },
@@ -271,28 +263,34 @@
         },
         {
           "name": "meta.object-initialization.spin2",
-          "match": "\\b((\\w|_)+)(\\[.*\\])?\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
+          "match": "\\b(\\w+)(\\[.*\\])?\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
           "captures": {
             "1": {
               "name": "entity.name.object.spin2"
             },
-            "3": {
+            "2": {
               "patterns": [
+                {
+                  "include": "#number"
+                },
+                {
+                  "include": "#constants"
+                },
                 {
                   "include": "#array_index"
                 }
               ]
             },
-            "4": {
+            "3": {
               "name": "punctuation.spin2"
             },
-            "5": {
+            "4": {
               "name": "meta.object.filename.spin2"
             },
-            "6": {
+            "5": {
               "name": "punctuation.spin2"
             },
-            "8": {
+            "7": {
               "name": "punctuation.spin2"
             }
           }
@@ -448,6 +446,14 @@
         {
           "name": "keyword.pasm.instruction.math-logic.pasm2",
           "match": "(?i)\\b(RO(L|R)|SA(L|R)|SCAS?|SET(R|S|D|BYTE|NIB|WORD)?|SEUSS(F|R)|SH(L|R)|SPLIT(B|W)|SUB(R|S|SX|X)?|SUM(N?C|N?Z)|TESTN?|TESTBN?|WR(N?C|N?Z)|XOR(O32)?)\\b"
+        },
+        {
+          "name": "keyword.pasm.operators.binary.pasm2",
+          "match": "(?i)\\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|ADD(BINTS|PINS|AND|OR|XOR))\\b"
+        },
+        {
+          "name": "keyword.pasm.operators.unary.pasm2",
+          "match": "(?i)\\b(!!|NOT|F?ABS|ENCOD|DECOD|BMASK|ONES|F?SQRT|Q(LOG|EXP))\\b"
         }
       ]
     },
@@ -522,6 +528,9 @@
       "patterns": [
         {
           "include": "#spin_language"
+        },
+        {
+          "include": "#pasm_language_inline"
         }
       ]
     },
@@ -546,6 +555,9 @@
       "patterns": [
         {
           "include": "#spin_language"
+        },
+        {
+          "include": "#pasm_language_inline"
         }
       ]
     },
@@ -600,9 +612,6 @@
         },
         {
           "include": "#debug_functions"
-        },
-        {
-          "include": "#pasm_language_inline"
         },
         {
           "include": "#smartpins_constants"
@@ -797,7 +806,7 @@
           "include": "#pasm_storage_alignment"
         },
         {
-          "match": "(?i)\\b(byte|word|bytefit|wordfit|long)\\s*(\\w+)(\\[.*\\])?(\\s*,\\s*(\\w+)(\\[.*\\])*)?",
+          "match": "(?i)\\b(byte|word|bytefit|wordfit|long)\\s*(\\w+)(\\[.*\\])?",
           "captures": {
             "1": {
               "name": "storage.type.spin2"
