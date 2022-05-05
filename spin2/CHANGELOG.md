@@ -18,6 +18,23 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.3.7] 2022-05-05
+
+### Miscellaneous semantic highlight fixes
+
+- Fix highlighting of multiple same-name constants in con declaration
+- Fix highlighting of variable and method names in debug() statements
+- Fix highlighting of constant names in case statements with constant range as match case
+- Fix highlighting of org constant name as offset
+- Fix highlighting of constant names in complex constant assignment
+
+### - Known Issues w/v1.3.7
+
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [1.3.6] 2022-04-22
 
 ### Improve debug() highlight methods and named operators correctly - misc fixes
@@ -31,7 +48,7 @@ Possible next additions:
 
 ### - Known Issues w/v1.3.6
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - *I'm sure there are more issues...*
