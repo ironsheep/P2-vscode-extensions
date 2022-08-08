@@ -3594,7 +3594,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private _getNonWhitePasmLineParts(line: string): string[] {
         const nonEqualsLine: string = this._removeDoubleQuotedStrings(line);
-        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\[\]\<\>\+\*\&\|\-\\\#\@\/]+/g);
+        let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\[\]\<\>\=\?\:\!\^\+\*\&\|\-\\\#\@\/]+/g);
         if (lineParts === null) {
             lineParts = [];
         }
