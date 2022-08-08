@@ -3905,7 +3905,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             'x_16p_2dac8_wfword', 'x_16p_4dac4_wfword', 'x_1adc8_0p_1dac8_wfbyte', 'x_1adc8_8p_2dac8_wfword',
             'x_1p_1dac1_wfbyte', 'x_2adc8_0p_2dac8_wfword', 'x_2adc8_16p_4dac8_wflong', 'x_2p_1dac2_wfbyte',
             'x_2p_2dac1_wfbyte', 'x_32p_4dac8_wflong', 'x_4adc8_0p_4dac8_wflong', 'x_4p_1dac4_wfbyte',
-            'x_4p_2dac2_wfbyte', 'x_4p_4dac1_wf_byte', 'x_8p_1dac8_wfbyte', 'x_8p_2dac4_wfbyte',
+            'x_4p_2dac2_wfbyte', 'x_4p_4dac1_wfbyte', 'x_8p_1dac8_wfbyte', 'x_8p_2dac4_wfbyte',
             'x_8p_4dac2_wfbyte', 'x_alt_off', 'x_alt_on', 'x_dacs_0n0_0n0', 'x_dacs_0n0_x_x', 'x_dacs_0_0_0_0',
             'x_dacs_0_0_x_x', 'x_dacs_0_x_x_x', 'x_dacs_1n1_0n0', 'x_dacs_1_0_1_0', 'x_dacs_1_0_x_x',
             'x_dacs_3_2_1_0', 'x_dacs_off', 'x_dacs_x_0_x_x', 'x_dacs_x_x_0n0', 'x_dacs_x_x_0_0',

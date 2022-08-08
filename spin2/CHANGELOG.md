@@ -18,15 +18,28 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.3.9] 2022-08-08
+
+### Minor Highlight fix for unrecognized symbol
+
+- BUGFIX: (#6) correct internal misspelling of X_4P_4DAC1_WFBYTE symbol.
+
+### - Known Issues w/v1.3.9
+
+- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [1.3.8] 2022-08-08
 
-### Miscellaneous semantic highlight fixes
+### Minor semantic pasm highlight fixes
 
 - BUGFIX (#7) - Fix highlighting in pasm statements when using operators with constants. (added missing detection of =,?,:,!, and ^ pasm operators as defined in pasm language manual)
 
 ### - Known Issues w/v1.3.8
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - *I'm sure there are more issues...*

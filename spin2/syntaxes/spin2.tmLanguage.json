@@ -746,7 +746,7 @@
         },
         {
           "name": "constant.language.streamer.spin2",
-          "match": "(?i)\\b(X_4P_2DAC2_WFBYTE|X_4P_4DAC1_WF_BYTE|X_8P_1DAC8_WFBYTE|X_8P_2DAC4_WFBYTE|X_8P_4DAC2_WFBYTE|X_DACS_0N0_0N0|X_DACS_0N0_X_X)\\b"
+          "match": "(?i)\\b(X_4P_2DAC2_WFBYTE|X_4P_4DAC1_WFBYTE|X_8P_1DAC8_WFBYTE|X_8P_2DAC4_WFBYTE|X_8P_4DAC2_WFBYTE|X_DACS_0N0_0N0|X_DACS_0N0_X_X)\\b"
         },
         {
           "name": "constant.language.streamer.spin2",
