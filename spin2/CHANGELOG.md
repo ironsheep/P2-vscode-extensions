@@ -24,8 +24,8 @@ Possible next additions:
 
 - Fix highlighting of multiple same-name constants in con declaration
 - Fix highlighting of variable and method names in debug() statements
-- Fix highlighting of constant names in case statements with constant range as match case
-- Fix highlighting of org constant name as offset
+- Fix highlighting of constant names in case statements with a constant range as match case
+- Fix highlighting of org constant name as the offset
 - Fix highlighting of constant names in complex constant assignment
 
 ### - Known Issues w/v1.3.7
