@@ -1,0 +1,4 @@
+CON
+
+
+#0, HV_1, HV_2, HV_3, HV_4, HV_MAX = HV_4   ' this is legal PNut syntax, please fix  (#8)
