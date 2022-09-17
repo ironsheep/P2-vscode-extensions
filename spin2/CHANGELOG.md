@@ -18,13 +18,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.4.1] 2022-08-08
+## [1.4.1] 2022-09-17
 
-### Various Highlight fixes and better single line comment processing
+### Various Highlight fixes and better single-line comment processing
 
 - BUGFIX: (#8) Now correctly recognize assignments within enum declarations
-- BUGFIX: (#5) Most of the single line comments are once again recognized suring syntax recognition the remaining exception is comments following debug() statements
-- Now recognize the use of spin2 unary and binary operators within constant assignements
+- BUGFIX: (#5) Most of the single-line comments are once again recognized during syntax recognition the remaining exception is when comments following debug() statements
+- Now recognize the use of spin2 unary and binary operators within constant assignments
 - Fixed a number of small highlight problems: (1) (local variables were not recognized in spin statements), (2) occasionally some comments were processed as spin statements
 
 ### - Known Issues w/v1.4.1
