@@ -1105,7 +1105,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                 currentOffset = line.indexOf(conDeclarationLine, currentOffset)
                 // locate key indicators of line style
                 const isAssignment: boolean = (conDeclarationLine.indexOf('=') != -1);
-                if (isAssignment) {
+                if (isAssignment && !haveEnumDeclaration) {
                     // -------------------------------------------
                     // have line assigning value to new constant
                     // -------------------------------------------
@@ -1137,7 +1137,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             tokenModifiers: ['readonly', 'missingDeclaration']
                         });
                     }
-                    // remove pront LHS of assignment and process remainder
+                    // remove front LHS of assignment and process remainder
                     const fistEqualOffset: number = conDeclarationLine.indexOf('=');
                     const assignmentRHSStr = conDeclarationLine.substring(fistEqualOffset + 1).trim();
                     currentOffset = line.indexOf(assignmentRHSStr)  // skip to RHS of assignment
@@ -1178,7 +1178,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 });
                             }
                             else {
-                                if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart) && !this._isDebugSymbol(namePart)) {
+                                if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart) && !this._isDebugSymbol(namePart) && !this._isUnaryOperator(namePart)) {
                                     this._logCON('  --  CON MISSING name=[' + namePart + ']');
                                     tokenSet.push({
                                         line: lineNumber,
@@ -1223,6 +1223,23 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             // it does, isolate name from offset
                             const enumNameParts: string[] = enumConstant.split('[');
                             enumConstant = enumNameParts[0];
+                        }
+                        if (enumConstant.includes('=')) {
+                            const enumAssignmentParts: string[] = enumConstant.split('=');
+                            enumConstant = enumAssignmentParts[0].trim()
+                            const enumExistingName: string = enumAssignmentParts[1].trim()
+                            if (enumExistingName.substr(0, 1).match(/[a-zA-Z_]/)) {
+                                this._logCON('  -- GLBL enumConstant=[' + enumConstant + ']');
+                                // our enum name can have a step offset
+                                const nameOffset = line.indexOf(enumExistingName, currentOffset)
+                                tokenSet.push({
+                                    line: lineNumber,
+                                    startCharacter: nameOffset,
+                                    length: enumExistingName.length,
+                                    tokenType: 'enumMember',
+                                    tokenModifiers: ['readonly']
+                                });
+                            }
                         }
                         if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/)) {
                             this._logCON('  -- GLBL enumConstant=[' + enumConstant + ']');
@@ -1862,7 +1879,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         const tokenSet: IParsedToken[] = [];
         // skip Past Whitespace
         let currentOffset: number = this._skipWhite(line, startingOffset);
-        const remainingLength: number = line.length - (currentOffset + 1);
+        const nonCommentSpinLine = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
+        const remainingLength: number = nonCommentSpinLine.length;
+        this._logCON('- reportSPIN nonCommentSpinLine=[' + nonCommentSpinLine + '] remainingLength=' + remainingLength);
         if (remainingLength > 0) {
             // locate key indicators of line style
             let assignmentOffset = line.indexOf(':=', currentOffset);
@@ -2311,7 +2330,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                     this._logPASM('  --  FOUND global name=[' + namePart + ']');
                                 }
                                 if (referenceDetails != undefined) {
-                                    this._logPASM('  --  SPIN Pasm add name=[' + namePart + ']');
+                                    this._logPASM('  --  SPIN inlinePASM add name=[' + namePart + ']');
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: nameOffset,
@@ -2614,6 +2633,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         let currentOffset: number = this._skipWhite(line, startingOffset);
         // get line parts - we only care about first one
         const debugStatementStr = this._getDebugStatement(currentOffset, line);
+        this._logDEBUG(' -- rptDbg debugStatementStr=[' + debugStatementStr + ']');
         // now record the comment if we have one
         const commentRHSStrOffset: number = currentOffset + debugStatementStr.length;
         const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
@@ -2629,9 +2649,9 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         }
         this._logDEBUG('-- DEBUG line(' + lineNumber + ') debugStatementStr=[' + debugStatementStr + ']');
         let lineParts: string[] = this._getDebugNonWhiteLineParts(debugStatementStr);
-        this._logDEBUG(' -- debug() lineParts=[' + lineParts + ']');
+        this._logDEBUG(' -- rptDbg lineParts=[' + lineParts + ']');
         if (lineParts.length > 0 && lineParts[0].toLowerCase() != "debug") {
-            //this._logDEBUG(' -- debug() first name not debug! (label?) removing! lineParts[0]=[' + lineParts[0] + ']');
+            //this._logDEBUG(' -- rptDbg first name not debug! (label?) removing! lineParts[0]=[' + lineParts[0] + ']');
             lineParts.shift();   // assume pasm, remove label
         }
         if (lineParts[0].toLowerCase() == 'debug') {
@@ -2639,20 +2659,21 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
             if (lineParts.length >= 2) {
                 const displayType: string = lineParts[1];
                 if (displayType.startsWith('`')) {
+                    this._logDEBUG(' -- rptDbg have "debug("` lineParts=[' + lineParts + ']');
                     symbolOffset = line.indexOf(displayType, symbolOffset) + 1 // plus 1 to get past back-tic
                     const newDisplayType: string = displayType.substring(1, displayType.length);
                     let displayTestName: string = (lineParts[1] == "`") ? lineParts[1] + lineParts[2] : lineParts[1];
                     displayTestName = displayTestName.toLowerCase().replace(/ \t/g, '');
                     const isRuntimeNamed: boolean = (displayTestName.startsWith('``') || displayTestName.startsWith('`zstr') || displayTestName.startsWith('`lstr'));
-                    this._logDEBUG(' -- debug() displayTestName=[' + displayTestName + '], isRuntimeNamed=' + isRuntimeNamed);
+                    this._logDEBUG(' -- rptDbg displayTestName=[' + displayTestName + '], isRuntimeNamed=' + isRuntimeNamed);
                     let bHaveInstantiation = this._isDebugDisplayType(newDisplayType) && !isRuntimeNamed;
                     if (bHaveInstantiation) {
-                        this._logDEBUG('  -- debug() --- PROCESSING Instantiation');
+                        this._logDEBUG('  -- rptDbg --- PROCESSING Instantiation');
                         // -------------------------------------
                         // process Debug() display instantiation
                         //   **    debug(`{displayType} {displayName} ......)
                         // (0a) register type use
-                        this._logDEBUG('  -- debug() newDisplayType=[' + newDisplayType + ']');
+                        this._logDEBUG('  -- rptDbg newDisplayType=[' + newDisplayType + ']');
                         tokenSet.push({
                             line: lineNumber,
                             startCharacter: symbolOffset,
@@ -2664,7 +2685,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         symbolOffset += displayType.length;
                         const newDisplayName: string = lineParts[2];
                         symbolOffset = line.indexOf(newDisplayName, symbolOffset)
-                        this._logDEBUG('  -- debug() newDisplayName=[' + newDisplayName + ']');
+                        this._logDEBUG('  -- rptDbg newDisplayName=[' + newDisplayName + ']');
                         tokenSet.push({
                             line: lineNumber,
                             startCharacter: symbolOffset,
@@ -2681,7 +2702,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             symbolOffset = line.indexOf(newParameter, symbolOffset)
                             const bIsParameterName: boolean = this._isNameWithTypeInstantiation(newParameter, eDisplayType);
                             if (bIsParameterName) {
-                                this._logDEBUG('  -- debug() newParam=[' + newParameter + ']');
+                                this._logDEBUG('  -- rptDbg newParam=[' + newParameter + ']');
                                 tokenSet.push({
                                     line: lineNumber,
                                     startCharacter: symbolOffset,
@@ -2693,7 +2714,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             else {
                                 const bIsColorName: boolean = this._isDebugColorName(newParameter);
                                 if (bIsColorName) {
-                                    this._logDEBUG('  -- debug() newColor=[' + newParameter + ']');
+                                    this._logDEBUG('  -- rptDbg newColor=[' + newParameter + ']');
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: symbolOffset,
@@ -2718,7 +2739,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         this._logPASM('  --  FOUND global name=[' + newParameter + ']');
                                     }
                                     if (referenceDetails != undefined) {
-                                        this._logPASM('  --  SPIN Pasm add name=[' + newParameter + ']');
+                                        this._logPASM('  --  SPIN/Pasm add name=[' + newParameter + ']');
                                         tokenSet.push({
                                             line: lineNumber,
                                             startCharacter: symbolOffset,
@@ -2731,7 +2752,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                         // handle unknown-name case
                                         const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
                                         if (paramIsSymbolName && !this._isDebugMethod(newParameter) && newParameter.indexOf("`") == -1 && !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) && !this._isFloatConversion(newParameter) && !this._isSpinBuiltinMethod(newParameter) && !this._isBuiltinReservedWord(newParameter)) {        // 1 xyzzy
-                                            this._logDEBUG('  -- debug() 1 unkParam=[' + newParameter + ']');
+                                            this._logDEBUG('  -- rptDbg 1 unkParam=[' + newParameter + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
                                                 startCharacter: symbolOffset,
@@ -2769,7 +2790,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                         // handle 1st display here
                         let firstParamIdx: number = 0;  // value NOT used
                         if (bHaveFeed) {
-                            this._logDEBUG('  -- debug() --- PROCESSING feed');
+                            this._logDEBUG('  -- rptDbg --- PROCESSING feed');
                             if (isRuntimeNamed) {
                                 firstParamIdx = (displayName == "`" || displayName == "``") ? 2 : 1; // [0]=`debug` [1]=`runtimeName, [2]... symbols
                             }
@@ -2778,7 +2799,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 // handle one or more names!
                                 do {
                                     // (0) register UserName use
-                                    this._logDEBUG('  -- debug() displayName=[' + displayName + ']');
+                                    this._logDEBUG('  -- rptDbg displayName=[' + displayName + ']');
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: symbolOffset,
@@ -2807,13 +2828,18 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                             for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
                                 newParameter = lineParts[idx];
                                 if (newParameter.indexOf("'") != -1 || this._isStorageType(newParameter)) {
+                                    symbolOffset += newParameter.length;
+                                    continue;   // skip this name (it's part of a string!)
+                                }
+                                else if (newParameter.indexOf("#") != -1) {
+                                    symbolOffset += newParameter.length;
                                     continue;   // skip this name (it's part of a string!)
                                 }
                                 symbolOffset = line.indexOf(newParameter, symbolOffset)
-                                this._logDEBUG('  -- debug() ?check? [' + newParameter + ']');
+                                this._logDEBUG('  -- rptDbg ?check? [' + newParameter + '] symbolOffset=' + symbolOffset);
                                 const bIsParameterName: boolean = this._isNameWithTypeFeed(newParameter, eDisplayType)
                                 if (bIsParameterName) {
-                                    this._logDEBUG('  -- debug() newParam=[' + newParameter + ']');
+                                    this._logDEBUG('  -- rptDbg newParam=[' + newParameter + ']');
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: symbolOffset,
@@ -2825,7 +2851,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 else {
                                     const bIsColorName: boolean = this._isDebugColorName(newParameter);
                                     if (bIsColorName) {
-                                        this._logDEBUG('  -- debug() newColor=[' + newParameter + ']');
+                                        this._logDEBUG('  -- rptDbg newColor=[' + newParameter + ']');
                                         tokenSet.push({
                                             line: lineNumber,
                                             startCharacter: symbolOffset,
@@ -2853,7 +2879,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                             this._logPASM('  --  SPIN Pasm add name=[' + newParameter + ']');
                                             tokenSet.push({
                                                 line: lineNumber,
-                                                startCharacter: symbolOffset,
+                                                startCharacter: symbolOffset,   // <-- this offset is bad!
                                                 length: newParameter.length,
                                                 tokenType: referenceDetails.tokenType,
                                                 tokenModifiers: referenceDetails.tokenModifiers
@@ -2864,7 +2890,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                             const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;       // 2 xyzzy
                                             if (paramIsSymbolName && this._isDebugMethod(newParameter) == false && newParameter.indexOf("`") == -1 && !this._isUnaryOperator(newParameter) && !this._isBinaryOperator(newParameter) &&
                                                 !this._isFloatConversion(newParameter) && !this._isSpinBuiltinMethod(newParameter) && !this._isBuiltinReservedWord(newParameter)) {
-                                                this._logDEBUG('  -- debug() 2 unkParam=[' + newParameter + ']');
+                                                this._logDEBUG('  -- rptDbg 2 unkParam=[' + newParameter + ']');
                                                 tokenSet.push({
                                                     line: lineNumber,
                                                     startCharacter: symbolOffset,
@@ -2887,7 +2913,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                     }
                 }
                 else {
-                    this._logDEBUG('  -- debug() --- PROCESSING non-display (other)');
+                    this._logDEBUG('  -- rptDbg --- PROCESSING non-display (other)');
                     // -------------------------------------
                     // process non-display debug statement
                     const firstParamIdx: number = 0; // no prefix to skip
@@ -2935,7 +2961,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
                                 // handle unknown-name case
                                 const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;        // 3 xyzzy
                                 if (paramIsSymbolName && !this._isDebugMethod(newParameter) && !this._isBinaryOperator(newParameter) && !this._isUnaryOperator(newParameter) && !this._isFloatConversion(newParameter) && !this._isSpinBuiltinMethod(newParameter) && !this._isSpinBuiltInVariable(newParameter)) {
-                                    this._logDEBUG('  -- debug() 3 unkParam=[' + newParameter + ']');
+                                    this._logDEBUG('  -- rptDbg 3 unkParam=[' + newParameter + ']');
                                     tokenSet.push({
                                         line: lineNumber,
                                         startCharacter: symbolOffset,
@@ -3658,34 +3684,62 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
         //  Ex #2:   ' a string up to [`(var)]
         //  Ex #3:   [)] a string after var'
         //  Ex #4:   [)] a string up to another [`(var)]
-        //this._logMessage('- RQS line [' + line + ']');
+        //  Ex #5:   debug(`scope_xy xy size 200 range 1000 samples 200 dotsize 5 'Goertzel' `dly(#200))
+        this._logMessage('- RQS line [' + line + ']');
         let trimmedLine: string = line;
-        //this._logMessage('  -- trim line [' + trimmedLine + ']');
+        this._logMessage('  -- trim line [' + trimmedLine + ']');
         const chrSingleQuote: string = "'";
         const chrBackTic: string = "`";
+        const chrOpenParen: string = "(";
         const chrCloseParen: string = ")";
-        let quoteStartOffset: number = trimmedLine.indexOf(chrSingleQuote, 0);
         let didRemove: boolean = false;
+        const firstOpenParenOffset: number = trimmedLine.indexOf(chrOpenParen, 0);
+        // skip past tic-open pairs and their closes
+        let nextBackTic: number = trimmedLine.indexOf(chrBackTic, 0);
+        let secondsBackTic: number = trimmedLine.indexOf(chrBackTic, nextBackTic + 1);
+        let lastCloseParenOffset: number = trimmedLine.indexOf(chrCloseParen, 0);
+        // this._logMessage('  -- 1 nextBackTic=[' + nextBackTic + '] lastCloseParenOffset=[' + lastCloseParenOffset + ']');
+        while (nextBackTic != -1) {
+            // if we have another back-tic before any parens skip the first one it's only a debug term id marker
+            if (secondsBackTic < lastCloseParenOffset) {
+                nextBackTic = secondsBackTic
+                // this._logMessage('  -- 1b nextBackTic=[' + nextBackTic + '] lastCloseParenOffset=[' + lastCloseParenOffset + ']');
+            }
+            // if we have `( followed by ) then skip this close, look for next
+            if (lastCloseParenOffset > nextBackTic) {
+                // look for next close
+                // this._logMessage('  -- SKIP backticOpenOffset=[' + nextBackTic + '] lastCloseParenOffset=[' + lastCloseParenOffset + ']');
+                lastCloseParenOffset = trimmedLine.indexOf(chrCloseParen, lastCloseParenOffset + 1);
+            }
+            nextBackTic = trimmedLine.indexOf(chrBackTic, nextBackTic + 1);
+        }
+        // by now lastCloseParenOffset should point to end of statement within line
+        let quoteStartOffset: number = trimmedLine.indexOf(chrSingleQuote, 0);
+        // this._logMessage('  -- 2 quoteStartOffset=[' + quoteStartOffset + '] lastCloseParenOffset=[' + lastCloseParenOffset + ']');
         while (quoteStartOffset != -1) {
             let bHaveBackTic: boolean = false;
             const quoteEndOffset: number = trimmedLine.indexOf(chrSingleQuote, quoteStartOffset + 1);
-            //this._logMessage('  -- quoteStartOffset=[' + quoteStartOffset + '] quoteEndOffset=[' + quoteEndOffset + ']');
+            if (quoteEndOffset > lastCloseParenOffset) {
+                break; // nothing beyond end of line please
+            }
+            this._logMessage('  -- quoteStartOffset=[' + quoteStartOffset + '] quoteEndOffset=[' + quoteEndOffset + ']');
             if (quoteEndOffset != -1) {
+                // any more strings? on this line?
                 let badElement: string = trimmedLine.substr(quoteStartOffset, quoteEndOffset - quoteStartOffset + 1);
                 let backTicOffset: number = trimmedLine.indexOf(chrBackTic, quoteStartOffset);
-                //this._logMessage('  -- RdsQS backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
+                this._logMessage('  -- RdsQS backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
                 if (backTicOffset != -1 && backTicOffset < quoteEndOffset) {
                     bHaveBackTic = true;
                     badElement = trimmedLine.substr(quoteStartOffset, backTicOffset - quoteStartOffset);
                     if (badElement.length > 0) {
                         // badElement = badElement.replace(chrBackTic, '');    // remove bacTicks
                     }
-                    //this._logMessage('  -- RdsQS 2 backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
+                    // this._logMessage('  -- RdsQS 2 backTicOffset=[' + backTicOffset + '], quoteEndOffset=[' + quoteEndOffset + '], badElement=[' + badElement + ']');
                 }
-                //this._logMessage('  -- RdsQS badElement=[' + badElement + ']');
+                this._logMessage('  -- RdsQS badElement=[' + badElement + ']');
                 trimmedLine = trimmedLine.replace(badElement, '#'.repeat(badElement.length));
                 didRemove = (showDebug) ? true : false;
-                //this._logMessage('  -- RdsQS post[' + trimmedLine + ']');
+                this._logMessage('  -- RdsQS post[' + trimmedLine + ']');
                 // handle  #3 and #4 cases
                 if (bHaveBackTic) {
                     const closeParenOffset: number = trimmedLine.indexOf(chrCloseParen, backTicOffset + 1);

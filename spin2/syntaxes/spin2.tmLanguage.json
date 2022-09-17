@@ -123,10 +123,16 @@
           "include": "#number"
         },
         {
-          "include": "#float_operators"
+          "include": "#spin2_float_conversions"
         },
         {
-          "include": "#spin_field_operations"
+          "include": "#spin2_field_operations"
+        },
+        {
+          "include": "#spin2_unary_operators"
+        },
+        {
+          "include": "#spin2_binary_operators"
         }
       ]
     },
@@ -169,7 +175,7 @@
           "include": "#pasm_language"
         },
         {
-          "include": "#dat_binary_operators"
+          "include": "#spin2_binary_operators"
         }
       ]
     },
@@ -227,7 +233,7 @@
     },
     "line_comment": {
       "name": "comment.line.spin2",
-      "match": "^[ \t]*'[^'].*$"
+      "match": "(?<!debug\\s*\\(`.*)'[^'].*$"
     },
     "number": {
       "patterns": [
@@ -331,7 +337,7 @@
           "include": "#pasm_only_instructions"
         },
         {
-          "include": "#float_operators"
+          "include": "#spin2_float_conversions"
         }
       ]
     },
@@ -503,7 +509,7 @@
           "include": "#pasm_field_operations"
         },
         {
-          "include": "#float_operators"
+          "include": "#spin2_float_conversions"
         }
       ]
     },
@@ -570,7 +576,7 @@
         }
       }
     },
-    "spin_field_operations": {
+    "spin2_field_operations": {
       "name": "keyword.operator.field.spin2",
       "match": "(?i)\\b(ADDBITS|ADDPINS)\\b"
     },
@@ -578,13 +584,17 @@
       "name": "keyword.operator.field.spin2",
       "match": "(?i)\\b(ADDBITS|ADDPINS)\\b"
     },
-    "float_operators": {
+    "spin2_float_conversions": {
       "name": "keyword.operator.float.spin2",
       "match": "(?i)\\b(FLOAT|ROUND|TRUNC)\\b"
     },
-    "dat_binary_operators": {
-      "name": "keyword.operator.binary.pasm2",
+    "spin2_binary_operators": {
+      "name": "keyword.operator.binary.spin2",
       "match": "(?i)\\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC)\\b"
+    },
+    "spin2_unary_operators": {
+      "name": "keyword.operator.unary.spin2",
+      "match": "(?i)\\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\\b"
     },
     "spin_language": {
       "name": "meta.block.spin.language.spin2",
@@ -605,10 +615,10 @@
           "include": "#string"
         },
         {
-          "include": "#spin_field_operations"
+          "include": "#spin2_field_operations"
         },
         {
-          "include": "#float_operators"
+          "include": "#spin2_float_conversions"
         },
         {
           "include": "#debug_functions"

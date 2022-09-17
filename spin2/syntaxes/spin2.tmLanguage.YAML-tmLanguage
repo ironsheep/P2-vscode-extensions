@@ -82,9 +82,13 @@ repository:
             -
                 include: '#number'
             -
-                include: '#float_operators'
+                include: '#spin2_float_conversions'
             -
-                include: '#spin_field_operations'
+                include: '#spin2_field_operations'
+            -
+                include: '#spin2_unary_operators'
+            -
+                include: '#spin2_binary_operators'
     constant_operators:
         name: keyword.operator.constant-math.spin2
         match: '(\=|\/|\*|\+|\-|\\)'
@@ -113,7 +117,7 @@ repository:
             -
                 include: '#pasm_language'
             -
-                include: '#dat_binary_operators'
+                include: '#spin2_binary_operators'
     debug_functions:
         name: support.function.debug.methods.spin2
         match: '(?i)\b(FDEC(_ARRAY|_REG_ARRAY)?|(S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(BAUD|COGS|DELAY|DISPLAY_LEFT|DISPLAY_TOP|ENABLE|HEIGHT|LEFT|LOG_SIZE|PIN_TX|PIN_RX|TIMESTAMP|TOP|WIDTH|WINDOWS_OFF)|DLY|PC_(KEY|MOUSE)|DOWNLOAD_BAUD)\b'
@@ -153,7 +157,7 @@ repository:
                 name: constant.numeric.base16.spin2
     line_comment:
         name: comment.line.spin2
-        match: "^[ \t]*'[^'].*$"
+        match: "(?<!debug\\s*\\(`.*)'[^'].*$"
     number:
         patterns:
             -
@@ -214,7 +218,7 @@ repository:
             -
                 include: '#pasm_only_instructions'
             -
-                include: '#float_operators'
+                include: '#spin2_float_conversions'
     pasm_storage_alignment:
         name: storage.modifier.spin2
         match: '(?i)\b(ALIGN(W|L))\b'
@@ -337,7 +341,7 @@ repository:
             -
                 include: '#pasm_field_operations'
             -
-                include: '#float_operators'
+                include: '#spin2_float_conversions'
     private_block:
         name: meta.block.private.spin2
         begin: '(?i)^(PRI)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
@@ -380,18 +384,21 @@ repository:
         captures:
             '1':
                 name: constant.numeric.base4.spin2
-    spin_field_operations:
+    spin2_field_operations:
         name: keyword.operator.field.spin2
         match: '(?i)\b(ADDBITS|ADDPINS)\b'
     pasm_field_operations:
         name: keyword.operator.field.spin2
         match: '(?i)\b(ADDBITS|ADDPINS)\b'
-    float_operators:
+    spin2_float_conversions:
         name: keyword.operator.float.spin2
         match: '(?i)\b(FLOAT|ROUND|TRUNC)\b'
-    dat_binary_operators:
-        name: keyword.operator.binary.pasm2
+    spin2_binary_operators:
+        name: keyword.operator.binary.spin2
         match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC)\b'
+    spin2_unary_operators:
+        name: keyword.operator.unary.spin2
+        match: '(?i)\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\b'
     spin_language:
         name: meta.block.spin.language.spin2
         patterns:
@@ -406,9 +413,9 @@ repository:
             -
                 include: '#string'
             -
-                include: '#spin_field_operations'
+                include: '#spin2_field_operations'
             -
-                include: '#float_operators'
+                include: '#spin2_float_conversions'
             -
                 include: '#debug_functions'
             -

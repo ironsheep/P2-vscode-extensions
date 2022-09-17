@@ -18,6 +18,22 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.4.1] 2022-08-08
+
+### Various Highlight fixes and better single line comment processing
+
+- BUGFIX: (#8) Now correctly recognize assignments within enum declarations
+- BUGFIX: (#5) Most of the single line comments are once again recognized suring syntax recognition the remaining exception is comments following debug() statements
+- Now recognize the use of spin2 unary and binary operators within constant assignements
+- Fixed a number of small highlight problems: (1) (local variables were not recognized in spin statements), (2) occasionally some comments were processed as spin statements
+
+### - Known Issues w/v1.4.1
+
+- The single-quote comment (now only on debug statements) is being handled by semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [1.3.9] 2022-08-08
 
 ### Minor Highlight fix for unrecognized symbol
@@ -26,7 +42,7 @@ Possible next additions:
 
 ### - Known Issues w/v1.3.9
 
-- Sadly, The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - *I'm sure there are more issues...*

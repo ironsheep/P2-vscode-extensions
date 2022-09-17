@@ -34,7 +34,7 @@ PUB go() | i
   debug(`MyScope2 'Sawtooth' 0 63 64 10 %1111) ' add comment
   repeat
     debug(`MyScope2 `(i & 63))
-    i++
+    i++         ' BUG!!!  i not colored!?
     waitms(50)
 
 ' -----------------

@@ -2,6 +2,11 @@
 
 CON
     PIN_BUTTON = 2
+
+
+    IDLEB       = 4
+    IDLEF        = decod(IDLEB)             ' Set when USB in idle state  BUG!!! decod should be recognized
+
 PUB SAR_ADC_Demo() : value | i, daclevel
     debug(`term terminal pos 100 438 color cyan size 55 6 textsize 14)
 

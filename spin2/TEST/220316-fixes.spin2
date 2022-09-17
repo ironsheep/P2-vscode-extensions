@@ -22,14 +22,14 @@ DAT		org
 
 		setq	#gtzl_base		'launch Goertzel
 		coginit	#16,##@pgm_gtzl
-
+        ' BUG  'Goertzel' in line following should be string-dk-red!!!!
 		debug(`scope_xy xy size 200 range 1000 samples 200 dotsize 5 'Goertzel' `dly(#200))     ' <----   debug() in DAT pasm allowed!
 
 .loop		debug(`xy `sdec_long_array_(#$00000,#2) `dly(#5))       ' AUGH debug() can have label!!!
 		jmp	 #.loop
 
 DAT		org
-' org (above) is not colored correctly unless comment follows?!
+' org is not colored correctly unless comment follows?!
 
 pgm_gtzl	add	ptra,#7			'init ADC pin
 		wrpin	adcmode,ptra
