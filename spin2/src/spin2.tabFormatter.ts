@@ -309,7 +309,7 @@ export class Formatter {
         return selections.map(selection => {
             let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
             const block = this.getBlockName(document, selection);
-            this._logMessage(`inD enabled=[${this.enable}], selection(isSingle-[${selection.isSingleLine}] BLOK-[${block}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`);
+            this._logMessage(`* inD enabled=[${this.enable}], selection(isSingle-[${selection.isSingleLine}] BLOK-[${block}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`);
             // if tabbing is not enabled, just return after doing nothing
             if (this.enable == false) {
                 return results;
@@ -385,6 +385,8 @@ export class Formatter {
                             } else {
                                 replaceCount = selection.end.character - selection.start.character;
                             }
+                            // if replacing let's move cursor back to start of selection
+                            cursorPos = selectionLeft
                         }
                     } else {
                         // have FAKE single line selection
@@ -392,7 +394,7 @@ export class Formatter {
                         cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
                     }
 
-                    this._logMessage(` - line#${currLine} bRplcLeft=[${bReplaceLeftOfSelection}] ltEdge-[${cursorPos.line}:${cursorPos.character}] text-[${selectedText}] rplcCt=(${replaceCount})`);
+                    this._logMessage(` - line#${currLine} bRplcLeft=[${bReplaceLeftOfSelection}] ltEdge-[${cursorPos.line}:${cursorPos.character}], text-[${selectedText}] rplcCt=(${replaceCount})`);
 
                     // lastly move non-white chars from cusor to next tabstop to right
                     let nextTabstop: number = this.getNextTabStop(block, cursorPos.character);
@@ -400,14 +402,14 @@ export class Formatter {
                         // select tab-stop that is to right of start of selection (not left of non-white)
                         nextTabstop = this.getNextTabStop(block, selection.start.character);
                     }
-                    this._logMessage(` - line#${currLine} finding: BLOK-[${block}] next TabStop is TAB-[${nextTabstop}]`);
+                    this._logMessage(` - line#${currLine} finding: BLOK-[${block}], cursor-[${cursorPos.line}:${cursorPos.character}], next TabStop is TAB-[${nextTabstop}]`);
 
                     // if we need ot move right...
                     if (nextTabstop > cursorPos.character) {
                         // insert spaces at cursor
                         const charactersToInsert: string = ' '.repeat(Math.abs(nextTabstop - cursorPos.character));
                         results.push(vscode.TextEdit.insert(cursorPos, charactersToInsert))
-                        this._logMessage(`  line#${currLine} pushed INSERT ${charactersToInsert.length} spaces before col ${cursorPos.character}`);
+                        this._logMessage(`    line#${currLine} pushed INSERT ${charactersToInsert.length} spaces before col ${cursorPos.character}`);
                     } else {
                         // remove spaces from left of cursor
                         let charsToRemove: number = cursorPos.character - nextTabstop;
@@ -415,14 +417,14 @@ export class Formatter {
                         const deleteEnd: vscode.Position = deleteStart.with(deleteStart.line, deleteStart.character + charsToRemove)
                         const range = selection.with({ start: deleteStart, end: deleteEnd })
                         results.push(vscode.TextEdit.delete(range))
-                        this._logMessage(`  line#${currLine} pushed DELETE spaces at columns [${deleteStart.character}-${deleteEnd.character}]`);
+                        this._logMessage(`    line#${currLine} pushed DELETE spaces at columns [${deleteStart.character}-${deleteEnd.character}]`);
                     }
                 } else {
                     cursorPos = cursorPos.with(cursorPos.line, 0)
                     const nextTabstop: number = this.getNextTabStop(block, cursorPos.character);
                     const charactersToInsert: string = ' '.repeat(nextTabstop);
                     results.push(vscode.TextEdit.insert(cursorPos, charactersToInsert))
-                    this._logMessage(`  line#${currLine} pushed blank-line INSERT ${charactersToInsert.length} spaces before col ${cursorPos.character}`);
+                    this._logMessage(`    line#${currLine} pushed blank-line INSERT ${charactersToInsert.length} spaces before col ${cursorPos.character}`);
                 }
             }
 
@@ -440,7 +442,7 @@ export class Formatter {
         return selections.map(selection => {
             let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
             const block = this.getBlockName(document, selection);
-            this._logMessage(`outD enabled=[${this.enable}], selection(isSingle-[${selection.isSingleLine}] BLOK-[${block}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`);
+            this._logMessage(`* outD enabled=[${this.enable}], selection(isSingle-[${selection.isSingleLine}] BLOK-[${block}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`);
             // if tabbing is not enabled, just return after doing nothing
             if (this.enable == false) {
                 return results;
