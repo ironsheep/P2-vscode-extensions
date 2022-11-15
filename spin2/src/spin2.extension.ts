@@ -6,6 +6,7 @@ import { toNamespacedPath } from 'path';
 // src/spin2.extension.ts
 
 import * as vscode from 'vscode';
+import { Formatter } from './spin2.tabFormatter';
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -28,6 +29,53 @@ export function activate(context: vscode.ExtensionContext) {
             { language: 'spin2' },
             new Spin2DocumentSemanticTokensProvider(), legend)
     );
+
+    //#region register tabstop formatter
+
+    var formatter = new Formatter();
+
+    const indentTabStopCommand = 'spin2.indentTabStop';
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(indentTabStopCommand, async () => {
+            try {
+                const editor = vscode?.window.activeTextEditor!;
+                const document = editor.document!;
+                var textEdits = await formatter.indentTabStop(document, editor.selections);
+                applyTextEdits(document, textEdits!);
+            } catch (error) {
+                await vscode.window.showErrorMessage("Formatter Problem");
+                console.error(error);
+            }
+        })
+    );
+
+    const outdentTabStopCommand = 'spin2.outdentTabStop';
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(outdentTabStopCommand, async () => {
+            try {
+                const editor = vscode.window.activeTextEditor!;
+                const document = editor.document!;
+                var textEdits = await formatter.outdentTabStop(document, editor.selections);
+                applyTextEdits(document, textEdits!);
+                console.log();
+            } catch (error) {
+                await vscode.window.showErrorMessage("Formatter Problem");
+                console.error(error);
+            }
+        })
+    );
+
+    function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
+        if (!textEdits) {
+            return;
+        }
+        const workEdits = new vscode.WorkspaceEdit();
+        workEdits.set(document.uri, textEdits); // give the edits
+        vscode.workspace.applyEdit(workEdits); // apply the edits
+    }
+
 }
 
 // ----------------------------------------------------------------------------
@@ -3309,7 +3357,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
     private spin2log: any = undefined;
     // adjust following true/false to show specific parsing debug
-    private spinDebugLogEnabled: boolean = false;    // WARNING disable before commit
+    private spinDebugLogEnabled: boolean = true;    // WARNING disable before commit
     private showSpinCode: boolean = true;
     private showCON: boolean = true;
     private showOBJ: boolean = true;

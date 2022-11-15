@@ -18,6 +18,23 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.4.x] 2022-11-??
+
+Feature Update - add manual formatting according to traditional spin2 custom tab-stops (Propeller Tool like)
+
+New Formatting Support:
+
+- Supports configurable tabstops-per-section like Propeller Tool.
+- Adds support for single-line indent/outdent
+- Adds support for multi-line indent/outdent
+
+### - Known Issues w/v1.4.x
+
+- The single-quote comment (now only on debug statements) is being handled by semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [1.4.1] 2022-09-17
 
 ### Various Highlight fixes and better single-line comment processing

@@ -26,6 +26,12 @@ The code outline for .spin2 files works as follows:
 
 _Hint:_ Configure the OUTLINE panel to "Sort by Position" to reflect the order in your source code.
 
+## Feature: Tab-stop support like Propeller Tool
+
+(Feature created by Jay B Harlow)
+
+Place cursor on line and TAB or SHIFT-TAB to indent or outdent the text
+
 ## Known Issues
 
 We are working on fixes to the following issues we've seen during our testing. However, they are not major enough to prevent this release.
