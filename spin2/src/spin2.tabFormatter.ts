@@ -279,8 +279,12 @@ export class Formatter {
             //   CURSOR POS is always .anchor! if SPECIAL case anchor is conveniently ZERO already!
             // COLUMN MODE is really multiple single-line selections!
 
-            // have initial position
+            // set initial position to right edge of selection
             let cursorPos: vscode.Position = selection.anchor;
+            if (selection.active > selection.anchor) {
+                cursorPos = selection.active
+            }
+            // now use selection to skip whitespace to right of cursor
             let selectedText: string = ''
             if (selection.isEmpty) {
                 // have insert point
@@ -315,8 +319,8 @@ export class Formatter {
                     cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
                     // if our selection is white-space on left we are intending to replace this white-space
                     if (bReplaceLeftOfSelection) {
-                        if (cursorPos.character > selection.anchor.character) {
-                            replaceCount = selection.anchor.character - selection.active.character;
+                        if (cursorPos.character > selection.active.character) {
+                            replaceCount = selection.active.character - selection.anchor.character;
                         } else {
                             replaceCount = cursorPos.character - selection.active.character;
                         }
@@ -376,9 +380,12 @@ export class Formatter {
             //   CURSOR POS is always .anchor! if SPECIAL case anchor is conveniently ZERO already!
             // COLUMN MODE is really multiple single-line selections!
 
-            // have initial position
-            // now use selection to skip whitespace to right of cursor
+            // set initial position to right edge of selection
             let cursorPos: vscode.Position = selection.anchor;
+            if (selection.active > selection.anchor) {
+                cursorPos = selection.active
+            }
+            // now use selection to skip whitespace to right of cursor
             let selectedText: string = ''
             if (selection.isEmpty) {
                 selectedText = document.lineAt(cursorPos.line).text;
