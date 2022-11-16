@@ -364,7 +364,12 @@ export class Formatter {
                 tabNumber++;
             } while (currTabstop < 80 && tabNumber < 10);
 
-            results.push(vscode.TextEdit.insert(cursorPos, `${charactersToInsert}${document.eol}`))
+            let endOfLineStr: string = '\n';
+            if (document.eol == EndOfLine.CRLF) {
+                endOfLineStr = '\r\n';
+            }
+
+            results.push(vscode.TextEdit.insert(cursorPos, `${charactersToInsert}${endOfLineStr}`))
 
             return results;
         }).reduce((selections, selection) => selections.concat(selection), []);
