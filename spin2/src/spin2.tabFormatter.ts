@@ -283,6 +283,7 @@ export class Formatter {
             lineCount = lines.length;
             firstLine = selection.start.line;
             lastLine = selection.end.line;
+            //this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], allSelectedText=[${allSelectedText}](${allSelectedText.length}), lines=[${lines}](${lines.length})`);
             for (var currLineIdx: number = 0; currLineIdx < lines.length; currLineIdx++) {
                 if (lines[currLineIdx].length == 0) {
                     lineCount--
@@ -294,10 +295,57 @@ export class Formatter {
                     }
                 }
             }
+            if (firstLine > lastLine && lineCount == 0) {
+                // have odd selection case, let's override it!
+                // (selection contained just a newline!)
+                firstLine--
+                lastLine = firstLine
+                lineCount = 1
+            }
         }
 
         return { firstLine, lastLine, lineCount }
     }
+
+    calculateLeftEdge(document: vscode.TextDocument, firstLine: number, lastLine: number): number {
+        // return column-number of left-most character in set of lines
+        let leftMostNonWhiteColumn: number = 999999;
+        for (var currLine: number = firstLine; currLine <= lastLine; currLine++) {
+            let selectedText: string = document.lineAt(currLine).text;
+            let cursorPos: vscode.Position = new vscode.Position(currLine, 0)
+            let nonWhitePos: vscode.Position = this.locateLeftTextEdge(selectedText, cursorPos)
+            if (nonWhitePos.character < leftMostNonWhiteColumn) {
+                leftMostNonWhiteColumn = nonWhitePos.character
+            }
+        }
+        return leftMostNonWhiteColumn;;
+    };
+
+
+
+    /**
+     * insert comment showing tab stops
+     *
+     * @param document A text document.
+     * @return A list of text edit objects.
+     */
+    insertTabStopsComment(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
+        return selections.map(selection => {
+            let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
+            const block = this.getBlockName(document, selection);
+            this._logMessage(`* iCm enabled=[${this.enable}], selection(isSingle-[${selection.isSingleLine}] BLOK-[${block}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`);
+            // if tabbing is not enabled, just return after doing nothing
+            if (this.enable == false) {
+                return results;
+            }
+            let { firstLine, lastLine, lineCount } = this.lineNumbersFromSelection(document, selection);
+            let cursorPos: vscode.Position = new vscode.Position(firstLine, 0);
+            let charactersToInsert = '\'--------+--------+-------+--- etc.\n'
+            results.push(vscode.TextEdit.insert(cursorPos, charactersToInsert))
+
+            return results;
+        }).reduce((selections, selection) => selections.concat(selection), []);
+    };
 
     /**
      * indent tab stop
@@ -305,7 +353,7 @@ export class Formatter {
      * @param document A text document.
      * @return A list of text edit objects.
      */
-    indentTabStop(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
+     indentTabStop(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
         return selections.map(selection => {
             let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
             const block = this.getBlockName(document, selection);
@@ -322,10 +370,8 @@ export class Formatter {
             //   CURSOR POS is always .anchor! if SPECIAL case anchor is conveniently ZERO already!
             // COLUMN MODE is really multiple single-line selections!
             let { firstLine, lastLine, lineCount } = this.lineNumbersFromSelection(document, selection);
-
             this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}]`);
             const bWholeLines: boolean = (firstLine != lastLine);
-
 
             // set initial position to right edge of selection
             let cursorPos: vscode.Position = selection.anchor;
@@ -336,8 +382,8 @@ export class Formatter {
             if (firstLine != lastLine) {
                 cursorPos = cursorPos.with(cursorPos.line, 0);
             }
-
             this._logMessage(` - finding: BLOK-[${block}], wholeLines=(${bWholeLines}), lines fm,to=[${firstLine}, ${lastLine}], cursor-[${cursorPos.line}:${cursorPos.character}]`);
+
             for (var currLine: number = firstLine; currLine <= lastLine; currLine++) {
                 // now use selection to skip whitespace to right of cursor
                 cursorPos = cursorPos.with(currLine, cursorPos.character);
@@ -378,16 +424,6 @@ export class Formatter {
                         const selectionLeft : vscode.Position = cursorPos.with(cursorPos.line, selection.start.character)
                         cursorPos = this.locateLeftTextEdge(selectedText, selectionLeft)
                         // if our selection is white-space on left we are intending to replace this white-space
-                        if (bReplaceLeftOfSelection) {
-                            // if text is beyond selection...
-                            if (cursorPos.character > selection.end.character) {
-                                replaceCount = cursorPos.character - selection.start.character;
-                            } else {
-                                replaceCount = selection.end.character - selection.start.character;
-                            }
-                            // if replacing let's move cursor back to start of selection
-                            cursorPos = selectionLeft
-                        }
                     } else {
                         // have FAKE single line selection
                         // -OR- have single line of multiple line selection
@@ -395,6 +431,14 @@ export class Formatter {
                     }
 
                     this._logMessage(` - line#${currLine} bRplcLeft=[${bReplaceLeftOfSelection}] ltEdge-[${cursorPos.line}:${cursorPos.character}], text-[${selectedText}] rplcCt=(${replaceCount})`);
+
+                    if (bReplaceLeftOfSelection) {
+                        // if text is beyond selection...
+                        replaceCount = cursorPos.character - selection.start.character;
+                        // if replacing, let's move cursor back to start of selection
+                        cursorPos = cursorPos.with(cursorPos.line, selection.start.character)
+                        this._logMessage(` - line#${currLine} replacing spaces, reset cursor-[${cursorPos.line}:${cursorPos.character}]`);
+                    }
 
                     // lastly move non-white chars from cusor to next tabstop to right
                     let nextTabstop: number = this.getNextTabStop(block, cursorPos.character);
@@ -405,14 +449,15 @@ export class Formatter {
                     this._logMessage(` - line#${currLine} finding: BLOK-[${block}], cursor-[${cursorPos.line}:${cursorPos.character}], next TabStop is TAB-[${nextTabstop}]`);
 
                     // if we need ot move right...
-                    if (nextTabstop > cursorPos.character) {
+                    let padLength = (nextTabstop - cursorPos.character) - replaceCount;
+                    if (padLength > 0) {
                         // insert spaces at cursor
-                        const charactersToInsert: string = ' '.repeat(Math.abs(nextTabstop - cursorPos.character));
+                        const charactersToInsert: string = ' '.repeat(padLength);
                         results.push(vscode.TextEdit.insert(cursorPos, charactersToInsert))
                         this._logMessage(`    line#${currLine} pushed INSERT ${charactersToInsert.length} spaces before col ${cursorPos.character}`);
                     } else {
                         // remove spaces from left of cursor
-                        let charsToRemove: number = cursorPos.character - nextTabstop;
+                        let charsToRemove: number = Math.abs(padLength);
                         const deleteStart: vscode.Position = cursorPos.with(cursorPos.line, cursorPos.character - charsToRemove)
                         const deleteEnd: vscode.Position = deleteStart.with(deleteStart.line, deleteStart.character + charsToRemove)
                         const range = selection.with({ start: deleteStart, end: deleteEnd })
@@ -453,81 +498,94 @@ export class Formatter {
             // SPECIAL: multiLine lineA and lineA+1 both at char pos 0 is really single line selection of lineA
             //   CURSOR POS is always .anchor! if SPECIAL case anchor is conveniently ZERO already!
             // COLUMN MODE is really multiple single-line selections!
+            let { firstLine, lastLine, lineCount } = this.lineNumbersFromSelection(document, selection);
+
+            // this will be used to find our tab column in multi-line case
+            const mutiLineLeftEdgeColumn = this.calculateLeftEdge(document, firstLine, lastLine)
+
+            this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}]`);
+            const bWholeLines: boolean = (firstLine != lastLine);
 
             // set initial position to right edge of selection
             let cursorPos: vscode.Position = selection.anchor;
             if (selection.active > selection.anchor) {
                 cursorPos = selection.active
             }
-            // now use selection to skip whitespace to right of cursor
-            let selectedText: string = ''
-            if (selection.isEmpty) {
-                selectedText = document.lineAt(cursorPos.line).text;
-            } else if (selection.isSingleLine) {
-                // have true partial single line selection
-                // for DELETE (UnTab) get whole line
-                selectedText = document.lineAt(selection.start.line).text;
-            } else if (selection.start.line + 1 == selection.end.line && selection.start.character == 0 && selection.end.character == 0) {
-                // have FAKE single line selection
-                selectedText = document.lineAt(selection.start.line).text;
+            // if we have multi-line selection reset cursor to first char of all lines
+            if (firstLine != lastLine) {
+                cursorPos = cursorPos.with(cursorPos.line, 0);
             }
-            else {
-                // have multiple line selection
-                // WHAT TO DO HERE?!!
-            }
+            this._logMessage(` - finding: BLOK-[${block}], wholeLines=(${bWholeLines}), lines fm,to=[${firstLine}, ${lastLine}], cursor-[${cursorPos.line}:${cursorPos.character}]`);
 
-            // if we found text to adjust...
-            if (selectedText.length > 0) {
-                // now adjust cursor: if at white, skip to next rightmost non-white, if at non-white, skip to left edge of non-white
-                //  or put another way skip to left most char of text (if in text find left edge, if not in text find first text to right)
-                const bReplaceLeftOfSelection = (!selection.isEmpty && selection.isSingleLine && this.isWhite(selectedText, 0));
-                let replaceCount : number = 0;
+            for (var currLine: number = firstLine; currLine <= lastLine; currLine++) {
+                // now use selection to skip whitespace to right of cursor
+                cursorPos = cursorPos.with(currLine, cursorPos.character);
+
+                // now use selection to skip whitespace to right of cursor
+                let selectedText: string = ''
                 if (selection.isEmpty) {
-                    // have insert point
-                    // if we are pointing to white space, move to left edge of text (to right of position)
-                    if (this.isWhite(selectedText, cursorPos.character)) {
+                    selectedText = document.lineAt(currLine).text;
+                } else if (selection.isSingleLine) {
+                    // have true partial single line selection
+                    // for DELETE (UnTab) get whole line
+                    selectedText = document.lineAt(currLine).text;
+                } else {
+                    // have FAKE single line selection
+                    // -OR- have single line of multiple line selection
+                    selectedText = document.lineAt(currLine).text;
+                }
+
+                // if we found text to adjust...
+                if (selectedText.length > 0) {
+                    // now adjust cursor: if at white, skip to next rightmost non-white, if at non-white, skip to left edge of non-white
+                    //  or put another way skip to left most char of text (if in text find left edge, if not in text find first text to right)
+                    const bReplaceLeftOfSelection = (!selection.isEmpty && selection.isSingleLine && this.isWhite(selectedText, 0));
+                    let replaceCount: number = 0;
+                    if (selection.isEmpty) {
+                        // have insert point
+                        // if we are pointing to white space, move to left edge of text (to right of position)
+                        cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
+                    } else if (selection.isSingleLine) {
+                        // have true single line selection
+                        // move to left edge of text (to left -OR- right of position)
+                        cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
+                        // if our selection is white-space on left we are intending to replace this white-space
+                        if (bReplaceLeftOfSelection) {
+                            replaceCount = cursorPos.character - selection.start.character;
+                        }
+                    } else {
+                        // have FAKE single line selection
+                        // -OR- have single line of multiple line selection
                         cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
                     }
-                } else if (selection.isSingleLine) {
-                    // have true single line selection
-                    // move to left edge of text (to left -OR- right of position)
-                    cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
-                    // if our selection is white-space on left we are intending to replace this white-space
-                    if (bReplaceLeftOfSelection) {
-                        if (cursorPos.character > selection.anchor.character) {
-                            replaceCount = selection.anchor.character - selection.active.character;
-                        } else {
-                            replaceCount = cursorPos.character - selection.active.character;
-                        }
+
+                    this._logMessage(` - bRplcLeft=[${bReplaceLeftOfSelection}] ltEdge-[${cursorPos.line}:${cursorPos.character}] text-[${selectedText}] rplcCt=(${replaceCount})`);
+
+                    // we'd like to outdent to prev tab-stop but let's only go as far a to leave 1 space before prior text
+                    let nextTabStopToLeft: number = this.getPreviousTabStop(block, cursorPos.character);
+                    if (lineCount > 1) {
+                        // in mulit-line case, we outdent to TAB before leftmost of entire group of lines
+                        nextTabStopToLeft = this.getPreviousTabStop(block, mutiLineLeftEdgeColumn);
                     }
-                } else if (selection.start.line + 1 == selection.end.line && selection.start.character == 0 && selection.end.character == 0) {
-                    // have FAKE single line selection
-                    cursorPos = this.locateLeftTextEdge(selectedText, cursorPos)
+                    let whiteSpaceToLeftCt: number = this.countLeftWhiteSpace(selectedText, cursorPos.character)
+                    let nbrCharsToDelete: number = cursorPos.character - nextTabStopToLeft
+                    this._logMessage(` - tabStop=(${nextTabStopToLeft}), spacesToLeft=(${whiteSpaceToLeftCt}), nbrCharsToDelete=(${nbrCharsToDelete})`);
+                    if (nbrCharsToDelete > whiteSpaceToLeftCt) {
+                        nbrCharsToDelete = whiteSpaceToLeftCt
+                    }
+                    const deleteStart: vscode.Position = cursorPos.with(cursorPos.line, cursorPos.character - nbrCharsToDelete)
+                    const deleteEnd: vscode.Position = deleteStart.with(deleteStart.line, deleteStart.character + nbrCharsToDelete)
+                    this._logMessage(` - delete(s,e-[${deleteStart.line}:${deleteStart.character} - ${deleteEnd.line}:${deleteEnd.character}])`);
+
+                    const range = selection.with({ start: deleteStart, end: deleteEnd })
+                    this._logMessage(`delete([${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}] tabStop: ${nextTabStopToLeft})`);
+                    results.push(vscode.TextEdit.delete(range))
+                } else {
+                    // Empty selection, nothing to do here!
                 }
-
-                this._logMessage(`outD  bRplcLeft=[${bReplaceLeftOfSelection}] ltEdge-[${cursorPos.line}:${cursorPos.character}] text-[${selectedText}] rplcCt=(${replaceCount})`);
-
-                // we'd like to outdent to prev tab-stop but let's only go as far a to leave 1 space before prior text
-                const nextTabStopToLeft : number = this.getPreviousTabStop(block, cursorPos.character);
-                let whiteSpaceToLeftCt : number = this.countLeftWhiteSpace(selectedText, cursorPos.character)
-                let nbrCharsToDelete : number = cursorPos.character - nextTabStopToLeft
-                this._logMessage(`outD tabStop=(${nextTabStopToLeft}), spacesToLeft=(${whiteSpaceToLeftCt}), nbrCharsToDelete=(${nbrCharsToDelete})`);
-                if (nbrCharsToDelete > whiteSpaceToLeftCt) {
-                    nbrCharsToDelete = whiteSpaceToLeftCt
-                }
-                const deleteStart : vscode.Position = cursorPos.with(cursorPos.line, cursorPos.character - nbrCharsToDelete)
-                const deleteEnd : vscode.Position = deleteStart.with(deleteStart.line, deleteStart.character + nbrCharsToDelete)
-                this._logMessage(`outD delete(s,e-[${deleteStart.line}:${deleteStart.character} - ${deleteEnd.line}:${deleteEnd.character}])`);
-
-                const range = selection.with({ start: deleteStart, end: deleteEnd })
-                this._logMessage(`delete([${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}] tabStop: ${nextTabStopToLeft})`);
-                return [
-                    vscode.TextEdit.delete(range)
-                ];
             }
-            else {
-                return []   // nothing to adjust in this case
-            }
+
+            return results;
         }).reduce((selections, selection) => selections.concat(selection), []);
     };
 

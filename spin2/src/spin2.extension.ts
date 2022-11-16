@@ -34,6 +34,22 @@ export function activate(context: vscode.ExtensionContext) {
 
     var formatter = new Formatter();
 
+    const insertTabStopsCommentCommand = 'spin2.insertTabStopsComment';
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(insertTabStopsCommentCommand, async () => {
+            try {
+                const editor = vscode?.window.activeTextEditor!;
+                const document = editor.document!;
+                var textEdits = await formatter.insertTabStopsComment(document, editor.selections);
+                applyTextEdits(document, textEdits!);
+            } catch (error) {
+                await vscode.window.showErrorMessage("Formatter Problem");
+                console.error(error);
+            }
+        })
+    );
+
     const indentTabStopCommand = 'spin2.indentTabStop';
 
     context.subscriptions.push(

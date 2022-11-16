@@ -137,7 +137,7 @@
             "properties": {
                 "spin2ElasticTabstops.enable": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Enable/disable Spin2 Tabstops."
                 },
                 "spin2ElasticTabstops.blocks": {
@@ -230,6 +230,10 @@
             {
                 "command": "spin2.outdentTabStop",
                 "title": "outdent tab stop"
+            },
+            {
+                "command": "spin2.insertTabStopsComment",
+                "title": "insert tab stop comment"
             }
         ],
         "keybindings": [
@@ -241,6 +245,11 @@
             {
                 "key": "shift+tab",
                 "command": "spin2.outdentTabStop",
+                "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2"
+            },
+            {
+                "key": "Ctrl+Alt+tab",
+                "command": "spin2.insertTabStopsComment",
                 "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2"
             }
         ]
