@@ -29,11 +29,10 @@ New Tabing Support:
 - Adds support for single-line indent/outdent
 - Adds support for multi-line indent/outdent
 - Adds new command `Ctrl+Alt+Tab` which inserts a current tabs placement comment as line above cursor
-- This TAB support **Spin2 Elastic Tab Stops** provides two new settings: 
- - **Spin2 Elastic Tab Stops**:`Blocks`: is where the tab stops are listed for each section 
- - **Spin2 Elastic Tab Stops**:`Enable`: checkbox which is by default NOT enabled</br>(_As this is an early release this feature is not enabled by default. You must enable and then restart vscode_)
- - These settings are global but can be edited and made custom per project as well
- 
+- This TAB support **Spin2 Elastic Tab Stops** provides two new settings:
+  - **Spin2 Elastic Tab Stops**:`Blocks`: is where the tab stops are listed for each section
+  - **Spin2 Elastic Tab Stops**:`Enable`: checkbox which is by default NOT enabled</br>(_As this is an early release this feature is not enabled by default. You must enable and then restart vscode_)
+  - These settings are global but can be edited and made custom per project as well
 
 ### - Known Issues w/v1.5.0
 
