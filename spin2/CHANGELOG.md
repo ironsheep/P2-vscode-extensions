@@ -23,12 +23,12 @@ Possible next additions:
 
 Feature Update - add TAB support according to traditional spin2 custom tab-stops (Propeller Tool like)
 
-New Tabing Support:
+New Tabbing Support:
 
-- Supports configurable tabstops-per-section like Propeller Tool.
+- Supports configurable tab-stops-per-section like Propeller Tool.
 - Adds support for single-line indent/outdent
 - Adds support for multi-line indent/outdent
-- Adds new command `Ctrl+Alt+Tab` which inserts a current tabs placement comment as line above cursor
+- Adds new command `Ctrl+Alt+Tab` which inserts a current tabs placement comment as a line above the cursor
 - This TAB support **Spin2 Elastic Tab Stops** provides two new settings:
   - **Spin2 Elastic Tab Stops**:`Blocks`: is where the tab stops are listed for each section
   - **Spin2 Elastic Tab Stops**:`Enable`: checkbox which is by default NOT enabled</br>(_As this is an early release this feature is not enabled by default. You must enable and then restart vscode_)
