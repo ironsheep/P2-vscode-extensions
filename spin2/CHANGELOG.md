@@ -13,23 +13,31 @@ Work to appear in upcoming releases:
 
 Possible next additions:
 
+- Add TAB support for `INSERT`, `OVERTYPE` and `ALIGN` editor modes
 - Add code reformatting aligning columns to user defined tabstops
 - Investigate and possibly add unique coloring for method pointers
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.4.x] 2022-11-??
+## [1.5.0] 2022-11-16
 
-Feature Update - add manual formatting according to traditional spin2 custom tab-stops (Propeller Tool like)
+Feature Update - add TAB support according to traditional spin2 custom tab-stops (Propeller Tool like)
 
-New Formatting Support:
+New Tabing Support:
 
 - Supports configurable tabstops-per-section like Propeller Tool.
 - Adds support for single-line indent/outdent
 - Adds support for multi-line indent/outdent
+- Adds new command `Ctrl+Alt+Tab` which inserts a current tabs placement comment as line above cursor
+- This TAB support **Spin2 Elastic Tab Stops** provides two new settings: 
+ - **Spin2 Elastic Tab Stops**:`Blocks`: is where the tab stops are listed for each section 
+ - **Spin2 Elastic Tab Stops**:`Enable`: checkbox which is by default NOT enabled</br>(_As this is an early release this feature is not enabled by default. You must enable and then restart vscode_)
+ - These settings are global but can be edited and made custom per project as well
+ 
 
-### - Known Issues w/v1.4.x
+### - Known Issues w/v1.5.0
 
+- The new TAB support does not adhere to `INSERT/OVERTYPE/ALIGN` modes (will in a later release)
 - The single-quote comment (now only on debug statements) is being handled by semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!

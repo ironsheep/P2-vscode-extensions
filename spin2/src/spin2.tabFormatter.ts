@@ -2,6 +2,7 @@
 
 import { nextTick } from 'process';
 import * as vscode from 'vscode';
+import { EndOfLine } from 'vscode';
 
 // ----------------------------------------------------------------------------
 //  this file contains routines for tabbing the code: ==> or <==
@@ -49,7 +50,7 @@ export class Formatter {
     readonly blockIdentifierREgEx1 = /^(?<block>(con|var|obj|pub|pri|dat))\s+/;
     readonly blockIdentifierREgEx2 = /^(?<block>(con|var|obj|pub|pri|dat))$/;
 
-    private tabbingDebugLogEnabled: boolean = true;    // WARNING disable before commit
+    private tabbingDebugLogEnabled: boolean = true;    // WARNING (REMOVE BEFORE FLIGHT) disable before commit
     private tabbinglog: any = undefined;
 
     private _logMessage(message: string): void {
@@ -275,6 +276,7 @@ export class Formatter {
     };
 
     lineNumbersFromSelection(document: vscode.TextDocument, selection: vscode.Selection): { firstLine: number, lastLine: number, lineCount: number } {
+
         let lineCount: number = 0;
         let firstLine: number = 0;
         let lastLine: number = 0;
@@ -362,7 +364,7 @@ export class Formatter {
                 tabNumber++;
             } while (currTabstop < 80 && tabNumber < 10);
 
-            results.push(vscode.TextEdit.insert(cursorPos, `${charactersToInsert}\n`))
+            results.push(vscode.TextEdit.insert(cursorPos, `${charactersToInsert}${document.eol}`))
 
             return results;
         }).reduce((selections, selection) => selections.concat(selection), []);

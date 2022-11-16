@@ -21,16 +21,21 @@ The code outline for .spin2 files works as follows:
 
 - Shows All Sections CON, OBJ, VAR, DAT, PUB, PRI
 - Section name is shown in outline, except:
-  - If section name is following by {comment} then name and comment will be shown in outline
+  - If section name is following by `{comment}` (or `' comment`) then name and comment will be shown in outline
   - For PUB and PRI the method name, parameters and return values are shown
 
-_Hint:_ Configure the OUTLINE panel to "Sort by Position" to reflect the order in your source code.
+_Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order in your source code.
 
-## Feature: Tab-stop support like Propeller Tool
+## Feature: Tab-stop support à la Propeller Tool
 
-(Feature created by Jay B Harlow)
+(Feature created by Jay B. Harlow)
 
-Place cursor on line and TAB or SHIFT-TAB to indent or outdent the text
+- Unique tab stops per section: CON, OBJ, VAR, DAT, PUB, PRI
+- Global default is set identical to Propeller Tool v2.7.0
+- Place cursor on line and press `TAB` or `Shift-TAB` to indent or outdent the text
+- Place cursor on line and press `Ctrl+Alt+Tab` to generate tab location comment
+
+*NOTE: The new TAB support does not adhere to INSERT / OVERTYPE / ALIGN modes (it will in a later release)*
 
 ## Known Issues
 
