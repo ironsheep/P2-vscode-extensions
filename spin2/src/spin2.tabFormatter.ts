@@ -1,3 +1,5 @@
+'use strict';
+
 // https://typescript.hotexamples.com/examples/vscode/window/createTextEditorDecorationType/typescript-window-createtexteditordecorationtype-method-examples.html
 
 import { nextTick } from 'process';

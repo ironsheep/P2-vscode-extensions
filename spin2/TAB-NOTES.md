@@ -59,3 +59,78 @@ NOTE: Tab on empty lines should just cause spaces to be appended to next tab sto
 		- just remove spaces from cursor to prior tab
 
 NOTE: empty lines are ignored for Shift+Tab.
+
+## Research: WWVD - (What would VSCode do?)
+
+### Press TAB (with what selected?):
+
+    [TIP1] insert point in non-white
+    	- tab inserts spaces to next tab-stop to left of cursor, splits chars at cursor
+    [TIP2] insert point in white
+    	- tab inserts spaces to next tab-stop to left of cursor
+    [TSE1] selection all non-white
+    	- The entire selection is removed and a single tab is inserted to the left of the cursor
+    [TSE2] selection all white
+    	- The entire selection is removed and a single tab is inserted to the left of the cursor
+    [TSE3] selection start in non-white end in white
+    	- The entire selection is removed and a single tab is inserted to the left of the cursor
+    [TSE4] selection start in white end in non-white
+    	- The entire selection is removed and a single tab is inserted to the left of the cursor
+    [TML1] multiple full lines
+    	- All lines moved right one tab stop (all lines maintain their current indent relative to each other)
+    [TML2] multiple full lines w/partial last line
+    	- All lines moved right one tab stop (all lines maintain their current indent relative to each other)
+    [TML3] multiple full lines w/partial first and last lines
+    	- All lines moved right one tab stop (all lines maintain their current indent relative to each other)
+    [TML4] two lines: partial first and last lines
+    	- All lines moved right one tab stop (all lines maintain their current indent relative to each other)
+
+
+### Press SHIFT+TAB (with what selected?):
+
+    [UIP1] insert point in non-white
+    	- entire line is shifted left to next tab stop, cursor remains where it was in line
+    [UIP2] insert point in white
+    	- entire line is shifted left to next tab stop, cursor remains where it was in line
+    [USE1] selection all non-white
+    	- entire line is shifted left to next tab stop, cursor remains where it was in line
+    [USE2] selection all white
+    	- 3 outcomes:
+    		- (1) 1st text is left of selected white but there is whitespace to left of 1st text
+    			- entire line is shifted left to next tab stop, cursor remains where it was in line
+    		- (2) 1st text is right of selected white
+    			- entire line is shifted left to next tab stop, cursor remains where it was in line
+    		- (3) 1st text is left of selected white but 1st text is flush at left edge of line
+    				- NOTHING happens!
+    [USE3] selection start in non-white end in white
+    	- 2 outcomes:
+    		- (1) 1st text is indented from left edge
+    				- entire line is shifted left to next tab stop, cursor remains where it was in line
+    		- (2) 1st text is flush at left edge
+    			- NOTHING happens!
+    [USE4] selection start in white end in non-white
+    	- 2 outcomes:
+    		- (1) 1st text is indented from left edge
+    				- entire line is shifted left to next tab stop, cursor remains where it was in line
+    		- (2) 1st text is flush at left edge
+    			- NOTHING happens!
+    [UML1] multiple full lines
+    	- All lines in section region treated:
+    		- if text is line is already at left edge - nothing happens
+    		- for any lines not at left edge they move left one tab stop 
+    		- (all lines maintain their current indent relative to each other)
+    [UML2] multiple full lines w/partial last line
+    	- All lines in section region treated:
+    		- if text is line is already at left edge - nothing happens
+    		- for any lines not at left edge they move left one tab stop 
+    		- (all lines maintain their current indent relative to each other)
+    [UML3] multiple full lines w/partial first and last lines
+    	- All lines in section region treated:
+    		- if text is line is already at left edge - nothing happens
+    		- for any lines not at left edge they move left one tab stop 
+    		- (all lines maintain their current indent relative to each other)
+    [UML4] two lines: partial first and last lines
+    	- All lines in section region treated:
+    		- if text is line is already at left edge - nothing happens
+    		- for any lines not at left edge they move left one tab stop 
+    		- (all lines maintain their current indent relative to each other)
