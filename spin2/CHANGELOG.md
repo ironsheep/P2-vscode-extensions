@@ -19,6 +19,10 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.5.1] 2022-11-16
+
+Minor Update - Release without DEBUG output enabled. (otherwise same as v1.5.0)
+
 ## [1.5.0] 2022-11-16
 
 Feature Update - add TAB support according to traditional spin2 custom tab-stops (Propeller Tool like)

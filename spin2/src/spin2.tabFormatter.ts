@@ -50,7 +50,7 @@ export class Formatter {
     readonly blockIdentifierREgEx1 = /^(?<block>(con|var|obj|pub|pri|dat))\s+/;
     readonly blockIdentifierREgEx2 = /^(?<block>(con|var|obj|pub|pri|dat))$/;
 
-    private tabbingDebugLogEnabled: boolean = true;    // WARNING (REMOVE BEFORE FLIGHT) disable before commit
+    private tabbingDebugLogEnabled: boolean = false; //true;    // WARNING (REMOVE BEFORE FLIGHT) disable before commit
     private tabbinglog: any = undefined;
 
     private _logMessage(message: string): void {

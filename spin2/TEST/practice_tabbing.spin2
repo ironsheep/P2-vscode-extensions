@@ -39,7 +39,7 @@ DAT  { hub data }
         mbox_copy           long    0
     mbox_command        long    0
         mbox_status         long    0
-        mbox_command        long    0
+        mbox_debug          long    0
 
         rx              long    0
 
@@ -59,8 +59,9 @@ _hubMonitor   mov rx,#1
             ret
 
 PUB sample_spin()
+
     org
-'+-----------------------------------------------------------------------------+
+
 go_command  mov     priv_bufad,   ##DISK_BUFF         ' ensure correct hub buffer
             setq    #3-1
             wrlong  priv_copy,    ##mbox_copy         ' give aux/sector/bufad to SD mailbox
@@ -80,7 +81,7 @@ go_command  mov     priv_bufad,   ##DISK_BUFF         ' ensure correct hub buffe
             call    #\_hubTxCR
             call    #\_hubMonitor
             RET                                       ' permit monitor to continue
-'+-----------------------------------------------------------------------------+
+
 tmp  byte   0
 
 lmm_x long    0
