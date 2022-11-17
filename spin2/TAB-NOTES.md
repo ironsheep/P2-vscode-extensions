@@ -2,6 +2,10 @@
 
 This page presents how we are thinking about the new Elastic Tabbing à la Propeller Tool as implemeted in our Spin2 extension for VSCode.
 
+![Project Maintenance][maintenance-shield]
+
+[![License][license-shield]](LICENSE)
+
 ## Spin2 Elastic Tabs - Specification
 
 {this section TBA}
@@ -61,6 +65,8 @@ NOTE: Tab on empty lines should just cause spaces to be appended to next tab sto
 NOTE: empty lines are ignored for Shift+Tab.
 
 ## Research: WWVD - (What would VSCode do?)
+
+I tested various (hopefully comprehensive) cases of selection and what happens when I press tab or shift+tab in these cases.  The following are my notes on VSCode behavior I observed:
 
 ### Press TAB (with what selected?):
 
@@ -134,3 +140,36 @@ NOTE: empty lines are ignored for Shift+Tab.
     		- if text is line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
+
+While this will inform some of the spin2 tabbing behaviors we are adding additional behaviors on top of this.
+
+*-Stephen*
+
+---
+
+> If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices!
+>
+> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep) &nbsp;&nbsp; -OR- &nbsp;&nbsp; [![Patreon](./images/patreon.png)](https://www.patreon.com/IronSheep?fan_landing=true)[Patreon.com/IronSheep](https://www.patreon.com/IronSheep?fan_landing=true)
+
+
+---
+
+## License
+
+Copyright © 2020 Iron Sheep Productions, LLC. All rights reserved.
+
+Licensed under the MIT License.
+
+Follow these links for more information:
+
+### [Copyright](copyright) | [License](LICENSE)
+
+[maintenance-shield]: https://img.shields.io/badge/maintainer-stephen%40ironsheep%2ebiz-blue.svg?style=for-the-badge
+
+[marketplace-version]: https://vsmarketplacebadge.apphb.com/version-short/ironsheepproductionsllc.spin2.svg
+
+[marketplace-installs]: https://vsmarketplacebadge.apphb.com/installs-short/ironsheepproductionsllc.spin2.svg
+
+[marketplace-rating]: https://vsmarketplacebadge.apphb.com/rating-short/ironsheepproductionsllc.spin2.svg
+
+[license-shield]: https://camo.githubusercontent.com/bc04f96d911ea5f6e3b00e44fc0731ea74c8e1e9/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f6c6963656e73652f69616e74726963682f746578742d646976696465722d726f772e7376673f7374796c653d666f722d7468652d6261646765
