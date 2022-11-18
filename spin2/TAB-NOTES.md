@@ -10,9 +10,9 @@ This page presents how we are thinking about the new Elastic Tabbing à la Prope
 
 On this Page:
 
-- [Specification]() - Spin2 VSCode Extension Tabbing Specification
-- [Research - Propeller Tool]() - Survey of **Propeller Tool** Tab, Shift+Tab behaviors
-- [Research - VSCode]() - Survey of **VSCode** Tab, Shift+Tab behaviors
+- [Specification](#spin2-elastic-tabs---specification) - Spin2 VSCode Extension Tabbing Specification
+- [Research - Propeller Tool](#research-wwptd---what-would-propeller-tool-do) - Survey of **Propeller Tool** Tab, Shift+Tab behaviors
+- [Research - VSCode](#research-wwvd---what-would-vscode-do) - Survey of **VSCode** Tab, Shift+Tab behaviors
 
 **Note** *Each of the sections on this page are subdivided into: `Tab` cases followed by `Shift+Tab` cases.*
 
@@ -35,6 +35,10 @@ When we are choosing a location, we consider three forms:
 1. Multiple line Selection - two or more, consecutive, partial or full lines are selected.
 
 (**NOTE:** *in the future, we may consider a distinct 4th case of selecting columns within the line acrosd two or more consective lines.*)
+
+### Pending changes before this spec. is complete
+
+- **To Be Added** factor in the insert mode effects (more specifically, the Align insert Mode.)
 
 ### Press TAB (with what selected?):
 
