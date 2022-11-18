@@ -158,21 +158,21 @@ I sutdied the Propeller Tool documentation to determine what special features ar
 ### Press TAB (with what selected?):
 
     [TIP1] Cursor placed to left of text on line
-        	- tab inserts spaces to next tab-stop to left of cursor (effictively cursor moves with text
+        	- tab inserts spaces to next tab-stop to left of cursor (effictively cursor moves with text)
     [TML1] multiple full/partial lines selected
     	- All lines moved right one tab stop (all lines maintain their current indent relative to each other)
     [UCML1] multiple columns selected across multiple lines
-    	- All text from left selected colum moved right one tab stop
+    	- All text from left selected column moved right one tab stop
 
 ### Press SHIFT+TAB (with what selected?):
 
     [UP1] Cursor placed to left of text on line
     	- entire line is shifted left to next tab stop, cursor remains where it was in line
     [UML1] multiple full/partial lines selected
-    	- All lines moved left one tab stop (all lines maintain their current indent relative to each other)
+    	- All lines moved left one tab stop (all lines maintain their current indent relative to each other, unless one or more line(s) is/are already at left edge)
     	- if text on line is already at left edge - nothing happens to that line
     [UCML1] multiple columns selected across multiple lines
-    	- All text from left selected colum moved left one tab stop
+    	- All text from left selected column moved left one tab stop
 
 ### Effect of INSERT, OVERTYPE and ALIGN insert Modes
 
@@ -269,7 +269,7 @@ While this will inform some of the spin2 tabbing behaviors we are adding additio
 
 *-Stephen*
 
-## Spin2 Elastic Tabs - DRAFT Implementation</Br>(for reference only)
+## Spin2 Elastic Tabs - DRAFT Implementation - v1.5.x</Br>(for reference only)
 
 ### Press TAB (with what selected?):
 
