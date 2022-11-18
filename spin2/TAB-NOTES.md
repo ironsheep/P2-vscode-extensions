@@ -34,11 +34,18 @@ When we are choosing a location, we consider three forms:
 1. Single line Selection - one or more characters are selected, all on the same line.
 1. Multiple line Selection - two or more, consecutive, partial or full lines are selected.
 
-(**NOTE:** *in the future, we may consider a distinct 4th case of selecting columns within the line acrosd two or more consective lines.*)
+(**NOTE:** *in the future, we may consider a distinct 4th case of selecting columns within a line across two or more consective lines.*)
 
-### Pending changes before this spec. is complete
+In this extension, we have "elastic" tab stops, meaning they are not at fixed intervals. This means we can define tab stops at any location within a line. When we say add spaces to next tab-stop, or remove spaces moving line to prior tab-stop we are meaning whatever tab stop is defined within the VSCode Spin2 settings.  In these settings we have unique tab stops per section: CON, OBJ, VAR, DAT, PUB, PRI.  These settings initially are set identical to Propeller Tool v2.7.0
 
-- **To Be Added** factor in the insert mode effects (more specifically, the Align insert Mode.)
+To indent a line (insert a tab) press `Tab`. To outdent a line (remove a tab) press `Shift+Tab`.
+
+We also have a special feature which reminds us of our current tab settings for a given section (PUB, PRI, DAT, etc.). By placing our cursor on a given line and then pressing `Ctrl+Alt+Tab` a "tab-ruler comment line" is placed above the line our cursor is on.
+
+
+### Pending Changes before this Specification is Complete
+
+- **To Be Added:** factor in the insert mode effects (more specifically, the Align insert Mode.)
 
 ### Press TAB (with what selected?):
 
