@@ -64,6 +64,37 @@ NOTE: Tab on empty lines should just cause spaces to be appended to next tab sto
 
 NOTE: empty lines are ignored for Shift+Tab.
 
+
+## Research: WWPTD - (What would Propeller Tool do?)
+
+I sutdied the Propeller Tool documentation to determine what special features are present with respect TAB and insert modes.  Here are my findings:
+
+**NOTE:** *In Propeller Tool the backspace key behavior is also altered according to the custom tab settins. We are not planning to do this in VSCode.*
+
+
+### Press TAB (with what selected?):
+
+    [TIP1] Cursor placed to left of text on line
+        	- tab inserts spaces to next tab-stop to left of cursor (effictively cursor moves with text
+    [TML1] multiple full/partial lines selected
+    	- All lines moved right one tab stop (all lines maintain their current indent relative to each other)
+    [UCML1] multiple columns selected across multiple lines
+    	- All text from left selected colum moved right one tab stop
+
+### Press SHIFT+TAB (with what selected?):
+
+    [UP1] Cursor placed to left of text on line
+    	- entire line is shifted left to next tab stop, cursor remains where it was in line
+    [UML1] multiple full/partial lines selected
+    	- All lines moved left one tab stop (all lines maintain their current indent relative to each other)
+    	- if text on line is already at left edge - nothing happens to that line
+    [UCML1] multiple columns selected across multiple lines
+    	- All text from left selected colum moved left one tab stop
+
+### Effect of INSERT, OVERTYPE and ALIGN insert modes
+
+TBA
+
 ## Research: WWVD - (What would VSCode do?)
 
 I tested various (hopefully comprehensive) cases of selection and what happens when I press tab or shift+tab in these cases.  The following are my notes on VSCode behavior I observed:
@@ -122,22 +153,22 @@ I tested various (hopefully comprehensive) cases of selection and what happens w
     			- NOTHING happens!
     [UML1] multiple full lines
     	- All lines in section region treated:
-    		- if text is line is already at left edge - nothing happens
+    		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
     [UML2] multiple full lines w/partial last line
     	- All lines in section region treated:
-    		- if text is line is already at left edge - nothing happens
+    		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
     [UML3] multiple full lines w/partial first and last lines
     	- All lines in section region treated:
-    		- if text is line is already at left edge - nothing happens
+    		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
     [UML4] two lines: partial first and last lines
     	- All lines in section region treated:
-    		- if text is line is already at left edge - nothing happens
+    		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
 
