@@ -91,9 +91,19 @@ I sutdied the Propeller Tool documentation to determine what special features ar
     [UCML1] multiple columns selected across multiple lines
     	- All text from left selected colum moved left one tab stop
 
-### Effect of INSERT, OVERTYPE and ALIGN insert modes
+### Effect of INSERT, OVERTYPE and ALIGN insert Modes
 
-TBA
+The Propeller Tool documentation says very little about insert and overtype modes. But in the end **Insert Mode** shoves characters immediately to the right of the cursor to the right with each character typed while **Overtype Mode** simply replaces the character to the right of the cursor with the character entered. 
+
+The interesting things happen with **Align Mode**. To quote propeller tool docs: 
+
+"*While in Align Mode characters inserted affect characters immediately to the right of the cursor but not characters separated by more than one space. The result is that comments and other items separated by more than one space maintain their intended alignment for as long as possible.*"
+
+
+### Effect of Block Selection and Block Moving
+
+This is used in Propeller tool. It may be supported already in VSCode. I have to practice with it.  I'm not sure if there is an interaction with our new elastic tabs and this ability. If there should be I'll note it here when I found out. At this point in time of my learning I don't think we need to address this.  We'll see.
+
 
 ## Research: WWVD - (What would VSCode do?)
 
