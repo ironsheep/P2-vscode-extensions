@@ -6,64 +6,136 @@ This page presents how we are thinking about the new Elastic Tabbing à la Prope
 
 [![License][license-shield]](LICENSE)
 
+## Table of Contents
+
+On this Page:
+
+- [Specification]() - Spin2 VSCode Extension Tabbing Specification
+- [Research - Propeller Tool]() - Survey of **Propeller Tool** Tab, Shift+Tab behaviors
+- [Research - VSCode]() - Survey of **VSCode** Tab, Shift+Tab behaviors
+
+**Note** *Each of the sections on this page are subdivided into: `Tab` cases followed by `Shift+Tab` cases.*
+
+Additional pages:
+
+- [README](README.md) - Return to opening page of this Repository
+
+---
+
 ## Spin2 Elastic Tabs - Specification
 
-{this section TBA}
+This section presents how we ultimately want `Tab` and `Shift-Tab` to behave. 
 
-## Spin2 Elastic Tabs - TEST Cases
+In general terms, we think of choosing a location in the code that we want to affect and then the `Tab` and `Shift+Tab` tells us how to affect the code at the location we've chosen. 
+
+When we are choosing a location, we consider three forms: 
+
+1. Insert Point - the cursor is place at a specific location on a single line but no charaters are selected.
+1. Single line Selection - one or more characters are selected, all on the same line.
+1. Multiple line Selection - two or more, consecutive, partial or full lines are selected.
+
+(**NOTE:** *in the future, we may consider a distinct 4th case of selecting columns within the line acrosd two or more consective lines.*)
 
 ### Press TAB (with what selected?):
 
-	- [IP1] insert point: in NON-WHITE
-		- (place cursor here)
-		- should move text at cursor, splitting text
-	- [IP2] insert point: in WHITE
-		- (place cursor at left-edge of text to right, OR END-OF-LINE)
-		- should move text at cursor, or just append spaces to next tab
-	- [SE1] selection (All NON-WHITE)
-		- (should location left edge of NON-WHITE (to left) and and place cursor there)
-	- [SE2] selection (starts WHITE, ends NON-WHITE)
-		- (should location left edge of NON-WHITE, within selection, set cursor there)
-	- [SE3] selection (starts NON-WHITE, ends WHITE)
-		- (should location left edge of NON-WHITE before start of selection, set cursor there) 
-	- [SE4] selection (All WHITE)
-		- (should place cursor at left-edge of text to right)
-			- selected text should be removed
-			- next tab is calc from left of selection, not cursor
-			- insert spaces to next TAB from left of selection
-		- (OR DO NOTHING if no more text to right)
-	- [ML1] Multi-line (FAKE SINGLE LINE)
-		- (should location left edge of NON-WHITE, place cursor there)
-		- (skipping WHITE at left of line)
-	
-NOTE: Tab on empty lines should just cause spaces to be appended to next tab stop.
+The following are specific `Tab` cases with intended outcomes. Each case is preceeded by a reference identifier in brackets. These cases are intended to be precise in description so that these descriptions can guide the final implementation and testing of this extension.
+
+**NOTE:** in the [ ] identifer: T = Tab, IP = "Insert Point", SE = "Selection", and ML = "Multi-Line"
+
+#### [TIP1] insert point in non-white
+
+- Tab inserts spaces to left of cursor moving to next tab-stop. The cursor and all line content to the right of the cursor effectively move to new tab-stop, This action has the visual effect of splitting the text at the initial cursor position.
+
+#### [TIP2] insert point in white
+
+- Tab inserts spaces to next tab-stop to left of cursor. The cursor and all line content to the right of the cursor effectively move to new tab-stop.
+
+#### [TSE1] selection all non-white
+
+*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
+
+- The non-white characters are chased to the left from the left edge of the selection until the left edge of the text is found (note this could be the beginning of the line, if it is not indented). The cursor is moved to this new position (To the left edge of the text identified by the selection). 
+- Spaces are then inserted to the left of this new cusor postion to the next tab stop. The cursor ends up, still to left of the left edge of the text, but the cursor and the text to the right of it have moved to the next tab-stop.
+
+#### [TSE2] selection all white
+
+*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
+
+- The white-space characters are chased to the right from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters). The cursor is moved to this new position (To the left edge of the text identified by the selection, or to the end of the line). 
+- Spaces are then inserted to the left of this new cursor postion to the next tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+
+#### [TSE3] selection start in non-white end in white
+
+*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
+
+- The non-white characters are chased to the leftfrom the left edge of the selection until the left edge of the text is found (note this could be the beginning of the line, if it is not indented). The cursor is moved to this new position (To the left edge of the text identified by the selection). 
+- Spaces are then inserted to the left of this new cusor postion to the next tab stop. The cursor ends up, still to left of the left edge of the text, but the cursor and the text to the right of it have moved to the next tab-stop.
+
+#### [TSE4] selection start in white end in non-white
+
+*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
+
+- The white-space characters are chased to the right from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters). The cursor is moved to this new position (To the left edge of the text identified by the selection, or to the end of the line). 
+- Spaces are then inserted to the left of this new cursor postion to the next tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+
+#### [TML1] multiple full lines</br>[TML2] multiple full lines w/partial last line</br>[TML3] multiple full lines w/partial first and last lines</br>[TML4] two lines: partial first and last lines
+
+*(these all behave the same way)*
+
+- All lines in selected region treated as full selected lines but are treated individually
+- Each line is indented by inserting spaces to the left of the first non-white character on the line. If the line was empty the spaces are inserted at the beginning of the line (or logically, appended to the empty line.)
+- The cursor will be at the start, or the end, of the selection. If the cursor was in left edge white-space it does not move. If, instead, it was after the left edge text on the line then it moved with the line but stayed in the same relative postion within the line.
 
 ### Press SHIFT+TAB (with what selected?):
 
-	- [UIP1] insert point: in NON-WHITE
-		- (place cursor at left-edge of text (to left), OR BEGIN-OF-LINE)
-		- just remove spaces from cursor to prior tab
-	- [UIP2] insert point: in WHITE
-		- (place cursor at left-edge of text (to right), OR END-OF-LINE)
-		- just remove spaces from cursor to prior tab
-	- [USE1] selection (All NON-WHITE)
-		- (place cursor at left-edge of text (to left), OR BEGIN-OF-LINE)
-		- just remove spaces from cursor to prior tab
-	- [USE2] selection (starts WHITE, ends NON-WHITE)
-		- (should location left edge of NON-WHITE, within selection, set cursor there)
-		- just remove spaces from cursor to prior tab
-	- [USE3] selection (starts NON-WHITE, ends WHITE)
-		- (place cursor at left-edge of text (to left), OR BEGIN-OF-LINE)
-		- just remove spaces from cursor to prior tab
-	- [USE4] selection (All WHITE)
-		- (place cursor at left-edge of text (to right), OR END-OF-LINE)
-		- just remove spaces from cursor to prior tab
-	- [UML1] Multi-line (FAKE SINGLE LINE)
-		- (place cursor at left-edge of text (from start of line to right), OR END-OF-LINE)
-		- just remove spaces from cursor to prior tab
+The following are specific `Shift+Tab` cases with intended outcomes. Each case is preceeded by a reference identifier in brackets. These cases are intended to be precise in description so that these descriptions can guide the final implementation and testing of this extension.
 
-NOTE: empty lines are ignored for Shift+Tab.
+**NOTE:** in the [ ] identifer: U = UnTab, IP = "Insert Point", SE = "Selection", and ML = "Multi-Line"
 
+#### [UIP1] insert point in non-white
+
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line. The cursor remains where it was in line but moved with the text to the left.
+
+#### [UIP2] insert point in white
+
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line is indented the entire line is shifted left to next tab stop to the left of the first text on the line. 
+- If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+
+#### [USE1] selection all non-white
+
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line. 
+- The cursor will be at the start, or the end, of the selection. The cursor remains where it was in line but moved with the text to the left.
+
+#### [USE2] selection all white
+
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line.
+- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+
+#### [USE3] selection start in non-white end in white
+
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line.
+- In this case the selection is at end of the line away from the left edge white-space. The cursor will be at one end of the selection. The cursor remains where it was in line but moved with the line to the left.
+
+#### [USE4] selection start in white end in non-white
+
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line.
+- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+
+#### [UML1] multiple full lines</br>[UML2] multiple full lines w/partial last line</br>[UML3] multiple full lines w/partial first and last lines</br>[UML4] two lines: partial first and last lines
+
+*(these all behave the same way)*
+
+- All lines in selected region treated as full selected lines but are treated individually
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- For any lines not at left edge they move left one tab stop (from the 1st character on the line)
+- (*all lines maintain their current indent relative to each other, unless some lines were already at the left edge so they couldn't be moved.*)
+- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
 
 ## Research: WWPTD - (What would Propeller Tool do?)
 
@@ -162,22 +234,22 @@ I tested various (hopefully comprehensive) cases of selection and what happens w
     		- (2) 1st text is flush at left edge
     			- NOTHING happens!
     [UML1] multiple full lines
-    	- All lines in section region treated:
+    	- All lines in selected region treated:
     		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
     [UML2] multiple full lines w/partial last line
-    	- All lines in section region treated:
+    	- All lines in selected region treated:
     		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
     [UML3] multiple full lines w/partial first and last lines
-    	- All lines in section region treated:
+    	- All lines in selected region treated:
     		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
     [UML4] two lines: partial first and last lines
-    	- All lines in section region treated:
+    	- All lines in selected region treated:
     		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
     		- (all lines maintain their current indent relative to each other)
@@ -185,6 +257,62 @@ I tested various (hopefully comprehensive) cases of selection and what happens w
 While this will inform some of the spin2 tabbing behaviors we are adding additional behaviors on top of this.
 
 *-Stephen*
+
+## Spin2 Elastic Tabs - DRAFT Implementation</Br>(for reference only)
+
+### Press TAB (with what selected?):
+
+	- [IP1] insert point: in NON-WHITE
+		- (place cursor here)
+		- should move text at cursor, splitting text
+	- [IP2] insert point: in WHITE
+		- (place cursor at left-edge of text to right, OR END-OF-LINE)
+		- should move text at cursor, or just append spaces to next tab
+	- [SE1] selection (All NON-WHITE)
+		- (should location left edge of NON-WHITE (to left) and and place cursor there)
+	- [SE2] selection (starts WHITE, ends NON-WHITE)
+		- (should location left edge of NON-WHITE, within selection, set cursor there)
+	- [SE3] selection (starts NON-WHITE, ends WHITE)
+		- (should location left edge of NON-WHITE before start of selection, set cursor there) 
+	- [SE4] selection (All WHITE)
+		- (should place cursor at left-edge of text to right)
+			- selected text should be removed
+			- next tab is calc from left of selection, not cursor
+			- insert spaces to next TAB from left of selection
+		- (OR DO NOTHING if no more text to right)
+	- [ML1] Multi-line (FAKE SINGLE LINE)
+		- (should location left edge of NON-WHITE, place cursor there)
+		- (skipping WHITE at left of line)
+	
+NOTE: Tab on empty lines should just cause spaces to be appended to next tab stop.
+
+### Press SHIFT+TAB (with what selected?):
+
+	- [UIP1] insert point: in NON-WHITE
+		- (place cursor at left-edge of text (to left), OR BEGIN-OF-LINE)
+		- just remove spaces from cursor to prior tab
+	- [UIP2] insert point: in WHITE
+		- (place cursor at left-edge of text (to right), OR END-OF-LINE)
+		- just remove spaces from cursor to prior tab
+	- [USE1] selection (All NON-WHITE)
+		- (place cursor at left-edge of text (to left), OR BEGIN-OF-LINE)
+		- just remove spaces from cursor to prior tab
+	- [USE2] selection (starts WHITE, ends NON-WHITE)
+		- (should location left edge of NON-WHITE, within selection, set cursor there)
+		- just remove spaces from cursor to prior tab
+	- [USE3] selection (starts NON-WHITE, ends WHITE)
+		- (place cursor at left-edge of text (to left), OR BEGIN-OF-LINE)
+		- just remove spaces from cursor to prior tab
+	- [USE4] selection (All WHITE)
+		- (place cursor at left-edge of text (to right), OR END-OF-LINE)
+		- just remove spaces from cursor to prior tab
+	- [UML1] Multi-line (FAKE SINGLE LINE)
+		- (place cursor at left-edge of text (from start of line to right), OR END-OF-LINE)
+		- just remove spaces from cursor to prior tab
+
+NOTE: empty lines are ignored for Shift+Tab.
+
+
 
 ---
 
