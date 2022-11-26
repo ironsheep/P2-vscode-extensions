@@ -14,10 +14,35 @@ Work to appear in upcoming releases:
 Possible next additions:
 
 - Add TAB support for `INSERT`, `OVERTYPE` and `ALIGN` editor modes
+- Add Named TAB configurations (have "Propeller Tool" tabs and your own custom set of tabs)
+- Update theme to work better with a couple common languages we use near our P2 projects
 - Add code reformatting aligning columns to user defined tabstops
 - Investigate and possibly add unique coloring for method pointers
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.6.0] 2022-11-19
+
+First formal release - Update for tabbing. Now operates according to latest Spec.
+
+- NEW: adds use of DAT tabbing for PUB/PRI inline-pasm
+
+- Supports configurable tab-stops-per-section like Propeller Tool.
+- Adds support for single-line indent/outdent
+- Adds support for multi-line indent/outdent
+- Adds command `Ctrl+Alt+Tab` which inserts a current tabs placement comment as a line above the cursor
+- This TAB support **Spin2 Elastic Tab Stops** provides two new settings:
+  - **Spin2 Elastic Tab Stops**:`Blocks`: is where the tab stops are listed for each section
+  - **Spin2 Elastic Tab Stops**:`Enable`: checkbox which is by default NOT enabled</br>(_As this is an early release this feature is not enabled by default. You must enable and then restart vscode_)
+  - These settings are global but can be edited and made custom per project as well
+
+### - Known Issues w/v1.6.0
+
+- We haven't yet learned how to control the ending postion of the edit cursor. So in many cases when using selection not single insert point the cusor may end up not being where you might expect it to be after pressing TAB or Shift+TAB.  We are looking into how to solve this.  Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+
+## [1.5.2] 2022-11-19
+
+Bugifx Update - Extension Tabbing-Disable now works! (Oops!)
 
 ## [1.5.1] 2022-11-16
 
@@ -44,7 +69,7 @@ New Tabbing Support:
 - The single-quote comment (now only on debug statements) is being handled by semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.4.1] 2022-09-17
 
@@ -60,7 +85,7 @@ New Tabbing Support:
 - The single-quote comment (now only on debug statements) is being handled by semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.9] 2022-08-08
 
@@ -70,10 +95,10 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.9
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.8] 2022-08-08
 
@@ -83,10 +108,10 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.8
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.7] 2022-05-05
 
@@ -100,10 +125,10 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.7
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.6] 2022-04-22
 
@@ -118,10 +143,10 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.6
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.5] 2022-04-20
 
@@ -133,11 +158,11 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.5
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.4] 2022-04-16
 
@@ -147,11 +172,11 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.4
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.2] 2022-04-04
 
@@ -163,11 +188,11 @@ New Tabbing Support:
 
 ### - Known Issues w/v1.3.2
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.1] 2022-03-31
 
@@ -181,20 +206,20 @@ New Tabbing Support:
 ### NOTEs v1.3.1
 
 - this adds support for the new Spin2 Extension directive:
-  - {-* VSCode-Spin2: nextline debug()-display: {displayType}  *-}
+  - {-_ VSCode-Spin2: nextline debug()-display: {displayType} _-}
   - Where: {displayType} should be one of [Logic, Scope, Scope_XY, FFT, Spectro, Plot, Term, Bitmap, and Midi]
 - The following **runtime forms** can now be handled by preceeding them with this new directive:
-  - debug(**\`zstr_(displayName)** lutcolors `uhex_long_array_(image_address, lut_size))
-  - debug(**\`lstr_(displayName, len)** lutcolors `uhex_long_array_(image_address, lut_size))
-  - debug(**\`#(letter)** lutcolors `uhex_long_array_(image_address, lut_size))
+  - debug(**\`zstr\_(displayName)** lutcolors `uhex*long_array*(image_address, lut_size))
+  - debug(**\`lstr\_(displayName, len)** lutcolors `uhex*long_array*(image_address, lut_size))
+  - debug(**\`#(letter)** lutcolors `uhex*long_array*(image_address, lut_size))
 
 ### - Known Issues w/v1.3.1
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.3.0] 2022-03-29
 
@@ -203,23 +228,23 @@ Initial Release of debug()-display **Highlight** and **Validation**
 - NEW add initial highlighting support for all debug() displays (Logic, Scope, Scope_XY, FFT, Spectro, Plot, Term, Bitmap, and Midi)
 - Unique colors within debug statement for: displayType, displayName, keywords, and colors
 - Validation: when a keyword is not legal for the display or is spelled incorrectly then is colored bright red
-- Moved single comment out of syntax into semantic highlighting so we can have single-quoted strings in our debug statements.  (*Syntax highlighting is not context aware, so entire tail of a debug() statement was incorectly rendered as a comment*)
+- Moved single comment out of syntax into semantic highlighting so we can have single-quoted strings in our debug statements. (_Syntax highlighting is not context aware, so entire tail of a debug() statement was incorectly rendered as a comment_)
 
 ### Initial limitations v1.3.0
 
-- The runtime calulation of display name is not supported, yet. (*In an upcoming release you'll be able to specify the preferred display type for validation of each of these statements.*)
+- The runtime calulation of display name is not supported, yet. (_In an upcoming release you'll be able to specify the preferred display type for validation of each of these statements._)
 - The following **example runtime forms** will be handled by the new directive when released:
-  - debug(**\`zstr_(displayName)** lutcolors `uhex_long_array_(image_address, lut_size))
-  - debug(**\`lstr_(displayName, len)** lutcolors `uhex_long_array_(image_address, lut_size))
-  - debug(**\`#(letter)** lutcolors `uhex_long_array_(image_address, lut_size))
+  - debug(**\`zstr\_(displayName)** lutcolors `uhex*long_array*(image_address, lut_size))
+  - debug(**\`lstr\_(displayName, len)** lutcolors `uhex*long_array*(image_address, lut_size))
+  - debug(**\`#(letter)** lutcolors `uhex*long_array*(image_address, lut_size))
 
 ### - Known Issues w/v1.3.0
 
-- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. *We have don't have a fix for this yet.*
+- The single-quote comment now being handled as semantic (vs. syntactic) is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within our trailing line comments. _We have don't have a fix for this yet._
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.2.3] 2022-03-16
 
@@ -236,7 +261,7 @@ Minor Highlighting Update
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.2.2] 2022-02-17
 
@@ -249,7 +274,7 @@ Minor Highlighting Update - Repair highlighting of binary operators in DAT data 
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.2.1] 2022-02-16
 
@@ -261,7 +286,7 @@ Minor Highlighting Update - Repair highlighting of binary operators in DAT data 
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.2.0] 2022-02-09
 
@@ -272,7 +297,7 @@ Syntax/Semantic Adjustments:
 - NEW: add new Spin2/Pasm2/Debug methods & constants which were added since our last release
 - NEW: directives that shouldn't be used in inline-pasm are now highlighted with bright red color
 - BUGFIX: parser no longer expects pasm2 labels to be in the 1st column
-- BUGFIX: added missing: four pasm if_ conditionals, one spin2 method name
+- BUGFIX: added missing: four pasm if\_ conditionals, one spin2 method name
 - BUGFIX: parser now parses multiplying of constant values correctly
 - BUGFIX: previously seen files no longer affect the semantic highlighting of the current file
 - BUGFIX: symbol-names starting with PUB, PRI, CON, DAT, etc. are no longer confusing parser
@@ -284,7 +309,7 @@ Syntax/Semantic Adjustments:
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
 - Occasional issues with highlighting of enum leading constant (#nnn should be recognized as number)
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.1.0] 2021-05-19
 
@@ -299,7 +324,7 @@ Semantic Adjustments:
 - debug() statements that don't use double-quoted strings currently are not parsed correctly
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.0.1] 2021-03-30
 
@@ -314,7 +339,7 @@ Syntax Adjustments:
 - debug() statements that don't use double-quoted strings currently are not parsed correctly
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.0.0] 2021-03-18
 
@@ -322,7 +347,7 @@ The Official Release of Semantic Highlighting
 
 In this release we clean things up a bit more, we deliver unknown name highlighting in brighter red, and **herein** we report on the state of testing against various code-sets.
 
-**NOTE:** *with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile. The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols.*
+**NOTE:** _with this new **unknown names** coloring feature we were able to find two files that shouldn't compile due to undefined symbols but actually do compile. The findings are being reported to Chip. The author of the files confirmed that the two files are missing symbols._
 
 Semantic Adjustments:
 
@@ -343,7 +368,7 @@ Syntax Adjustments:
 - debug() statements that don't use double-quoted strings currently can't be parsed
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ### REPORT: Source code shipped with PNut
 
@@ -385,7 +410,7 @@ Syntax Adjustments:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.3] 2021-03-16
 
@@ -400,7 +425,7 @@ Theme Adjustments:
 - Removed `Spin2 Cluso99` theme (by request)
 - Added `Spin2 Ironsheep Syntax` theme (primarily for extension developer use, disables Semantic highlighting)
 
-**Note**: *Should you wish, you can switch between the two ironsheep themes to show code with or without semantic highlighting*
+**Note**: _Should you wish, you can switch between the two ironsheep themes to show code with or without semantic highlighting_
 
 Semantic Adjustments:
 
@@ -436,7 +461,7 @@ Syntax Adjustments:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.2] 2021-03-12
 
@@ -469,7 +494,7 @@ Syntax Fixes:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic highlight: the 'modification' attribute is being over-applied
 - Semantic highlight: the 'modification' attribute should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.1] 2021-03-09
 
@@ -512,7 +537,7 @@ Syntax Fixes:
 - Syntax highlight of DAT section sometimes fails... RES and FIT not colored correctly
 - Semantic the 'modification' attribute is being over-applied
 - Oops spin is not case-sensative... I need to adjust so highlighting is also not!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.3.0] 2021-03-07
 
@@ -541,7 +566,7 @@ Preview Release of Semantic Highlighting
 - Does NOT recognize method calls to indexed objects
 - Fails to properly identify location of shorter variable name when is found within longer name earler in line...
 - Syntax highlight of DAT section sometimes failes... RES and FIT not colored correctly
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [0.2.2] 2020-11-30
 

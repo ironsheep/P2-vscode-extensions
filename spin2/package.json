@@ -1,285 +1,296 @@
 {
-    "name": "spin2",
-    "displayName": "Spin2",
-    "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
-    "icon": "images/Propeller.ico",
-    "version": "1.5.1",
-    "publisher": "IronSheepProductionsLLC",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/ironsheep/P2-vscode-extensions"
-    },
-    "bugs": {
-        "url": "https://github.com/ironsheep/P2-vscode-extensions/issues"
-    },
-    "author": "IronSheep",
-    "galleryBanner": {
-        "color": "#003060",
-        "theme": "dark"
-    },
-    "preview": true,
-    "keywords": [
-        "spin",
-        "spin2",
-        "pasm",
-        "pasm2",
-        "propeller",
-        "propeller 2",
-        "propeller v2",
-        "parallax"
+  "name": "spin2",
+  "displayName": "Spin2",
+  "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
+  "icon": "images/Propeller.ico",
+  "version": "1.5.9",
+  "publisher": "IronSheepProductionsLLC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ironsheep/P2-vscode-extensions"
+  },
+  "bugs": {
+    "url": "https://github.com/ironsheep/P2-vscode-extensions/issues"
+  },
+  "author": "IronSheep",
+  "galleryBanner": {
+    "color": "#003060",
+    "theme": "dark"
+  },
+  "preview": true,
+  "keywords": [
+    "spin",
+    "spin2",
+    "pasm",
+    "pasm2",
+    "propeller",
+    "propeller 2",
+    "propeller v2",
+    "parallax"
+  ],
+  "license": "MIT",
+  "main": "out/spin2.extension.js",
+  "activationEvents": [
+    "onLanguage:spin2",
+    "onStartupFinished"
+  ],
+  "engines": {
+    "vscode": "^1.59.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Spin2 Ironsheep",
+        "uiTheme": "vs-dark",
+        "path": "./themes/isp-spin-theme.json"
+      },
+      {
+        "label": "Spin2 Ironsheep Syntax",
+        "uiTheme": "vs-dark",
+        "path": "./themes/isp-spin-syntax-theme.json"
+      }
     ],
-    "license": "MIT",
-    "main": "out/spin2.extension.js",
-    "activationEvents": [
-        "onLanguage:spin2",
-        "onStartupFinished"
+    "grammars": [
+      {
+        "language": "spin2",
+        "scopeName": "source.spin2",
+        "path": "syntaxes/spin2.tmLanguage.json"
+      }
     ],
-    "engines": {
-        "vscode": "^1.59.0"
-    },
-    "categories": [
-        "Programming Languages"
+    "languages": [
+      {
+        "id": "spin2",
+        "aliases": [
+          "spin2",
+          "Spin2",
+          "SPIN2"
+        ],
+        "extensions": [
+          ".spin2"
+        ],
+        "configuration": "./spin2.language-configuration.json"
+      }
     ],
-    "contributes": {
-        "themes": [{
-                "label": "Spin2 Ironsheep",
-                "uiTheme": "vs-dark",
-                "path": "./themes/isp-spin-theme.json"
-            },
-            {
-                "label": "Spin2 Ironsheep Syntax",
-                "uiTheme": "vs-dark",
-                "path": "./themes/isp-spin-syntax-theme.json"
-            }
-        ],
-        "grammars": [{
-            "language": "spin2",
-            "scopeName": "source.spin2",
-            "path": "syntaxes/spin2.tmLanguage.json"
-        }],
-        "languages": [{
-            "id": "spin2",
-            "aliases": [
-                "spin2",
-                "Spin2",
-                "SPIN2"
-            ],
-            "extensions": [
-                ".spin2"
-            ],
-            "configuration": "./spin2.language-configuration.json"
-        }],
-        "semanticTokenTypes": [{
-                "id": "returnValue",
-                "superType": "parameter",
-                "description": "A parameter type of returnValue."
-            },
-            {
-                "id": "storageType",
-                "superType": "type",
-                "description": "A built-in storage type"
-            },
-            {
-                "id": "displayType",
-                "superType": "enumMember",
-                "description": "A built-in type of debug display"
-            },
-            {
-                "id": "displayName",
-                "superType": "label",
-                "description": "user name for debug display"
-            },
-            {
-                "id": "setupParameter",
-                "superType": "parameter",
-                "description": "A built-in debug display intantiation parameter name"
-            },
-            {
-                "id": "feedParameter",
-                "superType": "parameter",
-                "description": "A built-in debug display feed parameter name"
-            },
-            {
-                "id": "colorName",
-                "superType": "enumMember",
-                "description": "A built-in debug display color name"
-            }
-        ],
-        "semanticTokenModifiers": [{
-                "id": "local",
-                "description": "Annotates a symbol that is declared local to a method"
-            },
-            {
-                "id": "instance",
-                "description": "Annotates a variable unique to an instance"
-            },
-            {
-                "id": "missingDeclaration",
-                "description": "Annotates a variable but no declaration found!"
-            },
-            {
-                "id": "illegalUse",
-                "description": "Idenitifes keywords where they shouldn't be!"
-            }
-        ],
-        "semanticTokenScopes": [{
-            "scopes": {
-                "returnValue": [
-                    "meta.returntype.spin"
-                ],
-                "storageType": [
-                    "storage.type.pasm.spin2"
-                ]
-            }
-        }],
-        "configuration": [{
-            "title": "Spin2 Tabstops",
+    "semanticTokenTypes": [
+      {
+        "id": "returnValue",
+        "superType": "parameter",
+        "description": "A parameter type of returnValue."
+      },
+      {
+        "id": "storageType",
+        "superType": "type",
+        "description": "A built-in storage type"
+      },
+      {
+        "id": "displayType",
+        "superType": "enumMember",
+        "description": "A built-in type of debug display"
+      },
+      {
+        "id": "displayName",
+        "superType": "label",
+        "description": "user name for debug display"
+      },
+      {
+        "id": "setupParameter",
+        "superType": "parameter",
+        "description": "A built-in debug display intantiation parameter name"
+      },
+      {
+        "id": "feedParameter",
+        "superType": "parameter",
+        "description": "A built-in debug display feed parameter name"
+      },
+      {
+        "id": "colorName",
+        "superType": "enumMember",
+        "description": "A built-in debug display color name"
+      }
+    ],
+    "semanticTokenModifiers": [
+      {
+        "id": "local",
+        "description": "Annotates a symbol that is declared local to a method"
+      },
+      {
+        "id": "instance",
+        "description": "Annotates a variable unique to an instance"
+      },
+      {
+        "id": "missingDeclaration",
+        "description": "Annotates a variable but no declaration found!"
+      },
+      {
+        "id": "illegalUse",
+        "description": "Idenitifes keywords where they shouldn't be!"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "returnValue": [
+            "meta.returntype.spin"
+          ],
+          "storageType": [
+            "storage.type.pasm.spin2"
+          ]
+        }
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Spin2 Tabstops",
+        "properties": {
+          "spin2ElasticTabstops.enable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable/disable Spin2 Tabstops."
+          },
+          "spin2ElasticTabstops.blocks": {
+            "type": "object",
             "properties": {
-                "spin2ElasticTabstops.enable": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable/disable Spin2 Tabstops."
-                },
-                "spin2ElasticTabstops.blocks": {
-                    "type": "object",
-                    "properties": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer",
-                            "minimum": 0
-                        }
-                    },
-                    "default": {
-                        "con": {
-                            "tabStops": [
-                                2,
-                                8,
-                                16,
-                                18,
-                                32,
-                                56,
-                                80
-                            ]
-                        },
-                        "var": {
-                            "tabStops": [
-                                2,
-                                8,
-                                22,
-                                32,
-                                56,
-                                80
-                            ]
-                        },
-                        "obj": {
-                            "tabStops": [
-                                2,
-                                8,
-                                16,
-                                18,
-                                32,
-                                56,
-                                80
-                            ]
-                        },
-                        "pub": {
-                            "tabStops": [
-                                2,
-                                4,
-                                6,
-                                8,
-                                10,
-                                32,
-                                56,
-                                80
-                            ]
-                        },
-                        "pri": {
-                            "tabStops": [
-                                2,
-                                4,
-                                6,
-                                8,
-                                10,
-                                32,
-                                56,
-                                80
-                            ]
-                        },
-                        "dat": {
-                            "tabStops": [
-                                8,
-                                14,
-                                24,
-                                32,
-                                48,
-                                56,
-                                80
-                            ]
-                        }
-                    },
-                    "description": "List of tab stops, for section."
-                }
-            }
-        }],
-        "commands": [
-            {
-                "command": "spin2.indentTabStop",
-                "title": "Indent tab stop"
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
             },
-            {
-                "command": "spin2.outdentTabStop",
-                "title": "outdent tab stop"
+            "default": {
+              "con": {
+                "tabStops": [
+                  2,
+                  8,
+                  16,
+                  18,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "var": {
+                "tabStops": [
+                  2,
+                  8,
+                  22,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "obj": {
+                "tabStops": [
+                  2,
+                  8,
+                  16,
+                  18,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "pub": {
+                "tabStops": [
+                  2,
+                  4,
+                  6,
+                  8,
+                  10,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "pri": {
+                "tabStops": [
+                  2,
+                  4,
+                  6,
+                  8,
+                  10,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "dat": {
+                "tabStops": [
+                  8,
+                  14,
+                  24,
+                  32,
+                  48,
+                  56,
+                  80
+                ]
+              }
             },
-            {
-                "command": "spin2.insertTabStopsComment",
-                "title": "insert tab stop comment"
-            }
-        ],
-        "keybindings": [
-            {
-                "key": "tab",
-                "command": "spin2.indentTabStop",
-                "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2"
-            },
-            {
-                "key": "shift+tab",
-                "command": "spin2.outdentTabStop",
-                "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2"
-            },
-            {
-                "key": "Ctrl+Alt+tab",
-                "command": "spin2.insertTabStopsComment",
-                "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2"
-            }
-        ]
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile && npm run compile:grammar",
-        "compile": "tsc -p ./",
-        "lint": "eslint src --ext ts",
-        "watch": "tsc -watch -p ./",
-        "pretest": "npm run compile && npm run lint",
-        "test": "node ./out/test/runTest.js",
-        "compile:grammar": "npx js-yaml syntaxes/spin2.tmLanguage.YAML-tmLanguage > syntaxes/spin2.tmLanguage.json"
-    },
-    "devDependencies": {
-        "@types/glob": "^7.1.4",
-        "@types/mocha": "^8.2.2",
-        "@types/node": "14.x",
-        "@types/vscode": "^1.59.0",
-        "@typescript-eslint/eslint-plugin": "^4.26.0",
-        "@typescript-eslint/parser": "^4.26.0",
-        "eslint": "^7.27.0",
-        "glob": "^7.1.7",
-        "js-yaml": "^3.14.0",
-        "lodash": ">=4.17.19",
-        "mocha": "^8.4.0",
-        "mocha-explorer-launcher-scripts": "^0.3.0",
-        "source-map-support": "^0.5.19",
-        "typescript": "^4.3.2",
-        "vscode-test": "^1.5.2",
-        "vsce": "^1.85.0"
-    },
-    "dependencies": {}
+            "description": "List of tab stops, for section."
+          }
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "spin2.indentTabStop",
+        "title": "Indent tab stop"
+      },
+      {
+        "command": "spin2.outdentTabStop",
+        "title": "outdent tab stop"
+      },
+      {
+        "command": "spin2.insertTabStopsComment",
+        "title": "insert tab stop comment"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "tab",
+        "command": "spin2.indentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spin2ElasticTabstops.enable"
+      },
+      {
+        "key": "shift+tab",
+        "command": "spin2.outdentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spin2ElasticTabstops.enable"
+      },
+      {
+        "key": "Ctrl+Alt+tab",
+        "command": "spin2.insertTabStopsComment",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spin2ElasticTabstops.enable"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile && npm run compile:grammar",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "test": "node ./out/test/runTest.js",
+    "compile:grammar": "npx js-yaml syntaxes/spin2.tmLanguage.YAML-tmLanguage > syntaxes/spin2.tmLanguage.json"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.4",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "14.x",
+    "@types/vscode": "^1.59.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "glob": "^7.1.7",
+    "js-yaml": "^3.14.0",
+    "lodash": ">=4.17.19",
+    "mocha": "^8.4.0",
+    "mocha-explorer-launcher-scripts": "^0.3.0",
+    "source-map-support": "^0.5.19",
+    "typescript": "^4.3.2",
+    "vscode-test": "^1.5.2",
+    "vsce": "^1.85.0"
+  },
+  "dependencies": {}
 }

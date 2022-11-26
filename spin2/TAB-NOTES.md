@@ -61,33 +61,42 @@ The following are specific `Tab` cases with intended outcomes. Each case is prec
 
 - Tab inserts spaces to next tab-stop to left of cursor. The cursor and all line content to the right of the cursor effectively move to new tab-stop.
 
-#### [TSE1] selection all non-white
+#### [Group TSE1-4] ---  1st char of selection is whitespace  ---
+
+The selections in this group (those that start with selecting whitespace) have a special effect if the "whitespace part of the selection" spans a tabstop.
+
+- If it does span a tabstop then the text is moved left to the prior tabstop
+- Otherwise, (it does not span a tabstop) then the text is moved right to the next tabstop (unless the text is already at a tabstop.)
+
+For each of the selections in this group:
+
+*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
+
+- The white-space characters are chased to the right from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters). The cursor is moved to this new position (To the left edge of the text identified by the selection, or to the end of the line). 
+
+##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE3] Selection starts in white end in non-white (and whitespace DOES span a tab-stop)
+
+
+- Spaces are then removed from the left of this cursor postion to move the text left to the prior tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+
+##### [TSE2] Selection is all white (and does NOT span a tab-stop)</br>[TSE4] Selection starts in white end in non-white (and whitespace does NOT span a tab-stop)
+
+- If text is already at a tab-stop then nothing happens. otherwise (if text was not at a tab-stop) then spaces are then inserted to the left of this new cursor postion to the next tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+
+#### [Group TSE5,6] ---  1st char of selection is NOT whitespace  ---
+
+When the selection starts with characters, not whitespace, then the selection is treated as marking the non-white text that is to be indented by the TAB.  Since the selection may not start at the beginning of the non-white characters we first locate the start of the text by searching to the left of the cursor. This search will end up at the first space found, or (when no spaces are found) will end up at the beginning of the line.
+
+##### [TSE5] selection all non-white</br>[TSE6] selection start in non-white end in white
+
+*(these both behave the same way)*
 
 *(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
 
 - The non-white characters are chased to the left from the left edge of the selection until the left edge of the text is found (note this could be the beginning of the line, if it is not indented). The cursor is moved to this new position (To the left edge of the text identified by the selection). 
+
 - Spaces are then inserted to the left of this new cusor postion to the next tab stop. The cursor ends up, still to left of the left edge of the text, but the cursor and the text to the right of it have moved to the next tab-stop.
 
-#### [TSE2] selection all white
-
-*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
-
-- The white-space characters are chased to the right from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters). The cursor is moved to this new position (To the left edge of the text identified by the selection, or to the end of the line). 
-- Spaces are then inserted to the left of this new cursor postion to the next tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
-
-#### [TSE3] selection start in non-white end in white
-
-*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
-
-- The non-white characters are chased to the leftfrom the left edge of the selection until the left edge of the text is found (note this could be the beginning of the line, if it is not indented). The cursor is moved to this new position (To the left edge of the text identified by the selection). 
-- Spaces are then inserted to the left of this new cusor postion to the next tab stop. The cursor ends up, still to left of the left edge of the text, but the cursor and the text to the right of it have moved to the next tab-stop.
-
-#### [TSE4] selection start in white end in non-white
-
-*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
-
-- The white-space characters are chased to the right from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters). The cursor is moved to this new position (To the left edge of the text identified by the selection, or to the end of the line). 
-- Spaces are then inserted to the left of this new cursor postion to the next tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
 
 #### [TML1] multiple full lines</br>[TML2] multiple full lines w/partial last line</br>[TML3] multiple full lines w/partial first and last lines</br>[TML4] two lines: partial first and last lines
 
