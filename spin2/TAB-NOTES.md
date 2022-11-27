@@ -47,6 +47,8 @@ We also have a special feature which reminds us of our current tab settings for 
 
 - **To Be Added:** factor in the insert mode effects (more specifically, the Align insert Mode.)
 
+---
+
 ### Press TAB (with what selected?):
 
 The following are specific `Tab` cases with intended outcomes. Each case is preceeded by a reference identifier in brackets. These cases are intended to be precise in description so that these descriptions can guide the final implementation and testing of this extension.
@@ -55,37 +57,40 @@ The following are specific `Tab` cases with intended outcomes. Each case is prec
 
 #### [TIP1] insert point in non-white
 
-- Tab inserts spaces to left of cursor moving to next tab-stop. The cursor and all line content to the right of the cursor effectively move to new tab-stop, This action has the visual effect of splitting the text at the initial cursor position.
+- Tab inserts spaces to left of cursor moving to next tab-stop. 
+- The cursor and all line content to the right of the cursor effectively move to new tab-stop. (*This action has the visual effect of splitting the text at the initial cursor position.*)
 
 #### [TIP2] insert point in white
 
-- Tab inserts spaces to next tab-stop to left of cursor. The cursor and all line content to the right of the cursor effectively move to new tab-stop.
+- Tab inserts spaces to next tab-stop to left of cursor. 
+- The cursor and all line content to the right of the cursor effectively move to new tab-stop.
 
-#### [Group TSE1-4] ---  1st char of selection is whitespace  ---
+#### [Group TSE1-4] ---  1st char (left-most) of selection is whitespace  ---
 
 The selections in this group (those that start with selecting whitespace) have a special effect if the "whitespace part of the selection" spans a tabstop.
 
-- If it does span a tabstop then the text is moved left to the prior tabstop
-- Otherwise, (it does not span a tabstop) then the text is moved right to the next tabstop (unless the text is already at a tabstop.)
+- If it does span a tabstop then the text is moved left to the prior tabstop (*this "spanning a tabstop" selection is thought of as "remove these spaces to move the text on the right to the prior tabstop"*)
+- Otherwise, (if the selection does not span a tabstop) then the text is moved right to the next tabstop (unless the text is already at a tabstop.)
 
 For each of the selections in this group:
 
 *(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
 
-- The white-space characters are chased to the right from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters). The cursor is moved to this new position (To the left edge of the text identified by the selection, or to the end of the line). 
+- The white-space characters are chased to the RIGHT from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters).  
 
 ##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE3] Selection starts in white end in non-white (and whitespace DOES span a tab-stop)
 
-
-- Spaces are then removed from the left of this cursor postion to move the text left to the prior tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+- Spaces are then removed from the left of this cursor postion to move the text left to the prior tab stop. 
+- The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
 
 ##### [TSE2] Selection is all white (and does NOT span a tab-stop)</br>[TSE4] Selection starts in white end in non-white (and whitespace does NOT span a tab-stop)
 
-- If text is already at a tab-stop then nothing happens. otherwise (if text was not at a tab-stop) then spaces are then inserted to the left of this new cursor postion to the next tab stop. The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+- If text is already at a tab-stop then nothing happens. Otherwise (if text was not at a tab-stop) then spaces are then inserted to the left of this new cursor postion to the next tab stop.
+- The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
 
 #### [Group TSE5,6] ---  1st char of selection is NOT whitespace  ---
 
-When the selection starts with characters, not whitespace, then the selection is treated as marking the non-white text that is to be indented by the TAB.  Since the selection may not start at the beginning of the non-white characters we first locate the start of the text by searching to the left of the cursor. This search will end up at the first space found, or (when no spaces are found) will end up at the beginning of the line.
+When the selection starts with characters, not whitespace, then the selection is treated as marking the non-white text that is to be indented by the TAB.  Since the selection may not start at the beginning of the non-white characters we first locate the start of the text by searching to the LEFT of the cursor. This search will end up at the first space found, or (when no spaces are found) will end up at the beginning of the line.
 
 ##### [TSE5] selection all non-white</br>[TSE6] selection start in non-white end in white
 
@@ -98,13 +103,17 @@ When the selection starts with characters, not whitespace, then the selection is
 - Spaces are then inserted to the left of this new cusor postion to the next tab stop. The cursor ends up, still to left of the left edge of the text, but the cursor and the text to the right of it have moved to the next tab-stop.
 
 
-#### [TML1] multiple full lines</br>[TML2] multiple full lines w/partial last line</br>[TML3] multiple full lines w/partial first and last lines</br>[TML4] two lines: partial first and last lines
+#### [Group TML1 - TML4] ---  multiple line selection  ---
+
+##### [TML1] multiple full lines</br>[TML2] multiple full lines w/partial last line</br>[TML3] multiple full lines w/partial first and last lines</br>[TML4] two lines: partial first and last lines
 
 *(these all behave the same way)*
 
 - All lines in selected region treated as full selected lines but are treated individually
 - Each line is indented by inserting spaces to the left of the first non-white character on the line. If the line was empty the spaces are inserted at the beginning of the line (or logically, appended to the empty line.)
 - The cursor will be at the start, or the end, of the selection. If the cursor was in left edge white-space it does not move. If, instead, it was after the left edge text on the line then it moved with the line but stayed in the same relative postion within the line.
+
+---
 
 ### Press SHIFT+TAB (with what selected?):
 
@@ -114,48 +123,60 @@ The following are specific `Shift+Tab` cases with intended outcomes. Each case i
 
 #### [UIP1] insert point in non-white
 
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
-- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line. The cursor remains where it was in line but moved with the text to the left.
+The Left edge of the text affected is located by searching LEFT from cursor. All text on the line from this left edge to the right end of the line are affected by the move.
+
+- The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted left by one tab stop.
+- If the text would butt into earlier text on the line the moving text will move left but leave one space between the earlier text and the moving text.
+- - The cursor stays where was placed but moves relative with the text if the text moves
 
 #### [UIP2] insert point in white
 
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
-- If the line is indented the entire line is shifted left to next tab stop to the left of the first text on the line. 
-- If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+The Left edge of the text affected is located by searching RIGHT from cursor. All text on the line from this left edge to the right end of the line are affected by the move.
 
-#### [USE1] selection all non-white
+- The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted left by one tab stop.
+- If the text would butt into earlier text on the line the moving text will move left but leave one space between the earlier text and the moving text.
+- The cursor will stay where it was unless the moving text interferes. It will come to rest at the text left edge if the text affects the location where the cursor started 
 
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
-- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line. 
-- The cursor will be at the start, or the end, of the selection. The cursor remains where it was in line but moved with the text to the left.
 
-#### [USE2] selection all white
+#### [Group USE1, USE2] ---  1st char (left-most) of selection is whitespace  ---
 
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
-- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line.
-- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+##### [USE2] selection all white</br>[USE4] selection start in white end in non-white
 
-#### [USE3] selection start in non-white end in white
+*(these both behave the same way)*
 
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
-- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line.
-- In this case the selection is at end of the line away from the left edge white-space. The cursor will be at one end of the selection. The cursor remains where it was in line but moved with the line to the left.
+The Left edge of the text affected is located by searching RIGHT from left edge of the selection. All text on the line from this left edge of the text to the right end of the line are affected by the move.
 
-#### [USE4] selection start in white end in non-white
+- The affected text (Left-edge of which was located to the right of the cursor) and all text to the right is shifted left by one tab stop.
+- If the text would butt into earlier text on the line the moving text will move left but leave one space between the earlier text and the moving text.
+- The cursor should end up at the newly relocated text left edge 
 
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
-- If the line is indented the entire line is shifted left to next tab stop left of the first text on the line.
-- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+#### [Group USE3, USE4] ---  1st char (left-most) of selection is NOT whitespace  ---
 
-#### [UML1] multiple full lines</br>[UML2] multiple full lines w/partial last line</br>[UML3] multiple full lines w/partial first and last lines</br>[UML4] two lines: partial first and last lines
+##### [USE1] selection all non-white</br>[USE3] selection start in non-white end in white
+
+*(these both behave the same way)*
+
+The Left edge of the text affected is located by searching LEFT from cursor. All text on the line from this left edge of the text to the right end of the line are affected by the move.
+
+- The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted left by one tab stop.
+- If the text would butt into earlier text on the line the moving text will move left but leave one space between the earlier text and the moving text.
+- The cursor should end up at the newly relocated textleft edge
+
+
+#### [Group UML1 - UML4] ---  multiple line selection  ---
+
+##### [UML1] multiple full lines</br>[UML2] multiple full lines w/partial last line</br>[UML3] multiple full lines w/partial first and last lines</br>[UML4] two lines: partial first and last lines
 
 *(these all behave the same way)*
 
 - All lines in selected region treated as full selected lines but are treated individually
-- If the line was not indented, no adjustment is made to the line or cursor (nothing happened).
+- If the line was not indented, no adjustment is made to the line or cursor (nothing happenes).
 - For any lines not at left edge they move left one tab stop (from the 1st character on the line)
 - (*all lines maintain their current indent relative to each other, unless some lines were already at the left edge so they couldn't be moved.*)
-- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text to the right of of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+- The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text which was right of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
+
+
+---
 
 ## Research: WWPTD - (What would Propeller Tool do?)
 
@@ -196,6 +217,7 @@ The interesting things happen with **Align Mode**. To quote propeller tool docs:
 
 This is used in Propeller tool. It may be supported already in VSCode. I have to practice with it.  I'm not sure if there is an interaction with our new elastic tabs and this ability. If there should be I'll note it here when I found out. At this point in time of my learning I don't think we need to address this.  We'll see.
 
+---
 
 ## Research: WWVD - (What would VSCode do?)
 
@@ -278,7 +300,12 @@ While this will inform some of the spin2 tabbing behaviors we are adding additio
 
 *-Stephen*
 
+
+---
+
 ## Spin2 Elastic Tabs - DRAFT Implementation - v1.5.x</Br>(for reference only)
+
+**No longer behaves this way in releases v1.6.x and later.**
 
 ### Press TAB (with what selected?):
 
