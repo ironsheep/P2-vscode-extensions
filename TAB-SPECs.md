@@ -90,13 +90,13 @@ For each of the selections in this group:
 
 #### [Group TSE5,6] ---  1st char of selection is NOT whitespace  ---
 
+*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
+
 When the selection starts with characters, not whitespace, then the selection is treated as marking the non-white text that is to be indented by the TAB.  Since the selection may not start at the beginning of the non-white characters we first locate the start of the text by searching to the LEFT of the cursor. This search will end up at the first space found, or (when no spaces are found) will end up at the beginning of the line.
 
 ##### [TSE5] selection all non-white</br>[TSE6] selection starts in non-white, ends in white
 
 *(these both behave the same way)*
-
-*(Normally the selected characters would be removed and spaces to the next tab-stop would be inserted but this extension treats this differently as we are using these keys to format code!)*
 
 - The non-white characters are chased to the left from the left edge of the selection until the left edge of the text is found (note this could be the beginning of the line, if it is not indented). The cursor is moved to this new position (To the left edge of the text identified by the selection). 
 
@@ -109,9 +109,11 @@ When the selection starts with characters, not whitespace, then the selection is
 
 *(these all behave the same way)*
 
-- All lines in selected region treated as full selected lines but are treated individually
-- Each line is indented by inserting spaces to the left of the first non-white character on the line. If the line was empty the spaces are inserted at the beginning of the line (or logically, appended to the empty line.)
-- The cursor will be at the start, or the end, of the selection. If the cursor was in left edge white-space it does not move. If, instead, it was after the left edge text on the line then it moved with the line but stayed in the same relative postion within the line.
+- All lines in selected region are treated as if each entire line was selected
+- The next tabstop is calculated from the left-most text of all the lines in the selection</br>(This has the effect of indenting only the left-most lines when they are the only lines not at a tabstop)
+- Each line that is not at the calculated tabstop is indented by inserting spaces to the left of the first non-white character on the line. If the line was empty the spaces are inserted at the beginning of the line (or, logically, appended to the empty line.)
+- The cursor will be at the start, or the end, of the selection. If the cursor was in left edge white-space it does not move. If, instead, it was after the left edge text on the line then it moved with the line but stayed in the same relative postion within the line. 
+- Desired behavior for cursor is that if a cursor was on a line that moved the cursor should be placed at the text left edge on that line
 
 ---
 
@@ -123,6 +125,8 @@ The following are specific `Shift+Tab` cases with intended outcomes. Each case i
 
 #### [UIP1] insert point in non-white
 
+Think of this as: *"I clicked within a text object, move the object left."*
+
 The Left edge of the text affected is located by searching LEFT from cursor. All text on the line from this left edge to the right end of the line are affected by the move.
 
 - The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted left by one tab stop.
@@ -131,9 +135,12 @@ The Left edge of the text affected is located by searching LEFT from cursor. All
 
 #### [UIP2] insert point in white
 
+Think of this as: *"I clicked between text objects, move the object on the right to the left."*
+
+
 The Left edge of the text affected is located by searching RIGHT from cursor. All text on the line from this left edge to the right end of the line are affected by the move.
 
-- The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted left by one tab stop.
+- The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted LEFT by one tab stop.
 - If the text would butt into earlier text on the line the moving text will move left but leave one space between the earlier text and the moving text.
 - The cursor will stay where it was unless the moving text interferes. It will come to rest at the text left edge if the text affects the location where the cursor started 
 
@@ -156,7 +163,7 @@ The Left edge of the text affected is located by searching RIGHT from left edge 
 
 *(these both behave the same way)*
 
-The Left edge of the text affected is located by searching LEFT from cursor. All text on the line from this left edge of the text to the right end of the line are affected by the move.
+The Left edge of the text affected is located by searching LEFT from cursor. All text on the line from this text left edge to the right end of the line are affected by the move.
 
 - The affected text (Left-edge of which was located left of the cursor) and all text to the right is shifted left by one tab stop.
 - If the text would butt into earlier text on the line the moving text will move left but leave one space between the earlier text and the moving text.
@@ -169,12 +176,12 @@ The Left edge of the text affected is located by searching LEFT from cursor. All
 
 *(these all behave the same way)*
 
-- All lines in selected region treated as full selected lines but are treated individually
+- All lines in selected region are treated as if each entire line was selected
 - If the line was not indented, no adjustment is made to the line or cursor (nothing happenes).
 - For any lines not at left edge they move left one tab stop (from the 1st character on the line)
 - (*all lines maintain their current indent relative to each other, unless some lines were already at the left edge so they couldn't be moved.*)
 - The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text which was right of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
-
+- Desired behavior for cursor is that if a cursor was on a line that moved the cursor should be placed at the text left edge on that line
 
 ---
 
@@ -276,25 +283,13 @@ I tested various (hopefully comprehensive) cases of selection and what happens w
     		- (2) 1st text is flush at left edge
     			- NOTHING happens!
     [UML1] multiple full lines
-    	- All lines in selected region treated:
-    		- if text on line is already at left edge - nothing happens
-    		- for any lines not at left edge they move left one tab stop 
-    		- (all lines maintain their current indent relative to each other)
     [UML2] multiple full lines w/partial last line
-    	- All lines in selected region treated:
-    		- if text on line is already at left edge - nothing happens
-    		- for any lines not at left edge they move left one tab stop 
-    		- (all lines maintain their current indent relative to each other)
     [UML3] multiple full lines w/partial first and last lines
-    	- All lines in selected region treated:
-    		- if text on line is already at left edge - nothing happens
-    		- for any lines not at left edge they move left one tab stop 
-    		- (all lines maintain their current indent relative to each other)
     [UML4] two lines: partial first and last lines
-    	- All lines in selected region treated:
+    	- All lines in selected region are treated:
     		- if text on line is already at left edge - nothing happens
     		- for any lines not at left edge they move left one tab stop 
-    		- (all lines maintain their current indent relative to each other)
+    		- (all lines that are not already at the left edge of the line maintain their current indent relative to each other)
 
 While this will inform some of the spin2 tabbing behaviors we are adding additional behaviors on top of this.
 
