@@ -1,0 +1,50 @@
+Unit-testing our Tabbing:
+	
+	TAB Cases:
+		[TIP1] insert point in non-white
+		- PASS, no adverse visuals
+		
+		[TIP2] insert point in white
+		- PASS w/CURSOR BUG, should move with spaces added
+		- POSS-FIX: change insert to be cursor-1?
+		
+		[Group TSE1-4] --- 1st char (left-most) of selection is whitespace ---
+			[TSE1] Selection is all white (and DOES span a tab-stop)
+			- PASS w/CURSOR BUG, should move to left edge of text
+			- no poss fix until we can place cursor
+			
+			[TSE2] Selection starts in white, ends in non-white (and whitespace DOES span a tab-stop)
+			
+			[TSE3] Selection is all white (and does NOT span a tab-stop)
+			
+			[TSE4] Selection starts in white, ends in non-white (and whitespace does NOT span a tab-stop)
+			
+		[Group TSE5,6] --- 1st char of selection is NOT whitespace ---
+			[TSE5] selection all non-white
+			
+			[TSE6] selection starts in non-white, ends in white
+			
+		[Group TML1 - TML4] --- multiple line selection ---
+			[TML1] multiple full lines
+			
+			[TML2] multiple full lines w/partial last line
+			
+			[TML3] multiple full lines w/partial first and last lines
+			
+			[TML4] two lines: partial first and last lines
+			
+		
+	Shift+Tab Cases:
+		[UIP1] insert point in non-white
+		[UIP2] insert point in white
+		[Group USE1, USE2] --- 1st char (left-most) of selection is whitespace ---
+			[USE1] selection all white
+			[USE2] selection start in white end in non-white
+		[Group USE3, USE4] --- 1st char (left-most) of selection is NOT whitespace ---
+			[USE3] selection all non-white
+			[USE4] selection start in non-white end in white
+		[Group UML1 - UML4] --- multiple line selection ---
+			[UML1] multiple full lines
+			[UML2] multiple full lines w/partial last line
+			[UML3] multiple full lines w/partial first and last lines
+			[UML4] two lines: partial first and last lines

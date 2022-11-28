@@ -57,13 +57,13 @@ The following are specific `Tab` cases with intended outcomes. Each case is prec
 
 #### [TIP1] insert point in non-white
 
-- Tab inserts spaces to left of cursor moving to next tab-stop. 
-- The cursor and all line content to the right of the cursor effectively move to new tab-stop. (*This action has the visual effect of splitting the text at the initial cursor position.*)
+- Tab inserts spaces left of cursor to the next tab-stop. 
+- The cursor and all line content to the right of the cursor move to the next right-most tab-stop. (*If the cursor was in the middle of say a word, then this action has the visual effect of splitting the text at the initial cursor position.*)
 
 #### [TIP2] insert point in white
 
-- Tab inserts spaces to next tab-stop to left of cursor. 
-- The cursor and all line content to the right of the cursor effectively move to new tab-stop.
+- Tab inserts spaces left of cursor to the next tab-stop. 
+- The cursor and all line content to the right of the cursor move to the new tab-stop.
 
 #### [Group TSE1-4] ---  1st char (left-most) of selection is whitespace  ---
 
@@ -78,12 +78,12 @@ For each of the selections in this group:
 
 - The white-space characters are chased to the RIGHT from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters).  
 
-##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE2] Selection starts in white end in non-white (and whitespace DOES span a tab-stop)
+##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE2] Selection starts in white, ends in non-white (and whitespace DOES span a tab-stop)
 
 - Spaces are then removed from the left of this cursor postion to move the text left to the prior tab stop. 
 - The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
 
-##### [TSE3] Selection is all white (and does NOT span a tab-stop)</br>[TSE4] Selection starts in white end in non-white (and whitespace does NOT span a tab-stop)
+##### [TSE3] Selection is all white (and DOES NOT span a tab-stop)</br>[TSE4] Selection starts in white, ends in non-white (and whitespace DOES NOT span a tab-stop)
 
 - If text is already at a tab-stop then nothing happens. Otherwise (if text was not at a tab-stop) then spaces are then inserted to the left of this new cursor postion to the next tab stop.
 - The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
@@ -92,7 +92,7 @@ For each of the selections in this group:
 
 When the selection starts with characters, not whitespace, then the selection is treated as marking the non-white text that is to be indented by the TAB.  Since the selection may not start at the beginning of the non-white characters we first locate the start of the text by searching to the LEFT of the cursor. This search will end up at the first space found, or (when no spaces are found) will end up at the beginning of the line.
 
-##### [TSE5] selection all non-white</br>[TSE6] selection start in non-white end in white
+##### [TSE5] selection all non-white</br>[TSE6] selection starts in non-white, ends in white
 
 *(these both behave the same way)*
 
@@ -365,7 +365,7 @@ NOTE: empty lines are ignored for Shift+Tab.
 
 > If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices!
 >
-> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep) &nbsp;&nbsp; -OR- &nbsp;&nbsp; [![Patreon](./images/patreon.png)](https://www.patreon.com/IronSheep?fan_landing=true)[Patreon.com/IronSheep](https://www.patreon.com/IronSheep?fan_landing=true)
+> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep) &nbsp;&nbsp; -OR- &nbsp;&nbsp; [![Patreon](./DOCs/patreon.png)](https://www.patreon.com/IronSheep?fan_landing=true)[Patreon.com/IronSheep](https://www.patreon.com/IronSheep?fan_landing=true)
 
 
 ---
