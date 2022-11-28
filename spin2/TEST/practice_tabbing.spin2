@@ -22,6 +22,7 @@ PUB go() | i
         i += 3
 
 PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i
+'-+-+-+-+-+---------------------+-----------------------+-----------------------+
   image_address += lut_offset
   {-* VSCode-Spin2: nextline debug()-display: bitmap  *-}
   debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
@@ -37,16 +38,16 @@ CON
 DAT  { hub data }
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+
-        mbox_copy           long    0
-    mbox_command        long    0
-        mbox_status         long    0
-        mbox_debug          long    0
+        mbox_copy       long    0
+        mbox_command    long    0
+        mbox_status     long    0
+        mbox_debug      long    0
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+
         rx              long    0
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+
-        str_sd_err          byte    "ERROR",0
+        str_sd_err      byte    "ERROR",0
 
     orgh
 _hubTxStr   mov rx,#1
@@ -65,6 +66,7 @@ PUB sample_spin()
 
     org
 
+'-------+-----+---------+-------+---------------+-------+-----------------------+
 go_command  mov     priv_bufad,   ##DISK_BUFF         ' ensure correct hub buffer
             setq    #3-1
             wrlong  priv_copy,    ##mbox_copy         ' give aux/sector/bufad to SD mailbox

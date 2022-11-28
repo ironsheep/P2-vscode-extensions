@@ -78,12 +78,12 @@ For each of the selections in this group:
 
 - The white-space characters are chased to the RIGHT from the start of the selection until the left edge of the following text is found, or until we find the right edge end of line (if there were no non-white characters).  
 
-##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE3] Selection starts in white end in non-white (and whitespace DOES span a tab-stop)
+##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE2] Selection starts in white end in non-white (and whitespace DOES span a tab-stop)
 
 - Spaces are then removed from the left of this cursor postion to move the text left to the prior tab stop. 
 - The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
 
-##### [TSE2] Selection is all white (and does NOT span a tab-stop)</br>[TSE4] Selection starts in white end in non-white (and whitespace does NOT span a tab-stop)
+##### [TSE3] Selection is all white (and does NOT span a tab-stop)</br>[TSE4] Selection starts in white end in non-white (and whitespace does NOT span a tab-stop)
 
 - If text is already at a tab-stop then nothing happens. Otherwise (if text was not at a tab-stop) then spaces are then inserted to the left of this new cursor postion to the next tab stop.
 - The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
@@ -140,7 +140,7 @@ The Left edge of the text affected is located by searching RIGHT from cursor. Al
 
 #### [Group USE1, USE2] ---  1st char (left-most) of selection is whitespace  ---
 
-##### [USE2] selection all white</br>[USE4] selection start in white end in non-white
+##### [USE1] selection all white</br>[USE2] selection start in white end in non-white
 
 *(these both behave the same way)*
 
@@ -152,7 +152,7 @@ The Left edge of the text affected is located by searching RIGHT from left edge 
 
 #### [Group USE3, USE4] ---  1st char (left-most) of selection is NOT whitespace  ---
 
-##### [USE1] selection all non-white</br>[USE3] selection start in non-white end in white
+##### [USE3] selection all non-white</br>[USE4] selection start in non-white end in white
 
 *(these both behave the same way)*
 
@@ -180,7 +180,7 @@ The Left edge of the text affected is located by searching LEFT from cursor. All
 
 ## Research: WWPTD - (What would Propeller Tool do?)
 
-I sutdied the Propeller Tool documentation to determine what special features are present with respect TAB and insert modes.  Here are my findings:
+I studied the Propeller Tool documentation to determine what special features are present with respect TAB and insert modes.  Here are my findings:
 
 **NOTE:** *In Propeller Tool the backspace key behavior is also altered according to the custom tab settins. We are not planning to do this in VSCode.*
 
