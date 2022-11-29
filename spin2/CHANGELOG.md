@@ -21,7 +21,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.6.0] 2022-11-19
+## [1.6.0] 2022-11-28
 
 First formal release - Update for tabbing. Now operates according to latest Spec.
 
@@ -38,7 +38,7 @@ First formal release - Update for tabbing. Now operates according to latest Spec
 
 ### - Known Issues w/v1.6.0
 
-- We haven't yet learned how to control the ending postion of the edit cursor. So in many cases when using selection not single insert point the cusor may end up not being where you might expect it to be after pressing TAB or Shift+TAB.  We are looking into how to solve this.  Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+- We haven't yet learned how to control the ending postion of the edit cursor. So in many cases when using selection not single insert point the cusor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
 
 ## [1.5.2] 2022-11-19
 

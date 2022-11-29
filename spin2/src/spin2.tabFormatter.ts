@@ -51,7 +51,7 @@ export class Formatter {
   readonly orgIdentifierREgEx1 = /^(?<org>\s*(org|orgf))\s+/;
   readonly orgIdentifierREgEx2 = /^(?<org>\s*(org|orgf))$/;
 
-  private tabbingDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private tabbingDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private tabbinglog: any = undefined;
 
   private _logMessage(message: string): void {

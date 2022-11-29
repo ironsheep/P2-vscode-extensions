@@ -3334,7 +3334,7 @@ class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticToke
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spinDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spinDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;
