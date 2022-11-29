@@ -42,6 +42,9 @@ To indent a line (insert a tab) press `Tab`. To outdent a line (remove a tab) pr
 
 We also have a special feature which reminds us of our current tab settings for a given section (PUB, PRI, DAT, etc.). By placing our cursor on a given line and then pressing `Ctrl+Alt+Tab` a "tab-ruler comment line" is placed above the line our cursor is on.
 
+Lastly, we support using DAT tabbing for in-line PASM. In-line pasm for spin2 is found within **PUB** and **PRI** code blocks. The pasm2 is preceeded by `org` or `orgf` and ended with `end` or the actual end of the **PUB** or **PRI** method.
+
+(If you are writing code to be compiled by **FlexSpin** then in-line PASM is additionally recognised as starting with `asm` and ending with `endasm`.)
 
 ### Pending Changes before this Specification is Complete
 
@@ -110,8 +113,9 @@ When the selection starts with characters, not whitespace, then the selection is
 *(these all behave the same way)*
 
 - All lines in selected region are treated as if each entire line was selected
-- The next tabstop is calculated from the left-most text of all the lines in the selection</br>(This has the effect of indenting only the left-most lines when they are the only lines not at a tabstop)
-- Each line that is not at the calculated tabstop is indented by inserting spaces to the left of the first non-white character on the line. If the line was empty the spaces are inserted at the beginning of the line (or, logically, appended to the empty line.)
+- The next tabstop is calculated from the left-most text for each the line independently
+- Each line is moved to the next tabstop by inserting spaces to the left of the first non-white character on the line. 
+- If the line was empty spaces are appended to get to the next tabstop
 - The cursor will be at the start, or the end, of the selection. If the cursor was in left edge white-space it does not move. If, instead, it was after the left edge text on the line then it moved with the line but stayed in the same relative postion within the line. 
 - Desired behavior for cursor is that if a cursor was on a line that moved the cursor should be placed at the text left edge on that line
 
@@ -179,7 +183,7 @@ The Left edge of the text affected is located by searching LEFT from cursor. All
 - All lines in selected region are treated as if each entire line was selected
 - If the line was not indented, no adjustment is made to the line or cursor (nothing happenes).
 - For any lines not at left edge they move left one tab stop (from the 1st character on the line)
-- (*all lines maintain their current indent relative to each other, unless some lines were already at the left edge so they couldn't be moved.*)
+- (*all lines maintain their current indent relative to each other, until some lines arrive at the left edge or some lines were already at the left edge so they couldn't be moved.*)
 - The cursor will be at the start, or the end, of the selection. If the cursor was in the white-space that was removed, the cursor moves to the tab stop along with the text which was right of the cursor. If the cursor was elsewhere it remains where it was in line but moved with the text to the left. Lastly, if the cursor was to the left of the new tab-stop then the cursor didn't move. *(Whew!)*
 - Desired behavior for cursor is that if a cursor was on a line that moved the cursor should be placed at the text left edge on that line
 

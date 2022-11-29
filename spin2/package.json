@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
   "icon": "images/Propeller.ico",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -199,6 +199,9 @@
                   6,
                   8,
                   10,
+                  12,
+                  14,
+                  16,
                   32,
                   56,
                   80
@@ -211,6 +214,9 @@
                   6,
                   8,
                   10,
+                  12,
+                  14,
+                  16,
                   32,
                   56,
                   80
@@ -228,7 +234,7 @@
                 ]
               }
             },
-            "description": "List of tab stops, for section."
+            "description": "List of tab stops, by section."
           }
         }
       }
@@ -240,11 +246,11 @@
       },
       {
         "command": "spin2.outdentTabStop",
-        "title": "outdent tab stop"
+        "title": "Outdent tab stop"
       },
       {
         "command": "spin2.insertTabStopsComment",
-        "title": "insert tab stop comment"
+        "title": "Insert tab stop comment"
       }
     ],
     "keybindings": [

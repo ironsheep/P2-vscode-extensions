@@ -22,7 +22,7 @@ PUB go() | i
         i += 3
 
 PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i
-'-+-+-+-+-+---------------------+-----------------------+-----------------------+
+'-+-+-+-+-+-+-+-+---------------+-----------------------+-----------------------+
   image_address += lut_offset
   {-* VSCode-Spin2: nextline debug()-display: bitmap  *-}
   debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
@@ -40,7 +40,7 @@ DAT  { hub data }
 '-------+-----+---------+-------+---------------+-------+-----------------------+
         mbox_copy       long    0
     mbox_command    long    0
-        mbox_status     long    0
+                 mbox_status     long    0
         mbox_debug         long    0
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+

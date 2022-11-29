@@ -15,11 +15,27 @@ Possible next additions:
 
 - Add TAB support for `INSERT`, `OVERTYPE` and `ALIGN` editor modes
 - Add Named TAB configurations (have "Propeller Tool" tabs and your own custom set of tabs)
+- Add Hover popups for `PUB` and `PRI` method signature (help text)
+- Add Hover popups for pasm instructions (help text for each instruction)
 - Update theme to work better with a couple common languages we use near our P2 projects
 - Add code reformatting aligning columns to user defined tabstops
 - Investigate and possibly add unique coloring for method pointers
+- Add spin2 instruction templates as Snippets (*for instructions with two or more parameters*)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.6.1] 2022-11-29
+
+Minor update to the formal release (*clean up muli-line behavior, clean up in-line pasm support.*)
+
+- NEW: Fixes detection of in-line pasm by now treating `end` correctly and reverting to PUB/PRI tab use after the `end` statement
+- NEW: Adds support for `asm` and `endasm` **FlexSpin** in-line pasm keywords
+- NEW: adds 3 more tab stops for spin2 code in `PUB` and `PRI` (at 12, 14, at 16)
+- Adjusts: the multiline selection behavior for `TAB` and `Shift+TAB` has changed to treating each line individually.
+
+### - Known Issues w/v1.6.1
+
+- We haven't yet learned how to control the ending postion of the edit cursor. So in many cases when using selection not single insert point the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
 
 ## [1.6.0] 2022-11-28
 
@@ -38,7 +54,7 @@ First formal release - Update for tabbing. Now operates according to latest Spec
 
 ### - Known Issues w/v1.6.0
 
-- We haven't yet learned how to control the ending postion of the edit cursor. So in many cases when using selection not single insert point the cusor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+- We haven't yet learned how to control the ending postion of the edit cursor. So in many cases when using selection not single insert point the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
 
 ## [1.5.2] 2022-11-19
 

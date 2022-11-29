@@ -28,14 +28,15 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 
 ## Feature: Tab-stop support à la Propeller Tool
 
-(Feature created by Jay B. Harlow)
+(Initial Tabbing Feature contributed by Jay B. Harlow)
 
 - Unique tab stops per section: CON, OBJ, VAR, DAT, PUB, PRI
-- Global default is set identical to Propeller Tool v2.7.0
+- Global default has tabstops as defined by Propeller Tool v2.7.0 except +3 more tabstops for PUB, PRI (at 12, 14, and 16)
+- Uses DAT tabbing for in-line pasm (pasm within PUB, PRI blocks)
 - Place cursor on line and press `TAB` or `Shift-TAB` to indent or outdent the text
 - Place cursor on line and press `Ctrl+Alt+Tab` to generate tab location comment
 
-*NOTE: The new TAB support does not adhere to INSERT / OVERTYPE / ALIGN modes (it will in a later release)*
+*NOTE: This new TAB support does not adhere to INSERT / OVERTYPE / ALIGN modes (it will in a later release)*
 
 ## Known Issues
 

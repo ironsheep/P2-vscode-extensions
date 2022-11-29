@@ -48,8 +48,10 @@ export class Formatter {
 
   readonly blockIdentifierREgEx1 = /^(?<block>(con|var|obj|pub|pri|dat))\s+/;
   readonly blockIdentifierREgEx2 = /^(?<block>(con|var|obj|pub|pri|dat))$/;
-  readonly orgIdentifierREgEx1 = /^(?<org>\s*(org|orgf))\s+/;
-  readonly orgIdentifierREgEx2 = /^(?<org>\s*(org|orgf))$/;
+  readonly orgIdentifierREgEx1 = /^(?<org>\s*(org|orgf|asm))\s+/;
+  readonly orgIdentifierREgEx2 = /^(?<org>\s*(org|orgf|asm))$/;
+  readonly endIdentifierREgEx1 = /^(?<end>\s*(end|endasm))\s+/;
+  readonly endIdentifierREgEx2 = /^(?<end>\s*(end|endasm))$/;
 
   private tabbingDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private tabbinglog: any = undefined;
@@ -193,12 +195,14 @@ export class Formatter {
   getBlockName(document: vscode.TextDocument, selection: vscode.Selection): string {
     // searching towards top of document looking for enclosing block identifier
 
-    // NEW for PUB/PRI - lets detect ORG and ORGF being present
+    // NEW for PUB/PRI - lets detect ORG and ORGF (asm for FlexSpin) being present
+    // also detect END (endasm for FlexSpin)
     //  on way to finding PUB or PRI.
-    //  if we find one of the ORGs then we return DAT so as to use
-    //  DAT tabs in the PUB section for inline PASM
+    //  if we find one of the ORGs and NOT END then we return DAT so as to use
+    //   DAT tabs in the PUB section for inline PASM
     let blockName: string = "";
     let bFoundOrg = false;
+    let bFoundEnd = false;
     for (let lineIndex = selection.anchor.line; lineIndex >= 0; lineIndex--) {
       const line = document.lineAt(lineIndex);
       if (line.text.length < 3) {
@@ -217,6 +221,17 @@ export class Formatter {
         //this._logMessage(`   -- matchOrg-[${matchOrg}]`);
       }
 
+      if (bFoundEnd == false) {
+        let matchEnd = line.text.toLowerCase().match(this.endIdentifierREgEx1);
+        if (!matchEnd) {
+          matchEnd = line.text.toLowerCase().match(this.endIdentifierREgEx2);
+        }
+        if (matchEnd) {
+          bFoundEnd = true;
+        }
+        //this._logMessage(`   -- matchOrg-[${matchOrg}]`);
+      }
+
       let match = line.text.toLowerCase().match(this.blockIdentifierREgEx1);
       if (!match) {
         match = line.text.toLowerCase().match(this.blockIdentifierREgEx2);
@@ -226,7 +241,7 @@ export class Formatter {
       if (match) {
         blockName = match.groups?.block ?? "";
         if (blockName.length > 0) {
-          if (bFoundOrg && (blockName.toUpperCase() == "PUB" || blockName.toUpperCase() == "PRI")) {
+          if (bFoundOrg && !bFoundEnd && (blockName.toUpperCase() == "PUB" || blockName.toUpperCase() == "PRI")) {
             blockName = "dat";
           }
         }
@@ -457,9 +472,9 @@ export class Formatter {
           const horizStr: string = "-".repeat(distance);
           priorTabstop = currTabstop;
           charactersToInsert = `${charactersToInsert}${horizStr}+`;
-          //this._logMessage(` --tab#${tabNumber}  (${currTabstop}) dist(${distance})`);
+          //this._logMessage(` --tab#${tabNumber}  curr=(${currTabstop}) dist=(${distance})`);
           tabNumber++;
-        } while (currTabstop < 80 && tabNumber < 10);
+        } while (charactersToInsert.length < 80);
 
         let endOfLineStr: string = "\n";
         if (document.eol == EndOfLine.CRLF) {
@@ -514,27 +529,26 @@ export class Formatter {
 
         // if selection left char is white get tab from left edge of selection
         // else get tab from left edge of text
-        let mutiLineLeftEdgeColumn: number = 0;
         let { firstLine, lastLine, lineCount } = this.lineNumbersFromSelection(document, selection);
         const bWholeLines: boolean = firstLine != lastLine;
 
         // this will be used to find our tab column in multi-line case
         if (bWholeLines) {
-          mutiLineLeftEdgeColumn = this.calculateLeftEdge(document, firstLine, lastLine);
-          this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], multiLineLtEdge=(${mutiLineLeftEdgeColumn})`);
+          this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}]`);
         }
 
         // set initial position (where cursor actually is)
-        let cursorPos: vscode.Position = selection.active;
+        let initialCursorPos: vscode.Position = selection.active;
+        let cursorPos: vscode.Position = initialCursorPos;
         // if we have multi-line selection reset cursor to first char of all lines
         if (bWholeLines) {
-          cursorPos = cursorPos.with(cursorPos.line, 0);
+          initialCursorPos = cursorPos.with(cursorPos.line, 0);
         }
         this._logMessage(` - (DBG)BLOK-[${block}], wholeLines=(${bWholeLines}), lines fm,to=[${firstLine}, ${lastLine}], cursor-[${cursorPos.line}:${cursorPos.character}]`);
 
         for (var currLine: number = firstLine; currLine <= lastLine; currLine++) {
           // now use selection to skip whitespace to right of cursor
-          cursorPos = cursorPos.with(currLine, cursorPos.character);
+          cursorPos = cursorPos.with(currLine, initialCursorPos.character);
 
           // grab the text of the current selected line
           let currLineText: string = document.lineAt(currLine).text;
@@ -579,20 +593,12 @@ export class Formatter {
             } else {
               // have FAKE single line selection (treat as entire line selection)
               // -OR- have single line of multiple line selection
-              cursorPos = this.locateLeftTextEdge(currLineText, cursorPos);
-              textLeftEdgePos = cursorPos;
+              textLeftEdgePos = this.locateLeftTextEdge(currLineText, cursorPos);
+              cursorPos = textLeftEdgePos;
             }
 
             // lastly move non-white chars from cusor to next tabstop to right
-            let nextTabstop: number = 0;
-            if (bWholeLines) {
-              // -OR- have single line of multiple line selection
-              nextTabstop = this.getNextTabStop(block, mutiLineLeftEdgeColumn);
-            } else {
-              // just insert tab? calc from current postion, then...
-              nextTabstop = this.getNextTabStop(block, cursorPos.character);
-            }
-
+            let nextTabstop: number = this.getNextTabStop(block, cursorPos.character);
             this._logMessage(
               ` - line#${currLine} cursor-[${cursorPos.line}:${cursorPos.character}], leftEdge=[${textLeftEdgePos.line}:${textLeftEdgePos.character}], nextTabstop=[${nextTabstop}], selectedText-[${selectedText}], text-[${currLineText}]`
             );
@@ -628,10 +634,7 @@ export class Formatter {
                 // case 1: (tabstop - leftEdge) + plus leftEdgeSelectionWhite
                 // case 4:  (tabstop - leftEdge) + plus leftEdgeSelectionWhite
                 // -- we have white at left edge of selection!
-                if (textLeftEdgePos.character == nextTabstop) {
-                  // already at proper location
-                  // no deletes or adds
-                } else if (textLeftEdgePos.character < nextTabstop) {
+                if (textLeftEdgePos.character < nextTabstop) {
                   // need to move text right
                   // add only
                   nbrSpacesToInsert = nextTabstop - textLeftEdgePos.character;
@@ -680,8 +683,8 @@ export class Formatter {
             if (nbrSpacesToInsert > 0) {
               // insert spaces to left of cursor
               const charactersToInsert: string = " ".repeat(nbrSpacesToInsert);
-              this._logMessage(`    line#${currLine} pushed INSERT ${charactersToInsert.length} spaces at [${cursorPos.line}:${cursorPos.character}]`);
               results.push(vscode.TextEdit.insert(cursorPos, charactersToInsert));
+              this._logMessage(`    line#${currLine} pushed INSERT ${charactersToInsert.length} spaces at [${cursorPos.line}:${cursorPos.character}]`);
               //cursorPos = cursorPos.with(currLine, cursorPos.character + nbrSpacesToInsert);
               //this._logMessage(` - line#${currLine} afterINSERT cursor-[${cursorPos.line}:${cursorPos.character}]`);
             }
@@ -740,15 +743,11 @@ export class Formatter {
         const bWholeLines: boolean = firstLine != lastLine;
 
         // this will be used to find our new tab column in multi-line case
-        let mutiLineLeftEdgeColumn: number = 0;
-        if (bWholeLines) {
-          mutiLineLeftEdgeColumn = this.calculateLeftEdge(document, firstLine, lastLine);
-        }
-
-        this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], multiLineLtEdge=(${mutiLineLeftEdgeColumn}), bWholeLines=(${bWholeLines})`);
+        this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], bWholeLines=(${bWholeLines})`);
 
         // set initial position to right edge of selection
-        let cursorPos: vscode.Position = selection.end;
+        let initialCursorPos: vscode.Position = selection.end;
+        let cursorPos: vscode.Position = initialCursorPos;
         // if we have multi-line selection reset cursor to first char of all lines
         if (bWholeLines) {
           cursorPos = cursorPos.with(cursorPos.line, 0);
@@ -757,13 +756,13 @@ export class Formatter {
 
         for (var currLine: number = firstLine; currLine <= lastLine; currLine++) {
           // now use selection to skip whitespace to right of cursor
-          cursorPos = cursorPos.with(currLine, cursorPos.character);
+          cursorPos = cursorPos.with(currLine, initialCursorPos.character);
 
           // grab the text of the current selected line
           let currLineText: string = document.lineAt(currLine).text;
 
           // if we found text to adjust...
-          if (currLineText.length > 0) {
+          if (currLineText.length > 0 || bWholeLines) {
             // now adjust cursor: if at white, skip to next rightmost non-white, if at non-white, skip to left edge of non-white
             //  or put another way skip to left most char of text (if in text find left edge, if not in text find first text to right)
             if (selection.isEmpty) {
@@ -784,14 +783,7 @@ export class Formatter {
             this._logMessage(` - line#${currLine} ltEdge-[${cursorPos.line}:${cursorPos.character}], text-[${currLineText}]`);
 
             // we'd like to outdent to prev tab-stop but let's only go as far a to leave 1 space before prior text
-            let nextTabStopToLeft: number = 0;
-            if (lineCount > 1) {
-              // in multi-line case, we outdent to TAB before leftmost of entire group of lines
-              nextTabStopToLeft = this.getPreviousTabStop(block, mutiLineLeftEdgeColumn);
-            } else {
-              // in single-line case, we outdent to TAB before leftmost of entire group of lines
-              nextTabStopToLeft = this.getPreviousTabStop(block, cursorPos.character);
-            }
+            let nextTabStopToLeft: number = this.getPreviousTabStop(block, cursorPos.character);
             let whiteSpaceToLeftCt: number = this.countLeftWhiteSpace(currLineText, cursorPos.character);
             let nbrCharsToDelete: number = cursorPos.character - nextTabStopToLeft;
             this._logMessage(` - line#${currLine} tabStop=(${nextTabStopToLeft}), spacesToLeft=(${whiteSpaceToLeftCt}), nbrCharsToDelete=(${nbrCharsToDelete})`);
@@ -812,7 +804,6 @@ export class Formatter {
             // Empty selection, nothing to do here!
           }
         }
-
         return results;
       })
       .reduce((selections, selection) => selections.concat(selection), []);
