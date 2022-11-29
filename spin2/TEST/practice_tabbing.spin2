@@ -39,12 +39,12 @@ DAT  { hub data }
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+
         mbox_copy       long    0
-        mbox_command    long    0
+    mbox_command    long    0
         mbox_status     long    0
-        mbox_debug      long    0
+        mbox_debug         long    0
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+
-        rx              long    0
+        rx                 long    0
 
 '-------+-----+---------+-------+---------------+-------+-----------------------+
         str_sd_err      byte    "ERROR",0
@@ -62,7 +62,7 @@ _hubTxCR   mov rx,#1
 _hubMonitor   mov rx,#1
             ret
 
-PUB sample_spin()
+PUB sample_spin() | i
 
     org
 
@@ -100,6 +100,12 @@ priv_command    res 1
 priv_status     res 1
 
     end
+
+    ' random code so we can test fallback to PUB/PRI tabs here
+    i := @image5 + $36 'send RGB8/RGB16/RGB24 images from the same 24-bpp file
+    repeat $10000
+        debug(`e `uhex_(byte[i+0] >> 6 + byte[i+1] >> 5 << 2 + byte[i+2] >> 5 << 5 ))
+        debug(`f `uhex_(byte[i+0] >> 3 + byte[i+1] >> 2 << 5 + byte[i+2] >> 3 << 11))
 
 DAT
     image1 file "bird_lut1.bmp"
