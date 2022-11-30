@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
   "icon": "images/Propeller.ico",
-  "version": "1.6.1",
+  "version": "1.6.9",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -145,12 +145,12 @@
       {
         "title": "Spin2 Tabstops",
         "properties": {
-          "spin2ElasticTabstops.enable": {
+          "spinElasticTabstops.enable": {
             "type": "boolean",
             "default": false,
             "description": "Enable/disable Spin2 Tabstops."
           },
-          "spin2ElasticTabstops.blocks": {
+          "spinElasticTabstops.blocks": {
             "type": "object",
             "properties": {
               "type": "array",
@@ -233,41 +233,138 @@
                   80
                 ]
               }
-            },
-            "description": "List of tab stops, by section."
+            }
+          }
+        }
+      },
+      {
+        "title": "Spin2 Insert Mode Configuration",
+        "properties": {
+          "spinInsertMode.overtypePaste": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable use of overtype behavior when pasting text while in \"Overtype\" Mode."
+          },
+          "spinInsertMode.perEditor": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable the setting of insert/overtype/align mode \"per editor\"."
+          },
+          "spinInsertMode.enableAlign": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable \"Align\" Mode."
+          },
+          "spinInsertMode.secondaryCursorStyle": {
+            "type": "string",
+            "default": "block",
+            "enum": [
+              "line",
+              "line-thin",
+              "block",
+              "block-outline",
+              "underline",
+              "underline-thin"
+            ],
+            "description": "Sets the \"Overtype\" Mode cursor style."
+          },
+          "spinInsertMode.ternaryCursorStyle": {
+            "type": "string",
+            "default": "underline",
+            "enum": [
+              "line",
+              "line-thin",
+              "block",
+              "block-outline",
+              "underline",
+              "underline-thin"
+            ],
+            "description": "Sets the \"Align\" Mode cursor style."
+          },
+          "spinInsertMode.labelInsertMode": {
+            "type": "string",
+            "default": "Insert",
+            "description": "Label text in the status bar shown during \"Insert\" Mode, may be empty to hide the status."
+          },
+          "spinInsertMode.labelOvertypeMode": {
+            "type": "string",
+            "default": "Overtype",
+            "description": "Label text in the status bar shown during \"Overtype\" Mode, may be empty."
+          },
+          "spinInsertMode.labelAlignMode": {
+            "type": "string",
+            "default": "Align",
+            "description": "Label text in the status bar shown during \"Align\" Mode, may be empty."
           }
         }
       }
     ],
     "commands": [
       {
-        "command": "spin2.indentTabStop",
+        "command": "spin.indentTabStop",
         "title": "Indent tab stop"
       },
       {
-        "command": "spin2.outdentTabStop",
+        "command": "spin.outdentTabStop",
         "title": "Outdent tab stop"
       },
       {
-        "command": "spin2.insertTabStopsComment",
+        "command": "spin.insertTabStopsComment",
         "title": "Insert tab stop comment"
+      },
+      {
+        "command": "spin.insertMode.rotate",
+        "title": "Rotate through modes: Insert - Overtype - Align"
+      },
+      {
+        "command": "spin.insertMode.toggle",
+        "title": "Toggle between modes: Insert - Align"
+      },
+      {
+        "command": "spin.insertMode.deleteLeft",
+        "title": "Align mode Delete Left"
+      },
+      {
+        "command": "spin.insertMode.deleteRight",
+        "title": "Align mode Delete Right"
       }
     ],
     "keybindings": [
       {
         "key": "tab",
-        "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spin2ElasticTabstops.enable"
+        "command": "spin.indentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
       },
       {
-        "key": "shift+tab",
-        "command": "spin2.outdentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spin2ElasticTabstops.enable"
+        "key": "Shift+tab",
+        "command": "spin.outdentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
       },
       {
         "key": "Ctrl+Alt+tab",
-        "command": "spin2.insertTabStopsComment",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spin2ElasticTabstops.enable"
+        "command": "spin.insertTabStopsComment",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "command": "spin.insertMode.rotate",
+        "key": "insert",
+        "when": "editorFocus && editorLangId == spin2"
+      },
+      {
+        "command": "spin.insertMode.deleteLeft",
+        "key": "backspace",
+        "when": "editorFocus && spin.insert.mode == Overtype && editorLangId == spin2"
+      },
+      {
+        "command": "spin.insertMode.deleteRight",
+        "key": "delete",
+        "when": "editorFocus && spin.insert.mode == Overtype && editorLangId == spin2"
+      },
+      {
+        "command": "spin.insertMode.toggle",
+        "key": "Ctrl+Shift+i",
+        "mac": "Cmd+Shift+i",
+        "when": "editorFocus && editorLangId == spin2"
       }
     ]
   },

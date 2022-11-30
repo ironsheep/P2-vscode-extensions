@@ -35,16 +35,16 @@ export interface Blocks {
  */
 export class Formatter {
   readonly config = vscode.workspace.getConfiguration();
-  readonly blocks = this.config.get<Blocks>("spin2ElasticTabstops.blocks")!;
-  readonly blocksConfig = this.config.inspect<Blocks>("spin2ElasticTabstops.blocks");
+  readonly blocks = this.config.get<Blocks>("spinElasticTabstops.blocks")!;
+  readonly blocksConfig = this.config.inspect<Blocks>("spinElasticTabstops.blocks");
 
   readonly tabSize = this.config.get<number>("editor.tabSize");
   readonly useTabStops = this.config.get<number>("editor.useTabStops");
 
-  readonly enable = this.config.get<boolean>("spin2ElasticTabstops.enable");
-  readonly timeout = this.config.get<number>("spin2ElasticTabstops.timeout");
-  readonly maxLineCount = this.config.get<number>("spin2ElasticTabstops.maxLineCount");
-  readonly maxLineLength = this.config.get<number>("spin2ElasticTabstops.maxLineLength");
+  readonly enable = this.config.get<boolean>("spinElasticTabstops.enable");
+  readonly timeout = this.config.get<number>("spinElasticTabstops.timeout");
+  readonly maxLineCount = this.config.get<number>("spinElasticTabstops.maxLineCount");
+  readonly maxLineLength = this.config.get<number>("spinElasticTabstops.maxLineLength");
 
   readonly blockIdentifierREgEx1 = /^(?<block>(con|var|obj|pub|pri|dat))\s+/;
   readonly blockIdentifierREgEx2 = /^(?<block>(con|var|obj|pub|pri|dat))$/;

@@ -6,7 +6,12 @@ import { toNamespacedPath } from "path";
 // src/spin2.extension.ts
 
 import * as vscode from "vscode";
-import { Formatter } from "./spin2.tabFormatter";
+import { Formatter } from "./spin.tabFormatter";
+
+import { overtypeBeforePaste, overtypeBeforeType, alignBeforeType, alignDelete } from "./spin.insertMode.behavior";
+import { configuration, reloadConfiguration } from "./spin.insertMode.configuration";
+import { getMode, resetModes, toggleMode, toggleMode2State, EditorMode, modeName } from "./spin.insertMode.mode";
+import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.insertMode.statusBarItem";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -14,7 +19,7 @@ import { Formatter } from "./spin2.tabFormatter";
 //
 
 // register services provided by this file
-export function activate(context: vscode.ExtensionContext) {
+export const activate = (context: vscode.ExtensionContext) => {
   // register our outline provider
   context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: "file", language: "spin2" }, new Spin2ConfigDocumentSymbolProvider()));
 
@@ -27,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   var formatter = new Formatter();
   if (formatter.isEnbled()) {
-    const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
+    const insertTabStopsCommentCommand = "spin.insertTabStopsComment";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(insertTabStopsCommentCommand, async () => {
@@ -43,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
       })
     );
 
-    const indentTabStopCommand = "spin2.indentTabStop";
+    const indentTabStopCommand = "spin.indentTabStop";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(indentTabStopCommand, async () => {
@@ -59,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
       })
     );
 
-    const outdentTabStopCommand = "spin2.outdentTabStop";
+    const outdentTabStopCommand = "spin.outdentTabStop";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(outdentTabStopCommand, async () => {
@@ -85,6 +90,165 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.workspace.applyEdit(workEdits); // apply the edits
     }
   }
+
+  // ----------------------------------------------------------------------------
+  //   InserMode  Provider
+  //
+
+  const statusBarItem = createStatusBarItem();
+  activeTextEditorChanged();
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("spin.insertMode.rotate", toggleCommand),
+    vscode.commands.registerCommand("spin.insertMode.toggle", toggleCommand2State),
+
+    vscode.commands.registerCommand("type", typeCommand),
+    vscode.commands.registerCommand("paste", pasteCommand),
+
+    vscode.commands.registerCommand("spin.insertMode.deleteLeft", deleteLeftCommand),
+    vscode.commands.registerCommand("spin.insertMode.deleteRight", deleteRightCommand),
+
+    vscode.window.onDidChangeActiveTextEditor(activeTextEditorChanged),
+
+    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration),
+
+    statusBarItem
+  );
+};
+
+export const deactivate = () => {
+  destroyStatusBarItem();
+};
+
+// ----------------------------------------------------------------------------
+//   InsertMode command handlers   ////////////////////////////////////////////
+
+function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
+  if (textEditor === undefined) {
+    textEditor = vscode.window.activeTextEditor;
+  }
+
+  if (textEditor == null) {
+    updateStatusBarItem(null);
+  } else {
+    const mode = getMode(textEditor);
+    updateStatusBarItem(mode);
+    vscode.commands.executeCommand("setContext", "spin.insert.mode", modeName(mode));
+
+    // if in overtype mode, set the cursor to secondary style; otherwise, reset to default
+    let cursorStyle;
+    switch (mode) {
+      default:
+        cursorStyle = configuration.defaultCursorStyle;
+        break;
+      case EditorMode.OVERTYPE:
+        cursorStyle = configuration.secondaryCursorStyle;
+        break;
+      case EditorMode.ALIGN:
+        cursorStyle = configuration.ternaryCursorStyle;
+        break;
+    }
+    textEditor.options.cursorStyle = cursorStyle;
+  }
+}
+
+function toggleCommand() {
+  const textEditor = vscode.window.activeTextEditor;
+  if (textEditor == null) {
+    return;
+  }
+
+  toggleMode(textEditor);
+  activeTextEditorChanged(textEditor);
+}
+
+function toggleCommand2State() {
+  const textEditor = vscode.window.activeTextEditor;
+  if (textEditor == null) {
+    return;
+  }
+
+  toggleMode2State(textEditor);
+  activeTextEditorChanged(textEditor);
+}
+
+function getShowInStatusBar(): boolean {
+  if (configuration.labelInsertMode === "" && configuration.labelOvertypeMode === "" && configuration.labelAlignMode === "") {
+    return true;
+  }
+  return false;
+}
+
+const onDidChangeConfiguration = () => {
+  const previousPerEditor = configuration.perEditor;
+  const previousShowInStatusBar = getShowInStatusBar();
+
+  const updated = reloadConfiguration();
+  if (!updated) {
+    return;
+  }
+
+  const showInStatusBar = getShowInStatusBar();
+
+  // post create / destroy when changed
+  if (showInStatusBar !== previousShowInStatusBar) {
+    if (showInStatusBar) {
+      createStatusBarItem();
+    } else {
+      destroyStatusBarItem();
+    }
+  }
+
+  // update state if the per-editor/global configuration option changes
+  if (configuration.perEditor !== previousPerEditor) {
+    const textEditor = vscode.window.activeTextEditor;
+    const mode = textEditor != null ? getMode(textEditor) : null;
+    resetModes(mode, configuration.perEditor);
+  }
+
+  activeTextEditorChanged();
+};
+
+function typeCommand(args: { text: string }) {
+  const editor = vscode.window.activeTextEditor;
+  if (editor && getMode(editor) == EditorMode.OVERTYPE) {
+    overtypeBeforeType(editor, args.text, false);
+  } else if (editor && getMode(editor) == EditorMode.ALIGN) {
+    alignBeforeType(editor, args.text, false);
+  } else vscode.commands.executeCommand("default:type", args);
+}
+
+function deleteLeftCommand() {
+  const editor = vscode.window.activeTextEditor;
+  if (editor && getMode(editor) == EditorMode.ALIGN) {
+    alignDelete(editor, false);
+    return null;
+  } else return vscode.commands.executeCommand("deleteLeft");
+}
+
+function deleteRightCommand() {
+  const editor = vscode.window.activeTextEditor;
+  if (editor && getMode(editor) == EditorMode.ALIGN) {
+    alignDelete(editor, true);
+    return null;
+  } else return vscode.commands.executeCommand("deleteRight");
+}
+
+function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
+  const editor = vscode.window.activeTextEditor;
+  if (editor) {
+    if (getMode(editor) == EditorMode.OVERTYPE && configuration.overtypePaste) {
+      // TODO: Make paste work with align
+      overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
+      return vscode.commands.executeCommand("default:paste", args);
+    } else if (getMode(editor) == EditorMode.ALIGN && !args.pasteOnNewLine) {
+      alignBeforeType(editor, args.text, true);
+      return null;
+    } else {
+      return vscode.commands.executeCommand("default:paste", args);
+    }
+  }
+  return null;
 }
 
 // ----------------------------------------------------------------------------

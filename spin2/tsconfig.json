@@ -5,9 +5,7 @@
     "outDir": "out",
     "sourceMap": true,
     "rootDir": "src",
-    "lib": [
-         "es6"
-    ],
+    "lib": ["es6"],
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -18,9 +16,5 @@
     "experimentalDecorators": true,
     "removeComments": true
   },
-  "exclude": [
-    "node_modules",
-    ".vscode-test",
-    "REF/*.ts",
-  ]
+  "exclude": ["node_modules", ".vscode-test", "REF/*.ts"]
 }
