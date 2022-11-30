@@ -7,6 +7,8 @@ TEST/*
 !out/*
 !syntaxes/spin2.tmLanguage.json
 !spin2.language-configuration.json
+!syntaxes/spin1.tmLanguage.json
+!spin1.language-configuration.json
 !package.json
 !README.md
 !CHANGELOG.md

@@ -1,7 +1,7 @@
 {
   "name": "spin2",
   "displayName": "Spin2",
-  "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline support",
+  "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
   "version": "1.6.9",
   "publisher": "IronSheepProductionsLLC",
@@ -32,6 +32,7 @@
   "main": "out/spin2.extension.js",
   "activationEvents": [
     "onLanguage:spin2",
+    "onLanguage:spin",
     "onStartupFinished"
   ],
   "engines": {
@@ -58,6 +59,11 @@
         "language": "spin2",
         "scopeName": "source.spin2",
         "path": "syntaxes/spin2.tmLanguage.json"
+      },
+      {
+        "language": "spin",
+        "scopeName": "source.spin",
+        "path": "syntaxes/spin1.tmLanguage.json"
       }
     ],
     "languages": [
@@ -72,6 +78,18 @@
           ".spin2"
         ],
         "configuration": "./spin2.language-configuration.json"
+      },
+      {
+        "id": "spin",
+        "aliases": [
+          "spin",
+          "Spin",
+          "SPIN"
+        ],
+        "extensions": [
+          ".spin"
+        ],
+        "configuration": "./spin1.language-configuration.json"
       }
     ],
     "semanticTokenTypes": [
@@ -375,7 +393,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
-    "compile:grammar": "npx js-yaml syntaxes/spin2.tmLanguage.YAML-tmLanguage > syntaxes/spin2.tmLanguage.json"
+    "compile:grammar": "npx js-yaml syntaxes/spin2.tmLanguage.YAML-tmLanguage > syntaxes/spin2.tmLanguage.json && npx js-yaml syntaxes/spin1.tmLanguage.YAML-tmLanguage > syntaxes/spin1.tmLanguage.json "
   },
   "devDependencies": {
     "@types/glob": "^7.1.4",

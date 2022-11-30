@@ -1,0 +1,475 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "spin",
+  "patterns": [
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#block"
+    }
+  ],
+  "repository": {
+    "array_index": {
+      "name": "meta.array.index.spin",
+      "match": "(\\[)(.*?)(\\])",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.spin"
+        },
+        "2": {
+          "patterns": [
+            {
+              "include": "#number"
+            }
+          ]
+        },
+        "3": {
+          "name": "keyword.operator.spin"
+        }
+      }
+    },
+    "binary_number": {
+      "name": "constant.numeric.binary.spin",
+      "match": "(%)\\d+",
+      "captures": {
+        "1": {
+          "name": "constant.numeric.base.spin"
+        }
+      }
+    },
+    "block": {
+      "name": "meta.block.spin",
+      "patterns": [
+        {
+          "include": "#constant_block"
+        },
+        {
+          "include": "#variable_block"
+        },
+        {
+          "include": "#object_block"
+        },
+        {
+          "include": "#public_block"
+        },
+        {
+          "include": "#private_block"
+        },
+        {
+          "include": "#data_block"
+        }
+      ]
+    },
+    "block_comment": {
+      "name": "comment.block.spin",
+      "begin": "{",
+      "end": "}"
+    },
+    "cog": {
+      "name": "keyword.control.cog.spin",
+      "match": "(?i)\\b(COG(ID|NEW|INIT|STOP)|REBOOT)\\b"
+    },
+    "comment": {
+      "patterns": [
+        {
+          "include": "#doc_block_comment"
+        },
+        {
+          "include": "#block_comment"
+        },
+        {
+          "include": "#doc_line_comment"
+        },
+        {
+          "include": "#line_comment"
+        }
+      ]
+    },
+    "configuration": {
+      "name": "keyword.control.configuration.spin",
+      "match": "(?i)\\b(CHIPVER|_?CLKMODE|_?CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL[1-3]|PLL(1|2|4|8|16)X)\\b"
+    },
+    "constant": {
+      "name": "constant.language.spin",
+      "match": "(?i)\\b(TRUE|FALSE|POSX|NEGX|PI)\\b"
+    },
+    "constant_block": {
+      "name": "meta.block.constant.spin",
+      "begin": "(?i)^CON\\b",
+      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.block.con.spin"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "match": "\\b((\\w|_)+)\\s*(=)\\s*(.*)$",
+          "captures": {
+            "1": {
+              "name": "entity.name.constant.spin"
+            },
+            "3": {
+              "name": "keyword.operator.assignment.spin"
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#number"
+                },
+                {
+                  "include": "#string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "data_block": {
+      "name": "meta.block.data.spin",
+      "begin": "(?i)^DAT\\b",
+      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.block.dat.spin"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "name": "keyword.control.directive.pasm",
+          "match": "(?i)\\b(OBJ|FIT|RES)\\b"
+        },
+        {
+          "name": "keyword.control.configuration.pasm",
+          "match": "(?i)\\bCLKSET\\b"
+        },
+        {
+          "name": "keyword.control.cog.pasm",
+          "match": "(?i)\\bCOG(ID|INIT|STOP)\\b"
+        },
+        {
+          "name": "keyword.control.process.pasm",
+          "match": "(?i)\\b(LOCK(NEW|RET|CLR|SET)|WAIT(CNT|PEQ|PNE|VID))\\b"
+        },
+        {
+          "name": "keyword.control.conditions.pasm",
+          "match": "(?i)\\bIF_(ALWAYS|NEVER|N?E|(A|B)E?|N?C|N?Z|C_(EQ|NE)_Z|N?C_(AND|OR)_N?Z|Z_(EQ|NE)_C|N?Z_(AND|OR)_N?C)\\b"
+        },
+        {
+          "name": "keyword.control.flow.pasm",
+          "match": "(?i)\\b(CALL|DJNZ|JMP|JMPRET|TJNZ|TJZ|RET)\\b"
+        },
+        {
+          "name": "keyword.instruction.effects.pasm",
+          "match": "(?i)\\b(NR|WR|WC|WZ)\\b"
+        },
+        {
+          "name": "keyword.instruction.memory.pasm",
+          "match": "(?i)\\b(RD|WR)(BYTE|WORD|LONG)\\b"
+        },
+        {
+          "name": "keyword.instruction.pasm",
+          "match": "(?i)\\b(ABS(NEG)?|NEGN?(C|Z)?|MINS?|MAXS?|ADD(ABS|S|X|SX)?|SUB(ABS|S|X|SX)?|SUMN?(C|Z)?|MULS?|ANDN?|X?OR|ONES|ENC|RC(L|R)|REV|RO(L|R)|SH(L|R)|SAR|CMPS?X?|CMPSUB|TESTN?|MOV(S|D|I)|MUXN?(C|Z)?|HUBOP|NOP)\\b"
+        },
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#register"
+        },
+        {
+          "name": "keyword.operator.pasm",
+          "match": "(?i)(\\+|-|\\^\\^|\\|\\||\\|<|>\\||!|@|\\*\\*?|//?|#>|<#|~>|<<|>>|<-|->|><|&|\\||\\^|AND|OR|==|<>|<|>|=<|=>)"
+        },
+        {
+          "include": "#array_index"
+        },
+        {
+          "patterns": [
+            {
+              "include": "#quaternary_number"
+            },
+            {
+              "include": "#binary_number"
+            },
+            {
+              "include": "#decimal_number"
+            }
+          ]
+        },
+        {
+          "include": "#string"
+        }
+      ]
+    },
+    "decimal_number": {
+      "name": "constant.numeric.decimal.spin",
+      "match": "\\d+"
+    },
+    "directives": {
+      "name": "keyword.control.directive.spin",
+      "match": "(?i)\\b(STRING|CONSTANT|FLOAT|ROUND|TRUNC|FILE)\\b"
+    },
+    "doc_block_comment": {
+      "name": "comment.block.documentation.spin",
+      "begin": "{{",
+      "end": "}}"
+    },
+    "doc_line_comment": {
+      "name": "comment.block.documentation.spin",
+      "match": "''.*$"
+    },
+    "hexadecimal_number": {
+      "name": "constant.numeric.hexadecimal.spin",
+      "match": "(\\$)[0-9a-fA-F]+",
+      "captures": {
+        "1": {
+          "name": "constant.numeric.base.spin"
+        }
+      }
+    },
+    "line_comment": {
+      "name": "comment.line.spin",
+      "match": "'.*$"
+    },
+    "memory": {
+      "name": "keyword.control.memory.spin",
+      "match": "(?i)\\b((BYTE|WORD|LONG)(FILL|MOVE)?|LOOK(UPZ?|DOWNZ?)|STR(SIZE|CMP))\\b"
+    },
+    "number": {
+      "patterns": [
+        {
+          "include": "#quaternary_number"
+        },
+        {
+          "include": "#binary_number"
+        },
+        {
+          "include": "#hexadecimal_number"
+        },
+        {
+          "include": "#decimal_number"
+        }
+      ]
+    },
+    "object_block": {
+      "name": "meta.block.object.spin",
+      "begin": "(?i)^OBJ\\b",
+      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.block.obj.spin"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "name": "meta.object-initialization.spin",
+          "match": "\\b((\\w|_)+)\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
+          "captures": {
+            "1": {
+              "name": "entity.name.object.spin"
+            },
+            "3": {
+              "name": "punctuation.spin"
+            },
+            "4": {
+              "name": "support.type.spin"
+            },
+            "5": {
+              "name": "punctuation.spin"
+            },
+            "7": {
+              "name": "punctuation.spin"
+            }
+          }
+        }
+      ]
+    },
+    "operator": {
+      "name": "keyword.operator.spin",
+      "match": "(?i)(\\+(\\+|=)?|-(-|=)?|\\^(\\^|=)?|\\|(\\||=)?|~(~|>)?=?|\\?|\\|<|>\\||!|NOT|@@?|:?=|\\*(\\*|=)?|/(/|=)?|#>=?|<#=?|<<?=?|>>?=?|<-=?|->=?|><=?|&=|AND=?|OR=?|===?|<>=?|=[<>]=?)"
+    },
+    "private_block": {
+      "name": "meta.block.private.spin",
+      "begin": "(?i)^PRI\\b",
+      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.block.pri.spin"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#directives"
+        },
+        {
+          "include": "#array_index"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#configuration"
+        },
+        {
+          "include": "#cog"
+        },
+        {
+          "include": "#memory"
+        },
+        {
+          "include": "#operator"
+        },
+        {
+          "include": "#register"
+        },
+        {
+          "include": "#return"
+        }
+      ]
+    },
+    "public_block": {
+      "name": "meta.block.public.spin",
+      "begin": "(?i)^(PUB)(?:\\s+((?:\\w|\\d)+)(?:(\\()(.*)(\\)))?\\s*(?:(\\|)\\s*((\\w|_)+))?)?",
+      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.block.pub.spin"
+        },
+        "2": {
+          "name": "entity.name.function.spin"
+        },
+        "3": {
+          "name": "punctuation.spin"
+        },
+        "4": {
+          "name": "meta.parameter.spin"
+        },
+        "5": {
+          "name": "punctuation.spin"
+        },
+        "6": {
+          "name": "punctuation.spin"
+        },
+        "7": {
+          "name": "meta.return-type.spin"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#directives"
+        },
+        {
+          "include": "#array_index"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#configuration"
+        },
+        {
+          "include": "#cog"
+        },
+        {
+          "include": "#memory"
+        },
+        {
+          "include": "#operator"
+        },
+        {
+          "include": "#register"
+        },
+        {
+          "include": "#return"
+        }
+      ]
+    },
+    "quaternary_number": {
+      "name": "constant.numeric.quaternary.spin",
+      "match": "(%%)\\d+",
+      "captures": {
+        "1": {
+          "name": "constant.numeric.base.spin"
+        }
+      }
+    },
+    "register": {
+      "name": "variable.language.register.spin",
+      "match": "(?i)\\b(DIR[AB]|IN[AB]|OUT[AB]|CNT|CTR[AB]|FRQ[AB]|PHS[AB]|VCFG|VSCL|PAR)\\b"
+    },
+    "return": {
+      "name": "variable.language.return.spin",
+      "match": "(?i)\\breturn\\b"
+    },
+    "string": {
+      "name": "string.quoted.double.spin",
+      "match": "(\\\")(\\.|[^\"])*(\\\")",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.string.spin"
+        },
+        "3": {
+          "name": "punctuation.definition.string.spin"
+        }
+      }
+    },
+    "variable_block": {
+      "name": "meta.block.variable.spin",
+      "begin": "(?i)^VAR\\b",
+      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\\b",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.block.var.spin"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "match": "(?i)\\b(byte|word|long)\\s*((\\w|_)+)(\\[.*\\])?",
+          "captures": {
+            "1": {
+              "name": "storage.type.spin"
+            },
+            "2": {
+              "name": "variable.name.spin"
+            },
+            "4": {
+              "patterns": [
+                {
+                  "include": "#array_index"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scopeName": "source.spin"
+}
