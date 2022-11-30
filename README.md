@@ -20,6 +20,7 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 ## Features
 - **Syntax highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols
 - **Semantic Highlighting** for both Spin2 and Pasm2 now fully working
+- **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
 - File navigation from **Outline View**
 - Works with your favorite VSCode themes
 - Offers companion Theme (Two themes: Syntax+Semantic, and Syntax only - mostly used during semantic highlighting development)
@@ -29,6 +30,7 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 
 ### Future directions
 
+- Add Insert Mode support à la Parallax **Propeller Tool**
 - Task Provider - *studies the current environment and offers to write the tasks for a given P2 project*
 - Spin2/Pasm2 code formatter/beautifier - *allows us to have standard formatting for code we share! (source code could be formatted on each file save)*
 - Snippets for Spin2/Pasm2 (common code sequences which can be added easily to file being edited (e.g., smart pin setup code for given mode/use)
