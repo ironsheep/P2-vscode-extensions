@@ -319,70 +319,70 @@
     ],
     "commands": [
       {
-        "command": "spin.indentTabStop",
+        "command": "spin2.indentTabStop",
         "title": "Indent tab stop"
       },
       {
-        "command": "spin.outdentTabStop",
+        "command": "spin2.outdentTabStop",
         "title": "Outdent tab stop"
       },
       {
-        "command": "spin.insertTabStopsComment",
+        "command": "spin2.insertTabStopsComment",
         "title": "Insert tab stop comment"
       },
       {
-        "command": "spin.insertMode.rotate",
+        "command": "spin2.insertMode.rotate",
         "title": "Rotate through modes: Insert - Overtype - Align"
       },
       {
-        "command": "spin.insertMode.toggle",
+        "command": "spin2.insertMode.toggle",
         "title": "Toggle between modes: Insert - Align"
       },
       {
-        "command": "spin.insertMode.deleteLeft",
+        "command": "spin2.insertMode.deleteLeft",
         "title": "Align mode Delete Left"
       },
       {
-        "command": "spin.insertMode.deleteRight",
+        "command": "spin2.insertMode.deleteRight",
         "title": "Align mode Delete Right"
       }
     ],
     "keybindings": [
       {
         "key": "tab",
-        "command": "spin.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "command": "spin2.indentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && ((editorLangId == spin2) || (editorLangId == spin)) && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
-        "command": "spin.outdentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "command": "spin2.outdentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && ((editorLangId == spin2) || (editorLangId == spin)) && config.spinElasticTabstops.enable"
       },
       {
         "key": "Ctrl+Alt+tab",
-        "command": "spin.insertTabStopsComment",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "command": "spin2.insertTabStopsComment",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && ((editorLangId == spin2) || (editorLangId == spin)) && config.spinElasticTabstops.enable"
       },
       {
-        "command": "spin.insertMode.rotate",
+        "command": "spin2.insertMode.rotate",
         "key": "insert",
-        "when": "editorFocus && editorLangId == spin2"
+        "when": "editorFocus && ((editorLangId == spin2) || (editorLangId == spin))"
       },
       {
-        "command": "spin.insertMode.deleteLeft",
+        "command": "spin2.insertMode.deleteLeft",
         "key": "backspace",
-        "when": "editorFocus && spin.insert.mode == Overtype && editorLangId == spin2"
+        "when": "editorFocus && spin2.insert.mode == Overtype && ((editorLangId == spin2) || (editorLangId == spin))"
       },
       {
-        "command": "spin.insertMode.deleteRight",
+        "command": "spin2.insertMode.deleteRight",
         "key": "delete",
-        "when": "editorFocus && spin.insert.mode == Overtype && editorLangId == spin2"
+        "when": "editorFocus && spin2.insert.mode == Overtype && ((editorLangId == spin2) || (editorLangId == spin))"
       },
       {
-        "command": "spin.insertMode.toggle",
+        "command": "spin2.insertMode.toggle",
         "key": "Ctrl+Shift+i",
         "mac": "Cmd+Shift+i",
-        "when": "editorFocus && editorLangId == spin2"
+        "when": "editorFocus && ((editorLangId == spin2) || (editorLangId == spin))"
       }
     ]
   },

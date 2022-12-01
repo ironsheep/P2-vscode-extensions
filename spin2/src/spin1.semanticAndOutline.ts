@@ -289,7 +289,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
     const tokenSet: IParsedToken[] = [];
 
-    if (this.spinDebugLogEnabled) {
+    if (this.spin1DebugLogEnabled) {
       if (this.spin1log === undefined) {
         //Create output channel
         this.spin1log = vscode.window.createOutputChannel("Spin1 DEBUG");
@@ -3290,7 +3290,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spinDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;
@@ -3589,7 +3589,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private _getNonWhitePasmLineParts(line: string): string[] {
     const nonEqualsLine: string = this._removeDoubleQuotedStrings(line);
-    let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\[\]\<\>\=\?\:\!\^\+\*\&\|\-\\\#\@\/]+/g);
+    let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\[\]\<\>\=\?\!\^\+\*\&\|\-\\\#\@\/]+/g);
     if (lineParts === null) {
       lineParts = [];
     }
@@ -4938,7 +4938,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         haveLabelStatus = false;
       } else if (this._isReservedPasmSymbols(name)) {
         haveLabelStatus = false;
-      } else if (name.toUpperCase().startsWith("IF_") || name.toUpperCase() == "_RET_") {
+      } else if (name.toUpperCase().startsWith("IF_")) {
         haveLabelStatus = false;
       } else if (this._isPasmConditional(name)) {
         haveLabelStatus = false;

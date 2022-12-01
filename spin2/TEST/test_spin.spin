@@ -1,152 +1,179 @@
 '' =================================================================================================
 ''
-''   File....... test-file-004.spin2
-''   Purpose.... File in numbered series of test files used to verify syntax highlighting
+''   File....... test_spin.spin
+''   Purpose.... SPIN File in P1 series of test files used to verify syntax highlighting
 ''   Authors.... Stephen M Moraco
-''               -- Copyright (c) 2020 Iron Sheep Productions, LLC
+''               -- Copyright (c) 2022 Iron Sheep Productions, LLC
 ''               -- see below for terms of use
 ''   E-mail..... stephen@ironsheep.biz
-''   Started.... Nov 2020
-''   Updated.... 6 Nov 2020
+''   Started.... Nov 2022
+''   Updated.... 30 Nov 2022
 ''
 '' =================================================================================================
 
 
-'' this is our full PASM2 instruction set
+'' this is our full Spin P1 instruction set
 
 
-PUB null()
+OBJ
 
-    '' This is NOT a top level object
-    return 5
+    mouse   : "USB_Mouse"       ' instantiate "USB_Mouse.spin2" as "mouse"
+    v[16]   : "VocalSynth"      ' instantiate an array of 16 objects
+    vga     : "tv_vga"
 
 CON
+    _clkfreq
+    _clkmode
+    _free
+    _stack
+    _xinfreq
+    FALSE
+    FLOAT
+    NEGX
+    PI
+    PLL1X
+    PLL2X
+    PLL4X
+    PLL8X
+    PLL16X
+    POSX
+    RCFAST
+    RCSLOW
+    ROUND
+    TRUE
+    TRUNC
+    XINPUT
+    xtal1
+    xtal2
+    xtal3
+
+VAR
+
+    BYTE
+    FLOAT
+    LONG
+    ROUND
+    WORD
+    TRUNC
+OBJ
 
     FLOAT
     ROUND
     TRUNC
 
+DAT
+
+chkBffr     long    0[vga.MAX_BUFFER_LEN]
+            long    0[vga.MAX_COG_BUFFER_SIZE_IN_LONGS]
+
+
+PUB null()
+
+    '' This is NOT a top level object
 
 PUB allSpinLanguageParts()
 ' core spin verbs
-    AKPIN
+    ABORT
+    BYTE
     BYTEFILL
     BYTEMOVE
-    CALL
+    CASE
+    CHIPVER
+    CLKFREQ
+    CLKMODE
     CLKSET
-    COGATN
-    COGCHK
+    CNT
     COGID
     COGINIT
-    COGSPIN
+    COGNEW
     COGSTOP
-    GETCT
-    GETREGS
-    GETRND
-    GETSEC
-    HUBSET
-    LOCKCHK
+    CONSTANT
+    CTRA
+    CTRB
+    DIRA
+    DIRB
+    ELSE
+    FALSE
+    FLOAT
+    FRQA
+    FRQB
+    IF
+    IFNOT
+    INA
+    INB
+    LOCKCLR
     LOCKNEW
-    LOCKREL
     LOCKRET
-    LOCKTRY
+    LOCKSET
+    LONG
     LONGFILL
     LONGMOVE
     LOOKDOWN
     LOOKDOWNZ
     LOOKUP
     LOOKUPZ
-    MULDIV64
-    PINCLEAR
-    PINF
-    PINH
-    PINL
-    PINR
-    PINSTART
-    PINT
-    PINW
-    POLLATN
-    POLLCT
-    POLXY
-    RDPIN
-    RECV
-    REGEXEC
-    REGLOAD
-    ROTXY
-    RQPIN
-    SEND
-    SETREGS
+    NEGX
+    NEXT
+    OUTA
+    OUTB
+    PAR
+    PHSA
+    PI
+    PLL1X
+    PLL2X
+    PLL4X
+    PLL8X
+    PLL16X
+    POSX
+    QUIT
+    RCFAST
+    RCSLOW
+    REBOOT
+    REPEAT
+    RESULT
+    RETURN
+    ROUND
+    SPR
     STRCOMP
     STRING
     STRSIZE
-    WAITATN
-    WAITCT
-    WAITMS
-    WAITUS
+    TRUE
+    TRUNC
+    VCFG
+    VSCL
+    WAITCNT
+    WAITPEQ
+    WAITPNE
+    WAITVID
+    WORD
     WORDFILL
     WORDMOVE
-    WRPIN
-    WXPIN
-    WYPIN
-    XYPOL
-    NAN
+    XINPUT
+    xtal1
+    xtal2
+    xtal3
 
 PUB allHubVariableNames()
-    CLKFREQ
-    CLKMODE
-    VARBASE
-    PR0
-    PR1
-    PR2
-    PR3
-    PR4
-    PR5
-    PR6
-    PR7
-    IJMP1
-    IJMP2
-    IJMP3
-    IRET1
-    IRET2
-    IRET3
-    PA
-    PB
-    PTRA
-    PTRB
-    DIRA
-    DIRB
-    OUTA
-    OUTB
-    INA
-    INB
+                CLKFREQ
+                CLKMODE
+                CHIPVER
+                DIRA
+                DIRB
+                INA
+                INB
+                OUTA
+                OUTB
+                CNT
+                CTRA
+                CTRB
+                FRQA
+                FRQB
+                PHSA
+                PHSB
+                VCFG
+                VSCL
+                PAR
 
-PUB specialSymbolValues()
-' symbol for COGSPIN usage
-    NEWCOG
-    ' symbols for COGINIT
-    COGEXEC
-    HUBEXEC
-    COGEXEC_NEW
-    HUBEXEC_NEW
-    COGEXEC_NEW_PAIR
-    HUBEXEC_NEW_PAIR
-    ' EVENTS
-    EVENT_ATN
-    EVENT_CT1
-    EVENT_CT2
-    EVENT_CT3
-    EVENT_FBW
-    EVENT_INT
-    EVENT_PAT
-    EVENT_QMT
-    EVENT_SE1
-    EVENT_SE2
-    EVENT_SE3
-    EVENT_SE4
-    EVENT_XFI
-    EVENT_XMT
-    EVENT_XRL
-    EVENT_XRO
 
 'PUB allHubsetValuesForClockSetup()
 ' these are mostly numbers so we won't colorize these!
@@ -173,32 +200,12 @@ PUB allSpinConstants()
     FALSE
     POSX
     NEGX
+    PI
 
 PUB allnamedOperators()
-    ABS
-    ENCOD
-    DECOD
-    BMASK
-    ONES
-    SQRT
-    QLOG
-    QEXP
-    SAR
-    ROR
-    ROL
-    REV
-    ZEROX
-    SIGNX
-    SCA
-    SCAS
-    FRAC
     NOT
-    ' Field Operations
-    ADDBITS
-    ADDPINS
     AND
     OR
-    XOR
 
     FLOAT
     ROUND
@@ -292,10 +299,9 @@ PUB allDebugMethods()
     DEBUG_WINDOWS_OFF
 
 
-PUB allFlowControl()
+PRI allFlowControl()
     ABORT
     CASE
-    CASE_FAST
     ELSE
     ELSEIF
     ELSEIFNOT
@@ -511,7 +517,7 @@ CON { license }
  -------------------------------------------------------------------------------------------------
   MIT License
 
-  Copyright (c) 2020 Iron Sheep Productions, LLC
+  Copyright (c) 2022 Iron Sheep Productions, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal

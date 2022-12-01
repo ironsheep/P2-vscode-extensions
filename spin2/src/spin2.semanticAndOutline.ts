@@ -289,7 +289,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
     const tokenSet: IParsedToken[] = [];
 
-    if (this.spinDebugLogEnabled) {
+    if (this.spin2DebugLogEnabled) {
       if (this.spin2log === undefined) {
         //Create output channel
         this.spin2log = vscode.window.createOutputChannel("Spin2 DEBUG");
@@ -3256,7 +3256,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spinDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;

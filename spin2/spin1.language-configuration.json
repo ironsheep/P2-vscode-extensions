@@ -1,8 +1,20 @@
 {
   "comments": {
-    "lineComment": "'"
+    "lineCommentDoc": "''",
+    "lineComment": "'",
+    "blockCommentDoc": ["{{", "}}"],
+    "blockComment": ["{", "}"]
   },
-  "brackets": [["(", ")"]],
+  "brackets": [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"]
+  ],
   "autoClosingPairs": [{ "open": "(", "close": ")", "notIn": ["string", "comment"] }],
-  "surroundingPairs": [["(", ")"]]
+  "surroundingPairs": [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+    ["\"", "\""]
+  ]
 }

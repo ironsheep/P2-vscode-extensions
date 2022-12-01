@@ -2,7 +2,7 @@
 import * as vscode from "vscode";
 
 import { configuration } from "./spin.insertMode.configuration";
-import { EditorMode } from "./spin.insertMode.mode";
+import { eInsertMode } from "./spin.insertMode.mode";
 
 let statusBarItem: vscode.StatusBarItem | null;
 
@@ -12,7 +12,7 @@ export const createStatusBarItem = () => {
   }
 
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-  statusBarItem.command = "spin.insertMode.rotate";
+  statusBarItem.command = "spin2.insertMode.rotate";
   statusBarItem.show();
 
   updateStatusBarItem(null);
@@ -29,7 +29,7 @@ export const destroyStatusBarItem = () => {
   statusBarItem = null;
 };
 
-export const updateStatusBarItem = (insertMode: EditorMode | null) => {
+export const updateStatusBarItem = (insertMode: eInsertMode | null) => {
   if (statusBarItem == null) {
     return;
   }
@@ -44,13 +44,13 @@ export const updateStatusBarItem = (insertMode: EditorMode | null) => {
 
   let sbiText;
 
-  if (insertMode == EditorMode.OVERTYPE) {
+  if (insertMode == eInsertMode.OVERTYPE) {
     sbiText = configuration.labelOvertypeMode;
     statusBarItem.tooltip = "Overtype Mode, click to change to Align Mode (if enabled) or Insert Mode";
-  } else if (insertMode == EditorMode.INSERT) {
+  } else if (insertMode == eInsertMode.INSERT) {
     sbiText = configuration.labelInsertMode;
     statusBarItem.tooltip = "Insert Mode, click to change to Overtype Mode";
-  } else if (insertMode == EditorMode.ALIGN) {
+  } else if (insertMode == eInsertMode.ALIGN) {
     sbiText = configuration.labelAlignMode;
     statusBarItem.tooltip = "Align Mode, click to change to Insert Mode";
   }

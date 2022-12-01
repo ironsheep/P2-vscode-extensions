@@ -8,9 +8,9 @@ import { toNamespacedPath } from "path";
 import * as vscode from "vscode";
 import { Formatter } from "./spin.tabFormatter";
 
-import { overtypeBeforePaste, overtypeBeforeType, alignBeforeType, alignDelete } from "./spin.insertMode.behavior";
+import { overtypeBeforePaste, overtypeBeforeType } from "./spin.insertMode.behavior";
 import { configuration, reloadConfiguration } from "./spin.insertMode.configuration";
-import { getMode, resetModes, toggleMode, toggleMode2State, EditorMode, modeName } from "./spin.insertMode.mode";
+import { getMode, resetModes, toggleMode, toggleMode2State, eInsertMode, modeName } from "./spin.insertMode.mode";
 import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.insertMode.statusBarItem";
 import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semanticAndOutline";
 import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
@@ -29,10 +29,10 @@ export const activate = (context: vscode.ExtensionContext) => {
   context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "spin2" }, new Spin2DocumentSemanticTokensProvider(), Spin2Legend));
 
   // register our  Spin1 outline provider
-  context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: "file", language: "spin" }, new Spin2ConfigDocumentSymbolProvider()));
+  context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: "file", language: "spin" }, new Spin1ConfigDocumentSymbolProvider()));
 
   // register our  Spin1 semantic tokens provider
-  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "spin" }, new Spin2DocumentSemanticTokensProvider(), Spin1Legend));
+  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "spin" }, new Spin1DocumentSemanticTokensProvider(), Spin1Legend));
 
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider
@@ -40,7 +40,7 @@ export const activate = (context: vscode.ExtensionContext) => {
 
   var formatter = new Formatter();
   if (formatter.isEnbled()) {
-    const insertTabStopsCommentCommand = "spin.insertTabStopsComment";
+    const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(insertTabStopsCommentCommand, async () => {
@@ -50,13 +50,13 @@ export const activate = (context: vscode.ExtensionContext) => {
           var textEdits = await formatter.insertTabStopsComment(document, editor.selections);
           applyTextEdits(document, textEdits!);
         } catch (error) {
-          await vscode.window.showErrorMessage("Formatter Problem");
+          await vscode.window.showErrorMessage("Formatter Add Comment Problem");
           console.error(error);
         }
       })
     );
 
-    const indentTabStopCommand = "spin.indentTabStop";
+    const indentTabStopCommand = "spin2.indentTabStop";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(indentTabStopCommand, async () => {
@@ -66,13 +66,13 @@ export const activate = (context: vscode.ExtensionContext) => {
           var textEdits = await formatter.indentTabStop(document, editor);
           applyTextEdits(document, textEdits!);
         } catch (error) {
-          await vscode.window.showErrorMessage("Formatter Problem");
+          await vscode.window.showErrorMessage("Formatter TAB Problem");
           console.error(error);
         }
       })
     );
 
-    const outdentTabStopCommand = "spin.outdentTabStop";
+    const outdentTabStopCommand = "spin2.outdentTabStop";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(outdentTabStopCommand, async () => {
@@ -83,7 +83,7 @@ export const activate = (context: vscode.ExtensionContext) => {
           applyTextEdits(document, textEdits!);
           console.log();
         } catch (error) {
-          await vscode.window.showErrorMessage("Formatter Problem");
+          await vscode.window.showErrorMessage("Formatter Shift+TAB Problem");
           console.error(error);
         }
       })
@@ -107,14 +107,14 @@ export const activate = (context: vscode.ExtensionContext) => {
   activeTextEditorChanged();
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("spin.insertMode.rotate", toggleCommand),
-    vscode.commands.registerCommand("spin.insertMode.toggle", toggleCommand2State),
+    vscode.commands.registerCommand("spin2.insertMode.rotate", toggleCommand),
+    vscode.commands.registerCommand("spin2.insertMode.toggle", toggleCommand2State),
 
     vscode.commands.registerCommand("type", typeCommand),
     vscode.commands.registerCommand("paste", pasteCommand),
 
-    vscode.commands.registerCommand("spin.insertMode.deleteLeft", deleteLeftCommand),
-    vscode.commands.registerCommand("spin.insertMode.deleteRight", deleteRightCommand),
+    vscode.commands.registerCommand("spin2.insertMode.deleteLeft", deleteLeftCommand),
+    vscode.commands.registerCommand("spin2.insertMode.deleteRight", deleteRightCommand),
 
     vscode.window.onDidChangeActiveTextEditor(activeTextEditorChanged),
 
@@ -141,7 +141,7 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
   } else {
     const mode = getMode(textEditor);
     updateStatusBarItem(mode);
-    vscode.commands.executeCommand("setContext", "spin.insert.mode", modeName(mode));
+    vscode.commands.executeCommand("setContext", "spin2.insert.mode", modeName(mode));
 
     // if in overtype mode, set the cursor to secondary style; otherwise, reset to default
     let cursorStyle;
@@ -149,10 +149,10 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
       default:
         cursorStyle = configuration.defaultCursorStyle;
         break;
-      case EditorMode.OVERTYPE:
+      case eInsertMode.OVERTYPE:
         cursorStyle = configuration.secondaryCursorStyle;
         break;
-      case EditorMode.ALIGN:
+      case eInsertMode.ALIGN:
         cursorStyle = configuration.ternaryCursorStyle;
         break;
     }
@@ -219,38 +219,42 @@ const onDidChangeConfiguration = () => {
 
 function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;
-  if (editor && getMode(editor) == EditorMode.OVERTYPE) {
+  var formatter = new Formatter();
+  if (editor && getMode(editor) == eInsertMode.OVERTYPE) {
     overtypeBeforeType(editor, args.text, false);
-  } else if (editor && getMode(editor) == EditorMode.ALIGN) {
-    alignBeforeType(editor, args.text, false);
+  } else if (editor && getMode(editor) == eInsertMode.ALIGN) {
+    formatter.alignBeforeType(editor, args.text, false);
   } else vscode.commands.executeCommand("default:type", args);
 }
 
 function deleteLeftCommand() {
   const editor = vscode.window.activeTextEditor;
-  if (editor && getMode(editor) == EditorMode.ALIGN) {
-    alignDelete(editor, false);
+  var formatter = new Formatter();
+  if (editor && getMode(editor) == eInsertMode.ALIGN) {
+    formatter.alignDelete(editor, false);
     return null;
   } else return vscode.commands.executeCommand("deleteLeft");
 }
 
 function deleteRightCommand() {
   const editor = vscode.window.activeTextEditor;
-  if (editor && getMode(editor) == EditorMode.ALIGN) {
-    alignDelete(editor, true);
+  var formatter = new Formatter();
+  if (editor && getMode(editor) == eInsertMode.ALIGN) {
+    formatter.alignDelete(editor, true);
     return null;
   } else return vscode.commands.executeCommand("deleteRight");
 }
 
 function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
   const editor = vscode.window.activeTextEditor;
+  var formatter = new Formatter();
   if (editor) {
-    if (getMode(editor) == EditorMode.OVERTYPE && configuration.overtypePaste) {
+    if (getMode(editor) == eInsertMode.OVERTYPE && configuration.overtypePaste) {
       // TODO: Make paste work with align
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
-    } else if (getMode(editor) == EditorMode.ALIGN && !args.pasteOnNewLine) {
-      alignBeforeType(editor, args.text, true);
+    } else if (getMode(editor) == eInsertMode.ALIGN && !args.pasteOnNewLine) {
+      formatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {
       return vscode.commands.executeCommand("default:paste", args);

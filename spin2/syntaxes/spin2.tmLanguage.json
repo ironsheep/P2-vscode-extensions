@@ -31,7 +31,7 @@
     },
     "binary_number": {
       "name": "constant.numeric.binary.spin2",
-      "match": "(\\%[01][01_]*)\\b",
+      "match": "\\b(\\%[01][01_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base2.spin2"
@@ -188,7 +188,7 @@
       "patterns": [
         {
           "name": "constant.numeric.base10.spin2",
-          "match": "([\\-][0-9][0-9_]*)\\b"
+          "match": "\\b([\\-][0-9][0-9_]*)\\b"
         },
         {
           "name": "constant.numeric.base10.spin2",
@@ -213,18 +213,18 @@
       "name": "constant.numeric.decimal.spin2",
       "patterns": [
         {
-          "name": "constant.numeric.float.spin2",
-          "match": "([+\\-]?(?:0|[1-9][0-9_]*)(?:\\.[0-9]+)(?:[eE][+\\-]?[0-9]+)?)\\b"
+          "name": "constant.numeric.float.spin",
+          "match": "\\b([+\\-]?(?:0|[1-9][0-9_]*)(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+)?)\\b"
         },
         {
-          "name": "constant.numeric.float.spin2",
-          "match": "([+\\-]?(?:0|[1-9][0-9_]*)(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+))\\b"
+          "name": "constant.numeric.float.spin",
+          "match": "\\b([+\\-]?(?:0|[1-9][0-9_]*)?(?:\\.[0-9]+)(?:[eE][+\\-]?[0-9]+))\\b"
         }
       ]
     },
     "hexadecimal_number": {
       "name": "constant.numeric.hexadecimal.spin2",
-      "match": "(\\$[0-9a-fA-F][0-9a-fA-F_]*)\\b",
+      "match": "\\b(\\$[0-9a-fA-F][0-9a-fA-F_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base16.spin2"
@@ -358,11 +358,11 @@
           "include": "#cog_register_names"
         },
         {
-          "name": "storage.modifier.spin2",
+          "name": "storage.modifier.pasm2",
           "match": "(?i)\\b(ORG(F|H)?|FIT)\\b"
         },
         {
-          "name": "storage.type.pasm.spin2",
+          "name": "storage.type.pasm2",
           "match": "(?i)\\b(BYTE|WORD|LONG|RES)\\b"
         },
         {
@@ -569,7 +569,7 @@
     },
     "quaternary_number": {
       "name": "constant.numeric.quaternary.spin2",
-      "match": "(\\%\\%[0-3][0-3_]*)\\b",
+      "match": "\\b(\\%\\%[0-3][0-3_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base4.spin2"

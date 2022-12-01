@@ -1,4 +1,8 @@
-PUB spinMethodNames()
+PUB spinMethodNames() : nResult
+
+    BYTE
+    WORD
+    LONG
 
     HUBSET()
     ' Execute HUBSET instruction using Value

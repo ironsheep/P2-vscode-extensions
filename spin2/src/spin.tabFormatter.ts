@@ -2,9 +2,9 @@
 
 // https://typescript.hotexamples.com/examples/vscode/window/createTextEditorDecorationType/typescript-window-createtexteditordecorationtype-method-examples.html
 
-import { nextTick } from "process";
 import * as vscode from "vscode";
 import { EndOfLine } from "vscode";
+import { getMode, eInsertMode, modeName } from "./spin.insertMode.mode";
 
 // ----------------------------------------------------------------------------
 //  this file contains routines for tabbing the code: ==> or <==
@@ -34,17 +34,17 @@ export interface Blocks {
  *
  */
 export class Formatter {
-  readonly config = vscode.workspace.getConfiguration();
-  readonly blocks = this.config.get<Blocks>("spinElasticTabstops.blocks")!;
-  readonly blocksConfig = this.config.inspect<Blocks>("spinElasticTabstops.blocks");
+  readonly config = vscode.workspace.getConfiguration("spinElasticTabstops");
+  readonly blocks = this.config.get<Blocks>("blocks")!;
+  readonly blocksConfig = this.config.inspect<Blocks>("blocks");
 
   readonly tabSize = this.config.get<number>("editor.tabSize");
   readonly useTabStops = this.config.get<number>("editor.useTabStops");
 
-  readonly enable = this.config.get<boolean>("spinElasticTabstops.enable");
-  readonly timeout = this.config.get<number>("spinElasticTabstops.timeout");
-  readonly maxLineCount = this.config.get<number>("spinElasticTabstops.maxLineCount");
-  readonly maxLineLength = this.config.get<number>("spinElasticTabstops.maxLineLength");
+  readonly enable = this.config.get<boolean>("enable");
+  readonly timeout = this.config.get<number>("timeout");
+  readonly maxLineCount = this.config.get<number>("maxLineCount");
+  readonly maxLineLength = this.config.get<number>("maxLineLength");
 
   readonly blockIdentifierREgEx1 = /^(?<block>(con|var|obj|pub|pri|dat))\s+/;
   readonly blockIdentifierREgEx2 = /^(?<block>(con|var|obj|pub|pri|dat))$/;
@@ -53,7 +53,7 @@ export class Formatter {
   readonly endIdentifierREgEx1 = /^(?<end>\s*(end|endasm))\s+/;
   readonly endIdentifierREgEx2 = /^(?<end>\s*(end|endasm))$/;
 
-  private tabbingDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private tabbingDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private tabbinglog: any = undefined;
 
   private _logMessage(message: string): void {
@@ -67,8 +67,8 @@ export class Formatter {
     if (this.tabbingDebugLogEnabled) {
       if (this.tabbinglog === undefined) {
         //Create output channel
-        this.tabbinglog = vscode.window.createOutputChannel("Spin2 TAB DEBUG");
-        this._logMessage("Spin2 TAB log started.");
+        this.tabbinglog = vscode.window.createOutputChannel("Spin/Spin2 TAB DEBUG");
+        this._logMessage("Spin/Spin2 TAB log started.");
       } else {
         this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
       }
@@ -309,11 +309,42 @@ export class Formatter {
     return { bNotAllWhite, nonWhiteIndex };
   }
 
+  locateDoubleWhiteLeftEdge(currLineText: string, cursorPos: vscode.Position): vscode.Position {
+    // for Align Mode we need to manipulate the extra space at right edge of text being moved
+    // this extra space is defined as two or more spaces. So find the location of two spaces to
+    // right of the given position
+    let leftMostDoubleWhitePos: vscode.Position = cursorPos.with(0, 0);
+    for (var idx: number = cursorPos.character; idx < currLineText.length - 1; idx++) {
+      if (this.isCharWhiteAt(currLineText, idx) == true && this.isCharWhiteAt(currLineText, idx + 1) == true) {
+        leftMostDoubleWhitePos = cursorPos.with(cursorPos.line, idx);
+        break;
+      }
+    }
+    this._logMessage(
+      ` - (DBG) locateDoubleWhiteLeftEdge() txt-[${currLineText}](${currLineText.length}) cursor-[${cursorPos.line}:${cursorPos.character}] => dblWhtPos=[${leftMostDoubleWhitePos.line}:${leftMostDoubleWhitePos.character}]`
+    );
+    return leftMostDoubleWhitePos;
+  }
+
+  countOfWhiteChars(currLineText: string, cursorPos: vscode.Position): number {
+    // for Align Mode we are going to add or remove spaces in the extra space
+    //  area right of the cursor postion, let's count how many spaces we have there
+    let nbrWhiteChars: number = 0;
+    for (var idx: number = cursorPos.character; idx < currLineText.length; idx++) {
+      if (this.isCharWhiteAt(currLineText, idx) == false) {
+        break;
+      }
+      nbrWhiteChars++;
+    }
+    this._logMessage(` - (DBG) countOfWhiteChars() txt-[${currLineText}](${currLineText.length}) cursor-[${cursorPos.line}:${cursorPos.character}] => whiteLength is (${nbrWhiteChars}) spaces`);
+    return nbrWhiteChars;
+  }
+
   locateLeftTextEdge(currLineText: string, cursorPos: vscode.Position): vscode.Position {
     // now adjust cursor: if at white, skip to next rightmost non-white, if at non-white, skip to left edge of non-white
     //  or put another way skip to left most char of text (if in text find left edge, if not in text find first text to right)
     //this._logMessage(` - locateLeftTextEdge() txt-[${currLineText}](${currLineText.length}) cursor-[${cursorPos.line}:${cursorPos.character}])`);
-    const searchArea: string = currLineText.substring(cursorPos.character);
+    //const searchArea: string = currLineText.substring(cursorPos.character);
     //this._logMessage(`   -- searching-[${searchArea}](${searchArea.length}) [0-${searchArea.length - 1}])`);
     let leftMostNonWhitePos: vscode.Position = cursorPos;
     if (this.isCharWhiteAt(currLineText, cursorPos.character)) {
@@ -666,7 +697,7 @@ export class Formatter {
               nbrSpacesToInsert = nextTabstop;
             }
             this._logMessage(
-              ` - line#${currLine} finding: BLOK-[${block}], cursor-[${cursorPos.line}:${cursorPos.character}], next TabStop is TAB-(${nextTabstop}), nbrSpacesToInsert=(${nbrSpacesToInsert})`
+              ` - line#${currLine} finding: BLOK-[${block}], cursor-[${cursorPos.line}:${cursorPos.character}], next TabStop is TAB-(${nextTabstop}), nbrSpacesToRemove=(${nbrSpacesToRemove}), nbrSpacesToInsert=(${nbrSpacesToInsert})`
             );
 
             // optionally remove spaces, then optionally add spaces
@@ -674,11 +705,25 @@ export class Formatter {
               const deleteStartPos: vscode.Position = selection.start;
               const deleteEndPos: vscode.Position = deleteStartPos.with(deleteStartPos.line, deleteStartPos.character + nbrSpacesToRemove);
               const deleteRange: vscode.Range = new vscode.Range(deleteStartPos, deleteEndPos);
-              this._logMessage(`    line#${currLine} pushed DELETE spaces at [${deleteStartPos.line}:${deleteStartPos.character}-${deleteEndPos.character}]`);
+              this._logMessage(
+                `    line#${currLine} pushed DELETE ${deleteRange.end.character - deleteRange.start.character} spaces at [${deleteStartPos.line}:${deleteStartPos.character}-${deleteEndPos.character}]`
+              );
               results.push(vscode.TextEdit.delete(deleteRange));
               cursorPos = cursorPos.with(textLeftEdgePos.line, textLeftEdgePos.character - nbrSpacesToRemove);
               this._logMessage(`    line#${currLine} > after-DELETE cursor-[${cursorPos.line}:${cursorPos.character}]`);
               // since we are single line we could have putback text to put it back in if we need!
+              // if we are in align mode, let's count this change
+              if (getMode(editor) == eInsertMode.ALIGN) {
+                // see if we have double-white-space to manipulate...
+                let doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, textLeftEdgePos);
+                if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
+                  // yes we do!
+                  // insert length of spaces we removed but at this doubleWhite location
+                  const charactersToInsert: string = " ".repeat(deleteRange.end.character - deleteRange.start.character);
+                  this._logMessage(`    line#${currLine} pushed AlignMode INSERT ${charactersToInsert.length} spaces before [${doubleWhitePos.line}:${doubleWhitePos.character}]`);
+                  results.push(vscode.TextEdit.insert(doubleWhitePos, charactersToInsert));
+                }
+              }
             }
             if (nbrSpacesToInsert > 0) {
               // insert spaces to left of cursor
@@ -687,6 +732,26 @@ export class Formatter {
               this._logMessage(`    line#${currLine} pushed INSERT ${charactersToInsert.length} spaces at [${cursorPos.line}:${cursorPos.character}]`);
               //cursorPos = cursorPos.with(currLine, cursorPos.character + nbrSpacesToInsert);
               //this._logMessage(` - line#${currLine} afterINSERT cursor-[${cursorPos.line}:${cursorPos.character}]`);
+              // if we are in align mode, let's count this change
+              if (getMode(editor) == eInsertMode.ALIGN) {
+                // see if we have double-white-space to manipulate...
+                let doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, textLeftEdgePos);
+                if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
+                  // yes we do!
+                  // delete length of spaces we inserted but from this doubleWhite location
+                  const doubleWhiteLength: number = this.countOfWhiteChars(currLineText, doubleWhitePos);
+                  const deleteLength: number = doubleWhiteLength < nbrSpacesToInsert ? doubleWhiteLength : nbrSpacesToInsert;
+                  const deleteStartPos: vscode.Position = doubleWhitePos;
+                  const deleteEndPos: vscode.Position = deleteStartPos.with(deleteStartPos.line, deleteStartPos.character + deleteLength);
+                  const deleteRange: vscode.Range = new vscode.Range(deleteStartPos, deleteEndPos);
+                  this._logMessage(
+                    `    line#${currLine} pushed AlignMode DELETE ${deleteRange.end.character - deleteRange.start.character} spaces at [${deleteRange.start.line}:${deleteRange.start.character}-${
+                      deleteRange.end.character
+                    }]`
+                  );
+                  results.push(vscode.TextEdit.delete(deleteRange));
+                }
+              }
             }
             // ------------ FAILED EXPERIMENT to relocate cursor after edits ---------------------
             // now place our cursor at desired location
@@ -704,6 +769,7 @@ export class Formatter {
             const charactersToInsert: string = " ".repeat(nextTabstop);
             this._logMessage(`    line#${currLine} pushed blank-line INSERT ${charactersToInsert.length} spaces before [${cursorPos.line}:${cursorPos.character}]`);
             results.push(vscode.TextEdit.insert(this.leftOfCursor(cursorPos), charactersToInsert));
+            // NOTE: nothing to do for Align Mode in this empty-line case!
           }
         }
 
@@ -792,14 +858,25 @@ export class Formatter {
             }
             const deleteStart: vscode.Position = cursorPos.with(cursorPos.line, cursorPos.character - nbrCharsToDelete);
             const deleteEnd: vscode.Position = deleteStart.with(deleteStart.line, deleteStart.character + nbrCharsToDelete);
-            this._logMessage(` - line#${currLine} delete s,e-[${deleteStart.line}:${deleteStart.character} - ${deleteEnd.line}:${deleteEnd.character}]`);
-
-            const range = selection.with({
-              start: deleteStart,
-              end: deleteEnd,
-            });
+            const range = selection.with({ start: deleteStart, end: deleteEnd });
             this._logMessage(`    line#${currLine} pushed DELETE spaces [${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}], tabStop: ${nextTabStopToLeft})`);
             results.push(vscode.TextEdit.delete(range));
+            // if we are in align mode, let's count this change
+            const currMode: eInsertMode = getMode(editor);
+            const currModeName: string = modeName(currMode);
+            this._logMessage(`    Editor Mode = [${currModeName}]`);
+
+            if (currMode == eInsertMode.ALIGN) {
+              // see if we have double-white-space to manipulate...
+              const doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, deleteEnd);
+              if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
+                // yes we do!
+                // insert length of spaces we removed but at this doubleWhite location
+                const charactersToInsert: string = " ".repeat(range.end.character - range.start.character);
+                this._logMessage(`    line#${currLine} pushed AlignMode INSERT ${charactersToInsert.length} spaces before [${doubleWhitePos.line}:${doubleWhitePos.character}]`);
+                results.push(vscode.TextEdit.insert(doubleWhitePos, charactersToInsert));
+              }
+            }
           } else {
             // Empty selection, nothing to do here!
           }
@@ -807,5 +884,128 @@ export class Formatter {
         return results;
       })
       .reduce((selections, selection) => selections.concat(selection), []);
+  }
+
+  readonly alignWordExpr = /([^ ]+ ?)*[^ ]+/;
+
+  /**
+   * align before type
+   *
+   * @param editor The current editor window.
+   * @return Nothing.
+   */
+  alignBeforeType(editor: vscode.TextEditor, text: string, undoStop: boolean) {
+    // skip overtype behavior when enter is pressed
+    if (text === "\r" || text === "\n" || text === "\r\n") {
+      vscode.commands.executeCommand("default:type", { text: text });
+      return;
+    }
+    if (getMode(editor) != eInsertMode.ALIGN) {
+      this._logMessage(`* alnBT ABORT, not in Align mode`);
+      return; // bail if not in Align Mode!
+    }
+    if (text.indexOf(" ") !== -1) undoStop = true;
+
+    editor
+      .edit(
+        (edit) => {
+          editor.selections = editor.selections.map((selection) => {
+            this._logMessage(
+              `* alnBT enabled=[${this.enable}], text=[${text}], selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
+            );
+            const cursorPosition = selection.start;
+            const lineEndPosition = editor.document.lineAt(cursorPosition).range.end;
+            let typeSel = selection;
+
+            // handle alignment
+            if (typeSel.isSingleLine) {
+              let typeSize = editor.document.offsetAt(typeSel.end) - editor.document.offsetAt(typeSel.start);
+              if (typeSize > 1) undoStop = true;
+              if (typeSize != text.length) {
+                let spaceDiff = text.length - typeSize;
+                let currWord = editor.document.getWordRangeAtPosition(typeSel.end, this.alignWordExpr);
+                if (!currWord) currWord = editor.document.getWordRangeAtPosition(typeSel.end.translate(0, +1), this.alignWordExpr);
+                let spacesAfter;
+                if (currWord && !currWord.end.isEqual(lineEndPosition)) {
+                  spacesAfter = editor.document.getWordRangeAtPosition(currWord.end, / {2,}/);
+                } else if (!typeSel.end.isEqual(lineEndPosition)) {
+                  if (editor.document.getText(new vscode.Range(typeSel.end, typeSel.end.translate(0, +2))) === "  ") {
+                    spacesAfter = editor.document.getWordRangeAtPosition(typeSel.end, / {2,}/);
+                  }
+                }
+                if (spacesAfter && typeSize < text.length) {
+                  // remove spaces if possible
+                  let spaceCount = editor.document.offsetAt(spacesAfter.end) - editor.document.offsetAt(spacesAfter.start);
+                  edit.delete(new vscode.Range(spacesAfter.end.translate(0, -Math.min(spaceDiff, spaceCount - 1)), spacesAfter.end));
+                } else if (spacesAfter && typeSize > text.length) {
+                  // Add spaces
+                  edit.insert(spacesAfter.end, " ".repeat(typeSize - text.length));
+                }
+              }
+            } else {
+              undoStop = true;
+            }
+            if (typeSel.isEmpty) {
+              edit.insert(typeSel.end, text);
+            } else {
+              edit.replace(typeSel, text);
+            }
+            return new vscode.Selection(typeSel.end, typeSel.end);
+          });
+        },
+        { undoStopAfter: undoStop, undoStopBefore: false }
+      )
+      .then(() => {});
+  }
+
+  /**
+   * align delete (left or right)
+   *
+   * @param isRight T/F where T means is Delete-right
+   * @return Nothing
+   */
+  alignDelete(editor: vscode.TextEditor, isRight: boolean) {
+    if (getMode(editor) != eInsertMode.ALIGN) {
+      this._logMessage(`* alnDEL ABORT, not in Align mode`);
+      return; // bail if not in Align Mode!
+    }
+    editor.edit((edit) => {
+      editor.selections = editor.selections.map((selection) => {
+        this._logMessage(
+          `* alnDEL enabled=[${this.enable}], isRight=[${isRight}], selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
+        );
+        let range: vscode.Range = selection;
+        if (selection.isEmpty) {
+          if (selection.start.character == 0 && !isRight) {
+            // Delete at beginning of line
+            if (selection.start.line == 0) return selection;
+            let linelen = editor.document.lineAt(selection.start.line - 1).range.end.character;
+            range = new vscode.Range(new vscode.Position(selection.start.line - 1, linelen), selection.start);
+          } else {
+            range = new vscode.Range(selection.start, selection.start.translate(0, isRight ? +1 : -1));
+          }
+        }
+        let wordRange = editor.document.getWordRangeAtPosition(range.end.translate(0, +1), this.alignWordExpr) || range;
+        let checkRange = new vscode.Range(range.end, range.end.translate(0, +2));
+
+        let rangeSize = editor.document.offsetAt(range.end) - editor.document.offsetAt(range.start); // WTF why isn't there an API for this??????
+
+        let rangeEndtoEndOfLine = new vscode.Range(range.end, editor.document.lineAt(range.end).range.end);
+
+        if (!range.isSingleLine) {
+          edit.delete(range);
+        } else if (rangeEndtoEndOfLine.isEmpty || editor.document.getText(rangeEndtoEndOfLine).match(/^ +$/)) {
+          edit.delete(range.union(rangeEndtoEndOfLine));
+        } else if (editor.document.getText(checkRange) === "  " || wordRange.isEmpty) {
+          if (!editor.document.getText(range).match(/^ +$/)) {
+            edit.replace(range, " ".repeat(rangeSize));
+          }
+        } else {
+          edit.delete(range);
+          if (!wordRange.end.isEqual(rangeEndtoEndOfLine.end)) edit.insert(wordRange.end, " ".repeat(rangeSize));
+        }
+        return new vscode.Selection(range.start, range.start);
+      });
+    });
   }
 }

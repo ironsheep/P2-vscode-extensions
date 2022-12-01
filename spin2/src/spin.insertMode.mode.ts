@@ -3,17 +3,17 @@ import * as vscode from "vscode";
 
 import { configuration } from "./spin.insertMode.configuration";
 
-export enum EditorMode {
+export enum eInsertMode {
   INSERT,
   OVERTYPE,
   ALIGN,
 }
 
-const defaultMode = EditorMode.INSERT;
+const defaultMode = eInsertMode.INSERT;
 
 const state = {
   global: defaultMode,
-  perEditor: new WeakMap<vscode.TextEditor, EditorMode>(),
+  perEditor: new WeakMap<vscode.TextEditor, eInsertMode>(),
 };
 
 export const getMode = (textEditor: vscode.TextEditor) => {
@@ -25,40 +25,40 @@ export const getMode = (textEditor: vscode.TextEditor) => {
     state.perEditor.set(textEditor, defaultMode);
   }
 
-  return state.perEditor.get(textEditor) as EditorMode;
+  return state.perEditor.get(textEditor) as eInsertMode;
 };
 
-export function nextMode(oldMode: EditorMode) {
+export function nextMode(oldMode: eInsertMode): eInsertMode {
   switch (oldMode) {
-    case EditorMode.INSERT:
-      return EditorMode.OVERTYPE;
-    case EditorMode.OVERTYPE:
-      return configuration.enableAlign ? EditorMode.ALIGN : EditorMode.INSERT;
-    case EditorMode.ALIGN:
-      return EditorMode.INSERT;
+    case eInsertMode.INSERT:
+      return eInsertMode.OVERTYPE;
+    case eInsertMode.OVERTYPE:
+      return configuration.enableAlign ? eInsertMode.ALIGN : eInsertMode.INSERT;
+    case eInsertMode.ALIGN:
+      return eInsertMode.INSERT;
     default:
-      return EditorMode.INSERT;
+      return eInsertMode.INSERT;
   }
 }
 
-export function nextMode2State(oldMode: EditorMode) {
+export function nextMode2State(oldMode: eInsertMode): eInsertMode {
   switch (oldMode) {
-    case EditorMode.INSERT:
-      return configuration.enableAlign ? EditorMode.ALIGN : EditorMode.INSERT;
-    case EditorMode.ALIGN:
-      return EditorMode.INSERT;
+    case eInsertMode.INSERT:
+      return configuration.enableAlign ? eInsertMode.ALIGN : eInsertMode.INSERT;
+    case eInsertMode.ALIGN:
+      return eInsertMode.INSERT;
     default:
-      return EditorMode.INSERT;
+      return eInsertMode.INSERT;
   }
 }
 
-export function modeName(mode: EditorMode) {
+export function modeName(mode: eInsertMode): string {
   switch (mode) {
-    case EditorMode.INSERT:
+    case eInsertMode.INSERT:
       return "Insert";
-    case EditorMode.OVERTYPE:
+    case eInsertMode.OVERTYPE:
       return "Overtype";
-    case EditorMode.ALIGN:
+    case eInsertMode.ALIGN:
       return "Align";
     default:
       return "(ERROR)";
@@ -66,7 +66,7 @@ export function modeName(mode: EditorMode) {
 }
 
 export const toggleMode = (textEditor: vscode.TextEditor) => {
-  const upcomingMode: EditorMode = nextMode(getMode(textEditor));
+  const upcomingMode: eInsertMode = nextMode(getMode(textEditor));
 
   if (!configuration.perEditor) {
     state.global = upcomingMode;
@@ -78,7 +78,7 @@ export const toggleMode = (textEditor: vscode.TextEditor) => {
 };
 
 export const toggleMode2State = (textEditor: vscode.TextEditor) => {
-  const upcomingMode: EditorMode = nextMode2State(getMode(textEditor));
+  const upcomingMode: eInsertMode = nextMode2State(getMode(textEditor));
 
   if (!configuration.perEditor) {
     state.global = upcomingMode;
@@ -89,7 +89,7 @@ export const toggleMode2State = (textEditor: vscode.TextEditor) => {
   return upcomingMode;
 };
 
-export const resetModes = (mode: EditorMode | null, perEditor: boolean) => {
+export const resetModes = (mode: eInsertMode | null, perEditor: boolean) => {
   if (mode === null) {
     mode = defaultMode;
   }
@@ -102,12 +102,12 @@ export const resetModes = (mode: EditorMode | null, perEditor: boolean) => {
     // tracking: https://github.com/Microsoft/vscode/issues/15178
 
     state.global = defaultMode;
-    state.perEditor = state.perEditor = new WeakMap<vscode.TextEditor, EditorMode>();
+    state.perEditor = state.perEditor = new WeakMap<vscode.TextEditor, eInsertMode>();
   } else {
     // when switching from per-editor to global, set the global mode to the
     // provided mode and reset all per-editor modes
 
     state.global = mode;
-    state.perEditor = state.perEditor = new WeakMap<vscode.TextEditor, EditorMode>();
+    state.perEditor = state.perEditor = new WeakMap<vscode.TextEditor, eInsertMode>();
   }
 };
