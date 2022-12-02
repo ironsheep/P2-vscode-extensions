@@ -16,7 +16,6 @@
 PUB null()
 
     '' This is NOT a top level object
-
 CON
                 _clkfreq
                 _clkmode
@@ -38,15 +37,8 @@ CON
     _xinfreq        = 5_000_000
     _free           = 1_024
     _STACK          = 3000
-DAT
-' CON DECLARATIONS
-' PASM ONLY!  Use ASMCLK? See SPIN DOC P28
-                _clkfreq
-                _clkmode
-                _free
-                _stack
-                _xinfreq
 
+DAT
 
 name            BYTE    0[23]
 

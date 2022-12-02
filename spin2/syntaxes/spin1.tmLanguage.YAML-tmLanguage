@@ -56,7 +56,7 @@ repository:
                   - include: "#doc_line_comment"
                   - include: "#line_comment"
       configuration:
-            name: keyword.spin.builtin.variable.readonly.configuration
+            name: variable.language.readonly.configuration
             match: (?i)\b(CHIPVER|CLKMODE|CLKFREQ|CLKSET)\b
       constants:
             name: constant.language.spin

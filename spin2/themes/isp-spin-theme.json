@@ -82,6 +82,13 @@
       }
     },
     {
+      "name": "Variable",
+      "scope": ["variable.language"],
+      "settings": {
+        "foreground": "#8a358a"
+      }
+    },
+    {
       "name": "Numeric",
       "scope": ["constant.numeric"],
       "settings": {
