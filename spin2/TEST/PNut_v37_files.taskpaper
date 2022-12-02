@@ -1,0 +1,59 @@
+Spin/SPin2 files in FOLDER:
+	Root /Users/stephen/Dropbox/PropV2-Shared/P2-withPNut:
+	PNut_v37_files:
+		- ADC_to_VGA_millivolts.spin2
+			- EVENT not recognized: _ret_	setint1	#event_se1
+		- Chorus.spin2 @done(2022-12-02)
+		- Chorus_Crossfade_Pitchbend.spin2
+			- form of debug() not hightlighted correctly (diff string types)
+		- Chorus_Simple_Pitchbend.spin2
+			- form of debug() not hightlighted correctly (diff string types)
+		- DEBUG_BITMAP_HSV16_Demo.spin2 @done(2022-12-02)
+		- DEBUG_BITMAP_RGB24_Demo.spin2
+			- RED lutcolors!
+		- DEBUG_Mouse_and_Keyboard.spin2
+			- CON missing so top lines not hightlighed (?? how to do this in syntax processing? or override in Semantic processing ??)
+		- DEBUG_PLOT_HubRAM.spin2
+			- CON missing so top lines not hightlighed (?? how to do this in syntax processing? or override in Semantic processing ??)
+		- DEBUG_PLOT_Sprites.spin2
+			- CON missing so top lines not hightlighed (?? how to do this in syntax processing? or override in Semantic processing ??)
+		- DEBUG_demo.spin2 @done(2022-12-02)
+		- Five_Buttons_One_Pin.spin2
+			- EVENT not recognized: _ret_   setint3 #event_se1
+		- Goertzel_DEBUG_Demo.spin2 @done(2022-12-02)
+		- Goertzel_ultrasonic.spin2 @done(2022-12-02)
+		- HDMI_Spiral_Demo.spin2 @done(2022-12-02)
+		- HDMI_Spiral_Demo_800x480.spin2 @done(2022-12-02)
+		- HDTV_1920x1080_text_135x160.spin2 @done(2022-12-02)
+		- HDTV_1920x1080_text_240x90.spin2 @done(2022-12-02)
+		- NTSC_256_x_192.spin2 @done(2022-12-02)
+		- NTSC_256_x_192_interrupt.spin2 @done(2022-12-02)
+		- NTSC_PAL.spin2 @done(2022-12-02)
+		- NTSC_PAL_4bpp_interrupt.spin2
+			- debug() messing highlight of variable-label from DAT : debug(udec(pm,px),uhex(#pn_))
+		- NTSC_PAL_4bpp_interrupt_Demo.spin2 @done(2022-12-02)
+		- NTSC_PAL_Demo.spin2 @done(2022-12-02)
+		- Spin2_debugger.spin2
+			- bad float value hightlight!!!
+		- Spin2_interpreter.spin2
+			- RED hubexec as literal: coginit	#hubexec,##launch_spin
+		- VGA_1280x1024_text_160x85.spin2 @done(2022-12-02)
+		- VGA_640x480_text_80x40.spin2 @done(2022-12-02)
+		- blink.spin2 @done(2022-12-02)
+		- clock_setter.spin2 @done(2022-12-02)
+		- debugger_clock_frequency_change.spin2 @done(2022-12-02)
+		- debugger_demo.spin2
+			- label on debug line missed!
+			- .label missed!
+			- PUB signature missed?!
+		- debugger_single_step.spin2
+			- debug_main directive?
+		- flash_loader.spin2 @done(2022-12-02)
+		- floating_point_demo.spin2 @done(2022-12-02)
+		- headphones.spin2
+			- CON missing so top lines not hightlighed (?? how to do this in syntax processing? or override in Semantic processing ??)
+		- hubexec_from_spin2.spin2 @done(2022-12-02)
+		- inline_pasm.spin2 @done(2022-12-02)
+		- parser.spin2
+			- missing highlight on long and |m name use in DAT table (|m is sometimes white, while long is sometimes red)
+		- vga_text_demo.spin2 @done(2022-12-02)

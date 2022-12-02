@@ -1,0 +1,8 @@
+#/bin/bash
+NOW=`date +%y%m%d-%H%M%S`
+
+(set -x;./mkSpinList.py -o P2-Obex-${NOW}.taskpaper -r /Users/stephen/Dropbox/PropV2-Shared/P2-Obex/p2/All)
+(set -x;./mkSpinList.py -o P1-Obex-${NOW}.taskpaper -r /Users/stephen/Dropbox/PropV2-Shared/P1-Obex/p1/All)
+(set -x;./mkSpinList.py -o PNut_v37_files-${NOW}.taskpaper -r /Users/stephen/Dropbox/PropV2-Shared/P2-withPNut/PNut_v37_files)
+
+(set -x;./mkSpinList.py -o vscode-TEST-${NOW}.taskpaper -r "/Users/stephen/Projects/Projects-ExtGit/IronSheepProductionsLLC/Propeller2/VSCode Extensions/P2-vscode-extensions/spin2/TEST")
