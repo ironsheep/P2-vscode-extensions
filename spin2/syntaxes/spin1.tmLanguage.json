@@ -35,7 +35,7 @@
     },
     "binary_number": {
       "name": "constant.numeric.binary.spin",
-      "match": "\\b(\\%[01][01_]*)\\b",
+      "match": "(\\%[01][01_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base2.spin"
@@ -106,9 +106,9 @@
       "name": "keyword.spin.builtin.variable.readonly.configuration",
       "match": "(?i)\\b(CHIPVER|CLKMODE|CLKFREQ|CLKSET)\\b"
     },
-    "constant": {
+    "constants": {
       "name": "constant.language.spin",
-      "match": "(?i)\\b(TRUE|FALSE|POSX|NEGX|PI)\\b"
+      "match": "(?i)\\b(TRUE|FALSE|(POS|NEG)X|PI)\\b"
     },
     "constant_block": {
       "name": "meta.block.constant.spin",
@@ -127,7 +127,7 @@
           "include": "#number"
         },
         {
-          "include": "#constant"
+          "include": "#constants"
         },
         {
           "include": "#clock_constants"
@@ -139,9 +139,6 @@
           "include": "#spin_float_conversions"
         },
         {
-          "include": "#constant"
-        },
-        {
           "include": "#allocation_constants"
         },
         {
@@ -151,7 +148,7 @@
               "name": "entity.name.constant.spin"
             },
             "3": {
-              "name": "keyword.operator.assignment.spin"
+              "name": "keyword.equ.operator.assignment.spin"
             },
             "4": {
               "patterns": [
@@ -160,6 +157,24 @@
                 },
                 {
                   "include": "#string"
+                },
+                {
+                  "include": "#comment"
+                },
+                {
+                  "include": "#number"
+                },
+                {
+                  "include": "#constants"
+                },
+                {
+                  "include": "#clock_constants"
+                },
+                {
+                  "include": "#spin_float_conversions"
+                },
+                {
+                  "include": "#allocation_constants"
                 }
               ]
             }
@@ -184,7 +199,7 @@
           "include": "#cog_register_names"
         },
         {
-          "include": "#constant"
+          "include": "#constants"
         },
         {
           "include": "#storage_modifier"
@@ -246,7 +261,7 @@
         },
         {
           "name": "keyword.operator.pasm",
-          "match": "(?i)\\b(\\+|-|\\^\\^|\\|\\||\\|<|>\\||!|@|\\*\\*?|//?|#>|<#|~>|<<|>>|<-|->|><|&|\\||\\^|AND|OR|==|<>|<|>|=<|=>)\\b"
+          "match": "(?i)\\b(\\+|\\-|\\^\\^|\\|\\||\\|<|>\\||!|@|\\*\\*?|//?|#>|<#|~>|<<|>>|<-|->|><|&|\\||\\^|AND|OR|==|<>|<|>|=<|=>)\\b"
         }
       ]
     },
@@ -255,7 +270,7 @@
       "patterns": [
         {
           "name": "constant.numeric.base10.spin",
-          "match": "\\b([\\-][0-9][0-9_]*)\\b"
+          "match": "([\\+\\-][0-9][0-9_]*)\\b"
         },
         {
           "name": "constant.numeric.base10.spin",
@@ -289,17 +304,17 @@
       "patterns": [
         {
           "name": "constant.numeric.float.spin",
-          "match": "\\b([+\\-]?(?:0|[1-9][0-9_]*)(?:\\.[0-9]+)?(?:[eE][+\\-]?[0-9]+)?)\\b"
+          "match": "\\b([\\+\\-]?(?:0|[1-9][0-9_]*)\\.(?:[0-9]+)?(?:[eE][\\+\\-]?[0-9]+)?)\\b"
         },
         {
           "name": "constant.numeric.float.spin",
-          "match": "\\b([+\\-]?(?:0|[1-9][0-9_]*)?(?:\\.[0-9]+)(?:[eE][+\\-]?[0-9]+))\\b"
+          "match": "\\b([\\+\\-]?(?:0|[1-9][0-9_]*)?\\.(?:[0-9]+)(?:[eE][\\+\\-]?[0-9]+))\\b"
         }
       ]
     },
     "hexadecimal_number": {
       "name": "constant.numeric.hexadecimal.spin",
-      "match": "\\b(\\$[0-9a-fA-F][0-9a-fA-F_]*)\\b",
+      "match": "(?i)(\\$[0-9a-fA-F][0-9a-fA-F_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base16.spin"
@@ -419,7 +434,7 @@
           "include": "#comment"
         },
         {
-          "include": "#constant"
+          "include": "#constants"
         },
         {
           "include": "#string"
@@ -503,7 +518,7 @@
           "include": "#comment"
         },
         {
-          "include": "#constant"
+          "include": "#constants"
         },
         {
           "include": "#string"
@@ -557,7 +572,7 @@
     },
     "quaternary_number": {
       "name": "constant.numeric.quaternary.spin",
-      "match": "\\b(\\%\\%[0-3][0-3_]*)\\b",
+      "match": "(\\%\\%[0-3][0-3_]*)\\b",
       "captures": {
         "1": {
           "name": "constant.numeric.base4.spin"
@@ -596,6 +611,9 @@
       "patterns": [
         {
           "include": "#comment"
+        },
+        {
+          "include": "#constants"
         },
         {
           "include": "#string"
