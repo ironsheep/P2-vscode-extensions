@@ -83,7 +83,7 @@
       "match": "(?i)\\b(COG(ID|NEW|INIT|STOP)|REBOOT)\\b"
     },
     "cog_register_names": {
-      "name": "constant.language.cog-register-names.spin",
+      "name": "variable.language.cog-register-names.spin",
       "match": "(?i)\\b((DIR|IN|OUT|CTR|FRQ|PHS)(A|B)|CNT|VCFG|VSCL|PAR|SPR)\\b"
     },
     "comment": {
@@ -103,7 +103,7 @@
       ]
     },
     "configuration": {
-      "name": "keyword.spin.methods.configuration.spin",
+      "name": "keyword.spin.builtin.variable.readonly.configuration",
       "match": "(?i)\\b(CHIPVER|CLKMODE|CLKFREQ|CLKSET)\\b"
     },
     "constant": {
@@ -127,13 +127,16 @@
           "include": "#number"
         },
         {
+          "include": "#constant"
+        },
+        {
           "include": "#clock_constants"
         },
         {
           "include": "#clock_constants_settable"
         },
         {
-          "include": "#directives_math_ops"
+          "include": "#spin_float_conversions"
         },
         {
           "include": "#constant"
@@ -190,7 +193,7 @@
           "include": "#directives_file_include"
         },
         {
-          "include": "#directives_math_ops"
+          "include": "#spin_float_conversions"
         },
         {
           "include": "#array_index"
@@ -260,8 +263,8 @@
         }
       ]
     },
-    "directives_math_ops": {
-      "name": "keyword.control.directive.spin",
+    "spin_float_conversions": {
+      "name": "keyword.operator.float.spin",
       "match": "(?i)\\b(FLOAT|ROUND|TRUNC)\\b"
     },
     "directives_wraps": {
@@ -339,10 +342,10 @@
           "include": "#hexadecimal_number"
         },
         {
-          "include": "#decimal_number"
+          "include": "#float_number"
         },
         {
-          "include": "#float_number"
+          "include": "#decimal_number"
         }
       ]
     },
@@ -360,7 +363,7 @@
           "include": "#comment"
         },
         {
-          "include": "#directives_math_ops"
+          "include": "#spin_float_conversions"
         },
         {
           "name": "meta.object-initialization.spin",
@@ -419,6 +422,9 @@
           "include": "#constant"
         },
         {
+          "include": "#string"
+        },
+        {
           "include": "#configuration"
         },
         {
@@ -431,7 +437,7 @@
           "include": "#directives_wraps"
         },
         {
-          "include": "#directives_math_ops"
+          "include": "#spin_float_conversions"
         },
         {
           "include": "#array_index"
@@ -500,6 +506,9 @@
           "include": "#constant"
         },
         {
+          "include": "#string"
+        },
+        {
           "include": "#configuration"
         },
         {
@@ -512,7 +521,7 @@
           "include": "#directives_wraps"
         },
         {
-          "include": "#directives_math_ops"
+          "include": "#spin_float_conversions"
         },
         {
           "include": "#array_index"
@@ -589,7 +598,16 @@
           "include": "#comment"
         },
         {
-          "include": "#directives_math_ops"
+          "include": "#string"
+        },
+        {
+          "include": "#array_index"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#spin_float_conversions"
         },
         {
           "include": "#storage_types"

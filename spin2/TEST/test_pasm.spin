@@ -83,6 +83,7 @@ name            BYTE    0[23]
                 VCFG
                 VSCL
                 PAR
+                SPR
 
                 ' P1 instructions (alpahbetical)
                 ABS
@@ -166,8 +167,10 @@ name            BYTE    0[23]
                 XOR
 
     ' P1-Effects - flag write controls
-    WC | WZ
-    NR | WR
+    WC
+    WZ
+    NR
+    WR
 
     ' P1 instruction conditionals
     IF_ALWAYS

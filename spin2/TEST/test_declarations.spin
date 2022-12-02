@@ -1,21 +1,21 @@
 '' =================================================================================================
 ''
-''   File....... test-file-001.spin2
-''   Purpose.... File in numbered series of test files used to verify syntax highlighting
+''   File....... test_declarations.spin2
+''   Purpose.... File series of P1 Spin/Pasm test files used to verify syntax highlighting
 ''   Authors.... Stephen M Moraco
-''               -- Copyright (c) 2020 Iron Sheep Productions, LLC
+''               -- Copyright (c) 2022 Iron Sheep Productions, LLC
 ''               -- see below for terms of use
 ''   E-mail..... stephen@ironsheep.biz
-''   Started.... Nov 2020
-''   Updated.... 6 Nov 2020
+''   Started.... Dec 2022
+''   Updated.... 1 Dec 2022
 ''
 '' =================================================================================================
 
 
 CON { section comment }
 
-  CLK_FREQ = 335_000_000                                        ' system freq as a constant
-  _clkfreq = CLK_FREQ                                           ' set system clock
+  _clkmode = xtal1 + pll16x
+  _xinfreq = 5_000_000
 
 CON EnableFlow = 8
     DisableFlow = 4
@@ -28,13 +28,12 @@ CON EnableFlow = 8
     one_quaternary = %%0030_0130
 
     PWM_Base = 8
-    PWM_Pins = PWM_Base ADDPINS 7
 
     X = 5, y = -5, z = 1    ' comma separated assignments
 
     HalfPi = 1.5707963268   ' single precision float values
     QuarPi = HalfPi / 2.0 + pi
-    max = PosX
+    max = posx
     min = negx
 
     j = ROUND(4000.0 / QuarPi)  ' float to integer
@@ -99,7 +98,7 @@ CON { license }
  -------------------------------------------------------------------------------------------------
   MIT License
 
-  Copyright (c) 2020 Iron Sheep Productions, LLC
+  Copyright (c) 2022 Iron Sheep Productions, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal

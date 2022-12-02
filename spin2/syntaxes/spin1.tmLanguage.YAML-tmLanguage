@@ -47,7 +47,7 @@ repository:
             name: keyword.spin.methods.cog_control
             match: (?i)\b(COG(ID|NEW|INIT|STOP)|REBOOT)\b
       cog_register_names:
-            name: constant.language.cog-register-names.spin
+            name: variable.language.cog-register-names.spin
             match: '(?i)\b((DIR|IN|OUT|CTR|FRQ|PHS)(A|B)|CNT|VCFG|VSCL|PAR|SPR)\b'
       comment:
             patterns:
@@ -56,7 +56,7 @@ repository:
                   - include: "#doc_line_comment"
                   - include: "#line_comment"
       configuration:
-            name: keyword.spin.methods.configuration.spin
+            name: keyword.spin.builtin.variable.readonly.configuration
             match: (?i)\b(CHIPVER|CLKMODE|CLKFREQ|CLKSET)\b
       constant:
             name: constant.language.spin
@@ -71,9 +71,10 @@ repository:
             patterns:
                   - include: "#comment"
                   - include: "#number"
+                  - include: "#constant"
                   - include: "#clock_constants"
                   - include: "#clock_constants_settable"
-                  - include: "#directives_math_ops"
+                  - include: "#spin_float_conversions"
                   - include: "#constant"
                   - include: "#allocation_constants"
                   - match: \b((\w|_)+)\s*(=)\s*(.*)$
@@ -99,7 +100,7 @@ repository:
                   - include: "#constant"
                   - include: "#storage_modifier"
                   - include: "#directives_file_include"
-                  - include: "#directives_math_ops"
+                  - include: "#spin_float_conversions"
                   - include: "#array_index"
                   - include: "#number"
                   - include: "#string"
@@ -134,8 +135,8 @@ repository:
                 -
                     name: constant.numeric.base10.spin
                     match: '\b([0-9][0-9_]*)\b'
-      directives_math_ops:
-            name: keyword.control.directive.spin
+      spin_float_conversions:
+            name: keyword.operator.float.spin
             match: (?i)\b(FLOAT|ROUND|TRUNC)\b
       directives_wraps:
             name: keyword.control.directive.spin
@@ -153,12 +154,12 @@ repository:
       float_number:
             name: constant.numeric.decimal.spin
             patterns:
-                -
-                    name: constant.numeric.float.spin
-                    match: '\b([+\-]?(?:0|[1-9][0-9_]*)(?:\.[0-9]+)?(?:[eE][+\-]?[0-9]+)?)\b'
-                -
-                    name: constant.numeric.float.spin
-                    match: '\b([+\-]?(?:0|[1-9][0-9_]*)?(?:\.[0-9]+)(?:[eE][+\-]?[0-9]+))\b'
+            -
+                name: constant.numeric.float.spin
+                match: '\b([+\-]?(?:0|[1-9][0-9_]*)(?:\.[0-9]+)?(?:[eE][+\-]?[0-9]+)?)\b'
+            -
+                name: constant.numeric.float.spin
+                match: '\b([+\-]?(?:0|[1-9][0-9_]*)?(?:\.[0-9]+)(?:[eE][+\-]?[0-9]+))\b'
       hexadecimal_number:
             name: constant.numeric.hexadecimal.spin
             match: '\b(\$[0-9a-fA-F][0-9a-fA-F_]*)\b'
@@ -188,8 +189,8 @@ repository:
                   - include: "#quaternary_number"
                   - include: "#binary_number"
                   - include: "#hexadecimal_number"
-                  - include: "#decimal_number"
                   - include: "#float_number"
+                  - include: "#decimal_number"
       object_block:
         name: meta.block.object.spin
         begin: '(?i)^(OBJ)(\s+|\s*$)'
@@ -199,7 +200,7 @@ repository:
                 name: keyword.block.obj.spin
         patterns:
             - include: '#comment'
-            - include: "#directives_math_ops"
+            - include: "#spin_float_conversions"
             -
                 name: meta.object-initialization.spin
                 match: '\b(\w+)(\[.*\])?\s*(:)\s*((\")(\.|[^"])*(\"))'
@@ -227,11 +228,12 @@ repository:
             patterns:
                   - include: "#comment"
                   - include: "#constant"
+                  - include: "#string"
                   - include: "#configuration"
                   - include: "#clock_constants"
                   - include: "#return_var"
                   - include: "#directives_wraps"
-                  - include: "#directives_math_ops"
+                  - include: "#spin_float_conversions"
                   - include: "#array_index"
                   - include: "#number"
                   - include: "#storage_types"
@@ -264,11 +266,12 @@ repository:
             patterns:
                   - include: "#comment"
                   - include: "#constant"
+                  - include: "#string"
                   - include: "#configuration"
                   - include: "#clock_constants"
                   - include: "#return_var"
                   - include: "#directives_wraps"
-                  - include: "#directives_math_ops"
+                  - include: "#spin_float_conversions"
                   - include: "#array_index"
                   - include: "#number"
                   - include: "#storage_types"
@@ -308,7 +311,10 @@ repository:
                         name: keyword.block.var.spin
             patterns:
                   - include: "#comment"
-                  - include: "#directives_math_ops"
+                  - include: "#string"
+                  - include: "#array_index"
+                  - include: "#number"
+                  - include: "#spin_float_conversions"
                   - include: "#storage_types"
                   - match: (?i)\b(byte|word|long)\s*((\w|_)+)(\[.*\])?
                     captures:

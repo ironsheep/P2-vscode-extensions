@@ -24,6 +24,25 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [2.0.0] 2022-12-xx
+
+Fun Update!   First release of two **NEW** features and more.
+
+- **NEW** P1 support for .spin files (full syntax and semantic highlighting of the P1 language: spin/pasm)
+- **NEW** Add InsertMode support: [Insert|Overwrite|Align]
+- More changes to tabbing behavior, we're gradually dialiing it it
+- P2 Syntax/Semantic highlighting changes - adds support for: 
+   ● New Spin2 'GETCRC(dataptr,crcpoly,bytecount) method
+   ● New Spin2 'STRCOPY(destination,source,maxsize)' method
+   ● DEBUG display BITMAP now validates 'SPARSE color' 
+   ● GRAY, in addition to GREY, now recognized as a color in DEBUG displays
+
+### - Known Issues w/v2.0.0
+
+- We need to get Backspace and Delete working correctly when in InsertMode:Align - it's coming, hopefully soon.
+- We haven't yet learned how to control the ending position of the edit cursor. So in many cases when using selection not an insert point the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+
+
 ## [1.6.1] 2022-11-29
 
 Minor update to the formal release (*clean up muli-line behavior, clean up in-line pasm support.*)

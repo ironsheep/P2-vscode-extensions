@@ -4274,6 +4274,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "false",
       "posx",
       "negx",
+      "pi",
       //
       "newcog",
       "cogexec",
@@ -4324,6 +4325,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "cogspin",
       "cogstop",
       "getct",
+      "getcrc",
       "getregs",
       "getrnd",
       "getsec",
@@ -4359,14 +4361,15 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "pollct",
       "polxy",
       "rdpin",
+      "recv",
       "regexec",
       "regload",
       "rotxy",
       "rqpin",
       "send",
-      "recv",
       "setregs",
       "strcomp",
+      "strcopy",
       "string",
       "strsize",
       "waitatn",
@@ -4486,7 +4489,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "cmpx",
       "cogatn",
       "cogbrk",
-      "",
       "cogid",
       "coginit",
       "cogstop",
@@ -5204,7 +5206,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   // Debug Display: BITMAP declaration
   private _isDebugBitmapDeclarationParam(name: string): boolean {
-    const debugBitmapDeclTypes: string[] = ["title", "pos", "size", "dotsize", "lutcolors", "trace", "rate", "update", "hidexy"];
+    const debugBitmapDeclTypes: string[] = ["title", "pos", "size", "dotsize", "lutcolors", "trace", "rate", "update", "hidexy", "sparse"];
     const bBitmapDeclParamStatus: boolean = debugBitmapDeclTypes.indexOf(name.toLowerCase()) != -1;
     return bBitmapDeclParamStatus;
   }
@@ -5266,9 +5268,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
   }
 
   // color names for use in debug()
-  //   BLACK / WHITE or ORANGE / BLUE / GREEN / CYAN / RED / MAGENTA / YELLOW / GREY
+  //   BLACK / WHITE or ORANGE / BLUE / GREEN / CYAN / RED / MAGENTA / YELLOW / GREY|GRAY
   private _isDebugColorName(name: string): boolean {
-    const debugColorNames: string[] = ["black", "white", "orange", "blue", "green", "cyan", "red", "magenta", "yellow", "grey"];
+    const debugColorNames: string[] = ["black", "white", "orange", "blue", "green", "cyan", "red", "magenta", "yellow", "grey", "gray"];
     const bColorNameStatus: boolean = debugColorNames.indexOf(name.toLowerCase()) != -1;
     return bColorNameStatus;
   }
