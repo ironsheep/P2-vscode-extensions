@@ -787,12 +787,14 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       let newName = lineParts[0];
-      const nameType: string = isDataDeclarationLine ? "variable" : "label";
-      this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-      this._setGlobalToken(newName, {
-        tokenType: nameType,
-        tokenModifiers: [],
-      });
+      if (!this._spin2ReservedWords(newName)) {
+        const nameType: string = isDataDeclarationLine ? "variable" : "label";
+        this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
+        this._setGlobalToken(newName, {
+          tokenType: nameType,
+          tokenModifiers: [],
+        });
+      }
     }
   }
 
@@ -1019,15 +1021,21 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             if (possibleName.substr(0, 1).match(/[a-zA-Z_]/)) {
               // does name contain a namespace reference?
               let possibleNameSet: string[] = [];
+              let refChar: string = "";
               if (possibleName.includes(".")) {
+                refChar = ".";
                 possibleNameSet = possibleName.split(".");
+                this._logSPIN("  --  . possibleNameSet=[" + possibleNameSet + "]");
+              } else if (possibleName.includes("#")) {
+                refChar = "#";
+                possibleNameSet = possibleName.split("#");
+                this._logSPIN("  --  # possibleNameSet=[" + possibleNameSet + "]");
               } else {
                 possibleNameSet = [possibleName];
               }
-              this._logCON("  --  possibleNameSet=[" + possibleNameSet + "]");
               const namePart = possibleNameSet[0];
               let matchLen: number = namePart.length;
-              const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "." + possibleNameSet[1];
+              const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
               let referenceDetails: IRememberedToken | undefined = undefined;
               const nameOffset = line.indexOf(searchString, currentOffset);
               this._logCON("  -- namePart=[" + namePart + "](" + nameOffset + ")");
@@ -1044,7 +1052,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   tokenModifiers: referenceDetails.tokenModifiers,
                 });
               } else {
-                if (!this._isSpinReservedWord(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isUnaryOperator(namePart) && !this._isSpinBuiltInConstant(namePart)) {
+                if (
+                  !this._isSpinReservedWord(namePart) &&
+                  !this._isBuiltinReservedWord(namePart) &&
+                  !this._isUnaryOperator(namePart) &&
+                  !this._isSpinBuiltInConstant(namePart) &&
+                  !this._isPasmReservedWord(namePart)
+                ) {
                   this._logCON("  --  CON MISSING name=[" + namePart + "]");
                   tokenSet.push({
                     line: lineNumber,
@@ -1135,7 +1149,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let lineParts: string[] = this._getNonWhiteLineParts(dataDeclNonCommentStr);
     this._logVAR("- rptDataDeclLn lineParts=[" + lineParts + "]");
     // remember this object name so we can annotate a call to it
-    if (lineParts.length > 1) {
+    if (lineParts.length > 0) {
       if (this._isStorageType(lineParts[0]) || lineParts[0].toUpperCase() == "FILE" || lineParts[0].toUpperCase() == "ORG") {
         // if we start with storage type (or FILE, or ORG), not name, process rest of line for symbols
         currentOffset = line.indexOf(lineParts[0], currentOffset);
@@ -1227,16 +1241,20 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               this._logMessage("  -- possibleName=[" + possibleName + "]");
             }
             // does name contain a namespace reference?
+            let refChar: string = "";
             if (possibleName.includes(".") && !possibleName.startsWith(".")) {
+              refChar = ".";
               possibleNameSet = possibleName.split(".");
+              this._logSPIN("  --  . possibleNameSet=[" + possibleNameSet + "]");
+            } else if (possibleName.includes("#")) {
+              refChar = "#";
+              possibleNameSet = possibleName.split("#");
+              this._logSPIN("  --  # possibleNameSet=[" + possibleNameSet + "]");
             } else {
               possibleNameSet = [possibleName];
             }
-            if (showDebug) {
-              this._logMessage("  --  possibleNameSet=[" + possibleNameSet + "]");
-            }
             const namePart = possibleNameSet[0];
-            const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "." + possibleNameSet[1];
+            const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
             currentOffset = line.indexOf(searchString, currentOffset);
             let referenceDetails: IRememberedToken | undefined = undefined;
             if (allowLocal && this._isLocalToken(namePart)) {
@@ -1379,6 +1397,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currentOffset += likelyInstructionName.length + 1;
           for (let index = minNonLabelParts; index < lineParts.length; index++) {
             let argumentName = lineParts[index].replace(/[@#]/, "");
+            this._logPASM("  -- DAT PASM checking argumentName=[" + argumentName + "], currentOffset=(" + currentOffset + ")");
             if (argumentName.length < 1) {
               // skip empty operand
               continue;
@@ -1395,18 +1414,24 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               argumentName = nameParts[0];
             }
             let nameOffset: number = 0;
-            if (argumentName.substr(0, 1).match(/[a-zA-Z_\.]/)) {
+            if (argumentName.substr(0, 1).match(/[a-zA-Z_\.\:]/)) {
               // does name contain a namespace reference?
               this._logPASM("  -- argumentName=[" + argumentName + "]");
               let possibleNameSet: string[] = [];
+              let refChar: string = "";
               if (argumentName.includes(".") && !argumentName.startsWith(".")) {
+                refChar = ".";
                 possibleNameSet = argumentName.split(".");
+                this._logSPIN("  --  . possibleNameSet=[" + possibleNameSet + "]");
+              } else if (argumentName.includes("#")) {
+                refChar = "#";
+                possibleNameSet = argumentName.split("#");
+                this._logSPIN("  --  # possibleNameSet=[" + possibleNameSet + "]");
               } else {
                 possibleNameSet = [argumentName];
               }
-              this._logPASM("  --  possibleNameSet=[" + possibleNameSet + "]");
               const namePart = possibleNameSet[0];
-              const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "." + possibleNameSet[1];
+              const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
               nameOffset = line.indexOf(searchString, currentOffset);
               this._logPASM("  --  DAT Pasm searchString=[" + searchString + "](" + nameOffset + 1 + ")");
               let referenceDetails: IRememberedToken | undefined = undefined;
@@ -1747,12 +1772,16 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         }
         this._logSPIN("  -- LHS: varNameList=[" + varNameList + "]");
         for (let index = 0; index < varNameList.length; index++) {
-          const variableName: string = varNameList[index];
+          let variableName: string = varNameList[index];
           const variableNameLen: number = variableName.length;
           if (variableName.includes("[")) {
             // NOTE this handles code: byte[pColor][2] := {value}
-            // NOTE2 this handles code: result.byte[3] := {value}  P2 OBEX: jm_apa102c.spin2 (139)
-            // have complex target name, parse in loop
+            //outa[D7..D4] := %0011               P1 OBEX:LCD SPIN driver - 2x16.spin (315)
+
+            // have complex target name, parse in loop (remove our range specifier '..')
+            if (variableName.includes("..")) {
+              variableName = variableName.replace("..", " ");
+            }
             const variableNameParts: string[] = variableName.split(/[ \t\[\]\/\*\+\-\(\)\<\>]/);
             this._logSPIN("  -- LHS: [] variableNameParts=[" + variableNameParts + "]");
             let haveModification: boolean = false;
@@ -1885,6 +1914,15 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   tokenType: "variable",
                   tokenModifiers: ["modification", "defaultLibrary"],
                 });
+              } else if (cleanedVariableName.toLowerCase() == "result") {
+                this._logSPIN("  --  SPIN return Special Name=[" + cleanedVariableName + "]");
+                tokenSet.push({
+                  line: lineNumber,
+                  startCharacter: nameOffset,
+                  length: cleanedVariableName.length,
+                  tokenType: "returnValue",
+                  tokenModifiers: ["declaration", "local"],
+                });
               } else {
                 // we don't have name registered so just mark it
                 if (!this._isSpinReservedWord(cleanedVariableName) && !this._isSpinBuiltinMethod(cleanedVariableName) && !this._isBuiltinReservedWord(cleanedVariableName)) {
@@ -1936,14 +1974,20 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         if (possibleName.substr(0, 1).match(/[a-zA-Z_]/)) {
           this._logSPIN("  -- possibleName=[" + possibleName + "]");
           // does name contain a namespace reference?
+          let refChar: string = "";
           if (possibleName.includes(".")) {
+            refChar = ".";
             possibleNameSet = possibleName.split(".");
-            this._logSPIN("  --  possibleNameSet=[" + possibleNameSet + "]");
+            this._logSPIN("  --  . possibleNameSet=[" + possibleNameSet + "]");
+          } else if (possibleName.includes("#")) {
+            refChar = "#";
+            possibleNameSet = possibleName.split("#");
+            this._logSPIN("  --  # possibleNameSet=[" + possibleNameSet + "]");
           } else {
             possibleNameSet = [possibleName];
           }
           const namePart = possibleNameSet[0];
-          const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "." + possibleNameSet[1];
+          const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
           nameOffset = nonStringAssignmentRHSStr.indexOf(searchString, currNonStringOffset) + currentOffset;
           this._logSPIN("  --  SPIN RHS  nonStringAssignmentRHSStr=[" + nonStringAssignmentRHSStr + "]");
           this._logSPIN("  --  SPIN RHS   searchString=[" + searchString + "], namePart=[" + namePart + "]");
@@ -1977,13 +2021,22 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 tokenModifiers: [],
               });
             } else if (this._isSpinBuiltInConstant(namePart)) {
-              this._logSPIN("  --  SPIN RHS constant=[" + namePart + "]");
+              this._logSPIN("  --  SPIN RHS builtin constant=[" + namePart + "]");
               tokenSet.push({
                 line: lineNumber,
                 startCharacter: nameOffset,
                 length: namePart.length,
                 tokenType: "variable",
                 tokenModifiers: ["readonly", "defaultLibrary"],
+              });
+            } else if (namePart.toLowerCase() == "result") {
+              this._logSPIN("  --  SPIN return Special Name=[" + namePart + "]");
+              tokenSet.push({
+                line: lineNumber,
+                startCharacter: nameOffset,
+                length: namePart.length,
+                tokenType: "returnValue",
+                tokenModifiers: ["declaration", "local"],
               });
             } else if (!this._isSpinReservedWord(namePart) && !this._isSpinBuiltinMethod(namePart) && !this._isSpinBuiltInVariable(namePart) && !this._isBuiltinReservedWord(namePart)) {
               // NO DEBUG FOR ELSE, most of spin control elements come through here!
@@ -2004,11 +2057,14 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
           }
           if (possibleNameSet.length > 1) {
-            // we have .constant namespace suffix
+            // we have .methodName or #constantName namespace suffix
             // determine if this is method has '(' or constant name
             const referenceOffset = nonStringAssignmentRHSStr.indexOf(searchString, currNonStringOffset) + currentOffset;
             let isMethod: boolean = false;
             if (line.substr(referenceOffset + searchString.length, 1) == "(") {
+              isMethod = true;
+            } else if (refChar == ".") {
+              // spin1 does NOT require name() method calls!
               isMethod = true;
             }
             const constantPart: string = possibleNameSet[1];
@@ -2127,16 +2183,22 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               const currArgumentLen = argumentName.length;
               if (argumentName.substr(0, 1).match(/[a-zA-Z_\.]/)) {
                 // does name contain a namespace reference?
+                let refChar: string = "";
                 this._logPASM("  -- argumentName=[" + argumentName + "]");
                 let possibleNameSet: string[] = [];
                 if (argumentName.includes(".") && !argumentName.startsWith(".")) {
+                  refChar = ".";
                   possibleNameSet = argumentName.split(".");
+                  this._logSPIN("  --  . possibleNameSet=[" + possibleNameSet + "]");
+                } else if (argumentName.includes("#")) {
+                  refChar = "#";
+                  possibleNameSet = argumentName.split("#");
+                  this._logSPIN("  --  # possibleNameSet=[" + possibleNameSet + "]");
                 } else {
                   possibleNameSet = [argumentName];
                 }
-                this._logPASM("  --  possibleNameSet=[" + possibleNameSet + "]");
                 const namePart = possibleNameSet[0];
-                const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "." + possibleNameSet[1];
+                const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
                 const nameOffset = line.indexOf(searchString, currentOffset);
                 let referenceDetails: IRememberedToken | undefined = undefined;
                 if (this._isLocalPasmTokenForMethod(this.currentMethodName, namePart)) {
@@ -2811,7 +2873,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private _getNonWhiteSpinLineParts(line: string): IFilteredStrings {
     //                                     split(/[ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]/);
     const nonEqualsLine: string = this._removeDoubleQuotedStrings(line);
-    let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\#\^\/]+/g);
+    let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\-\:\,\+\[\]\@\(\)\!\*\=\<\>\&\|\?\\\~\^\/]+/g);
     if (lineParts === null) {
       lineParts = [];
     }
@@ -3053,6 +3115,544 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
     return reservedStatus;
   }
+
+  private _spin2ReservedWords(name: string): boolean {
+    const spin2InstructionsOfNote: string[] = [
+      "alignl",
+      "alignw",
+      "orgf",
+      "orgh",
+      "pr0",
+      "pr1",
+      "pr2",
+      "pr3",
+      "pr4",
+      "pr5",
+      "pr6",
+      "pr7",
+      "ijmp1",
+      "ijmp2",
+      "ijmp3",
+      "iret1",
+      "iret2",
+      "iret3",
+      "pa",
+      "pb",
+      "ptra",
+      "ptrb",
+      "addct1",
+      "addct2",
+      "addct3",
+      "addpix",
+      "akpin",
+      "allowi",
+      "altb",
+      "altd",
+      "altgb",
+      "altgn",
+      "altgw",
+      "alti",
+      "altr",
+      "alts",
+      "altsb",
+      "altsn",
+      "altsw",
+      "augd",
+      "augs",
+      "bitc",
+      "bith",
+      "bitl",
+      "bitnc",
+      "bitnot",
+      "bitnz",
+      "bitrnd",
+      "bitz",
+      "blnpix",
+      "bmask",
+      "brk",
+      "calla",
+      "callb",
+      "calld",
+      "callpa",
+      "callpb",
+      "cmpm",
+      "cmpr",
+      "cogatn",
+      "cogbrk",
+      "crcbit",
+      "crcnib",
+      "decmod",
+      "decod",
+      "dirc",
+      "dirh",
+      "dirl",
+      "dirnc",
+      "dirnot",
+      "dirnz",
+      "dirrnd",
+      "dirz",
+      "djf",
+      "djnf",
+      "djz",
+      "drvc",
+      "drvh",
+      "drvl",
+      "drvnc",
+      "drvnot",
+      "drvnz",
+      "drvrnd",
+      "drvz",
+      "encod",
+      "execf",
+      "fblock",
+      "fge",
+      "fges",
+      "fle",
+      "fles",
+      "fltc",
+      "flth",
+      "fltl",
+      "fltnc",
+      "fltnot",
+      "fltnz",
+      "fltrnd",
+      "fltz",
+      "getbrk",
+      "getbyte",
+      "getbyte",
+      "getct",
+      "getnib",
+      "getptr",
+      "getqx",
+      "getqy",
+      "getrnd",
+      "getrnd",
+      "getscp",
+      "getword",
+      "getword",
+      "getxacc",
+      "hubset",
+      "ijnz",
+      "ijz",
+      "incmod",
+      "jatn",
+      "jct1",
+      "jct2",
+      "jct3",
+      "jfbw",
+      "jint",
+      "jmprel",
+      "jnatn",
+      "jnct1",
+      "jnct2",
+      "jnct3",
+      "jnfbw",
+      "jnint",
+      "jnpat",
+      "jnqmt",
+      "jnse1",
+      "jnse2",
+      "jnse3",
+      "jnse4",
+      "jnxfi",
+      "jnxmt",
+      "jnxrl",
+      "jnxro",
+      "jpat",
+      "jqmt",
+      "jse1",
+      "jse2",
+      "jse3",
+      "jse4",
+      "jxfi",
+      "jxmt",
+      "jxrl",
+      "jxro",
+      "loc",
+      "lockrel",
+      "locktry",
+      "mergeb",
+      "mergew",
+      "mixpix",
+      "modc",
+      "modcz",
+      "modz",
+      "movbyts",
+      "mulpix",
+      "muxnibs",
+      "muxnits",
+      "muxq",
+      "nixint1",
+      "nixint2",
+      "nixint3",
+      "outc",
+      "outh",
+      "outl",
+      "outnc",
+      "outnot",
+      "outnz",
+      "outrnd",
+      "outz",
+      "pollatn",
+      "pollct1",
+      "pollct2",
+      "pollct3",
+      "pollfbw",
+      "pollint",
+      "pollpat",
+      "pollqmt",
+      "pollse1",
+      "pollse2",
+      "pollse3",
+      "pollse4",
+      "pollxfi",
+      "pollxmt",
+      "pollxrl",
+      "pollxro",
+      "pop",
+      "popa",
+      "popb",
+      "push",
+      "pusha",
+      "pushb",
+      "qdiv",
+      "qexp",
+      "qfrac",
+      "qlog",
+      "qmul",
+      "qrotate",
+      "qsqrt",
+      "qvector",
+      "rczl",
+      "rczr",
+      "rdfast",
+      "rdlut",
+      "rdpin",
+      "rep",
+      "resi0",
+      "resi1",
+      "resi2",
+      "resi3",
+      "reta",
+      "retb",
+      "reti0",
+      "reti1",
+      "reti2",
+      "reti3",
+      "rfbyte",
+      "rflong",
+      "rfvar",
+      "rfvars",
+      "rfword",
+      "rgbexp",
+      "rgbsqz",
+      "rolbyte",
+      "rolbyte",
+      "rolnib",
+      "rolword",
+      "rolword",
+      "rqpin",
+      "sal",
+      "sca",
+      "scas",
+      "setbyte",
+      "setcfrq",
+      "setci",
+      "setcmod",
+      "setcq",
+      "setcy",
+      "setd",
+      "setdacs",
+      "setint1",
+      "setint2",
+      "setint3",
+      "setluts",
+      "setnib",
+      "setpat",
+      "setpiv",
+      "setpix",
+      "setq",
+      "setq2",
+      "setr",
+      "sets",
+      "setscp",
+      "setse1",
+      "setse2",
+      "setse3",
+      "setse4",
+      "setword",
+      "setxfrq",
+      "seussf",
+      "seussr",
+      "signx",
+      "skip",
+      "skipf",
+      "splitb",
+      "splitw",
+      "stalli",
+      "subr",
+      "testb",
+      "testbn",
+      "testp",
+      "testpn",
+      "tjf",
+      "tjnf",
+      "tjns",
+      "",
+      "tjs",
+      "tjv",
+      "trgint1",
+      "trgint2",
+      "trgint3",
+      "waitatn",
+      "waitct1",
+      "waitct2",
+      "waitct3",
+      "waitfbw",
+      "waitint",
+      "waitpat",
+      "waitse1",
+      "waitse2",
+      "waitse3",
+      "waitse4",
+      "waitx",
+      "waitxfi",
+      "waitxmt",
+      "waitxrl",
+      "waitxro",
+      "wfbyte",
+      "wflong",
+      "wfword",
+      "wmlong",
+      "wrc",
+      "wrfast",
+      "wrlut",
+      "wrnc",
+      "wrnz",
+      "wrpin",
+      "wrz",
+      "wxpin",
+      "wypin",
+      "xcont",
+      "xinit",
+      "xoro32",
+      "xstop",
+      "xzero",
+      "zerox",
+      "wcz",
+      "xorc",
+      "xorz",
+      "orc",
+      "orz",
+      "andc",
+      "andz",
+      "_ret_",
+      "if_00",
+      "if_01",
+      "if_0x",
+      "if_10",
+      "if_x0",
+      "if_diff",
+      "if_not_11",
+      "if_11",
+      "if_same",
+      "if_x1",
+      "if_not_10",
+      "if_1x",
+      "if_not_01",
+      "if_not_00",
+      "if_le",
+      "if_lt",
+      "if_ge",
+      "if_gt",
+      "p_adc",
+      "p_adc_100x",
+      "p_adc_10x",
+      "p_adc_1x",
+      "p_adc_30x",
+      "p_adc_3x",
+      "p_adc_ext",
+      "p_adc_float",
+      "p_adc_gio",
+      "p_adc_scope",
+      "p_adc_vio",
+      "p_async_io",
+      "p_async_rx",
+      "p_async_tx",
+      "p_bitdac",
+      "p_channel",
+      "p_compare_ab",
+      "p_compare_ab_fb",
+      "p_counter_highs",
+      "p_counter_periods",
+      "p_counter_ticks",
+      "p_count_highs",
+      "p_count_rises",
+      "p_dac_124r_3v",
+      "p_dac_600r_2v",
+      "p_dac_75r_2v",
+      "p_dac_990r_3v",
+      "p_dac_dither_pwm",
+      "p_dac_dither_rnd",
+      "p_dac_noise",
+      "p_events_ticks",
+      "p_high_100ua",
+      "p_high_10ua",
+      "p_high_150k",
+      "p_high_15k",
+      "p_high_1k5",
+      "p_high_1ma",
+      "p_high_fast",
+      "p_high_float",
+      "p_high_ticks",
+      "p_invert_a",
+      "p_invert_b",
+      "p_invert_in",
+      "p_invert_output",
+      "p_level_a",
+      "p_level_a_fbn",
+      "p_level_a_fbp",
+      "p_local_a",
+      "p_local_b",
+      "p_logic_a",
+      "p_logic_a_fb",
+      "p_logic_b_fb",
+      "p_low_100ua",
+      "p_low_10ua",
+      "p_low_150k",
+      "p_low_15k",
+      "p_low_1k5",
+      "p_low_1ma",
+      "p_low_fast",
+      "p_low_float",
+      "p_minus1_a",
+      "p_minus1_b",
+      "p_minus2_a",
+      "p_minus2_b",
+      "p_minus3_a",
+      "p_minus3_b",
+      "p_nco_duty",
+      "p_nco_freq",
+      "p_normal",
+      "p_oe",
+      "p_outbit_a",
+      "p_outbit_b",
+      "p_periods_highs",
+      "p_periods_ticks",
+      "p_plus1_a",
+      "p_plus1_b",
+      "p_plus2_a",
+      "p_plus2_b",
+      "p_plus3_a",
+      "p_plus3_b",
+      "p_pulse",
+      "p_pwm_sawtooth",
+      "p_pwm_smps",
+      "p_pwm_triangle",
+      "p_quadrature",
+      "p_reg_down",
+      "p_reg_up",
+      "p_repository",
+      "p_schmitt_a",
+      "p_schmitt_a_fb",
+      "p_schmitt_b_fb",
+      "p_state_ticks",
+      "p_sync_io",
+      "p_sync_rx",
+      "p_sync_tx",
+      "p_transition",
+      "p_true_a",
+      "p_true_b",
+      "p_true_in",
+      "p_true_output",
+      "p_tt_00",
+      "p_tt_01",
+      "p_tt_10",
+      "p_tt_11",
+      "p_usb_pair",
+      "x_16p_2dac8_wfword",
+      "x_16p_4dac4_wfword",
+      "x_1adc8_0p_1dac8_wfbyte",
+      "x_1adc8_8p_2dac8_wfword",
+      "x_1p_1dac1_wfbyte",
+      "x_2adc8_0p_2dac8_wfword",
+      "x_2adc8_16p_4dac8_wflong",
+      "x_2p_1dac2_wfbyte",
+      "x_2p_2dac1_wfbyte",
+      "x_32p_4dac8_wflong",
+      "x_4adc8_0p_4dac8_wflong",
+      "x_4p_1dac4_wfbyte",
+      "x_4p_2dac2_wfbyte",
+      "x_4p_4dac1_wf_byte",
+      "x_8p_1dac8_wfbyte",
+      "x_8p_2dac4_wfbyte",
+      "x_8p_4dac2_wfbyte",
+      "x_alt_off",
+      "x_alt_on",
+      "x_dacs_0n0_0n0",
+      "x_dacs_0n0_x_x",
+      "x_dacs_0_0_0_0",
+      "x_dacs_0_0_x_x",
+      "x_dacs_0_x_x_x",
+      "x_dacs_1n1_0n0",
+      "x_dacs_1_0_1_0",
+      "x_dacs_1_0_x_x",
+      "x_dacs_3_2_1_0",
+      "x_dacs_off",
+      "x_dacs_x_0_x_x",
+      "x_dacs_x_x_0n0",
+      "x_dacs_x_x_0_0",
+      "x_dacs_x_x_0_x",
+      "x_dacs_x_x_1_0",
+      "x_dacs_x_x_x_0",
+      "x_dds_goertzel_sinc1",
+      "x_dds_goertzel_sinc2",
+      "x_imm_16x2_1dac2",
+      "x_imm_16x2_2dac1",
+      "x_imm_16x2_lut",
+      "x_imm_1x32_4dac8",
+      "x_imm_2x16_2dac8",
+      "x_imm_2x16_4dac4",
+      "x_imm_32x1_1dac1",
+      "x_imm_32x1_lut",
+      "x_imm_4x8_1dac8",
+      "x_imm_4x8_2dac4",
+      "x_imm_4x8_4dac2",
+      "x_imm_4x8_lut",
+      "x_imm_8x4_1dac4",
+      "x_imm_8x4_2dac2",
+      "x_imm_8x4_4dac1",
+      "x_imm_8x4_lut",
+      "x_pins_off",
+      "x_pins_on",
+      "x_rfbyte_1p_1dac1",
+      "x_rfbyte_2p_1dac2",
+      "x_rfbyte_2p_2dac1",
+      "x_rfbyte_4p_1dac4",
+      "x_rfbyte_4p_2dac2",
+      "x_rfbyte_4p_4dac1",
+      "x_rfbyte_8p_1dac8",
+      "x_rfbyte_8p_2dac4",
+      "x_rfbyte_8p_4dac2",
+      "x_rfbyte_luma8",
+      "x_rfbyte_rgb8",
+      "x_rfbyte_rgbi8",
+      "x_rflong_16x2_lut",
+      "x_rflong_32p_4dac8",
+      "x_rflong_32x1_lut",
+      "x_rflong_4x8_lut",
+      "x_rflong_8x4_lut",
+      "x_rflong_rgb24",
+      "x_rfword_16p_2dac8",
+      "x_rfword_16p_4dac4",
+      "x_rfword_rgb16",
+      "x_write_off",
+      "x_write_on",
+    ];
+    const reservedStatus: boolean = spin2InstructionsOfNote.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
   private _isBinaryOperator(name: string): boolean {
     const binaryOperationsOfNote: string[] = ["sar", "ror", "rol", "rev", "zerox", "signx", "sca", "scas", "frac", "addbits", "addpins", "and", "or", "xor"];
     const reservedStatus: boolean = binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;

@@ -435,9 +435,12 @@ name            BYTE    0[23]
                 ZEROX
     ' flag write controls
     WC | WZ | WCZ
-    XORC | XORZ
-    ORC | ORZ
-    ANDC | ANDZ
+    XORC
+    XORZ
+    ORC
+    ORZ
+    ANDC
+    ANDZ
 
     ' instruction conditionals
     _RET_

@@ -1,91 +1,95 @@
 Spin/SPin2 files in FOLDER:
- Root /Users/stephen/Dropbox/PropV2-Shared/P1-Obex/p1:
- All:
-
- 1-wire Routines:
+	Root /Users/stephen/Dropbox/PropV2-Shared/P1-Obex/p1:
+	All:
+	
+	1-wire Routines:
 		- OneWire.spin
-		- OW-Demo1.spin
-		- OW-SearchDemo.spin
-
- 1-wire Routines in Spin:
-		- FloatMath.spin
+			- sigh: NO FIX: tail end of file not highlighted (bunch of res 1's)
+		- OW-Demo1.spin @done(2022-12-02)
+		- OW-SearchDemo.spin @done(2022-12-02)
+	
+	1-wire Routines in Spin:
+		- FloatMath.spin @done(2022-12-02)
 		- FloatString.spin
-		- SpinOneWire-test.spin
-		- SpinOneWire.spin
-		- TV.spin
-		- TV_Text.spin
-
- 1.8 MHz SPI Slave:
-		- Demo.spin
-		- Parallax Serial Terminal.spin
+			- BAD float number recognition!
+		- SpinOneWire-test.spin @done(2022-12-02)
+		- SpinOneWire.spin @done(2022-12-02)
+		- TV.spin @done(2022-12-02)
+		- TV_Text.spin @done(2022-12-02)
+	
+	1.8 MHz SPI Slave:
+		- Demo.spin @done(2022-12-02)
+		- Parallax Serial Terminal.spin @done(2022-12-02)
 		- SPI Slave.spin
-
- 1Mbaud FullDuplexSerial (Fixed baud-rate):
-		- asm_write_ex.spin
-		- Ser1Mb.spin
-
- 2114 4K Static RAM Read-Write spin file:
+			- sigh: NO FIX: tail end of file not highlighted (bunch of res 1's)
+	
+	1Mbaud FullDuplexSerial (Fixed baud-rate):
+		- asm_write_ex.spin @done(2022-12-02)
+		- Ser1Mb.spin @done(2022-12-02)
+	
+	2114 4K Static RAM Read-Write spin file:
 		- 2114_RAM_Write_01.spin
-
- 3 IO Pin Hitatchi compatible LCD driver:
-		- HI_LCD_CNT_2.spin
-		- PC2004LRF_test.spin
-
- 4 x 4 keypad reader using a single IO pin:
-		- 4_x_4_keypad_1-pin_0.spin
-
- 4-bit Parallel LCD driver:
-		- LCD 2x16 demo.spin
-		- LCD 4x20 demo.spin
-		- LCD PASM driver - 2x16.spin
-		- LCD routines.spin
-		- LCD SPIN driver - 2x16.spin
-		- LCD SPIN driver - 4x20.spin
-
- 4-pole IIR Filter - Fixed point math - pasm:
-		- filter_rc4_asm.spin
-		- filter_rc4_asm_demo.spin
-		- filter_rc4_asm_demo2.spin
-		- Parallax Serial Terminal.spin
-
- 4-pole IIR Filter - Fixed point math - spin:
-		- filter_recurse4.spin
-		- filter_recurse4_demo.spin
-		- Parallax Serial Terminal.spin
-
- 433Mhz_WirelessTX:
+	
+	3 IO Pin Hitatchi compatible LCD driver:
+		- HI_LCD_CNT_2.spin @done(2022-12-02)
+		- PC2004LRF_test.spin @done(2022-12-02)
+			- FILE DOESN'T COMPILE (Missing comma) highlighter flagged it correctly @done(2022-12-02)
+	
+	4 x 4 keypad reader using a single IO pin:
+		- 4_x_4_keypad_1-pin_0.spin @done(2022-12-02)
+	
+	4-bit Parallel LCD driver:
+		- LCD 2x16 demo.spin @done(2022-12-02)
+		- LCD 4x20 demo.spin @done(2022-12-02)
+		- LCD PASM driver - 2x16.spin @done(2022-12-02)
+		- LCD routines.spin @done(2022-12-02)
+		- LCD SPIN driver - 2x16.spin @done(2022-12-02)
+		- LCD SPIN driver - 4x20.spin @done(2022-12-02)
+	
+	4-pole IIR Filter - Fixed point math - pasm:
+		- filter_rc4_asm.spin @done(2022-12-02)
+		- filter_rc4_asm_demo.spin @done(2022-12-02)
+		- filter_rc4_asm_demo2.spin @done(2022-12-02)
+		- Parallax Serial Terminal.spin @done(2022-12-02)
+	
+	4-pole IIR Filter - Fixed point math - spin:
+		- filter_recurse4.spin @done(2022-12-02)
+		- filter_recurse4_demo.spin @done(2022-12-02)
+		- Parallax Serial Terminal.spin @done(2022-12-02)
+	
+	433Mhz_WirelessTX:
 		- TX 433 A.spin
-
- 4D Systems GOLDELOX uLCD display support code:
-		- FullDuplexSerial-wCTS.spin
-		- GOLDE_UI.spin
-		- GOLDEtest.spin
-		- uLCDSerialIO.spin
-
- 4D systems uLCD-xx,uLCD-xxPT & uLCD-xxPCT VisiGenie framework:
-		- 4D_VisiGenie.spin
-
- 4D Systems uOLED-128-GMD1:
-		- Clock.spin
-		- FullDuplexSerial.spin
-		- uOLED-128-GMD1.spin
-		- uOLED-128-GMD1_Demo.spin
-
- 4D Systems uOLED-160-GMD1:
-		- Clock.spin
-		- FullDuplexSerial.spin
-		- uOLED-160-GMD1.spin
-		- uOLED-160-GMD1_Demo.spin
-
- 4D-Systems-uOLED-160-G1SGC:
-		- 4D-Systems-uOLED-160-G1SGC.spin
-		- 4D-Systems-uOLED-160-G1SGC_Demo.spin
-		- 4D-Systems-uOLED-160-G1SGC_Test.spin
-		- Clock.spin
-		- Format.spin
-		- FullDuplexSerial.spin
-
- 4Leds4Buttons4Games:
+	
+	4D Systems GOLDELOX uLCD display support code:
+		- FullDuplexSerial-wCTS.spin @done(2022-12-02)
+		- GOLDE_UI.spin @done(2022-12-02)
+		- GOLDEtest.spin @done(2022-12-02)
+		- uLCDSerialIO.spin @done(2022-12-02)
+	
+	4D systems uLCD-xx,uLCD-xxPT & uLCD-xxPCT VisiGenie framework:
+		- 4D_VisiGenie.spin @done(2022-12-02)
+	
+	4D Systems uOLED-128-GMD1:
+		- Clock.spin @done(2022-12-02)
+		- FullDuplexSerial.spin @done(2022-12-02)
+		- uOLED-128-GMD1.spin @done(2022-12-02)
+		- uOLED-128-GMD1_Demo.spin @done(2022-12-02)
+	
+	4D Systems uOLED-160-GMD1:
+		- Clock.spin @done(2022-12-02)
+		- FullDuplexSerial.spin @done(2022-12-02)
+		- uOLED-160-GMD1.spin @done(2022-12-02)
+		- uOLED-160-GMD1_Demo.spin @done(2022-12-02)
+	
+	4D-Systems-uOLED-160-G1SGC:
+		- 4D-Systems-uOLED-160-G1SGC.spin @done(2022-12-02)
+		- 4D-Systems-uOLED-160-G1SGC_Demo.spin @done(2022-12-02)
+		- 4D-Systems-uOLED-160-G1SGC_Test.spin @done(2022-12-02)
+		- Clock.spin @done(2022-12-02)
+		- Format.spin @done(2022-12-02)
+		- FullDuplexSerial.spin @done(2022-12-02)
+	
+	4Leds4Buttons4Games:
 		- 4LEDS.spin
 		- 4Switches.spin
 		- CatchMe.spin
@@ -96,53 +100,53 @@ Spin/SPin2 files in FOLDER:
 		- GuessMe.spin
 		- readme.spin
 		- simon.spin
-
- 4x4 Jameco Keypad Driver:
+	
+	4x4 Jameco Keypad Driver:
 		- 4x4_Jameco_Keypad.spin
 		- 4x4_Keypad_Demo.spin
 		- Debug_Lcd.spin
 		- Serial_Lcd.spin
 		- Simple_Numbers.spin
 		- Simple_Serial.spin
-
- 4x4 Keypad driver TG:
+	
+	4x4 Keypad driver TG:
 		- 4x4_Keypad.spin
 		- 4x4_Keypad_Demo.spin
 		- Debug_Lcd.spin
 		- Serial_Lcd.spin
 		- Simple_Numbers.spin
 		- Simple_Serial.spin
-
- 4x4 Keypad Reader DEMO:
+	
+	4x4 Keypad Reader DEMO:
 		- 4x4 keypad Reader DEMO.spin
 		- 4x4 Keypad Reader.spin
 		- VGA.spin
 		- VGA_Text.spin
-
- 6-pole IIR Filter - Floatmath - pasm:
+	
+	6-pole IIR Filter - Floatmath - pasm:
 		- filter_rc6f_asm.spin
 		- filter_rc6f_asm_demo.spin
 		- Parallax Serial Terminal.spin
-
- 7-Segment LED display driver for SLED-C4:
+	
+	7-Segment LED display driver for SLED-C4:
 		- FullDuplexSerial.spin
 		- ral_SLEDC4_10.spin
 		- ral_SLEDC4demo.spin
-
- 7-Segment_01.spin:
+	
+	7-Segment_01.spin:
 		- 7-Segment_01.spin
-
- 74C922 Keypad Driver:
+	
+	74C922 Keypad Driver:
 		- 74c922buffer.spin
 		- 74c922demo.spin
 		- Parallax Serial Terminal.spin
-
- 74C92X Keypad Buffer and Driver:
+	
+	74C92X Keypad Buffer and Driver:
 		- 74c92Xbuffer.spin
 		- 74c92Xdemo.spin
 		- 74c92Xsearchdemo.spin
-
- 74HC595 Regular and MultiPWM Shift Register Driver:
+	
+	74HC595 Regular and MultiPWM Shift Register Driver:
 		- 74HC595_MultiPWM.spin
 		- 74HC595_Regular.spin
 		- Demo_74HC595_MultiPWM.spin
@@ -151,56 +155,56 @@ Spin/SPin2 files in FOLDER:
 		- Simple_74HC595.spin
 		- TV.spin
 		- TV_Text.spin
-
- 74hc597 driver:
+	
+	74hc597 driver:
 		- 74HC597.spin
-
- 7705&7706 driver:
+	
+	7705&7706 driver:
 		- AD7706-2wire.spin
 		- adc_test.spin
 		- FullDuplexSerial.spin
-
- 8255 Programmable Peripheral Interface Driver:
+	
+	8255 Programmable Peripheral Interface Driver:
 		- demo-ppi8255.spin
 		- FullDuplexSerial.spin
 		- ppi8255.spin
-
- A Better Gyro Demo:
+	
+	A Better Gyro Demo:
 		- BetterGyroDemo.spin
-
- AD5220 Digital Potentiometer:
+	
+	AD5220 Digital Potentiometer:
 		- AD5220.spin
-
- AD7705 interface (ADC converter):
+	
+	AD7705 interface (ADC converter):
 		- AD7705.spin
-
- AD7822:
+	
+	AD7822:
 		- AD7822.spin
-
- AD8803 Demo:
+	
+	AD8803 Demo:
 		- AD8803.spin
 		- AD8803_DEMO.spin
-
- AD9833_simple:
+	
+	AD9833_simple:
 		- ad9833_simple.spin
 		- FloatMath.spin
-
- AD9851 DDS:
+	
+	AD9851 DDS:
 		- AD9851.spin
 		- AD9851_Demo.spin
-
- Adafruit 16 channels Servo Driver (PCA9685):
+	
+	Adafruit 16 channels Servo Driver (PCA9685):
 		- Adafruit16chServoDriver.spin
 		- Adafruit16chServoDriverDemo.spin
 		- FullDuplexSerial.spin
 		- I2C SPIN driver v1.4od.spin
-
- Adafruit OLED Driver and Demo:
+	
+	Adafruit OLED Driver and Demo:
 		- Numbers.spin
 		- OLED_AsmFast.spin
 		- OLED_DriverDemo2.spin
-
- ADB Double Bridger:
+	
+	ADB Double Bridger:
 		- adb-demo-io-double.spin
 		- adb-shell-module-01.spin
 		- adb-shell-module-23.spin
@@ -208,106 +212,106 @@ Spin/SPin2 files in FOLDER:
 		- stringoutput_external_buffer.spin
 		- usb-fs-host-01.spin
 		- usb-fs-host-23.spin
-
- ADC LTC1298:
+	
+	ADC LTC1298:
 		- CD_Graphics.spin
 		- CD_LTC1298.spin
 		- CD_Numbers.spin
 		- CD_Test_LTC1298.spin
 		- TV.spin
-
- ADC MCP3204 SPI Driver:
+	
+	ADC MCP3204 SPI Driver:
 		- ADC_MCP3204_Diff_SPI.spin
 		- ADC_MCP3204_SingleEnded_SPI.spin
 		- MCP3204_Differential_demo.spin
 		- MCP3204_SingleEnded_demo.spin
 		- Parallax Serial Terminal.spin
-
- ADC0808driver.spin:
+	
+	ADC0808driver.spin:
 		- ADC0808driver.spin
 		- ADCdebugger.spin
-
- ADC0820:
+	
+	ADC0820:
 		- adc0820_driver_CH1.spin
 		- adc0820_driver_CH2.spin
 		- adc0820_main_CH12c.spin
-
- ADC0831 Driver V2:
+	
+	ADC0831 Driver V2:
 		- ADC0831_Driver.spin
-
- ADC0831 LM34:
+	
+	ADC0831 LM34:
 		- ADC0831_LM34.spin
-
- adc0831_block:
+	
+	adc0831_block:
 		- adc0831_block.spin
 		- adc0831_block_demo.spin
 		- Parallax Serial Terminal.spin
-
- adc0831_fast:
+	
+	adc0831_fast:
 		- adc0831_fast.spin
 		- adc0831_fast_demo.spin
 		- Parallax Serial Terminal.spin
-
- adc0831_slow:
+	
+	adc0831_slow:
 		- adc0831_slow.spin
 		- adc0831_slow_demo.spin
 		- Parallax Serial Terminal.spin
-
- ADC0834 Interface:
+	
+	ADC0834 Interface:
 		- CD_ADC0834.spin
 		- CD_FloatMath.spin
 		- CD_Graphics.spin
 		- CD_Numbers.spin
 		- CD_Test_ADC0834.spin
 		- CD_WindDir.spin
-
- ADC0838 Channel Debug:
+	
+	ADC0838 Channel Debug:
 		- ADC0838_Channel_Debug.spin
-
- ADC_0831_DEMO:
+	
+	ADC_0831_DEMO:
 		- ADC0831_DEMO.spin
-
- ADS1220 ADC from Texas Instruments:
+	
+	ADS1220 ADC from Texas Instruments:
 		- ADS1220.spin
 		- FullDuplexSerial.spin
 		- SPI_Asm.spin
-
- ADS1252:
+	
+	ADS1252:
 		- ADS1252.spin
-
- ADS7822P Object V2.0 - AD interface:
+	
+	ADS7822P Object V2.0 - AD interface:
 		- ads7822p.spin
 		- ads7822p_Demo.spin
 		- VGA_640x240_Bitmap.spin
-
- ADS7828 ADC:
+	
+	ADS7828 ADC:
 		- ADS7828.spin
-
- ADXL345 accelerometer:
+	
+	ADXL345 accelerometer:
 		- ADXL345Object.spin
 		- ADXL345ObjectDemo.spin
 		- FloatMath.spin
 		- FloatString.spin
 		- FullDuplexSerialPlus.spin
-
- AES:
+	
+	AES:
 		- AES.spin
 		- AEStest.spin
 		- Clock.spin
 		- Format.spin
 		- SerialMirror.spin
-
- AES-128 in PASM:
+	
+	AES-128 in PASM:
 		- AES-128.spin
-
- Airoha AR1010 driver & demo:
+	
+	Airoha AR1010 driver & demo:
 		- AR1010.spin
 		- AR1010_Demo.spin
 		- Basic_I2C_Driver.spin
 		- Clock.spin
 		- FullDuplexSerialPlus.spin
-
- Another GoogleEarth Logger:
+	
+	Another GoogleEarth Logger:
 		- Another_GoogleEarth_Logger.spin
 		- Format_AGEL.spin
 		- fsrw.spin
@@ -317,154 +321,154 @@ Spin/SPin2 files in FOLDER:
 		- MAX_6957_DS17285_IO.spin
 		- Numbers.spin
 		- sdspiqasm_AGEL.spin
-
- ARC - Arbitrary Row and Column Keypad encoder:
+	
+	ARC - Arbitrary Row and Column Keypad encoder:
 		- ARCKEY DEMO.spin
 		- ARCKEY.spin
 		- FullDuplexSerial.spin
-
- Arduino-compatible LIGHT:
+	
+	Arduino-compatible LIGHT:
 		- Arduino_light_5.spin
-
- AS3935 Lightning Sensor:
+	
+	AS3935 Lightning Sensor:
 		- AS3935.spin
 		- AS3935_driver.spin
 		- Parallax Serial Terminal.spin
 		- SPI_Spin.spin
-
- Augmented Assembly Code (PreSpin ver):
+	
+	Augmented Assembly Code (PreSpin ver):
 		- Demo SUBS test-aac.spin
 		- MacroDemo1.pre.spin
 		- MacroDemo2.pre.spin
 		- PC_Interface.spin
 		- PreprocTest.pre.spin
 		- Quick start sample-aac.spin
-
- Augmented Assembly Code (standalone ver):
+	
+	Augmented Assembly Code (standalone ver):
 		- Demo SUBS test-aac.spin
 		- Quick start sample-aac.spin
-
- Autodatalogger:
+	
+	Autodatalogger:
 		- Autodatalogger.spin
 		- Autodatalogger_test.spin
 		- FullDuplexSerialPlus.spin
 		- FullDuplexSerialUART.spin
-
- Automated Home Security:
+	
+	Automated Home Security:
 		- DHCP_GBSbuild_01_28_2011.spin
 		- kd_SensorArray.spin
 		- KPDAutomatedHomeSecurity.spin
 		- Parallax Serial Terminal.spin
 		- s-35390A_GBSbuild_01_23_2011.spin
-
- Automobile ignition system simulator:
+	
+	Automobile ignition system simulator:
 		- Desktach.spin
 		- MCP3208.spin
 		- Parallax Serial Terminal.spin
 		- Synth.spin
-
- Automotive Fuel Injector Tester:
+	
+	Automotive Fuel Injector Tester:
 		- InjectorOnOffP4Tester80MHz.spin
-
- Automotive sensors system simulator:
+	
+	Automotive sensors system simulator:
 		- Desktachmulti-cog.spin
 		- MCP3208.spin
 		- Parallax Serial Terminal.spin
 		- Synth.spin
-
- Base64 Decoder:
+	
+	Base64 Decoder:
 		- base64.spin
-
- Basic I2C Driver:
+	
+	Basic I2C Driver:
 		- Basic_I2C_Driver_1.spin
-
- Basic PID:
+	
+	Basic PID:
 		- PID1_1.spin
-
- Basic Unipolar Stepper Driver Object with Limit Switches:
+	
+	Basic Unipolar Stepper Driver Object with Limit Switches:
 		- Stepper.spin
-
- beau1button:
+	
+	beau1button:
 		- beau1button-demo_v1.2.spin
 		- beep.spin
 		- Parallax Serial Terminal.spin
 		- PropellerRTC_Emulator.spin
 		- Simple_Numbers.spin
 		- soft_lcd4_ez.spin
-
- Bipolar Stepper motor driver:
+	
+	Bipolar Stepper motor driver:
 		- stepper.spin
 		- stepper_test.spin
 		- stepper_test_half_step.spin
-
- Bit Manipulator:
+	
+	Bit Manipulator:
 		- BitManipulator.spin
-
- Bitwise Manipulators:
+	
+	Bitwise Manipulators:
 		- Bitwise Manipulators.spin
-
- BlueSmirf Bluetooth serial port, with Bluetooth device discovery, listing and pairing:
+	
+	BlueSmirf Bluetooth serial port, with Bluetooth device discovery, listing and pairing:
 		- BlueSmirf_Bluetooth_Modem.spin
 		- StringBuilder.spin
-
- BluetoothBee:
+	
+	BluetoothBee:
 		- BluetoothBee.spin
 		- BluetoothBeeDemo.spin
 		- FullDuplexSerial.spin
 		- TV.spin
 		- TV_Text.spin
-
- BoeBotBasic:
+	
+	BoeBotBasic:
 		- BB_definitions.spin
 		- BB_FullDuplexSerial.spin
 		- BB_i2cSpiInit.spin
 		- BB_i2cSpiLdr.spin
 		- BB_massStorage.spin
 		- BoeBotBasic.spin
-
- Boot Loader:
+	
+	Boot Loader:
 		- Basic_I2C_Driver.spin
 		- fsrw.spin
 		- loader.spin
 		- sdspiFemto.spin
 		- sdspiqasm.spin
-
- BS2 commands (simplified):
+	
+	BS2 commands (simplified):
 		- BS2_Commands.spin
-
- BS2 Functions:
+	
+	BS2 Functions:
 		- BS2_Functions.spin
-
- BuildYourOwnServo:
+	
+	BuildYourOwnServo:
 		- ADC0831.spin
 		- Bugs.spin
 		- MyServoDemo.spin
 		- Random.spin
 		- SerialDisplay.spin
 		- SN754410.spin
-
- BUST Non Randomness:
+	
+	BUST Non Randomness:
 		- BUST_NonRandom.spin
 		- Parallax Serial Terminal.spin
 		- SPIN_TrigPack.spin
-
- Button:
+	
+	Button:
 		- Button.spin
 		- ButtonDemo2.spin
 		- TV.spin
 		- TV_Text.spin
-
- c3088 (cmucam) ASCII camera driver:
+	
+	c3088 (cmucam) ASCII camera driver:
 		- propcamera_module_preproc_antbotlayout_pcb.spin
-
- CANbus objects:
+	
+	CANbus objects:
 		- CANbus controller 500Kbps.spin
 		- CANbus Loopback demo.spin
 		- CANbus reader 1Mbps.spin
 		- CANbus Writer 1Mbps.spin
 		- FullDuplexSerial.spin
-
- CANbus Objects -- Simplified Loopback Test:
+	
+	CANbus Objects -- Simplified Loopback Test:
 		- CANbus controller 500Kbps.spin
 		- CANbus Loopback demo JT.spin
 		- CANbus Loopback demo JT2.spin
@@ -472,18 +476,18 @@ Spin/SPin2 files in FOLDER:
 		- CANbus reader 1Mbps.spin
 		- CANbus Writer 1Mbps.spin
 		- FullDuplexSerial.spin
-
- Capacitive Touch Switch:
+	
+	Capacitive Touch Switch:
 		- capswitch.spin
 		- capswitch_test.spin
 		- PC_Text.spin
-
- CELL PHONE (SIM900) CONNECTED TO PROPELLER, VERSION 1.0:
+	
+	CELL PHONE (SIM900) CONNECTED TO PROPELLER, VERSION 1.0:
 		- BASIC_FUNCTIONS.spin
 		- FullDuplexSerial.spin
 		- SEND_TEXT.spin
-
- Ciphers:
+	
+	Ciphers:
 		- ciphers.spin
 		- ciphers_demo.spin
 		- Graphics.spin
@@ -492,236 +496,236 @@ Spin/SPin2 files in FOLDER:
 		- Synth.spin
 		- TV.spin
 		- TV_Terminal.spin
-
- CLib:
+	
+	CLib:
 		- cfloatstr.spin
 		- clib.spin
 		- cmalloc.spin
 		- cserial.spin
 		- testclib.spin
-
- Clock:
+	
+	Clock:
 		- Clock.spin
-
- CM2302 Temperature and Humidity Driver:
+	
+	CM2302 Temperature and Humidity Driver:
 		- CM2302.spin
-
- CMUCam Color Tracking:
+	
+	CMUCam Color Tracking:
 		- CMUCamera.spin
-
- CMUCAM Serial Data Check:
+	
+	CMUCAM Serial Data Check:
 		- CMUCAM_Serial_Check.spin
-
- CMUcam1 Driver:
+	
+	CMUcam1 Driver:
 		- CMUcamDriver.spin
-
- CMUCamera2 Spin Object:
+	
+	CMUCamera2 Spin Object:
 		- CMUCamera2.spin
-
- cogArrays:
+	
+	cogArrays:
 		- ArraysInCOG.spin
 		- ArraysInHUB.spin
 		- Debug_PC.spin
 		- fullduplexserial.spin
-
- Coil Sensor Demo:
+	
+	Coil Sensor Demo:
 		- Clock.spin
 		- COIL_demo.spin
 		- COILREAD.spin
 		- Graphics.spin
 		- TV.spin
-
- ColorPAL:
+	
+	ColorPAL:
 		- ColorPAL.spin
 		- ColorPALDemo.spin
 		- Simple_Serial.spin
-
- Combo mouse & keyboard driver:
+	
+	Combo mouse & keyboard driver:
 		- config.spin
 		- kbm.spin
 		- kbmtest.spin
 		- pcFullDuplexSerial4FC.spin
-
- Commodore VIC-20 Keyboard Driver:
+	
+	Commodore VIC-20 Keyboard Driver:
 		- Parallax Serial Terminal.spin
 		- VIC20_KB.spin
 		- VIC20_KB_Demo.spin
-
- ConfigReader:
+	
+	ConfigReader:
 		- CogOS_IO(Term).spin
 		- ConfigReader.spin
 		- fsrw.spin
 		- FullDuplexSerial.spin
 		- mb_rawb_spi.spin
 		- TestCR.spin
-
- Continuous Rotation Servo Position Reader v1.0:
+	
+	Continuous Rotation Servo Position Reader v1.0:
 		- Continuous Rotation Servo Position Reader v1.0.spin
 		- Parallax Serial Terminal.spin
 		- Servo32_Ramp_v2.spin
 		- Servo32v9.spin
-
- Control of a DC motors with H-Bridge chips:
+	
+	Control of a DC motors with H-Bridge chips:
 		- Debug_Lcd.spin
 		- MotorPwm.spin
 		- MotorsTest.spin
 		- Serial_Lcd.spin
 		- SetMotor.spin
 		- Simple_Numbers.spin
-
- Convert Sensirion:
+	
+	Convert Sensirion:
 		- Conv_Sensirion.spin
 		- Float32.spin
-
- CRC Model:
+	
+	CRC Model:
 		- crcmodel.spin
 		- test_crc.spin
-
- CreateOI for the iRobot Create:
+	
+	CreateOI for the iRobot Create:
 		- Clock.spin
 		- CreateOI.spin
 		- DynamicMathLib_Short.spin
 		- Float32ADML.spin
 		- FullDuplexSerial.spin
-
- cyclic redundancy check (CRC):
+	
+	cyclic redundancy check (CRC):
 		- BS2_Functions.spin
 		- CRC.spin
 		- RPC_HostControler.spin
 		- Simple_Serial.spin
-
- Datalogger SPI mode:
+	
+	Datalogger SPI mode:
 		- DataloggerSPI.spin
 		- DataloggerSPI_test.spin
-
- DataLoggerX4:
+	
+	DataLoggerX4:
 		- DataLoggerX4_066.spin
 		- DataLoggerX4_069_Demo.spin
 		- FullDuplexSerial.spin
-
- Date & Time:
+	
+	Date & Time:
 		- date_time_epoch.spin
 		- date_time_epoch_demo.spin
 		- date_time_ts.spin
 		- date_time_ts_demo.spin
 		- serial_terminal.spin
-
- Day Of The Week calculator:
+	
+	Day Of The Week calculator:
 		- DayOfTheWeek.spin
-
- DCF77 transmitter:
+	
+	DCF77 transmitter:
 		- Dcf77 TX.spin
 		- Parallax Serial Terminal.spin
 		- PropellerSignalGenerator.spin
 		- RealTimeClock.spin
-
- DecimalPlace:
+	
+	DecimalPlace:
 		- DecimalPlace.spin
-
- Dedicated pwm generator:
+	
+	Dedicated pwm generator:
 		- pwmAsm.spin
 		- pwmasm_test.spin
-
- DHT11 & DHT22 Sensor:
+	
+	DHT11 & DHT22 Sensor:
 		- DHT11_Test.spin
 		- DHTnn_Object.spin
 		- FloatMath.spin
 		- FloatString.spin
 		- FullDuplexSerial.spin
-
- Display Prop Info (clockfreq, avail cogs):
+	
+	Display Prop Info (clockfreq, avail cogs):
 		- FullDuplexSerial.spin
 		- Simple_Numbers.spin
 		- sysinfo.spin
-
- DMX-512A Receive Driver:
+	
+	DMX-512A Receive Driver:
 		- DMX_Rx_Driver_Demo_Ver011.spin
 		- DMX_Rx_Driver_Ver014.spin
-
- DMX512 basic output:
+	
+	DMX512 basic output:
 		- DMXout.spin
-
- DMX_Dimmer24:
+	
+	DMX_Dimmer24:
 		- DMX_Dimmer24_10_8_2013.spin
 		- jm_dmxin.spin
-
- Dongle Basic:
+	
+	Dongle Basic:
 		- BB_definitions.spin
 		- BB_FullDuplexSerial.spin
 		- BB_i2cSpiInit.spin
 		- BB_i2cSpiLdr.spin
 		- BB_massStorage.spin
 		- DongleBasic.spin
-
- Double Precision Binary to BCD Conversion Bin2BCD:
+	
+	Double Precision Binary to BCD Conversion Bin2BCD:
 		- DpBin2BCD.spin
 		- Parallax Serial Terminal.spin
-
- DrawLines:
+	
+	DrawLines:
 		- DrawLines.spin
 		- VGA_512x384_Bitmap.spin
-
- Driver for HT16K133 and 8x8 bicolor led matrix (Adafruit backpack):
+	
+	Driver for HT16K133 and 8x8 bicolor led matrix (Adafruit backpack):
 		- Basic_I2C_Driver_1.spin
 		- HT16K33_Bicolor_8x8.spin
-
- DS1302 timekeeping chip driver:
+	
+	DS1302 timekeeping chip driver:
 		- DS1302-demo.spin
 		- DS1302.spin
 		- Simple_Numbers.spin
 		- TV.spin
 		- TV_Text.spin
-
- DS1302_full:
+	
+	DS1302_full:
 		- DS1302_full-demo.spin
 		- DS1302_full.spin
 		- SerialMirror.spin
 		- Simple_Numbers.spin
-
- DS1620 Thermometer:
+	
+	DS1620 Thermometer:
 		- DS1620.spin
 		- ShiftIO.spin
 		- Timing.spin
-
- DS1620_full:
+	
+	DS1620_full:
 		- DS1620_full.spin
 		- DS1620_full_demo.spin
 		- Parallax Serial Terminal.spin
 		- ShiftIO.spin
 		- Timing.spin
-
- DS1822 demo:
+	
+	DS1822 demo:
 		- DS1822_Temperature_sensor_demo.spin
-
- DS2760 Thermocouple Kit Driver:
+	
+	DS2760 Thermocouple Kit Driver:
 		- Brilldea-DS2760-Ver004.spin
 		- OneWire.spin
-
- DTMF:
+	
+	DTMF:
 		- DTMF.spin
 		- DTMF_DEMO.spin
 		- Synth.spin
-
- DTMF decoder:
+	
+	DTMF decoder:
 		- DTMF decoder demo.spin
 		- goertzel.spin
 		- Parallax Serial Terminal.spin
-
- Dual PWM motor driver in 1 cog:
+	
+	Dual PWM motor driver in 1 cog:
 		- DutyCycle.spin
-
- Dual Quadrature Encoder Driver:
+	
+	Dual Quadrature Encoder Driver:
 		- QEDEngine.spin
-
- dualPing:
+	
+	dualPing:
 		- dualPing.spin
 		- Ping_demo.spin
 		- SerialMirror.spin
-
- DX160B:
+	
+	DX160B:
 		- DX160Bobject.spin
-
- Dynamic Cog Loader:
+	
+	Dynamic Cog Loader:
 		- JDCogSerial.spin
 		- Main.spin
 		- MemoryWaster.spin
@@ -731,24 +735,24 @@ Spin/SPin2 files in FOLDER:
 		- x_Loader.spin
 		- x_Main.spin
 		- x_Saver.spin
-
- Dynamic Math Lib:
+	
+	Dynamic Math Lib:
 		- DynamicMathLib.spin
 		- Float32ADML.spin
-
- Dynamic Math Lib - Nav Optimized:
+	
+	Dynamic Math Lib - Nav Optimized:
 		- DynamicMathLib.spin
-
- EEPROM Monitor Demo:
+	
+	EEPROM Monitor Demo:
 		- EEPROM_Monitor.spin
 		- EEPROM_Monitor_Demo.spin
 		- Very Basic I2C.spin
-
- Eight Talking Cogs:
+	
+	Eight Talking Cogs:
 		- BS2_Functions_1_3_5.spin
 		- Eight Talking Cogs.spin
-
- Elliptic Curve Crypto:
+	
+	Elliptic Curve Crypto:
 		- Clock.spin
 		- ECC-tester.spin
 		- ECC.spin
@@ -759,39 +763,39 @@ Spin/SPin2 files in FOLDER:
 		- NIST-P384.spin
 		- NIST-P521.spin
 		- SerialMirror.spin
-
- Emic Text-to-Speech Driver, Basic:
+	
+	Emic Text-to-Speech Driver, Basic:
 		- EmicDriver.spin
-
- Emic Text-to-Speech Driver, Extended:
+	
+	Emic Text-to-Speech Driver, Extended:
 		- EmicDriverExtended.spin
-
- ENC28J60 Ethernet PHY&MAC Chip Driver:
+	
+	ENC28J60 Ethernet PHY&MAC Chip Driver:
 		- driver_enc28j60.spin
-
- Enhanced I2C:
+	
+	Enhanced I2C:
 		- i2c.spin
-
- Enhanced Servo Controller with Acceleration:
+	
+	Enhanced Servo Controller with Acceleration:
 		- dServo.spin
 		- dServo_use_1_Servo_Example.spin
 		- dServo_use_6_Servos_Example.spin
 		- Float32.spin
-
- ESC Motor Control Demo:
+	
+	ESC Motor Control Demo:
 		- ESC_Motor_Control_Demo.spin
-
- Event Driven LSA (Logic State Analyzer) ViewPort:
+	
+	Event Driven LSA (Logic State Analyzer) ViewPort:
 		- EventLogger.spin
 		- EventLogTest.spin
-
- Extended Full Duplex Serial:
+	
+	Extended Full Duplex Serial:
 		- Extended_FDSerial.spin
-
- ezLCD-002:
+	
+	ezLCD-002:
 		- ezLCD-002.spin
-
- F32 - Concise floating point code for the Propeller:
+	
+	F32 - Concise floating point code for the Propeller:
 		- F32_1_6.spin
 		- F32_test.spin
 		- FFDS1.spin
@@ -799,11 +803,11 @@ Spin/SPin2 files in FOLDER:
 		- Float32Full.spin
 		- FloatMath.spin
 		- FloatString.spin
-
- Fake TV (drop-in TV.spin to VGA.spin replacement):
+	
+	Fake TV (drop-in TV.spin to VGA.spin replacement):
 		- FakeTV.spin
-
- FAT16 routines SD Card layer - Updated:
+	
+	FAT16 routines SD Card layer - Updated:
 		- fsrw.spin
 		- fsrw_speed.spin
 		- README.spin
@@ -816,8 +820,8 @@ Spin/SPin2 files in FOLDER:
 		- TV.spin
 		- tv_text.spin
 		- vga_1024x768_tile_driver_with_cursor.spin
-
- FAT16 routines with secure digital card layer:
+	
+	FAT16 routines with secure digital card layer:
 		- fsrw.spin
 		- mb_rawb_spi.spin
 		- mb_small_spi.spin
@@ -827,8 +831,8 @@ Spin/SPin2 files in FOLDER:
 		- serial_terminal.spin
 		- sysdep_demo_ser.spin
 		- test.spin
-
- FemtoBasic:
+	
+	FemtoBasic:
 		- comboKeyboard.spin
 		- FemtoBasic.spin
 		- fsrwFemto.spin
@@ -836,55 +840,55 @@ Spin/SPin2 files in FOLDER:
 		- sdspiFemto.spin
 		- tv_wtext.spin
 		- vga_Drive.spin
-
- Fixed-point math with trig functions in SPIN:
+	
+	Fixed-point math with trig functions in SPIN:
 		- FloatMath.spin
 		- Parallax Serial Terminal.spin
 		- SPIN_TrigPack.spin
 		- SPIN_TrigPack_Demo.spin
-
- Float Math Extended:
+	
+	Float Math Extended:
 		- FME.spin
-
- Float String:
+	
+	Float String:
 		- FloatString.spin
-
- Floating Point:
+	
+	Floating Point:
 		- Float32.spin
 		- Float32A.spin
 		- Float32Full.spin
-
- FloatString:
+	
+	FloatString:
 		- FloatString.spin
-
- FMS Serial Joystick DEMO Driver v1.0a:
+	
+	FMS Serial Joystick DEMO Driver v1.0a:
 		- FMS Serial Joystick DEMO Driver v1.0.a.spin
 		- FullDuplexSerial.spin
-
- Format:
+	
+	Format:
 		- Format.spin
 		- Format_test.spin
-
- Four Character, Seven Segment 0.8'' LED:
+	
+	Four Character, Seven Segment 0.8'' LED:
 		- Digital tachoDriver.spin
 		- FullDuplexSerial.spin
-
- FPU Extended KF:
+	
+	FPU Extended KF:
 		- FPU_ExtendedKF.spin
 		- FPU_Matrix_Driver.spin
 		- FullDuplexSerialPlus.spin
-
- FPU Kalman Filter:
+	
+	FPU Kalman Filter:
 		- FPU_KalmanFilter.spin
 		- FPU_Matrix_Driver.spin
 		- FullDuplexSerialPlus.spin
-
- FPU Steady State KF:
+	
+	FPU Steady State KF:
 		- FPU_Matrix_Driver.spin
 		- FPU_SteadyStateKF.spin
 		- FullDuplexSerialPlus.spin
-
- Frequency Meter:
+	
+	Frequency Meter:
 		- Frequency Meter.spin
 		- HackedSingingDemoSeven.spin
 		- StereoSpatializer.spin
@@ -893,53 +897,53 @@ Spin/SPin2 files in FOLDER:
 		- VGA.spin
 		- VGA_Text.spin
 		- VocalTract.spin
-
- FrequencySynth v1.1:
+	
+	FrequencySynth v1.1:
 		- FrequencySynth.spin
 		- Synth.spin
-
- Full Duplex Serial:
+	
+	Full Duplex Serial:
 		- FullDuplexSerial.spin
-
- Full Duplex Serial with output flow control:
+	
+	Full Duplex Serial with output flow control:
 		- FullDuplexSerial-wCTS.spin
-
- FullDuplexSerial_rr004:
+	
+	FullDuplexSerial_rr004:
 		- FullDuplexSerial_rr004.spin
-
- GameCube Controller:
+	
+	GameCube Controller:
 		- GameCube test.spin
 		- GameCube_v1.2.spin
 		- TV.spin
 		- TV_Text.spin
-
- gamepad_drv_001 - Keyboard Instead:
+	
+	gamepad_drv_001 - Keyboard Instead:
 		- gamepad_drv_001.spin
 		- Keyboard.spin
-
- gamepad_drv_001 - N64:
+	
+	gamepad_drv_001 - N64:
 		- gamepad_drv_001.spin
 		- N64_v1.2.spin
-
- GaugeObject:
+	
+	GaugeObject:
 		- GaugeDemo.spin
 		- GaugeObject_V1.spin
 		- Graphics.spin
 		- Numbers.spin
 		- TV.spin
-
- Generalized WAV player:
+	
+	Generalized WAV player:
 		- fsrw.spin
 		- sdspiqasm.spin
 		- wav_decoder.spin
 		- wave_asm.spin
 		- WaveExample.spin
 		- WavePlayerSdAccess.spin
-
- Generating 5Mhz clock for slave propeller chips:
+	
+	Generating 5Mhz clock for slave propeller chips:
 		- HowToSlavePropellerClocksAt5Mhz.spin
-
- GPS Float Demo:
+	
+	GPS Float Demo:
 		- Float32A.spin
 		- Float32Full.spin
 		- FloatMath.spin
@@ -949,8 +953,8 @@ Spin/SPin2 files in FOLDER:
 		- GPS_Float.spin
 		- GPS_Float_Demo.spin
 		- GPS_Str_NMEA.spin
-
- GPS Float Lite Demo:
+	
+	GPS Float Lite Demo:
 		- FloatMath.spin
 		- FloatString.spin
 		- FullDuplexSerial.spin
@@ -958,51 +962,51 @@ Spin/SPin2 files in FOLDER:
 		- GPS_Float_Lite.spin
 		- GPS_Float_Lite_Demo.spin
 		- GPS_Str_NMEA_Lite.spin
-
- GPS NMEA Parser:
+	
+	GPS NMEA Parser:
 		- FullDuplexSerial.spin
 		- GPSDriver.spin
 		- GPSDriver_Demo.spin
-
- GPS Scrolling Map:
+	
+	GPS Scrolling Map:
 		- FullDuplexSerial.spin
 		- uOLED128GMD1.spin
 		- uOLED_Demo.spin
-
- GPS to VGA:
+	
+	GPS to VGA:
 		- FullDuplexSerial_mini.spin
 		- gps vga.spin
 		- GPS_IO_mini.spin
 		- VGA.spin
 		- VGA_Text.spin
-
- GPS_SD_Card_TV_Demo.spin:
+	
+	GPS_SD_Card_TV_Demo.spin:
 		- GPS_SD_Card_TV_Demo.spin
-
- H48C Tri-Axis Accelerometer DEMO:
+	
+	H48C Tri-Axis Accelerometer DEMO:
 		- H48C Tri-Axis Accelerometer DEMO.spin
 		- H48C Tri-Axis Accelerometer.spin
 		- VGA.spin
 		- VGA_Text.spin
-
- Hamradio repeater logic:
+	
+	Hamradio repeater logic:
 		- CW Keyer Sinus.spin
 		- goertzel.spin
 		- Parallax Serial Terminal.spin
 		- PropellerSignalGenerator.spin
 		- repeater.spin
-
- HB-25:
+	
+	HB-25:
 		- CJ_HB25_014.spin
-
- HC4LED Driver:
+	
+	HC4LED Driver:
 		- hc4led_obj_test.spin
 		- hc4led_object.spin
-
- HD44780 Driver:
+	
+	HD44780 Driver:
 		- HD44780_DRV.spin
-
- HD44780 PASM driver:
+	
+	HD44780 PASM driver:
 		- BenkyLCDdriver.spin
 		- LCD_menu.spin
 		- LCD_small_pic.spin
@@ -1010,16 +1014,16 @@ Spin/SPin2 files in FOLDER:
 		- LCD_test_4.spin
 		- PWM_32_v2.spin
 		- RealRandom.spin
-
- Heap:
+	
+	Heap:
 		- heap.spin
 		- heap_test.spin
-
- Heartbeat:
+	
+	Heartbeat:
 		- Heartbeat Demo.spin
 		- Heartbeat.spin
-
- HIH-6131 and LM76CHM Demo:
+	
+	HIH-6131 and LM76CHM Demo:
 		- Basic_I2C_Driver.spin
 		- Float32.spin
 		- FloatString.spin
@@ -1028,8 +1032,8 @@ Spin/SPin2 files in FOLDER:
 		- lmm_tim.spin
 		- MainProgram.spin
 		- pcFullDuplexSerial4FC.spin
-
- HM55B Compass Module TV and Serial DEMO:
+	
+	HM55B Compass Module TV and Serial DEMO:
 		- FullDuplexSerial.spin
 		- Graphics.spin
 		- HM55B Compass Calibration.spin
@@ -1037,8 +1041,8 @@ Spin/SPin2 files in FOLDER:
 		- HM55B Compass Module_Serial Demo_V1.1.spin
 		- HM55B Compass Module_TVDemo_V1.4.spin
 		- TV.spin
-
- HMC6343 I2C Driver:
+	
+	HMC6343 I2C Driver:
 		- Basic_I2C_Driver.spin
 		- config.spin
 		- hmc6343Object.spin
@@ -1046,33 +1050,33 @@ Spin/SPin2 files in FOLDER:
 		- i2cscan.spin
 		- lis302dlobject.spin
 		- pcFullDuplexSerial4FC.spin
-
- Humidity & Temperature Sensor TI HDC10x0:
+	
+	Humidity & Temperature Sensor TI HDC10x0:
 		- Float32Full.spin
 		- FloatString.spin
 		- HDC00x0.spin
 		- HDC1000Demo.spin
 		- Parallax Serial Terminal.spin
 		- pasm_i2c_driver.spin
-
- Hx711 Weight Sensor driver:
+	
+	Hx711 Weight Sensor driver:
 		- dataIO4port.spin
 		- fullDuplexSerial4port.spin
 		- Hx711-Demo.spin
 		- Hx711.spin
-
- Hydra Morse Code Sender:
+	
+	Hydra Morse Code Sender:
 		- graphics_drv_010.spin
 		- keyboard_iso_010.spin
 		- LEJ_KeyboardMorseSender.spin
 		- NS_sound_drv_051_22khz_16bit.spin
 		- tv_drv_010.spin
-
- I2C Interface to PADS Acoustic Distance Sensor:
+	
+	I2C Interface to PADS Acoustic Distance Sensor:
 		- Basic_I2C_DriverTM.spin
 		- PADSObject1p1.spin
-
- I2C LMM drivers:
+	
+	I2C LMM drivers:
 		- ADXL345Objectlmm.spin
 		- Basic_I2C_Driver.spin
 		- blinkm.spin
@@ -1088,13 +1092,13 @@ Spin/SPin2 files in FOLDER:
 		- PWM_32_sv2.spin
 		- SpinLMM.spin
 		- umath.spin
-
- i2cDriver:
+	
+	i2cDriver:
 		- DemoI2Cdriver.spin
 		- i2cDriver.spin
 		- Parallax Serial Terminal.spin
-
- i2cObject:
+	
+	i2cObject:
 		- DS1307Obj.spin
 		- DS1621Obj.spin
 		- i2cDemoApp.spin
@@ -1105,8 +1109,8 @@ Spin/SPin2 files in FOLDER:
 		- Simple_Numbers.spin
 		- Simple_Serial.spin
 		- SRF08Object.spin
-
- i2cObjectv2:
+	
+	i2cObjectv2:
 		- Basic_I2C_Driver.spin
 		- Debug_PC.spin
 		- DS1307Obj.spin
@@ -1119,38 +1123,38 @@ Spin/SPin2 files in FOLDER:
 		- SD21Object.spin
 		- Simple_Numbers.spin
 		- SRF08Object.spin
-
- ID:
+	
+	ID:
 		- Basic_I2C_Driver.spin
 		- id.spin
 		- RealRandom.spin
-
- idxQuadDecoder:
+	
+	idxQuadDecoder:
 		- IdxQuadDecoder.spin
-
- IL3820 ePaper Driver:
+	
+	IL3820 ePaper Driver:
 		- IL3820 e-paper Demo.spin
 		- IL3820 ePaper PASM.spin
 		- IL3820 ePaper Spin.spin
-
- ILI9325 320x240 TFT driver:
+	
+	ILI9325 320x240 TFT driver:
 		- ILI9325.spin
 		- tft-test-9325.spin
 		- touchSPI.spin
-
- ILI9341 SPI driver:
+	
+	ILI9341 SPI driver:
 		- ILI9341-spi.spin
 		- ILI9341-test.spin
-
- ILM-216 2x16 Legacy LCD:
+	
+	ILM-216 2x16 Legacy LCD:
 		- ILM-216_LCD.spin
 		- ILM-216_LCD_Test.spin
-
- Inductive Proximity Sensor:
+	
+	Inductive Proximity Sensor:
 		- Inductive Proximity Sensor Part1.spin
 		- Inductive Proximity Sensor Part2.spin
-
- Inductive Sensor Demo:
+	
+	Inductive Sensor Demo:
 		- ADC.spin
 		- Graphics.spin
 		- Inductor Demo.spin
@@ -1158,30 +1162,30 @@ Spin/SPin2 files in FOLDER:
 		- Numbers.spin
 		- Synth.spin
 		- TV.spin
-
- Inline PAsm in Spin Demo:
+	
+	Inline PAsm in Spin Demo:
 		- Inline PAsm in Spin Demo.spin
-
- invert_pwm_1cog_6pin:
+	
+	invert_pwm_1cog_6pin:
 		- invert_pwm_1cog_6pin.spin
 		- invert_pwm_1cog_6pin_test.spin
-
- inverter_pwm:
+	
+	inverter_pwm:
 		- inverter_pwm.spin
 		- inverter_pwm_test.spin
-
- iPod:
+	
+	iPod:
 		- iPod.spin
 		- iPodTrial.spin
 		- pcFullDuplexSerial4FC_JG.spin
-
- IR Heartbeat Monitor DEMO v1:
+	
+	IR Heartbeat Monitor DEMO v1:
 		- IR Heartbeat Monitor DEMO v1.spin
 		- Parallax Serial Terminal.spin
 		- PWM_32_v4.spin
 		- Single Pin Sigma Delta ADC Driver v1.spin
-
- IR Kit:
+	
+	IR Kit:
 		- ir_capture.spin
 		- ir_oscope.spin
 		- ir_reader_demo.spin
@@ -1193,155 +1197,155 @@ Spin/SPin2 files in FOLDER:
 		- ir_view.spin
 		- ir_view_serial.spin
 		- serial_terminal.spin
-
- IR Remote:
+	
+	IR Remote:
 		- IR_Remote.spin
 		- IR_RemoteTest.spin
 		- Serial_Lcd.spin
 		- Simple_Numbers.spin
-
- IR Remote Decoder:
+	
+	IR Remote Decoder:
 		- IR.Functions DEMO_build_01_21_2011.spin
 		- IR.Functions_build_01_21_2011.spin
 		- Parallax Serial Terminal.spin
 		- Synth.spin
-
- IR Transmit:
+	
+	IR Transmit:
 		- IR_Remote.spin
 		- Serial_Lcd.spin
 		- Simple_Numbers.spin
 		- Sony_Send.spin
 		- Sony_Send_Test.spin
 		- Timing.spin
-
- IRPlay_Record:
+	
+	IRPlay_Record:
 		- IR_Demo.spin
 		- IRPlayRecord.spin
 		- Parallax Serial Terminal.spin
 		- StringKeyMap.spin
-
- IRPlayRecord:
+	
+	IRPlayRecord:
 		- IR_Demo.spin
 		- IRPlayRecord.spin
 		- Keyboard.spin
 		- TV.spin
 		- TV_Text.spin
-
- ISP Programming ATTiny with the Propeller:
+	
+	ISP Programming ATTiny with the Propeller:
 		- ATTinyISP_012.spin
 		- FullDuplexSerial.spin
-
- J-ADC383:
+	
+	J-ADC383:
 		- J-ADC838.spin
 		- rdADC383TV.spin
-
- JDCogSerial:
+	
+	JDCogSerial:
 		- JDCogSerial.spin
-
- Joy To The World:
+	
+	Joy To The World:
 		- Joy_to_The_World.spin
 		- StereoSpatializer.spin
 		- VocalTract.spin
-
- jtn_i2c:
+	
+	jtn_i2c:
 		- 24lc16b.spin
 		- FullDuplexSerial.spin
 		- I2C.spin
 		- Test_24lc16b.spin
-
- Keyboard driver for both Hydra and Demo Board:
+	
+	Keyboard driver for both Hydra and Demo Board:
 		- comboKeyboard.spin
-
- KS0108 128x64 parallel lcd driver W character display:
+	
+	KS0108 128x64 parallel lcd driver W character display:
 		- Demo_Lcd_Ks0108V1.3.spin
 		- Graphics.spin
 		- ks0108V1.3.spin
-
- Kye's Serial Object -- now more compatible:
+	
+	Kye's Serial Object -- now more compatible:
 		- RS232_COMEngine.spinfix.spin
-
- l298 driver:
+	
+	l298 driver:
 		- L298.spin
-
- L298 PWM Motor Control:
+	
+	L298 PWM Motor Control:
 		- ILM-216_LCD.spin
 		- L298MotorPwm.spin
 		- L298MotorsTest.spin
 		- L298SetMotor.spin
 		- Simple_Numbers.spin
-
- L3G4200D 3 Axis Gyro IC:
+	
+	L3G4200D 3 Axis Gyro IC:
 		- L3G4200D_Example_code-mod_1.spin
-
- LCD 2x16 Parallel:
+	
+	LCD 2x16 Parallel:
 		- LCD_16x2_GG.spin
-
- LCD Driver HD44780 16x2 4 bit 8 bit DEMO:
+	
+	LCD Driver HD44780 16x2 4 bit 8 bit DEMO:
 		- LCD_16x2_4Bit.spin
 		- LCD_16x2_8Bit.spin
-
- LCD parallel demo using the Hitachi HD44780 LCD:
+	
+	LCD parallel demo using the Hitachi HD44780 LCD:
 		- DemoLcd.spin
 		- LCDDEMO.spin
-
- LCD-Wintek-wd-c2401p:
+	
+	LCD-Wintek-wd-c2401p:
 		- DEMO-LCD-wintek-wd-c2401p-complete.spin
 		- LCD-wintek-wd-c2401p-complete.spin
 		- LCD-wintek-wd-c2401p.spin
-
- LED Charlieplexer for 2 to 28 pins:
+	
+	LED Charlieplexer for 2 to 28 pins:
 		- charlieplexer.spin
 		- CharlieplexerDemo.spin
-
- LED Painter Driver:
+	
+	LED Painter Driver:
 		- Brilldea-LED_Painter-Driver-Ver008.spin
-
- LED-Counter_V2:
+	
+	LED-Counter_V2:
 		- LED-Counter_V2.spin
 		- Timing.spin
-
- LED_Blink_VGA_02.spin:
+	
+	LED_Blink_VGA_02.spin:
 		- vga_Drive.spin
-
- led_pwm:
+	
+	led_pwm:
 		- led_pwm.spin
 		- led_pwm_cog.spin
 		- led_pwm_demo.spin
-
- Light Dimmer & Triac Driver:
+	
+	Light Dimmer & Triac Driver:
 		- Clock_Simulator.spin
 		- Dimmer.spin
 		- LCD_16x2_4Bit.spin
-
- Linear Converter:
+	
+	Linear Converter:
 		- LinearConverter.spin
-
- Lis302DL & LIS3LV02DQ I2C driver:
+	
+	Lis302DL & LIS3LV02DQ I2C driver:
 		- Basic_I2C_Driver.spin
 		- config.spin
 		- i2cscan.spin
 		- lis302dlobject.spin
 		- listest.spin
 		- pcFullDuplexSerial4FC.spin
-
- LM9033A 128x96 Graphics LCD driver:
+	
+	LM9033A 128x96 Graphics LCD driver:
 		- Brilldea-LM9033A Demo-Ver001.spin
 		- Brilldea-LM9033A Driver-Ver002.spin
 		- Graphics.spin
-
- Lock-Bit Demo:
+	
+	Lock-Bit Demo:
 		- simple_multicore_demo3d.spin
-
- LR3_DriverDemo (1):
+	
+	LR3_DriverDemo (1):
 		- LR3DriverDemo_1_1.spin
-
- LR3DriverDemo (1):
+	
+	LR3DriverDemo (1):
 		- LR3DriverDemo_1.spin
-
- MA3-P12 Absolute Magnetic Encoder Driver:
+	
+	MA3-P12 Absolute Magnetic Encoder Driver:
 		- MA3P12_Absolute_Encoder.spin
-
- Maidenhead with Distance and Bearing:
+	
+	Maidenhead with Distance and Bearing:
 		- CharHelp.spin
 		- Float32A.spin
 		- Float32Full.spin
@@ -1351,133 +1355,133 @@ Spin/SPin2 files in FOLDER:
 		- Maidenhead_1_08.spin
 		- Numbers.spin
 		- Test_Maidenhead.spin
-
- max 1270:
+	
+	max 1270:
 		- Copy_of_Max_1270.spin
-
- MAX1202:
+	
+	MAX1202:
 		- BS2_Functions.spin
 		- Max_1202.spin
 		- Timing.spin
-
- MAX1270 8ch 12b ADC testprogram:
+	
+	MAX1270 8ch 12b ADC testprogram:
 		- ADC Max1270 DEMOa.spin
 		- BS2_Functions a.spin
 		- FullDuplexSerial.spin
 		- Max1270.spin
 		- Timing.spin
-
- max31855_simple:
+	
+	max31855_simple:
 		- max31855_simple.spin
 		- max31855_simple_demo.spin
 		- Parallax Serial Terminal.spin
-
- MAX451:
+	
+	MAX451:
 		- max451.spin
-
- MAX536:
+	
+	MAX536:
 		- max536.spin
-
- MAX6956:
+	
+	MAX6956:
 		- i2cObject.spin
 		- i2cTest.spin
 		- MAX6956Obj.spin
 		- tv.spin
 		- tv_text.spin
-
- Max7219 8x8 Column-oriented Stick with scrolling:
+	
+	Max7219 8x8 Column-oriented Stick with scrolling:
 		- Max7219_8x8_ColumnWise.spin
-
- Maxbotix MB1000 simple serial:
+	
+	Maxbotix MB1000 simple serial:
 		- FullDuplexSerial.spin
 		- maxbotix_mb1000.spin
 		- mb1000_serial_demo.spin
 		- Simple_Serial.spin
-
- Maxim 1 wire CRC 8:
+	
+	Maxim 1 wire CRC 8:
 		- crc8_maxim.spin
-
- MC33926 Demonstration:
+	
+	MC33926 Demonstration:
 		- dc_motor_03.spin
-
- MCP23017Driver:
+	
+	MCP23017Driver:
 		- i2cDriver.spin
 		- MCP23017Driver.spin
 		- Parallax Serial Terminal.spin
-
- MCP2515 CANbus controller driver:
+	
+	MCP2515 CANbus controller driver:
 		- MCP2515_driver.spin
-
- MCP2515 Engine (custom SPI):
+	
+	MCP2515 Engine (custom SPI):
 		- MCP2515-Example.spin
 		- MCP2515-SPI Engine.spin
 		- Queue.spin
-
- MCP3008 Driver:
+	
+	MCP3008 Driver:
 		- MCP3008.spin
-
- MCP3201 Modular ADC system:
+	
+	MCP3201 Modular ADC system:
 		- acq_module.spin
 		- adc_master.spin
 		- clockgen.spin
-
- MCP3202 Reader in SPIN:
+	
+	MCP3202 Reader in SPIN:
 		- LCDRoutines4.spin
 		- MCP3202Read1.spin
-
- MCP3208 12-bit, 8-channel ADC:
+	
+	MCP3208 12-bit, 8-channel ADC:
 		- MCP3208.spin
-
- MCP3208 fast ADC 12 bit 24 chnl Multi-Chip:
+	
+	MCP3208 fast ADC 12 bit 24 chnl Multi-Chip:
 		- MCP3208_fast_multi.spin
-
- MCP3208 fast ADC 12 bit 8 channel:
+	
+	MCP3208 fast ADC 12 bit 8 channel:
 		- MCP3208_fast.spin
-
- MCP41HV51 proof of concept spin program:
+	
+	MCP41HV51 proof of concept spin program:
 		- mcp41HV51_poc_0.spin
-
- mcp41xxx & mcp42xxx digital pot meter object:
+	
+	mcp41xxx & mcp42xxx digital pot meter object:
 		- mcp41xxx.spin
 		- mcp41xxxx_demo.spin
-
- MCP4922 - 2 channel, 12-bit DAC:
+	
+	MCP4922 - 2 channel, 12-bit DAC:
 		- MCP4922 Demo.spin
 		- MCP4922.spin
-
- mcp4xxx_simple digital potentiometer driver:
+	
+	mcp4xxx_simple digital potentiometer driver:
 		- mcp4xxx_simple.spin
 		- mcp4xxx_simple_demo.spin
-
- MD5 Hash (Spin):
+	
+	MD5 Hash (Spin):
 		- MD5.spin
-
- mdb_RealTimeClock:
+	
+	mdb_RealTimeClock:
 		- date_time_epoch.spin
 		- MDB_RealTimeClock.spin
-
- Medium Frequency R2R Sine Wave Generator 1.25 Mhz:
+	
+	Medium Frequency R2R Sine Wave Generator 1.25 Mhz:
 		- Medium_Frequency_R2R_Sine_Wave_Generator_1.25_Mhz_v01.spin
-
- Memkey Driver:
+	
+	Memkey Driver:
 		- memkey.spin
-
- Memory Dumper:
+	
+	Memory Dumper:
 		- dumptest.spin
 		- memdumper.spin
-
- Memsic 2125 Accelerometer DEMO - Serial Version:
+	
+	Memsic 2125 Accelerometer DEMO - Serial Version:
 		- FullDuplexSerial.spin
 		- Memsic2125_v1.2.spin
 		- Serial_Demo.spin
-
- Memsic 2125 Accelerometer DEMO - TV Graphics:
+	
+	Memsic 2125 Accelerometer DEMO - TV Graphics:
 		- Graphics.spin
 		- Graphics_Demo_v2.spin
 		- Memsic2125_v1.2.spin
 		- TV.spin
-
- memStick_fsys:
+	
+	memStick_fsys:
 		- FDS_sgf.spin
 		- format_memory.spin
 		- manageWB.spin
@@ -1486,67 +1490,67 @@ Spin/SPin2 files in FOLDER:
 		- memStick_demo.spin
 		- memStick_dev.spin
 		- serial_terminal.spin
-
- MethodPointer:
+	
+	MethodPointer:
 		- fds1.spin
 		- MethodPointer.spin
 		- test.spin
 		- test1.spin
-
- Micro_SD_Card:
+	
+	Micro_SD_Card:
 		- fsrw.spin
 		- Parallax Serial Terminal.spin
 		- safe_spi.spin
 		- SD_Card_Micro_01.spin
-
- Microchip 3202-B 2-channel 12-bit ADC:
+	
+	Microchip 3202-B 2-channel 12-bit ADC:
 		- FullDuplexSerialPlus.spin
 		- MCP3202.spin
 		- MCP3202_Demo.spin
 		- MCP3202_Demo1LED.spin
 		- MCP3202_Demo2LED.spin
-
- Microphone to Headphones:
+	
+	Microphone to Headphones:
 		- microphone_to_headphones.spin
-
- MIDI in:
+	
+	MIDI in:
 		- MidiIn.spin
-
- mixingboard3.1.spin:
+	
+	mixingboard3.1.spin:
 		- mixingboard3.1.spin
-
- MLX90614 sensor:
+	
+	MLX90614 sensor:
 		- config.spin
 		- i2cscan.spin
 		- MLX90614_test.spin
 		- MLX90614Object.spin
 		- pcFullDuplexSerial4FC.spin
 		- ppdb_ledds.spin
-
- MLX90614_simple:
+	
+	MLX90614_simple:
 		- MLX90614_simple.spin
 		- MLX90614_simple_demo.spin
 		- Parallax Serial Terminal.spin
-
- MMBE:
+	
+	MMBE:
 		- MMBE.spin
-
- MMS7455L All Spin:
+	
+	MMS7455L All Spin:
 		- _MMS7455L All Spin Demo Start.spin
 		- Mirror_TV.spin
 		- Mirror_TV_Text.spin
 		- MMA7455L_SPI_All_Spin.spin
-
- Modbus RTU:
+	
+	Modbus RTU:
 		- FullDuplexSerial.spin
 		- Modbus_PAC.spin
 		- Parallax Serial Terminal.spin
-
- Modbus RTU Master:
+	
+	Modbus RTU Master:
 		- modbusmaster.spin
 		- pcFullDuplexSerial4FC512.spin
-
- Modem, Bell 202:
+	
+	Modem, Bell 202:
 		- bell202_modem.spin
 		- bell202_modem_demo.spin
 		- FullDuplexSerial.spin
@@ -1554,65 +1558,65 @@ Spin/SPin2 files in FOLDER:
 		- modem_monitor_xmt_side.spin
 		- Simple_Numbers.spin
 		- umath.spin
-
- Morse Code Demo SOS:
+	
+	Morse Code Demo SOS:
 		- morse_code_demo_SOS.spin
-
- Morse code keyer, non blocking:
+	
+	Morse code keyer, non blocking:
 		- cw demo.spin
 		- CW Keyer.spin
-
- Morse Code V1.2:
+	
+	Morse Code V1.2:
 		- Keyboard.spin
 		- morse_code.spin
 		- morse_code_demo.spin
 		- Synth.spin
-
- Mother of all LED sequencers:
+	
+	Mother of all LED sequencers:
 		- DisplaySequencer.spin
 		- GetButtons.spin
 		- LEDSequencer_asm.spin
 		- MyLed.spin
 		- Package.spin
 		- Parallax Serial Terminal.spin
-
- Motor Minder:
+	
+	Motor Minder:
 		- FloatMath.spin
 		- FloatString.spin
 		- Motor_Minder.spin
 		- Motor_Minder_Test.spin
 		- Serial_Lcd.spin
 		- Simple_Numbers.spin
-
- Motor_Minder_Reversible:
+	
+	Motor_Minder_Reversible:
 		- Motor_Minder_Reversible.spin
-
- Mouse:
+	
+	Mouse:
 		- Mouse.spin
-
- Moving Average Filter - Fixed Point - pasm:
+	
+	Moving Average Filter - Fixed Point - pasm:
 		- filter_gaussian_asm_demo.spin
 		- filter_mavg_asm.spin
 		- filter_mavg_asm_demo.spin
 		- SerialMirror.spin
-
- Moving Average Filter - Fixed Point - spin:
+	
+	Moving Average Filter - Fixed Point - spin:
 		- filter_ma.spin
 		- filter_ma_demo.spin
 		- Parallax Serial Terminal.spin
-
- MPC_Roll_Demo.spin:
+	
+	MPC_Roll_Demo.spin:
 		- FullDuplexSerialPlus.spin
 		- MPC_Roll_Demo1.4.2.spin
-
- MPL115A1 SPI Interface:
+	
+	MPL115A1 SPI Interface:
 		- MPL115A1.spin
 		- Timing_1.spin
-
- MPU-9150 Driver:
+	
+	MPU-9150 Driver:
 		- MPU.spin
-
- MPU-9150 Driver (Spin):
+	
+	MPU-9150 Driver (Spin):
 		- FloatMath.spin
 		- FloatString.spin
 		- FME.spin
@@ -1620,33 +1624,33 @@ Spin/SPin2 files in FOLDER:
 		- MPU-9150_Spin.spin
 		- MPU-9150_Spin_Basic.spin
 		- MPU-9150_Spin_Demo.spin
-
- MS5534:
+	
+	MS5534:
 		- MS5534.spin
-
- ms5534_V.01:
+	
+	ms5534_V.01:
 		- FullDuplexSerialPlus.spin
 		- MS5534_Demo.spin
 		- MS5534_v.01.spin
-
- MSF Decoder - Time Signal:
+	
+	MSF Decoder - Time Signal:
 		- Debug_Lcd03.spin
 		- Serial_Lcd03.spin
 		- Simple_Numbers.spin
 		- Simple_Serial.spin
 		- Width Test Code.spin
-
- Multi Cog Fifo:
+	
+	Multi Cog Fifo:
 		- Fifo.spin
-
- Multi Propeller - 8bit Parallel IO:
+	
+	Multi Propeller - 8bit Parallel IO:
 		- ParallelIO.spin
-
- MultiCogSerialDebug:
+	
+	MultiCogSerialDebug:
 		- MultiCogSerialDebug.spin
 		- MultiCogSerialDebug_test.spin
-
- Multiple serial port driver:
+	
+	Multiple serial port driver:
 		- CMUCamera.spin
 		- config.spin
 		- GPS_IO.spin
@@ -1657,24 +1661,24 @@ Spin/SPin2 files in FOLDER:
 		- sertest2.spin
 		- sertest3.spin
 		- sertest4.spin
-
- Multiple Stepper Motor Controller:
+	
+	Multiple Stepper Motor Controller:
 		- Multi-Stepper_Controller.spin
-
- MultiPortUART with C# (windows) client:
+	
+	MultiPortUART with C# (windows) client:
 		- CogTestOfMultiUART.spin
 		- MultiUART_demo.spin
 		- MultiUARTFullDuplexSerial.spin
-
- Music Maker:
+	
+	Music Maker:
 		- MusicMaker.spin
-
- MyPong:
+	
+	MyPong:
 		- MyPong.spin
 		- TV_Half_Height.spin
 		- TV_Text_Half_Height.spin
-
- N256S0830HDA SPI SRAM driver:
+	
+	N256S0830HDA SPI SRAM driver:
 		- config.spin
 		- memtest.spin
 		- pcFullDuplexSerial4FC.spin
@@ -1682,34 +1686,34 @@ Spin/SPin2 files in FOLDER:
 		- spisram2.spin
 		- spisram4.spin
 		- spisram8.spin
-
- N64 Controller:
+	
+	N64 Controller:
 		- N64 test.spin
 		- N64_v1.2.spin
 		- TV.spin
 		- TV_Text.spin
-
- NES Controller Object:
+	
+	NES Controller Object:
 		- NES.spin
 		- TestNES.spin
 		- TV.spin
 		- TV_Text.spin
-
- NHD-0420D3Z-FL-GBW LCD Driver:
+	
+	NHD-0420D3Z-FL-GBW LCD Driver:
 		- Lcd_NHD-0420D3Z-FL-GBW.spin
 		- Simple_Numbers.spin
 		- Simple_Serial.spin
-
- Nibble:
+	
+	Nibble:
 		- FullDuplexSerial.spin
 		- Nibble.spin
 		- NibbleDemo.spin
 		- SimpleDebug.spin
-
- Nokia 5110 LCD driver:
+	
+	Nokia 5110 LCD driver:
 		- Nokia5110.spin
-
- NOSIC:
+	
+	NOSIC:
 		- antbot_nosic_networking.spin
 		- antbot_sebels.spin
 		- DirectPingParser.spin
@@ -1728,65 +1732,65 @@ Spin/SPin2 files in FOLDER:
 		- statemachine.spin
 		- statemachine_debug.spin
 		- timer.spin
-
- nRF24L01 driver and demo:
+	
+	nRF24L01 driver and demo:
 		- Clock.spin
 		- FullDuplexSerialPlus.spin
 		- nRF24L01.spin
 		- nRF24L01_Demo.spin
-
- nRF24L01pDriver:
+	
+	nRF24L01pDriver:
 		- DemoRadio.spin
 		- NRF24L01pDriver.spin
 		- Parallax Serial Terminal.spin
 		- SPIdriver.spin
-
- NTSC & PAL driver templates:
+	
+	NTSC & PAL driver templates:
 		- NTSC_colorbars.spin
 		- PAL_colorbars.spin
-
- Numbers:
+	
+	Numbers:
 		- Numbers.spin
-
- One Pin TV Text:
+	
+	One Pin TV Text:
 		- AiChip_SmallFont_Atari_lsb_001.spin
 		- hexfont.spin
 		- hexfont2.spin
 		- OnePinTVText.spin
 		- OPTTdemo.spin
-
- Overlay Loader:
+	
+	Overlay Loader:
 		- overlay_035.spin
-
- P8X32A QuickStart board LED Fun:
+	
+	P8X32A QuickStart board LED Fun:
 		- P8X32A_QuickStart_LED_Fun.spin
-
- PAM-7Q Driver GPS spin:
+	
+	PAM-7Q Driver GPS spin:
 		- P7QDemo.spin
 		- PAM7Q.spin
 		- Parallax Serial Terminal.spin
-
- Parallax Digital IO Board 4pin Serial Driver:
+	
+	Parallax Digital IO Board 4pin Serial Driver:
 		- DigitalIO4pinDriver.spin
 		- Test_Digital_IO_Driver.spin
-
- Parallax Legacy Infrared Sensor:
+	
+	Parallax Legacy Infrared Sensor:
 		- ParallaxInfrared.spin
-
- Parallax Serial Terminal:
+	
+	Parallax Serial Terminal:
 		- Parallax Serial Terminal Demo.spin
 		- Parallax Serial Terminal QuickStart.spin
 		- Parallax Serial Terminal.spin
-
- Parallax Servo Controller (Serial) driver V2:
+	
+	Parallax Servo Controller (Serial) driver V2:
 		- ServoControllerSerial.spin
-
- Parallel LCD Driver:
+	
+	Parallel LCD Driver:
 		- BS2_Functions.spin
 		- parallel_lcd.spin
 		- Timing.spin
-
- PASM demo routines:
+	
+	PASM demo routines:
 		- PASM 1 - 9 - Blinking LEDs.spin
 		- PASM 10a - Serial transmitter using djnz.spin
 		- PASM 10b - Serial transmitter using waitcnt.spin
@@ -1806,94 +1810,94 @@ Spin/SPin2 files in FOLDER:
 		- PASM 17c3 - transmitter.spin
 		- PASM 18 - Self-modifying code.spin
 		- PASM demos.spin
-
- Pasm I2C Driver:
+	
+	Pasm I2C Driver:
 		- pasm_i2c_driver.spin
-
- Paul's Standard Library:
+	
+	Paul's Standard Library:
 		- Paul_StandardLibrary.spin
-
- Pause:
+	
+	Pause:
 		- Pause Demo.spin
 		- Pause.spin
-
- PCF8574 Driver:
+	
+	PCF8574 Driver:
 		- FullDuplexSerial.spin
 		- PCF8574 Driver Test.spin
 		- PCF8574_Driver.spin
-
- PCF8583 Real Time Clock Driver:
+	
+	PCF8583 Real Time Clock Driver:
 		- Button.spin
 		- PCF8583.spin
 		- PCF8583Demo.spin
 		- TV.spin
 		- TV_Text.spin
-
- PID Routines:
+	
+	PID Routines:
 		- PID-_Demo.spin
 		- PID.spin
-
- Ping PASM:
+	
+	Ping PASM:
 		- Ping_Fast.spin
-
- Ping_Pasm:
+	
+	Ping_Pasm:
 		- Parallax Serial Terminal.spin
 		- Ping_Pasm.spin
-
- PinkV2:
+	
+	PinkV2:
 		- PinkV2.spin
 		- PinkV2_test.spin
-
- pixelmusic 3000 for Demoboard:
+	
+	pixelmusic 3000 for Demoboard:
 		- Graphics.spin
 		- pixelmusic_demoboard.spin
 		- TV.spin
-
- Playstation 2 Controller Emulator:
+	
+	Playstation 2 Controller Emulator:
 		- psx_controller_emulator.spin
-
- PlayStation 2 With Analog Buttons:
+	
+	PlayStation 2 With Analog Buttons:
 		- dwd_PS2ControllerV10.spin
 		- dwd_Ps2DemoV10.spin
 		- FullDuplexSerial.spin
-
- Poker Probability:
+	
+	Poker Probability:
 		- Parallax Serial Terminal.spin
 		- Poker_Probability_Demo.spin
 		- SPIN_TrigPack.spin
-
- Pololu miniIMU9v2_simple:
+	
+	Pololu miniIMU9v2_simple:
 		- miniIMU9v2_simple.spin
 		- miniIMU9v2_simple_demo.spin
 		- Parallax Serial Terminal.spin
-
- Position controller driver V1.3 (PPC):
+	
+	Position controller driver V1.3 (PPC):
 		- Parallax Serial Terminal.spin
 		- PPC Test 2.spin
 		- PPC_DriverV1.3.spin
 		- Simple_Serial.spin
 		- Timing.spin
-
- powerStep01 stepper motor driver SPI:
+	
+	powerStep01 stepper motor driver SPI:
 		- DemoPS01driver.spin
 		- Parallax Serial Terminal.spin
 		- PowerStep01Driver.spin
 		- SPIdriver.spin
-
- PPC Driver:
+	
+	PPC Driver:
 		- PPC_DriverV1.2.spin
-
- Prop Blade DMX & LED Painter Demo:
+	
+	Prop Blade DMX & LED Painter Demo:
 		- Brilldea-GSCLK-Driver-Ver001.spin
 		- Brilldea-Prop Blade DemoDMX-Ver010.spin
 		- Brilldea-Prop Blade-Switches-Driver-Ver011.spin
 		- Brilldea-TLC5940-Driver-Ver006.spin
 		- DMX-Rx-Driver-Ver014.spin
-
- Prop Blade Switches Driver:
+	
+	Prop Blade Switches Driver:
 		- Brilldea-Prop_Blade-Switches-Driver-Ver011.spin
-
- PropBOE-BOT Wheel Encoders:
+	
+	PropBOE-BOT Wheel Encoders:
 		- Input Output Pins.spin
 		- Parallax Serial Terminal Plus.spin
 		- PropBOE Servos.spin
@@ -1901,15 +1905,15 @@ Spin/SPin2 files in FOLDER:
 		- Propeller Board of Education.spin
 		- Servos and Encoders Test.spin
 		- Timing.spin
-
- PropBus, Single wire multi-propeller comm link:
+	
+	PropBus, Single wire multi-propeller comm link:
 		- PropBus BC Test.spin
 		- PropBus RT Test.spin
 		- PropBusBC.spin
 		- PropBusRT.spin
 		- PropBusRT_RC.spin
-
- PropCMD:
+	
+	PropCMD:
 		- AiGeneric_Driver.spin
 		- AiGeneric_Driver_002.spin
 		- AiGeneric_Driver_TV.spin
@@ -1918,8 +1922,8 @@ Spin/SPin2 files in FOLDER:
 		- fsrwFemto.spin
 		- PropCMD.spin
 		- sdspiFemto.spin
-
- Propeller Experiment Controller:
+	
+	Propeller Experiment Controller:
 		- EXP_FrequencyGenerator.spin
 		- EXP_FSRW.spin
 		- EXP_Numbers.spin
@@ -1928,42 +1932,42 @@ Spin/SPin2 files in FOLDER:
 		- EXP_SafeSPI.spin
 		- Experimental_Event.spin
 		- Experimental_Functions.spin
-
- Propeller Life:
+	
+	Propeller Life:
 		- PropellerLife.spin
-
- Propeller Loader:
+	
+	Propeller Loader:
 		- PropellerLoader.spin
-
- Propeller RTC Emulator:
+	
+	Propeller RTC Emulator:
 		- FullDuplexSerial.spin
 		- PropellerRTC_Emulator.spin
 		- PropellerRTC_Emulator_DEMO.spin
-
- PROPSHELL:
+	
+	PROPSHELL:
 		- Full-Duplex_COMEngine.spin
 		- LEDShellExampleH2M.spin
 		- LEDShellExampleM2M.spin
 		- propshell.spin
 		- SimpleExample.spin
-
- PROPTB6612FNG:
+	
+	PROPTB6612FNG:
 		- pwm.spin
 		- SimpleExample.spin
 		- tb6612fng.spin
-
- PS2_Wrapper:
+	
+	PS2_Wrapper:
 		- Parallax Serial Terminal.spin
 		- PS2_Controller.spin
 		- PS2_Wrapper V2 test.spin
 		- PS2_Wrapper.spin
-
- PS2Controller:
+	
+	PS2Controller:
 		- Parallax Serial Terminal.spin
 		- PS2Controller.spin
 		- PS2Test.spin
-
- PSOne VGA drivers:
+	
+	PSOne VGA drivers:
 		- config.spin
 		- kbm.spin
 		- pcFullDuplexSerial4FC.spin
@@ -1972,80 +1976,80 @@ Spin/SPin2 files in FOLDER:
 		- VGA_512x128_Bitmap_PSOne.spin
 		- VGA_CSYNC_I.spin
 		- VGA_Text_PSOne.spin
-
- Pulsadis detector:
+	
+	Pulsadis detector:
 		- fsrw.spin
 		- Full-Duplex_COMEngine.spin
 		- Pulsadis controller.spin
 		- Pulsadis doc.spin
 		- Pulsadis head.spin
 		- safe_spi.spin
-
- Pulse Duration Monitor:
+	
+	Pulse Duration Monitor:
 		- PulseTimeTapA.spin
-
- Pulse stretcher:
+	
+	Pulse stretcher:
 		- Parallax Serial Terminal.spin
 		- stretcher.spin
 		- stretcher_demo.spin
-
- Pushbutton state reader:
+	
+	Pushbutton state reader:
 		- Pushbutton_Reader_v.1.0.spin
-
- PWM 32 DEMO:
+	
+	PWM 32 DEMO:
 		- PWM_32_DEMO_v1.1.spin
 		- PWM_32_v4.spin
-
- PWM decoder and Frequency Counter:
+	
+	PWM decoder and Frequency Counter:
 		- _FreqCount.spin
 		- TV.spin
 		- TV_Text.spin
-
- PWM Motor Driver (H Bridge):
+	
+	PWM Motor Driver (H Bridge):
 		- PWMMotorDriver.spin
 		- PWMMotorDriver_test.spin
-
- PWM_Nctrx:
+	
+	PWM_Nctrx:
 		- PWM_3ctrx_pasm_demo_0.spin
 		- PWM_3ctrx_spin_demo.spin
-
- PWM_triangle_ctrxbeat:
+	
+	PWM_triangle_ctrxbeat:
 		- PWM_triangle_ctrxbeat.spin
-
- QiK object for Pololu drives:
+	
+	QiK object for Pololu drives:
 		- FullDuplexSerial.spin
 		- Parallax Serial Terminal.spin
 		- QiK SetParameter1.spin
 		- QiKCommands.spin
 		- Timing.spin
-
- QRSS Beacon:
+	
+	QRSS Beacon:
 		- CW Beacon Transmitter1.spin
 		- Synth.spin
-
- QTI_simple:
+	
+	QTI_simple:
 		- Parallax Serial Terminal.spin
 		- QTI_simple.spin
 		- QTI_simple_demo.spin
-
- Quad quadrature encoder object:
+	
+	Quad quadrature encoder object:
 		- encoder-test.spin
 		- encoder.spin
 		- Format.spin
 		- SerialMirror.spin
-
- Quadrature Decoder:
+	
+	Quadrature Decoder:
 		- FullDuplexSerial.spin
 		- QuadDecoder.spin
 		- QuadDecoderDEMO.spin
-
- Quadrature Encoder:
+	
+	Quadrature Encoder:
 		- Quadrature_Encoder.spin
-
- Quadrature encoder (16x) ported to C:
+	
+	Quadrature encoder (16x) ported to C:
 		- Encoder.spin
-
- Quadrature Encoder DRO:
+	
+	Quadrature Encoder DRO:
 		- QDRO_Basic_I2C_Driver.spin
 		- QDRO_Float32.spin
 		- QDRO_Keyboard.spin
@@ -2054,152 +2058,152 @@ Spin/SPin2 files in FOLDER:
 		- QDRO_Sparecogs.spin
 		- QDRO_VGA.spin
 		- QDRO_VGA_Text.spin
-
- Quadrature interface SPI Lsi7366:
+	
+	Quadrature interface SPI Lsi7366:
 		- FullDuplexSerialPlus.spin
 		- LS7366 Quad cntr DEMO.spin
 		- Timing.spin
-
- QuickStart - Push-On, Push-Off - Touch Demo:
+	
+	QuickStart - Push-On, Push-Off - Touch Demo:
 		- Touch Buttons 2.spin
 		- Touch Buttons LED Demo _ Push On _ Push Off _ v2.0.spin
-
- Quickstart Touch Buttons LED Patterns Demo v1.0:
+	
+	Quickstart Touch Buttons LED Patterns Demo v1.0:
 		- Touch Buttons LED Patterns Demo v1.0.spin
 		- Touch Buttons.spin
-
- Quickstart_LED_Sequence_Demo:
+	
+	Quickstart_LED_Sequence_Demo:
 		- LED_Sequence_BitxBit.spin
 		- My_LED_Sequence.spin
-
- Quickstart_LEDs_Counting_in_Binary_Sequence:
+	
+	Quickstart_LEDs_Counting_in_Binary_Sequence:
 		- Counter_Sequences.spin
-
- QuickVGA+ Nunchuk Test:
+	
+	QuickVGA+ Nunchuk Test:
 		- QuickVGAplus_nunchuk_test.spin
-
- Radio Override:
+	
+	Radio Override:
 		- FullDuplexSerial.spin
 		- radio_override.spin
 		- RadioOverrideDemo.spin
 		- Servo32Simplified.spin
-
- RC4 cryptography:
+	
+	RC4 cryptography:
 		- A434.spin
 		- BS2_Functions.spin
 		- RC4.spin
-
- RCTIME DEMO:
+	
+	RCTIME DEMO:
 		- Graphics.spin
 		- Numbers.spin
 		- RCTIME.spin
 		- RCTIME_background_DEMO.spin
 		- RCTIME_foreground_DEMO.spin
 		- TV.spin
-
- RCTime Plus:
+	
+	RCTime Plus:
 		- FloatMath.spin
 		- FloatString.spin
 		- FullDuplexSerialPlus.spin
 		- RCTime Plus Demo.spin
 		- RCTIME Plus.spin
-
- Real Time Clock:
+	
+	Real Time Clock:
 		- FullDuplexSerial.spin
 		- RealTimeClock.spin
 		- RTC_DEMO.spin
-
- RFID.Reader.Writer:
+	
+	RFID.Reader.Writer:
 		- FullDuplexSerial.spin
 		- RFID.Reader.Tester.spin
 		- RFID.Reader.Writer.Driver.spin
-
- RFID_Demo:
+	
+	RFID_Demo:
 		- RFID_Demo.spin
-
- RFM22 & RFM23 - (Ported Example):
+	
+	RFM22 & RFM23 - (Ported Example):
 		- FullDuplexSerial.spin
 		- RFM23BP Ported Example.spin
-
- RN-XV Wifly FTP Client V01:
+	
+	RN-XV Wifly FTP Client V01:
 		- Parallax Serial Terminal Extended.spin
 		- RN-XV Wifly FTP Client V01.spin
 		- STRINGS2.spin
 		- Wifly Serial Terminal  V01.1.spin
-
- RN-XV Wifly Web Server V01:
+	
+	RN-XV Wifly Web Server V01:
 		- Parallax Serial Terminal Extended.spin
 		- STRINGS2.spin
 		- Wifly Serial Terminal  V01.spin
 		- Wifly Web Server V01.spin
-
- RX input & RC Receiver Input:
+	
+	RX input & RC Receiver Input:
 		- LCD_16x2_GG.spin
 		- RX.spin
 		- RX_demo.spin
 		- Servo32_Ramp_v1.spin
 		- Servo32v6.spin
-
- S6b0724 text and graphics driver:
+	
+	S6b0724 text and graphics driver:
 		- Demo_Lcd_s6b0724V1.0.spin
 		- Graphics.spin
 		- S6B0724V1.0.spin
-
- Sample Palette Graphics Demo:
+	
+	Sample Palette Graphics Demo:
 		- Graphics.spin
 		- GraphicsPaletteHelper.spin
 		- TV.spin
-
- Say-It Driver:
+	
+	Say-It Driver:
 		- BS2_Functions.spin
 		- FullDuplexSerial.spin
 		- SayIt_test.spin
 		- SayItDriver_VR.spin
-
- SCA100T:
+	
+	SCA100T:
 		- Demo SCA100T.spin
 		- SCA100T.spin
-
- SD13305 monochrome display driver:
+	
+	SD13305 monochrome display driver:
 		- SD13305.spin
-
- SD_uAlfat:
+	
+	SD_uAlfat:
 		- FullDuplexSerial.spin
 		- SD_uAlfat.spin
 		- SD_uAlfat_demo.spin
 		- Simple_Numbers.spin
-
- SDLoader:
+	
+	SDLoader:
 		- fsrwFemto.spin
 		- sdloader.spin
 		- sdspiFemto.spin
-
- SDM_graphics_XOR:
+	
+	SDM_graphics_XOR:
 		- MPE_XORGRA_114_SDM_mods6.spin
 		- SDM_graphics_XOR_025.spin
 		- tv.spin
-
- SEN-10121 demo:
+	
+	SEN-10121 demo:
 		- ADXL345Object.spin
 		- FullDuplexSerialPlus.spin
 		- i2cObject.spin
 		- SEN-10121 demo.spin
 		- Simple_Numbers.spin
-
- Sensirion Demo:
+	
+	Sensirion Demo:
 		- FloatString.spin
 		- Sensirion.spin
 		- SensirionDemo.spin
-
- Sensirion_full Demo:
+	
+	Sensirion_full Demo:
 		- Float32.spin
 		- FloatMath.spin
 		- FloatString.spin
 		- FullDuplexSerial.spin
 		- Sensirion_full.spin
 		- SensirionDemo_full.spin
-
- Serial Com:
+	
+	Serial Com:
 		- LCD.spin
 		- Numbers.spin
 		- serial_com.spin
@@ -2207,8 +2211,8 @@ Spin/SPin2 files in FOLDER:
 		- serial_com_slave.spin
 		- serial_com_slave_example.spin
 		- Simple_Serial.spin
-
- Serial Router:
+	
+	Serial Router:
 		- FullDuplexSerialExt.spin
 		- nasa router firmware example 12sp.spin
 		- serial_output_thingy.spin
@@ -2226,24 +2230,24 @@ Spin/SPin2 files in FOLDER:
 		- TwelveSerialPorts128.spin
 		- TwelveSerialPorts32.spin
 		- TwelveSerialPorts512.spin
-
- SerialMirror:
+	
+	SerialMirror:
 		- SerialMirror.spin
-
- Servo Pulse Input:
+	
+	Servo Pulse Input:
 		- ServoInput.spin
 		- ServoInput_DEMO.spin
-
- Servo-4:
+	
+	Servo-4:
 		- servo4.spin
 		- servo4_demo.spin
-
- Servo32 V9:
+	
+	Servo32 V9:
 		- Servo32_Ramp_v2.spin
 		- Servo32v9.spin
 		- Servo32v9_Demo.spin
-
- Servos and Encoders Calibration:
+	
+	Servos and Encoders Calibration:
 		- Input Output Pins.spin
 		- Parallax Serial Terminal Plus.spin
 		- PropBOE MicroSD.spin
@@ -2253,8 +2257,8 @@ Spin/SPin2 files in FOLDER:
 		- SD-MMC_FATEngine.spin
 		- Servos and Encoders Calibration.spin
 		- Timing.spin
-
- Settings:
+	
+	Settings:
 		- api_telnet_serial.spin
 		- auth_digest.spin
 		- base16.spin
@@ -2273,51 +2277,51 @@ Spin/SPin2 files in FOLDER:
 		- TV.spin
 		- TV_Text.spin
 		- wwwexample.spin
-
- Seven segment display driver, and Charlieplex driver:
+	
+	Seven segment display driver, and Charlieplex driver:
 		- SevenSegment_Charlieplex_driver.spin
 		- SevenSegment_driver.spin
-
- Seven-segment display:
+	
+	Seven-segment display:
 		- Seven-segment test.spin
 		- SevenSegment.spin
-
- SHA-256:
+	
+	SHA-256:
 		- Clock.spin
 		- Format.spin
 		- SerialMirror.spin
 		- SHA-256.spin
 		- SHA-test.spin
-
- Shell Sort:
+	
+	Shell Sort:
 		- FullDuplexSerialPlus.spin
 		- ShellSort.spin
 		- ShellSortTest.spin
-
- Shift Register in and out:
+	
+	Shift Register in and out:
 		- FullDuplexSerial.spin
 		- Shift input and output.spin
 		- shift_in_out_demo.spin
 		- SimpleDebug.spin
-
- Shift Register Object:
+	
+	Shift Register Object:
 		- ShiftRegisterObject.spin
-
- Simple GPS-Module Test Program:
+	
+	Simple GPS-Module Test Program:
 		- Extended_FDSerial.spin
 		- FullDuplexSerial.spin
 		- GPS_Basic_RMC_ Demo.spin
 		- Timing.spin
-
- Simple Numbers:
+	
+	Simple Numbers:
 		- Simple_Numbers.spin
-
- Simple OLED-96-G1 driver:
+	
+	Simple OLED-96-G1 driver:
 		- OLED demo.spin
 		- OLED-96-G1.spin
 		- Parallax Serial Terminal.spin
-
- Simple Propeller Assembly Debugger (SPAD):
+	
+	Simple Propeller Assembly Debugger (SPAD):
 		- FullDuplexSerialPlus_Plus.spin
 		- SimplePropellerAssemblyDebugger.spin
 		- SimplePropellerAssemblyDebugger_LedDemo.spin
@@ -2325,31 +2329,31 @@ Spin/SPin2 files in FOLDER:
 		- SimplePropellerAssemblyDebugger_ReadMeDemo.spin
 		- SimplePropellerAssemblyDebugger_SimpleDemo.spin
 		- SimplePropellerAssemblyDebugger_YourDemo.spin
-
- Simple SD Boot Loader:
+	
+	Simple SD Boot Loader:
 		- SimpleSDBootLoader.spin
-
- Simple Serial:
+	
+	Simple Serial:
 		- Simple_Serial.spin
-
- SimpleSD:
+	
+	SimpleSD:
 		- Parallax Serial Terminal.spin
 		- SDCard.spin
 		- SimpleSD.spin
-
- Single Pin Sigma Delta ADC Driver v1:
+	
+	Single Pin Sigma Delta ADC Driver v1:
 		- Parallax Serial Terminal.spin
 		- Single Pin Sigma Delta ADC DEMO.spin
 		- Single Pin Sigma Delta ADC Driver v1.spin
-
- SMD500 baro Module:
+	
+	SMD500 baro Module:
 		- AP_AltitudeINTEGERmath.spin
 		- EC_i2c_readbaro.spin
 		- ECi2c.spin
 		- TV.spin
 		- tv_text.spin
-
- SMD500 Temp Module:
+	
+	SMD500 Temp Module:
 		- EC_i2c_readbaro.spin
 		- ECi2c.spin
 		- Float32A.spin
@@ -2359,79 +2363,79 @@ Spin/SPin2 files in FOLDER:
 		- SMD500_Temp_Module.spin
 		- TV.spin
 		- tv_text.spin
-
- soft_lcd4_ez:
+	
+	soft_lcd4_ez:
 		- jm_lcd4_ez.spin
 		- Parallax Serial Terminal.spin
 		- soft_lcd4_ez-demo.spin
 		- soft_lcd4_ez.spin
-
- Software-only RFID reader:
+	
+	Software-only RFID reader:
 		- access-list-sample.spin
 		- rfid-door-control.spin
 		- rfid-lf.spin
-
- SOMO-14D device operation:
+	
+	SOMO-14D device operation:
 		- FullDuplexSerial.spin
 		- SOMO14D.spin
 		- SOMO14D_Demo.spin
-
- Sonar SRF-04:
+	
+	Sonar SRF-04:
 		- J-SonarSFR04-v1.spin
-
- Sony IR Decoder:
+	
+	Sony IR Decoder:
 		- BS2_Functions.spin
 		- SevenSegment.spin
 		- Sony_IR_Decoder.spin
-
- Sony Playstation 2 Controller:
+	
+	Sony Playstation 2 Controller:
 		- PS2_Controller.spin
 		- PS2_Controller_Serial_demo.spin
-
- Spare COGs:
+	
+	Spare COGs:
 		- sparecogs.spin
-
- Sparkfun graphic backpack GLCD driver:
+	
+	Sparkfun graphic backpack GLCD driver:
 		- glcd demo.spin
 		- Parallax Serial Terminal.spin
 		- Sparkfun 128x64 GLCD.spin
-
- Sparkfun's Huge LCD with Bigchars from ROM:
+	
+	Sparkfun's Huge LCD with Bigchars from ROM:
 		- HugeLcd_Test1.10.spin
 		- HugeLcdDriver1.10_db.spin
 		- HugeLcdDriver1.10_nodb.spin
 		- Simple_Numbers.spin
-
- SPDIF (digital audio) output:
+	
+	SPDIF (digital audio) output:
 		- fsrw.spin
 		- hss-spdif-demo.spin
 		- sdspiqasm.spin
 		- spdif-wav-demo.spin
 		- spdifOut.spin
 		- yma_hss_v1.2_spdif.spin
-
- SPI Assembly - Serial Peripheral Interface:
+	
+	SPI Assembly - Serial Peripheral Interface:
 		- FullDuplexSerial.spin
 		- SPI Asm DEMO.spin
 		- SPI_Asm.spin
-
- SPI Spin - Serial Peripheral Interface:
+	
+	SPI Spin - Serial Peripheral Interface:
 		- FullDuplexSerial.spin
 		- SPI Spin DEMO.spin
 		- SPI_Spin.spin
-
- SPIDriver:
+	
+	SPIDriver:
 		- SPIdriver.spin
-
- Spin and Pasm Debugger - Zero footprint:
+	
+	Spin and Pasm Debugger - Zero footprint:
 		- ClusoDebugger_276.spin
 		- ClusoDebuggerDemoPasm_275.spin
 		- FullDuplexSerial.spin
-
- SPIN LED blinker:
+	
+	SPIN LED blinker:
 		- timing.spin
-
- Spin Stamp Code for the Boe-Bot:
+	
+	Spin Stamp Code for the Boe-Bot:
 		- AsciiName.spin
 		- BothServosThreeSeconds.spin
 		- CenterServoP12.spin
@@ -2477,60 +2481,60 @@ Spin/SPin2 files in FOLDER:
 		- TimedMessagesYourTurn.spin
 		- VariablesAndSimpleMath.spin
 		- VariablesAndSimpleMathYourTurn.spin
-
- Stack Length 2:
+	
+	Stack Length 2:
 		- Stack_Length_2.spin
-
- Stepper Motor Driver (PASM):
+	
+	Stepper Motor Driver (PASM):
 		- _StepDriver.spin
 		- _Stepper Demo.spin
 		- LCD_16x2_8Bit.spin
-
- Stingray motor & motion control:
+	
+	Stingray motor & motion control:
 		- SRMotorControl.spin
-
- String Library:
+	
+	String Library:
 		- ASCII0_STREngine_1.spin
-
- StringKeyMap:
+	
+	StringKeyMap:
 		- Parallax Serial Terminal.spin
 		- StringKeyMap.spin
 		- StringKeyMap_demo.spin
-
- Succesive Aproximation Normalization Filter:
+	
+	Succesive Aproximation Normalization Filter:
 		- Parallax Serial Terminal.spin
 		- Succesive Aproximation Normalization Filter v1.1 DEMO.spin
 		- Succesive Aproximation Normalization Filter v1.1.spin
-
- Super Sound v2.0:
+	
+	Super Sound v2.0:
 		- ciphers.spin
 		- DTMF.spin
 		- morse_code.spin
 		- Super_Sound.spin
 		- Super_Sound_Demo.spin
 		- Synth.spin
-
- Sure Electronics 6432 bi-color LED Matrix Driver:
+	
+	Sure Electronics 6432 bi-color LED Matrix Driver:
 		- 6432_Demo_10.spin
 		- 6432_Driver_10.spin
 		- 6432_Graphics_10.spin
-
- Sure Transceiver Demo:
+	
+	Sure Transceiver Demo:
 		- ABoard.spin
 		- BBoard.spin
 		- FourPortSerial.spin
 		- MyLed1.spin
 		- SureDemo.spin
-
- Synth:
+	
+	Synth:
 		- Synth.spin
-
- T6963 240x128 Driver:
+	
+	T6963 240x128 Driver:
 		- Graphics.spin
 		- Graphics_Demo_Lcd_v1.2.spin
 		- T6963_240x128_1_1.spin
-
- TCM75 and HP03D I2C drivers:
+	
+	TCM75 and HP03D I2C drivers:
 		- Basic_I2C_Driver.spin
 		- config.spin
 		- hp03Object.spin
@@ -2539,19 +2543,19 @@ Spin/SPin2 files in FOLDER:
 		- Synth.spin
 		- tcn75Object.spin
 		- thtest.spin
-
- TCS3200-DB Driver:
+	
+	TCS3200-DB Driver:
 		- Serial.spin
 		- TAOSDriver.spin
 		- TAOSExample.spin
-
- TCS3471 Color Light-to-Digital Converter:
+	
+	TCS3471 Color Light-to-Digital Converter:
 		- Basic_I2C_Driver_1.spin
 		- Parallax Serial Terminal.spin
 		- TCS3471.spin
 		- TCS3471_test.spin
-
- Template for 5.00Mhz crystal:
+	
+	Template for 5.00Mhz crystal:
 		- Graphics.spin
 		- Keyboard.spin
 		- Mouse.spin
@@ -2561,8 +2565,8 @@ Spin/SPin2 files in FOLDER:
 		- TV_Terminal.spin
 		- VGA.spin
 		- VGA_Text.spin
-
- Template for 6.25Mhz crystal:
+	
+	Template for 6.25Mhz crystal:
 		- Graphics.spin
 		- Keyboard.spin
 		- Mouse.spin
@@ -2572,57 +2576,57 @@ Spin/SPin2 files in FOLDER:
 		- TV_Terminal.spin
 		- VGA.spin
 		- VGA_Text.spin
-
- Time:
+	
+	Time:
 		- Time.spin
-
- Timer_PlusCountdown:
+	
+	Timer_PlusCountdown:
 		- Timer_plus_countdown.spin
 		- timer_Plus_countdown_Demo.spin
-
- Timing.spin:
+	
+	Timing.spin:
 		- Timing.spin
-
- Tiny pop3 client:
+	
+	Tiny pop3 client:
 		- api_telnet_serial.spin
 		- driver_enc28j60.spin
 		- driver_socket.spin
 		- eth_top_tv_popmail_client.spin
 		- TV.spin
 		- TV_Text.spin
-
- TLC1543 11 channel 5V 38k SPS serial ADC driver:
+	
+	TLC1543 11 channel 5V 38k SPS serial ADC driver:
 		- BBTestsADC1543.spin
 		- TLC1543ADC.spin
 		- TLC1543ADC_H.spin
-
- TLC5940 Driver:
+	
+	TLC5940 Driver:
 		- Brilldea-GSCLK-Driver-Ver001.spin
 		- Brilldea-TLC5940-Driver-Ver006.spin
-
- TLC5940_Driver:
+	
+	TLC5940_Driver:
 		- Example.spin
 		- GSCLK_Driver.spin
 		- TLC5940_Driver.spin
-
- TLV2543 ADC driver:
+	
+	TLV2543 ADC driver:
 		- adctest.spin
 		- config.spin
 		- pcFullDuplexSerial4FC.spin
 		- tlv2543.spin
-
- TMP102 Digital Thermostat Spin Driver:
+	
+	TMP102 Digital Thermostat Spin Driver:
 		- Parallax Serial Terminal.spin
 		- TMP102 Demo.spin
 		- TMP102.spin
-
- TPA81Object:
+	
+	TPA81Object:
 		- FullDuplexSerial.spin
 		- i2cObject.spin
 		- TPA81_Test.spin
 		- TPA81Object.spin
-
- Trending Barometer:
+	
+	Trending Barometer:
 		- 29124_altimeter.spin
 		- Debug_Lcd03.spin
 		- DS1302_full.spin
@@ -2631,112 +2635,112 @@ Spin/SPin2 files in FOLDER:
 		- Serial_Lcd03.spin
 		- Simple_Numbers.spin
 		- Simple_Serial.spin
-
- Trigonometric Integer Math Library:
+	
+	Trigonometric Integer Math Library:
 		- SL32_INTEngine_2.spin
-
- TSL1401 Linescan Imaging Sensor Binary Driver:
+	
+	TSL1401 Linescan Imaging Sensor Binary Driver:
 		- FullDuplexSerialPlus.spin
 		- TestTSL1401Binary.spin
 		- TSL1401Binary.spin
-
- TSL230_clockin_demo:
+	
+	TSL230_clockin_demo:
 		- Blinker.spin
 		- tsl230_clockin_DEMO.spin
-
- tsl230_ip_demo:
+	
+	tsl230_ip_demo:
 		- tsl230_ip.spin
-
- tsl230_pi_demo:
+	
+	tsl230_pi_demo:
 		- SerialMirror.spin
 		- tsl230_pi.spin
 		- tsl230_pi_DEMO.spin
-
- TSL3301 digital line sensor driver:
+	
+	TSL3301 digital line sensor driver:
 		- FullDuplexSerial.spin
 		- TSL3301_driver_spn_v1.spin
 		- TSL3301_driver_v1.spin
 		- TSL3301_spn_demo.spin
-
- TV:
+	
+	TV:
 		- TV.spin
-
- tx.spin:
+	
+	tx.spin:
 		- tx.spin
-
- Txx - Fast Serial Transmitter for PASM and Spin:
+	
+	Txx - Fast Serial Transmitter for PASM and Spin:
 		- txx.spin
 		- txxdemo.spin
-
- UART Datalogger:
+	
+	UART Datalogger:
 		- DataLogger_UART_Demo.spin
 		- DataLogger_UART_Driver.spin
 		- Parallax Serial Terminal.spin
-
- UART DataLogger Lite:
+	
+	UART DataLogger Lite:
 		- DataLogger_Lite_CSV.spin
 		- DataLogger_Lite_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uLCD(SK)-32PTU Touch Screen v2.0 DEMO Driver:
+	
+	uLCD(SK)-32PTU Touch Screen v2.0 DEMO Driver:
 		- Parallax Serial Terminal.spin
 		- uLCD(SK)-32PTU_DEMO_v2.0.spin
 		- uLCD(SK)-32PTU_v2.0.spin
-
- Ultrasonic_VGA_Demo:
+	
+	Ultrasonic_VGA_Demo:
 		- Ultrasonic_VGA_Demo.spin
-
- uM-FPU v3.1 ARITHMETIC Driver demo:
+	
+	uM-FPU v3.1 ARITHMETIC Driver demo:
 		- FPU32_ARITH_Demo.spin
 		- FPU32_ARITH_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uM-FPU v3.1 FFT driver:
+	
+	uM-FPU v3.1 FFT driver:
 		- FPU32_FFT_Demo.spin
 		- FPU32_FFT_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uM-FPU v3.1 I2C driver demo:
+	
+	uM-FPU v3.1 I2C driver demo:
 		- DS1621_I2C_Driver.spin
 		- FPU_I2C_DemoApp.spin
 		- FPU_I2C_Driver.spin
 		- FullDuplexSerialPlus.spin
 		- I2C_Driver.spin
-
- uM-FPU v3.1 MATRIX Driver demo:
+	
+	uM-FPU v3.1 MATRIX Driver demo:
 		- FPU32_MATRIX_Demo.spin
 		- FPU32_MATRIX_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uM-FPU v3.1 SPI Driver demo:
+	
+	uM-FPU v3.1 SPI Driver demo:
 		- FPU32_SPI_Demo.spin
 		- FPU32_SPI_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uM-FPU64 ARITHMETIC Driver demo:
+	
+	uM-FPU64 ARITHMETIC Driver demo:
 		- FPU64_ARITH_Demo.spin
 		- FPU64_ARITH_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uM-FPU64 FFT Driver demo:
+	
+	uM-FPU64 FFT Driver demo:
 		- FPU64_FFT_Demo.spin
 		- FPU64_FFT_Driver.spin
 		- Parallax Serial Terminal.spin
-
- uM-FPU64 MATRIX Driver demo:
+	
+	uM-FPU64 MATRIX Driver demo:
 		- FPU64_MATRIX_Demo.spin
 		- FPU64_MATRIX_Driver.spin
 		- Parallax Serial Terminal.spin
-
- ummc file system:
+	
+	ummc file system:
 		- FDS_sg.spin
 		- format_memory.spin
 		- serial_terminal.spin
 		- ummc.spin
 		- ummc_demo.spin
 		- ummc_term.spin
-
- uMP3 Player Simple Interface:
+	
+	uMP3 Player Simple Interface:
 		- Debug_Lcd.spin
 		- Extended_FDSerial.spin
 		- FullDuplexSerial.spin
@@ -2744,31 +2748,31 @@ Spin/SPin2 files in FOLDER:
 		- Simple_Numbers.spin
 		- uMP3.spin
 		- uMP3_Test.spin
-
- Unipolar Stepper:
+	
+	Unipolar Stepper:
 		- Unipolar Stepper.spin
-
- unistep_simple unipolar 4 pole 5 wire stepper motor driver:
+	
+	unistep_simple unipolar 4 pole 5 wire stepper motor driver:
 		- Parallax Serial Terminal.spin
 		- unistep_simple.spin
 		- unistep_simple_demo.spin
-
- Unsigned Integer Math Functions:
+	
+	Unsigned Integer Math Functions:
 		- umath.spin
-
- uOLED-128 LCD Driver:
+	
+	uOLED-128 LCD Driver:
 		- Clock.spin
 		- FullDuplexSerial.spin
 		- uOLED_128.spin
 		- uOLED_128_DEMO.spin
-
- uOLED-128x128 Driver For SparkFun Carrier Board:
+	
+	uOLED-128x128 Driver For SparkFun Carrier Board:
 		- 8bit_Display-Driver-v01.spin
 		- 8bit_Graphics-Driver-v02.spin
 		- 8bit_OLED-Demo.spin
 		- Numbers.spin
-
- uOLED96PropBasic:
+	
+	uOLED96PropBasic:
 		- OLED_definitions.spin
 		- OLED_Driver.spin
 		- OLED_FullDuplexSerial.spin
@@ -2776,12 +2780,12 @@ Spin/SPin2 files in FOLDER:
 		- OLED_i2cSpiLdr.spin
 		- OLED_massStorage.spin
 		- uOLED96PropBasic.spin
-
- uPD161704A TFT driver, 8bit parallel:
+	
+	uPD161704A TFT driver, 8bit parallel:
 		- tft-test3.spin
 		- uPD161704A-par8.spin
-
- USB and Bluetooth Host Stack:
+	
+	USB and Bluetooth Host Stack:
 		- bluetooth-hciusb.spin
 		- bluetooth-host.spin
 		- bluetooth-keyring-test.spin
@@ -2804,97 +2808,97 @@ Spin/SPin2 files in FOLDER:
 		- usb-ft232.spin
 		- usb-modem.spin
 		- usb-storage.spin
-
- V2Xe cog demo:
+	
+	V2Xe cog demo:
 		- V2XE_Cog_1.0.spin
-
- VC0706 serial JPEG camera driver:
+	
+	VC0706 serial JPEG camera driver:
 		- vc0706_driver.spin
-
- Velleman VMA203 KeyPad Input:
+	
+	Velleman VMA203 KeyPad Input:
 		- jm_adc124s021MRX.spin
 		- LCD_16x2_4Bit-VMA203H.spin
 		- VMA203_PAB_demoMRX5Buttons.spin
-
- Velleman VMA203 LCD Driver:
+	
+	Velleman VMA203 LCD Driver:
 		- DEMO_LCD_16x2_4Bit-VMA203H.spin
 		- LCD_16x2_4Bit-VMA203H.spin
-
- VEX RC Receiver De-multiplexer:
+	
+	VEX RC Receiver De-multiplexer:
 		- VEXDemux.spin
-
- VGA 40x18 ROM Font:
+	
+	VGA 40x18 ROM Font:
 		- vga_40x18_rom_demo.spin
 		- vga_40x18_rom_hc.spin
 		- vga_40x18_rom_rc.spin
 		- VGA_40x18_rom_text.spin
-
- VGA HiRes Font Pack - Onkyo's VFD Font with Single & Double Box Drawing:
+	
+	VGA HiRes Font Pack - Onkyo's VFD Font with Single & Double Box Drawing:
 		- onesys_font.spin
-
- VGA Text at 100MHz:
+	
+	VGA Text at 100MHz:
 		- VGA.spin
 		- VGA_Text_100MHz.spin
 		- VGA_Text_100MHz_Demo.spin
-
- VGA_1024:
+	
+	VGA_1024:
 		- VGA_1024.spin
-
- VGA_640x240_Bitmap:
+	
+	VGA_640x240_Bitmap:
 		- VGA_640x240_Bitmap.spin
 		- VGA_640x240_Bitmap_Demo.spin
-
- VGA_MX2125_DISPLAY:
+	
+	VGA_MX2125_DISPLAY:
 		- Float32A.spin
 		- Float32Full.spin
 		- MXD2125.spin
 		- vga graphics ASM.spin
 		- VGA_512x384_Bitmap.spin
 		- VGA_MX2125_DISPLAY.spin
-
- Vinculum SPI Driver:
+	
+	Vinculum SPI Driver:
 		- Vinculum_1_1.spin
-
- Vizic SmartGPU2 LCD Family:
+	
+	Vizic SmartGPU2 LCD Family:
 		- Clock.spin
 		- Format.spin
 		- FullDuplexSerial.spin
 		- VizicSmartGPU2LCD.spin
 		- VizicSmartGPU2LCDTest.spin
-
- VL6180Driver:
+	
+	VL6180Driver:
 		- i2cDriver.spin
 		- Parallax Serial Terminal.spin
 		- VL6180Driver.spin
-
- vs1002 MP3 decoder Driver:
+	
+	vs1002 MP3 decoder Driver:
 		- fsrw.spin
 		- sdspiqasm.spin
 		- vs1002 example.spin
 		- vs1002 mp3.spin
-
- Walking Ring Sine Generators:
+	
+	Walking Ring Sine Generators:
 		- Walking_Ring_Sine_Generator_v01_16Step.spin
-
- WALTR - S2 - Logo - Bluetooth - Pen Lifter:
+	
+	WALTR - S2 - Logo - Bluetooth - Pen Lifter:
 		- FullDuplexSerial_rr004.spin
 		- s2.spin
 		- Servo32v7.spin
 		- WALTR_JustLogo_r01.spin
 		- WALTR_r01.spin
-
- Wheel_Controller:
+	
+	Wheel_Controller:
 		- WC_Test_Harness.spin
 		- Wheel_Controller.spin
-
- Wii Classic Controller Driver:
+	
+	Wii Classic Controller Driver:
 		- ClassicCtrl.spin
 		- Extended_FDSerial.spin
 		- FullDuplexSerial.spin
 		- i2cObject.spin
 		- TestClassic.spin
-
- Wii MotionPlus Driver:
+	
+	Wii MotionPlus Driver:
 		- Extended_FDSerial.spin
 		- Float32A.spin
 		- Float32Full.spin
@@ -2902,8 +2906,8 @@ Spin/SPin2 files in FOLDER:
 		- i2cObject.spin
 		- MotionPlus.spin
 		- TestMotionPlus.spin
-
- Wii Nunchuck Driver:
+	
+	Wii Nunchuck Driver:
 		- Extended_FDSerial.spin
 		- Float32A.spin
 		- Float32Full.spin
@@ -2911,64 +2915,64 @@ Spin/SPin2 files in FOLDER:
 		- i2cObject.spin
 		- Nunchuck.spin
 		- TestNunchuck.spin
-
- Winbond Flash and Microchip SRAM Driver:
+	
+	Winbond Flash and Microchip SRAM Driver:
 		- comboKeyboard.spin
 		- FemtoBasic.spin
 		- massStorage.spin
 		- sdspiFemto.spin
 		- vga_Driver.spin
 		- Winbond_Driver.spin
-
- Wiznet W5100 Indirect Parallel Driver:
+	
+	Wiznet W5100 Indirect Parallel Driver:
 		- W5100_Indirect_Driver.spin
-
- Wiznet W5100 SPI Driver:
+	
+	Wiznet W5100 SPI Driver:
 		- Brilldea_W5100_UDP_Echo_Demo_SPI_Ver004_SPI.spin
 		- W5100_SPI_Driver.spin
-
- Wiznet W5200 Driver:
+	
+	Wiznet W5200 Driver:
 		- W5200_Driver.spin
-
- Wiznet W5500 Driver:
+	
+	Wiznet W5500 Driver:
 		- W5500_Driver_0.spin
-
- WS2812 LED Driver modified by Doug Hilton for RadioShack part number 2760249 Tri-LED strip:
+	
+	WS2812 LED Driver modified by Doug Hilton for RadioShack part number 2760249 Tri-LED strip:
 		- RadioShack_2760249.spin
 		- RadioShack_2760249_demo.spin
-
- WS2812 LED Driver modified by Doug Hilton for RadioShack part number 2760339 Tri-LED strip:
+	
+	WS2812 LED Driver modified by Doug Hilton for RadioShack part number 2760339 Tri-LED strip:
 		- jm_ws2812.spin
 		- jm_ws2812_demo.spin
-
- WX ESP8266 SPIN Get Started:
+	
+	WX ESP8266 SPIN Get Started:
 		- Page_Controls_Light_1.spin
 		- Text_Page_To_Micro_1.spin
 		- Val_From_Micro_1.spin
 		- WXstart_1.spin
-
- X10 Interface TW523:
+	
+	X10 Interface TW523:
 		- X-10_TW523_v2.spin
-
- X10 Powerline Interface:
+	
+	X10 Powerline Interface:
 		- X10.spin
-
- XBee Tranceiver Object - FullDuplexSerial4 version:
+	
+	XBee Tranceiver Object - FullDuplexSerial4 version:
 		- pcFullDuplexSerial4FC512.spin
 		- XBee_Object_FDS4.spin
-
- XBee Transceiver AT-API Object:
+	
+	XBee Transceiver AT-API Object:
 		- API_Base.spin
 		- XBee_Object_2.spin
-
- XOR Cipher:
+	
+	XOR Cipher:
 		- XorEncrypt.spin
-
- xTach - Tachometer - Frequency Counter - Pure spin:
+	
+	xTach - Tachometer - Frequency Counter - Pure spin:
 		- xTach.spin
 		- xTachTest.spin
-
- ZyTemp Infrared Thermometer Driver:
+	
+	ZyTemp Infrared Thermometer Driver:
 		- FullDuplexSerial.spin
 		- SPI_Spin.spin
 		- ZyTemp_Demo.spin

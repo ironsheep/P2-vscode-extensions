@@ -13,7 +13,7 @@
 
 '' this is our full PASM (P1) instruction set
 
-PUB null()
+PUB null() : nRet
 
     '' This is NOT a top level object
 CON
