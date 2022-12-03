@@ -40,7 +40,7 @@ It's bad enough that you have to keep track of that damn overtype indicator at t
 Fine.
 
 ```json
-"overtype.perEditor": true
+"spinInsertMode.perEditor": true
 ```
 
 > Sets the insert/overtype mode per editor.
@@ -58,15 +58,27 @@ Some additional tips for using overtype paste:
 
 - Don't forget your Undo shortcut(s).
 - I know this doesn't work like [insert editor here]. Every single freaking editor handles overtype paste differently. It's not my fault.
-- If you think you have a saner way to handle this, for the love of everything warm and cuddly, [MAKE A PULL REQUEST](https://github.com/DrMerfy/vscode-overtype/pulls).
+- If you think you have a saner way to handle this, for the love of everything warm and cuddly, let us know.
 
 Without further ado...
 
 ```json
-"overtype.paste": true
+"spinInsertMode.overtypePaste": true
 ```
 
 > When in overtype mode, uses overtype behavior when pasting text.
+
+### Settings: Enable Align Mode
+
+Our third mode "Align Mode" is seperately enableable for the time being in case it gives anyone problems as we are dialing it in.
+
+```json
+"spinInsertMode.enableAlign": true
+```
+
+> Enable or Disable Align Mode.</br>
+> Default: true
+
 
 ### Settings: Status Bar indicators (abbreviated, localized or none)
 
@@ -76,17 +88,17 @@ Or simply want to match the language to the general UI?
 Don't worry, we've got just the setting for you!
 
 ```json
-"overtype.labelInsertMode": "",
-"overtype.labelOvertypeMode": "Ovr"
-"overtype.labelAlignMode": "Aln"
+"spinInsertMode.labelInsertMode": "",
+"spinInsertMode.labelOvertypeMode": "Ovr"
+"spinInsertMode.labelAlignMode": "Aln"
 ```
 
 > Shows an abbreviated overtype status (`Ovr`) in the status bar if active, an abbreviated align status (`Aln`) in the status bar if activ and nothing for the "normal" insert mode.
 
 ```json
-"overtype.labelInsertMode": "",
-"overtype.labelOvertypeMode": ""
-"overtype.labelAlignMode": ""
+"spinInsertMode.labelInsertMode": "",
+"spinInsertMode.labelOvertypeMode": ""
+"spinInsertMode.labelAlignMode": ""
 ```
 
 > Disable showing the insert mode status in the status bar completely.
@@ -94,7 +106,7 @@ Don't worry, we've got just the setting for you!
 ### Settings: Overtype cursor style
 
 You can change the overtype cursor style from the preferences.
-Set the `overtype.secondaryCursorStyle` to either one of:
+Set the `spinInsertMode.secondaryCursorStyle` to either one of:
 
 - line
 - line-thin
@@ -106,7 +118,7 @@ Set the `overtype.secondaryCursorStyle` to either one of:
 e.g.
 
 ```json
-"overtype.secondaryCursorStyle": "underline"
+"spinInsertMode.secondaryCursorStyle": "underline"
 ```
 
 > Sets the overtype cursor style.</br>
@@ -115,7 +127,7 @@ e.g.
 ### Settings: Align cursor style
 
 You can change the align cursor style from the preferences.
-Set the `overtype.ternaryCursorStyle` to either one of:
+Set the `spinInsertMode.ternaryCursorStyle` to either one of:
 
 - line
 - line-thin
@@ -127,24 +139,12 @@ Set the `overtype.ternaryCursorStyle` to either one of:
 e.g.
 
 ```json
-"overtype.ternaryCursorStyle": "underline"
+"spinInsertMode.ternaryCursorStyle": "underline"
 ```
 
 > Sets the align cursor style.</br>
 > Default: underline
 
-## Contributing
-
-How can you contribute?
-
-- [**Open an issue**](https://github.com/DrMerfy/vscode-overtype/issues) if you found a problem.
-- [**Make a pull request**](https://github.com/DrMerfy/vscode-overtype/pulls) if you fixed a problem!
-
-> Make sure to run `npm run lint` before pushing
-
-## Release notes
-
-There's a [`CHANGELOG.md`](https://github.com/DrMerfy/vscode-overtype/blob/master/CHANGELOG.md) file.
 
 ## License
 

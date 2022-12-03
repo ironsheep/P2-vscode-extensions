@@ -1177,7 +1177,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             tokenType: referenceDetails.tokenType,
             tokenModifiers: referenceDetails.tokenModifiers,
           });
-        } else if (!this._isReservedPasmSymbols(newName)) {
+        } else if (
+          !this._isReservedPasmSymbols(newName) &&
+          !this._isPasmInstruction(newName) &&
+          !this._isPasmConditional(newName) &&
+          !this._isDatStorageType(newName) &&
+          !newName.toUpperCase().startsWith("IF_")
+        ) {
           this._logDAT("  --  DAT rDdl MISSING name=[" + newName + "]");
           tokenSet.push({
             line: lineNumber,
