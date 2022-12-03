@@ -106,7 +106,7 @@ NOTE: to activate one of the experimental themes distributed with this extension
 
 ## License
 
-Copyright © 2021 Iron Sheep Productions, LLC. All rights reserved.<br />
+Copyright © 2022 Iron Sheep Productions, LLC. All rights reserved.<br />
 Licensed under the MIT License. <br>
 <br>
 Follow these links for more information:
