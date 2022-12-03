@@ -19,7 +19,7 @@ repository:
                 name: keyword.operator.spin2
     binary_number:
         name: constant.numeric.binary.spin2
-        match: '(\%[01][01_]*)\b'
+        match: (\%[01][01_]*)\b
         captures:
             '1':
                 name: constant.numeric.base2.spin2
@@ -60,7 +60,7 @@ repository:
         match: '(?i)\b(CHIPVER|_?CLKMODE|_?CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL[1-3]|PLL(1|2|4|8|16)X)\b'
     constants:
         name: constant.language.spin2
-        match: '(?i)\b(TRUE|FALSE|(POS|NEG)X)\b'
+        match: '(?i)\b(TRUE|FALSE|(POS|NEG)X|PI)\b'
     constant_block:
         name: meta.block.constant.spin2
         begin: '(?i)^(CON)(\s+|\s*$)'
@@ -126,7 +126,7 @@ repository:
         patterns:
              -
                 name: constant.numeric.base10.spin2
-                match: '([\-][0-9][0-9_]*)\b'
+                match: '([\+\-][0-9][0-9_]*)\b'
              -
                 name: constant.numeric.base10.spin2
                 match: '\b([0-9][0-9_]*)\b'
@@ -144,11 +144,11 @@ repository:
         name: constant.numeric.decimal.spin2
         patterns:
             -
-                name: constant.numeric.float.spin2
-                match: '([+\-]?(?:0|[1-9][0-9_]*)(?:\.[0-9]+)(?:[eE][+\-]?[0-9]+)?)\b'
+                name: constant.numeric.float.spin
+                match: '\b([\+\-]?(?:0|[1-9][0-9_]*)\.(?:[0-9]+)?(?:[eE][\+\-]?[0-9]+)?)\b'
             -
-                name: constant.numeric.float.spin2
-                match: '([+\-]?(?:0|[1-9][0-9_]*)(?:\.[0-9]+)?(?:[eE][+\-]?[0-9]+))\b'
+                name: constant.numeric.float.spin
+                match: '\b([\+\-]?(?:0|[1-9][0-9_]*)?\.(?:[0-9]+)(?:[eE][\+\-]?[0-9]+))\b'
     hexadecimal_number:
         name: constant.numeric.hexadecimal.spin2
         match: '(\$[0-9a-fA-F][0-9a-fA-F_]*)\b'
@@ -232,10 +232,10 @@ repository:
             -
                 include: '#cog_register_names'
             -
-                name: storage.modifier.spin2
+                name: storage.modifier.pasm2
                 match: '(?i)\b(ORG(F|H)?|FIT)\b'
             -
-                name: storage.type.pasm.spin2
+                name: storage.type.pasm2
                 match: '(?i)\b(BYTE|WORD|LONG|RES)\b'
             -
                 name: keyword.pasm.instruction.branch.pasm2
@@ -380,7 +380,7 @@ repository:
                 include: '#pasm_language_inline'
     quaternary_number:
         name: constant.numeric.quaternary.spin2
-        match: '(\%\%[0-3][0-3_]*)\b'
+        match: (\%\%[0-3][0-3_]*)\b
         captures:
             '1':
                 name: constant.numeric.base4.spin2

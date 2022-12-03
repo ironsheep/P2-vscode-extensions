@@ -1,0 +1,49 @@
+Spin/SPin2 files in FOLDER:
+ Root /Users/stephen/Projects/Projects-ExtGit/IronSheepProductionsLLC/Propeller2/VSCode Extensions/P2-vscode-extensions/spin2:
+ TEST:
+
+ spin:
+		- test_declarations.spin
+		- test_notSpin1.spin
+		- test_pasm.spin
+		- test_spin.spin
+
+ spin2:
+		- 1CogKbM_neoyume.spin2
+		- 220316-fixes.spin2
+		- 220325-fixes.spin2
+		- 220404-fixes.spin2
+		- 220415-fixes.spin2
+		- 220419-fixes.spin2
+		- 220421-fixes.spin2
+		- 220505-fixes.spin2
+		- 220505b-fixes.spin2
+		- 220808-fixes.spin2
+		- 220820-fixes.spin2
+		- 220906-fixes.spin2
+		- debug_coloring_examples.spin2
+		- docs-all-blocks.spin2
+		- docs-con-blocks.spin2
+		- docs-dat-blocks.spin2
+		- docs-minimal-pasm.spin2
+		- docs-minimal-spin.spin2
+		- docs-obj-blocks.spin2
+		- docs-pub-pri-blocks.spin2
+		- docs-spin2-language.spin2
+		- docs-var-blocks.spin2
+		- github_issue_05.spin2
+		- Jeff Debug Test 2 (syntax).spin2
+		- Jeff Debug Test 3 (syntax).spin2
+		- Jeff Test.spin2
+		- Jeff Test2.spin2
+		- jm_fullduplexserial.spin2
+		- jm_test.spin2
+		- neoyume_lower.spin2
+		- practice_tabbing.spin2
+		- test-file-001.spin2
+		- test-file-002.spin2
+		- test-file-003.spin2
+		- test-file-004.spin2
+		- test_inline_pasm.spin2
+		- test_spin2_methods.spin2
+		- user_sample_cluso99.spin2

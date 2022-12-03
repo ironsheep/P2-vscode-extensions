@@ -13,16 +13,33 @@ Work to appear in upcoming releases:
 
 Possible next additions:
 
-- Add TAB support for `INSERT`, `OVERTYPE` and `ALIGN` editor modes
 - Add Named TAB configurations (have "Propeller Tool" tabs and your own custom set of tabs)
 - Add Hover popups for `PUB` and `PRI` method signature (help text)
 - Add Hover popups for pasm instructions (help text for each instruction)
-- Update theme to work better with a couple common languages we use near our P2 projects
-- Add code reformatting aligning columns to user defined tabstops
+- Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
 - Investigate and possibly add unique coloring for method pointers
 - Add spin2 instruction templates as Snippets (*for instructions with two or more parameters*)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.7.0] 2022-12-02
+
+Fun Update!   First release of two **NEW** features and more.
+
+- **NEW** P1 support for .spin files (full syntax and semantic highlighting of the P1 language: spin/pasm)
+- **NEW** Add InsertMode support: [Insert|Overwrite|Align]
+- More changes to tabbing behavior, we're gradually dialiing it in
+- P2 Syntax/Semantic highlighting changes - adds support for: 
+   ● New Spin2 'GETCRC(dataptr,crcpoly,bytecount) method
+   ● New Spin2 'STRCOPY(destination,source,maxsize)' method
+   ● DEBUG display BITMAP now validates 'SPARSE color' 
+   ● GRAY, in addition to GREY, now recognized as a color in DEBUG displays
+
+### - Known Issues w/v1.7.0
+
+- We need to get Backspace and Delete working correctly when in InsertMode:Align - it's coming, hopefully soon.
+- We haven't yet learned how to control the ending position of the edit cursor. So in many cases when using selection not an insert point the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+
 
 ## [1.6.1] 2022-11-29
 

@@ -18,6 +18,7 @@
 PUB null()
 
     '' This is NOT a top level object
+    return 5
 
 CON
 
