@@ -28,7 +28,7 @@ Fun Update!   First release of two **NEW** features and more.
 
 - **NEW** P1 support for .spin files (full syntax and semantic highlighting of the P1 language: spin/pasm)
 - **NEW** Add InsertMode support: [Insert|Overwrite|Align]
-- More changes to tabbing behavior, we're gradually dialiing it in
+- More changes to tabbing behavior, we're gradually dialing it in
 - P2 Syntax/Semantic highlighting changes - adds support for: 
    ● New Spin2 'GETCRC(dataptr,crcpoly,bytecount) method
    ● New Spin2 'STRCOPY(destination,source,maxsize)' method
@@ -39,7 +39,10 @@ Fun Update!   First release of two **NEW** features and more.
 
 - We need to get Backspace and Delete working correctly when in InsertMode:Align - it's coming, hopefully soon.
 - We haven't yet learned how to control the ending position of the edit cursor. So in many cases when using selection not an insert point the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
-
+- The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
 
 ## [1.6.1] 2022-11-29
 
@@ -53,6 +56,10 @@ Minor update to the formal release (*clean up muli-line behavior, clean up in-li
 ### - Known Issues w/v1.6.1
 
 - We haven't yet learned how to control the ending position of the edit cursor. So in many cases when using selection not an insert point the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+- The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+
 
 ## [1.6.0] 2022-11-28
 
