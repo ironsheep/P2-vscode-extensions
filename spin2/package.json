@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -351,38 +351,84 @@
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && ((editorLangId == spin2) || (editorLangId == spin)) && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "key": "tab",
+        "command": "spin2.indentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
         "command": "spin2.outdentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && ((editorLangId == spin2) || (editorLangId == spin)) && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "key": "Shift+tab",
+        "command": "spin2.outdentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Ctrl+Alt+tab",
         "command": "spin2.insertTabStopsComment",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && ((editorLangId == spin2) || (editorLangId == spin)) && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "key": "Ctrl+Alt+tab",
+        "command": "spin2.insertTabStopsComment",
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.rotate",
         "key": "insert",
-        "when": "editorFocus && ((editorLangId == spin2) || (editorLangId == spin))"
+        "when": "editorFocus && editorLangId == spin2"
+      },
+      {
+        "command": "spin2.insertMode.rotate",
+        "key": "insert",
+        "when": "editorFocus && editorLangId == spin"
+      },
+      {
+        "command": "spin2.insertMode.rotate",
+        "key": "F11",
+        "when": "editorFocus && editorLangId == spin2"
+      },
+      {
+        "command": "spin2.insertMode.rotate",
+        "key": "F11",
+        "when": "editorFocus && editorLangId == spin"
       },
       {
         "command": "spin2.insertMode.deleteLeft",
         "key": "backspace",
-        "when": "editorFocus && spin2.insert.mode == Overtype && ((editorLangId == spin2) || (editorLangId == spin))"
+        "when": "editorTextFocus && !editorReadonly&& editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "command": "spin2.insertMode.deleteLeft",
+        "key": "backspace",
+        "when": "editorTextFocus && !editorReadonly&& editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.deleteRight",
         "key": "delete",
-        "when": "editorFocus && spin2.insert.mode == Overtype && ((editorLangId == spin2) || (editorLangId == spin))"
+        "when": "editorTextFocus && !editorReadonly && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "command": "spin2.insertMode.deleteRight",
+        "key": "delete",
+        "when": "editorTextFocus && !editorReadonly && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.toggle",
         "key": "Ctrl+Shift+i",
         "mac": "Cmd+Shift+i",
-        "when": "editorFocus && ((editorLangId == spin2) || (editorLangId == spin))"
+        "when": "editorFocus && editorLangId == spin2"
+      },
+      {
+        "command": "spin2.insertMode.toggle",
+        "key": "Ctrl+Shift+i",
+        "mac": "Cmd+Shift+i",
+        "when": "editorFocus && editorLangId == spin"
       }
     ]
   },

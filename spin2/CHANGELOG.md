@@ -22,6 +22,22 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.7.1] 2022-12-05
+
+Update to keyboard mapping: All key mapping now reenabled and Align mode now fully functional
+
+- Fixed: Backspace and Delete now working correctly in Align Mode
+- Fixed: Oops, now all keymapping is working. (When clause was set to enable for spin and spin2 but killed everything instead)
+- [F11] key is now assigned as an alternate in case you don't have an [Insert] key (or Fn+Enter is not working)
+
+### - Known Issues w/v1.7.1
+
+- We haven't yet learned how to control the ending position of the edit cursor. So in many cases when using selection, not an insert point, the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+- The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
+
 ## [1.7.0] 2022-12-02
 
 Fun Update!   First release of two **NEW** features and more.

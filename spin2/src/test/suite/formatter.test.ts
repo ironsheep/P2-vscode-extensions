@@ -12,7 +12,9 @@ suite("Indent Test Suite", async function () {
 
   const testDocument = "{Object_Title_and_Purpose}" + "\n" + "CON" + "\n" + "CONSTANT_NAME = 0";
 
-  const formatter = new formatter_1.Formatter();
+  var outputChannel: vscode.OutputChannel | undefined = undefined;
+
+  const formatter = new formatter_1.Formatter(outputChannel, false);
 
   function tab(character: number): string {
     return " ".repeat(character);

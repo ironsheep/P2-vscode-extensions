@@ -49,7 +49,6 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 We are working on fixes to the following issues we've seen during our testing. However, they are not major enough to prevent this release.
 
 - We are still working through validating the P1 support against the full P1 obex - this is a work in progress
-- **Align mode** needs to do special things for [Delete] and [Backspace] - this is not working yet.
 - Some line comments are not properly colored
 - Occasionally [byte|word|long] storage types are not properly colored
 - Occasionally some pasm code escapes coloring.  We're trying to understand this.

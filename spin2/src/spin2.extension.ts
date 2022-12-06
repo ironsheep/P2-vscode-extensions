@@ -20,6 +20,18 @@ import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider,
 //    and our semantic highlighting provider
 //
 
+var formatter: Formatter;
+
+var outputChannel: vscode.OutputChannel | undefined = undefined;
+const formatDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+
+export const logFormatMessage = (message: string): void => {
+  if (formatDebugLogEnabled && outputChannel != undefined) {
+    //Write to output window.
+    outputChannel.appendLine(message);
+  }
+};
+
 // register services provided by this file
 export const activate = (context: vscode.ExtensionContext) => {
   // register our Spin2 outline provider
@@ -37,13 +49,25 @@ export const activate = (context: vscode.ExtensionContext) => {
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider
   //
+  if (formatDebugLogEnabled) {
+    if (outputChannel === undefined) {
+      //Create output channel
+      outputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
+      logFormatMessage("Spin/Spin2 Format log started.");
+    } else {
+      logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
+    }
+  }
 
-  var formatter = new Formatter();
+  formatter = new Formatter(outputChannel, formatDebugLogEnabled);
+  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", formatter.isEnbled());
+
   if (formatter.isEnbled()) {
     const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(insertTabStopsCommentCommand, async () => {
+        logFormatMessage("* insertTabStopsCommentCommand");
         try {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
@@ -60,6 +84,7 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     context.subscriptions.push(
       vscode.commands.registerCommand(indentTabStopCommand, async () => {
+        logFormatMessage("* indentTabStopCommand");
         try {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
@@ -76,6 +101,7 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     context.subscriptions.push(
       vscode.commands.registerCommand(outdentTabStopCommand, async () => {
+        logFormatMessage("* outdentTabStopCommand");
         try {
           const editor = vscode.window.activeTextEditor!;
           const document = editor.document!;
@@ -141,6 +167,7 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
   } else {
     const mode = getMode(textEditor);
     updateStatusBarItem(mode);
+    logFormatMessage("* activeTextEditorChanged");
     vscode.commands.executeCommand("setContext", "spin2.insert.mode", modeName(mode));
 
     // if in overtype mode, set the cursor to secondary style; otherwise, reset to default
@@ -162,6 +189,7 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
 
 function toggleCommand() {
   const textEditor = vscode.window.activeTextEditor;
+  logFormatMessage("* toggle");
   if (textEditor == null) {
     return;
   }
@@ -172,6 +200,7 @@ function toggleCommand() {
 
 function toggleCommand2State() {
   const textEditor = vscode.window.activeTextEditor;
+  logFormatMessage("* toggle2State");
   if (textEditor == null) {
     return;
   }
@@ -219,18 +248,23 @@ const onDidChangeConfiguration = () => {
 
 function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;
-  var formatter = new Formatter();
+  const firstChar: number = args.text.charCodeAt(0);
+  if (args.text.length == 1 && firstChar < 0x20) {
+    logFormatMessage("* type [0x" + firstChar.toString(16) + "](" + args.text.length + ")");
+  } else {
+    logFormatMessage("* type [" + args.text + "](" + args.text.length + ")");
+  }
   if (editor && getMode(editor) == eInsertMode.OVERTYPE) {
     overtypeBeforeType(editor, args.text, false);
-  } else if (editor && getMode(editor) == eInsertMode.ALIGN) {
+  } else if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
     formatter.alignBeforeType(editor, args.text, false);
   } else vscode.commands.executeCommand("default:type", args);
 }
 
 function deleteLeftCommand() {
   const editor = vscode.window.activeTextEditor;
-  var formatter = new Formatter();
-  if (editor && getMode(editor) == eInsertMode.ALIGN) {
+  logFormatMessage("* deleteLeft");
+  if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
     formatter.alignDelete(editor, false);
     return null;
   } else return vscode.commands.executeCommand("deleteLeft");
@@ -238,8 +272,8 @@ function deleteLeftCommand() {
 
 function deleteRightCommand() {
   const editor = vscode.window.activeTextEditor;
-  var formatter = new Formatter();
-  if (editor && getMode(editor) == eInsertMode.ALIGN) {
+  logFormatMessage("* deleteRight");
+  if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
     formatter.alignDelete(editor, true);
     return null;
   } else return vscode.commands.executeCommand("deleteRight");
@@ -247,13 +281,13 @@ function deleteRightCommand() {
 
 function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
   const editor = vscode.window.activeTextEditor;
-  var formatter = new Formatter();
   if (editor) {
+    logFormatMessage("* paste");
     if (getMode(editor) == eInsertMode.OVERTYPE && configuration.overtypePaste) {
       // TODO: Make paste work with align
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
-    } else if (getMode(editor) == eInsertMode.ALIGN && !args.pasteOnNewLine) {
+    } else if (formatter.isEnbled() && getMode(editor) == eInsertMode.ALIGN && !args.pasteOnNewLine) {
       formatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {

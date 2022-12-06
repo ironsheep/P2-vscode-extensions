@@ -2125,6 +2125,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const inLinePasmRHSStr = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
     const lineParts: string[] = this._getNonWhitePasmLineParts(inLinePasmRHSStr);
     this._logPASM("  -- reportInLinePasmDecl lineParts=[" + lineParts + "]");
+    if (lineParts.length == 0) {
+      return tokenSet;
+    }
     const firstName: string = lineParts.length > 0 ? lineParts[0] : "";
     const secondName: string = lineParts.length > 1 ? lineParts[1] : "";
     // handle name in as first part of line...
@@ -2596,7 +2599,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin1DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;
@@ -3836,24 +3839,27 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   }
 
   private _isDatOrPasmLabel(name: string): boolean {
-    let haveLabelStatus: boolean = name.substr(0, 1).match(/[a-zA-Z_\.\:]/) ? true : false;
-    if (haveLabelStatus) {
-      if (this._isDatNFileStorageType(name)) {
-        haveLabelStatus = false;
-      } else if (name.toLowerCase() == "dat") {
-        haveLabelStatus = false;
-      } else if (this._isReservedPasmSymbols(name)) {
-        haveLabelStatus = false;
-      } else if (name.toUpperCase().startsWith("IF_")) {
-        haveLabelStatus = false;
-      } else if (this._isPasmConditional(name)) {
-        haveLabelStatus = false;
-      } else if (this._isIllegalInlinePasmDirective(name)) {
-        haveLabelStatus = false;
-      } else if (this._isPasmInstruction(name)) {
-        haveLabelStatus = false;
-      } else if (this._isPasmNonArgumentInstruction(name)) {
-        haveLabelStatus = false;
+    let haveLabelStatus: boolean = false;
+    if (name.length > 0) {
+      haveLabelStatus = name.substr(0, 1).match(/[a-zA-Z_\.\:]/) ? true : false;
+      if (haveLabelStatus) {
+        if (this._isDatNFileStorageType(name)) {
+          haveLabelStatus = false;
+        } else if (name.toLowerCase() == "dat") {
+          haveLabelStatus = false;
+        } else if (this._isReservedPasmSymbols(name)) {
+          haveLabelStatus = false;
+        } else if (name.toUpperCase().startsWith("IF_")) {
+          haveLabelStatus = false;
+        } else if (this._isPasmConditional(name)) {
+          haveLabelStatus = false;
+        } else if (this._isIllegalInlinePasmDirective(name)) {
+          haveLabelStatus = false;
+        } else if (this._isPasmInstruction(name)) {
+          haveLabelStatus = false;
+        } else if (this._isPasmNonArgumentInstruction(name)) {
+          haveLabelStatus = false;
+        }
       }
     }
     return haveLabelStatus;

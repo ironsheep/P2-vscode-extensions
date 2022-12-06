@@ -53,26 +53,20 @@ export class Formatter {
   readonly endIdentifierREgEx1 = /^(?<end>\s*(end|endasm))\s+/;
   readonly endIdentifierREgEx2 = /^(?<end>\s*(end|endasm))$/;
 
-  private tabbingDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private tabbingDebugLogEnabled: boolean = false;
   private tabbinglog: any = undefined;
 
   private _logMessage(message: string): void {
-    if (this.tabbinglog != undefined) {
+    if (this.tabbingDebugLogEnabled && this.tabbinglog != undefined) {
       //Write to output window.
       this.tabbinglog.appendLine(message);
     }
   }
 
-  constructor() {
-    if (this.tabbingDebugLogEnabled) {
-      if (this.tabbinglog === undefined) {
-        //Create output channel
-        this.tabbinglog = vscode.window.createOutputChannel("Spin/Spin2 TAB DEBUG");
-        this._logMessage("Spin/Spin2 TAB log started.");
-      } else {
-        this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
-      }
-    }
+  constructor(outputChannel: vscode.OutputChannel | undefined, formatDebugLogEnabled: boolean) {
+    this.tabbingDebugLogEnabled = formatDebugLogEnabled;
+    // save output channel
+    this.tabbinglog = outputChannel;
   }
 
   // Editor Tab Size - "editor.tabSize"
@@ -739,7 +733,10 @@ export class Formatter {
                 if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
                   // yes we do!
                   // delete length of spaces we inserted but from this doubleWhite location
-                  const doubleWhiteLength: number = this.countOfWhiteChars(currLineText, doubleWhitePos);
+                  let doubleWhiteLength: number = this.countOfWhiteChars(currLineText, doubleWhitePos);
+                  if (doubleWhiteLength == nbrSpacesToInsert) {
+                    doubleWhiteLength -= 1; // never delete all the spaces!
+                  }
                   const deleteLength: number = doubleWhiteLength < nbrSpacesToInsert ? doubleWhiteLength : nbrSpacesToInsert;
                   const deleteStartPos: vscode.Position = doubleWhitePos;
                   const deleteEndPos: vscode.Position = deleteStartPos.with(deleteStartPos.line, deleteStartPos.character + deleteLength);

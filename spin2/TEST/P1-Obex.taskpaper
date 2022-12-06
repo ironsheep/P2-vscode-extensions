@@ -90,24 +90,24 @@ Spin/SPin2 files in FOLDER:
 		- FullDuplexSerial.spin @done(2022-12-02)
 	
 	4Leds4Buttons4Games:
-		- 4LEDS.spin
-		- 4Switches.spin
-		- CatchMe.spin
-		- debug.spin
-		- debug_off.spin
-		- FunLib.spin
-		- GlowMe.spin
-		- GuessMe.spin
-		- readme.spin
-		- simon.spin
+		- 4LEDS.spin @done(2022-12-05)
+		- 4Switches.spin @done(2022-12-05)
+		- CatchMe.spin @done(2022-12-05)
+		- debug.spin @done(2022-12-05)
+		- debug_off.spin @done(2022-12-05)
+		- FunLib.spin @done(2022-12-05)
+		- GlowMe.spin @done(2022-12-05)
+		- GuessMe.spin @done(2022-12-05)
+		- readme.spin @done(2022-12-05)
+		- simon.spin @done(2022-12-05)
 	
 	4x4 Jameco Keypad Driver:
-		- 4x4_Jameco_Keypad.spin
-		- 4x4_Keypad_Demo.spin
-		- Debug_Lcd.spin
-		- Serial_Lcd.spin
-		- Simple_Numbers.spin
-		- Simple_Serial.spin
+		- 4x4_Jameco_Keypad.spin @done(2022-12-05)
+		- 4x4_Keypad_Demo.spin @done(2022-12-05)
+		- Debug_Lcd.spin @done(2022-12-05)
+		- Serial_Lcd.spin @done(2022-12-05)
+		- Simple_Numbers.spin @done(2022-12-05)
+		- Simple_Serial.spin @done(2022-12-05)
 	
 	4x4 Keypad driver TG:
 		- 4x4_Keypad.spin
@@ -124,17 +124,17 @@ Spin/SPin2 files in FOLDER:
 		- VGA_Text.spin
 	
 	6-pole IIR Filter - Floatmath - pasm:
-		- filter_rc6f_asm.spin
-		- filter_rc6f_asm_demo.spin
-		- Parallax Serial Terminal.spin
+		- filter_rc6f_asm.spin @done(2022-12-05)
+		- filter_rc6f_asm_demo.spin @done(2022-12-05)
+		- Parallax Serial Terminal.spin @done(2022-12-05)
 	
 	7-Segment LED display driver for SLED-C4:
-		- FullDuplexSerial.spin
-		- ral_SLEDC4_10.spin
-		- ral_SLEDC4demo.spin
+		- FullDuplexSerial.spin @done(2022-12-05)
+		- ral_SLEDC4_10.spin @done(2022-12-05)
+		- ral_SLEDC4demo.spin @done(2022-12-05)
 	
 	7-Segment_01.spin:
-		- 7-Segment_01.spin
+		- 7-Segment_01.spin @done(2022-12-05)
 	
 	74C922 Keypad Driver:
 		- 74c922buffer.spin
@@ -171,6 +171,7 @@ Spin/SPin2 files in FOLDER:
 	
 	A Better Gyro Demo:
 		- BetterGyroDemo.spin
+			- BAD comment mis-parsed on PUB line
 	
 	AD5220 Digital Potentiometer:
 		- AD5220.spin
