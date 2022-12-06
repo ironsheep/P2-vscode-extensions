@@ -2,6 +2,7 @@
 import sys
 import os
 import argparse
+import subprocess
 
 from time import time, sleep, localtime, strftime
 from colorama import Fore, Back, Style
@@ -108,14 +109,46 @@ def contentsOfDir(dirSpec):
     for filename in folder_content:
         fileSpec = os.path.join(dirSpec, filename)
         if os.path.isdir(fileSpec):
-            folderSpecList.append(fileSpec)
+            folderSpecList.append(filename)
         elif os.path.isfile(fileSpec):
+            if isSpinFile(filename):
+                md5sum = md5sumOfFile(fileSpec)
+                recordFileMd5sum(md5sum, filename)
             fileSpecList.append(filename)
         else:
             print_line('WARNING: Skipping unknown name=[{}/{}]'.format(dirSpec, fileSpec), warning=True)
+
     print_line('files=[{}]'.format(fileSpecList), debug=True)
     print_line('folders=[{}]'.format(folderSpecList), debug=True)
     return (fileSpecList, folderSpecList)
+
+def md5sumOfFile(filespec):
+    cmd = ['md5', '{}'.format(filespec)]
+    #print_line('MD5-cmd: {}'.format(cmd), debug=True)
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    lineParts = result.stdout.decode('utf-8').strip().split('=')
+    lineParts[1] = lineParts[1].strip()
+    #print_line('MD5: lineParts[{}]'.format(lineParts), debug=True)
+#    if ('v1_2' in filespec):
+#        print_line('md5file!: filespec=[{}], lineParts=[{}]'.format(filespec, lineParts), warning=True)
+    if (len(lineParts) != 2 or len(lineParts[1]) != 32):
+        print_line('md5sum??: filespec=[{}], lineParts=[{}]'.format(filespec, lineParts), warning=True)
+    return lineParts[1]
+
+def isSpinFile(fileSpec):
+    foundSpinStatus = False
+    if fileSpec.lower().endswith('spin2') or fileSpec.lower().endswith('spin'):
+        foundSpinStatus = True
+    return foundSpinStatus
+
+def isSpinFilesInList(fileSpecList):
+    foundSpinStatus = False
+    if len(fileSpecList) > 0:
+        for filename in fileSpecList:
+            if isSpinFile(filename):
+                foundSpinStatus = True
+                break
+    return foundSpinStatus
 
 def spinFilesInList(fileSpecList):
     spinFileSpecList = []
@@ -124,34 +157,185 @@ def spinFilesInList(fileSpecList):
             spinFileSpecList.append(filename)
     return spinFileSpecList
 
-def listFilenames(fileSpecList):
-    if len(fileSpecList) > 0:
-        fileList = spinFilesInList(fileSpecList)
-        sortedList = sorted(fileList, key=str.casefold)
+def listFilenames(fileSpecList, containerDir, depth):
+    baseDirName = os.path.basename(containerDir)
+    spinFileList = spinFilesInList(fileSpecList)
+    if len(spinFileList) > 0 and not baseDirName.startswith('.'):
+        dirNbr = countDirectory(containerDir)
+        writeFinding('\n {:0>3d}-{}:  {}:'.format(dirNbr, depth, containerDir))
+        sortedList = sorted(spinFileList, key=str.casefold)
         for filename in sortedList:
-            writeFinding('\t\t- {}'.format(filename))
+            countStr = countFilename(filename)
+            writeFinding('\t\t- {} [{}]'.format(filename, countStr))
+
+def genFileListFromFolder(startingDirSpec, depth, dirParent):
+    baseDirName = os.path.basename(startingDirSpec)
+    print_line('Scanning folder=[{}]   {}'.format(baseDirName, startingDirSpec), verbose=True)
+    fileSpecList, folderSpecList = contentsOfDir(startingDirSpec)
+    print_line('--', debug=True)
+    # process files within dir
+    topDirName = baseDirName
+    if baseDirName == 'All':
+        topDirName = ''
+    subDirParent = ''
+    if isSpinFilesInList(fileSpecList):
+        containerDir = topDirName
+        if len(dirParent) > 0:
+            containerDir = os.path.join(dirParent, topDirName)
+        listFilenames(fileSpecList, containerDir, depth)
+    else:
+        subDirParent = topDirName
+    if len(folderSpecList) > 0:
+        sortedFolderNameList = sorted(folderSpecList, key=str.casefold)
+        for dirname in sortedFolderNameList:
+            subDirSpec = os.path.join(startingDirSpec, dirname)
+            if not dirname.startswith('.'):
+                genFileListFromFolder(subDirSpec, depth+1, subDirParent)
+
+countByFilename= {}
+dirnames = []
+filenamesByMD5sum = {}
+uniqCountByFilename = {}
+
+def countOfUniqFilesNamed(filename):
+    fileCount = 0
+    if filename in uniqCountByFilename.keys():
+        fileCount = uniqCountByFilename[filename]
+#        if ('v1_2' in filename):
+#            print_line('countOfUniq!: FOUND fileCount=[{}], filename=[{}]'.format(fileCount, filename), info=True)
+    else:
+        for md5sum in filenamesByMD5sum.keys():
+            possFilename = filenamesByMD5sum[md5sum]
+            if filename == possFilename:
+                fileCount += 1
+            elif fileNameSep in possFilename:
+                possFilenames = possFilename.split(fileNameSep)
+                for possName in possFilenames:
+                    if filename == possName:
+                        fileCount += 1
+
+        # save so we don't calc this again
+        uniqCountByFilename[filename] = fileCount
+
+#   if ('v1_2' in filename):
+#        print_line('countOfUniq!: fileCount=[{}], filename=[{}]'.format(fileCount, filename), warning=True)
+
+    if (fileCount == 0):
+        print_line('countOfUniq??: filename=[{}], fileCount=[{}]'.format(filename, fileCount), warning=True)
+
+    return fileCount
+
+fileNameSep = '$fn$'
+
+def recordFileMd5sum(md5sum, filename):
+    if len(md5sum) > 0 and len(filename) > 0:
+        if md5sum not in filenamesByMD5sum.keys():
+            filenamesByMD5sum[md5sum] = filename
+        else:
+            # get one or more filenames
+            foundFile = filenamesByMD5sum[md5sum]
+            # if sep we have more than one
+            if fileNameSep in foundFile:
+                filenames = foundFile.split(fileNameSep)
+                if not filename in filenames:
+                    # filename not in list so add it
+                    filenames.append(filename)
+                    foundFile = fileNameSep.join(filenames)
+                    # replace dict entry with new
+                    filenamesByMD5sum[md5sum] = foundFile
+            else:
+                # NO sep we have only one
+                if foundFile != filename:
+                    # place the 2nd name in the list
+                    foundFile = '{}{}{}'.format(foundFile, fileNameSep, filename)
+                    # replace dict entry with new
+                    filenamesByMD5sum[md5sum] = foundFile
+
+        if md5sum not in filenamesByMD5sum.keys():
+            print_line('recordFileMd5!: FAILED TO RECORD: md5sum=[{}], filename=[{}]'.format(md5sum, filename), error=True)
+    else:
+        print_line('recordFileMd5!: EMPTY FIELD! md5sum=[{}], filename=[{}]'.format(md5sum, filename), error=True)
+
+def countFilename(newFilename):
+    countStr = ''
+    if len(newFilename) > 0:
+        if newFilename not in countByFilename.keys():
+            fileNbr = len(countByFilename.keys()) + 1
+            countStr = '{},{}'.format(fileNbr, 1)
+            countByFilename[newFilename] = countStr
+        else:
+            countStr = countByFilename[newFilename]
+            countParts = countStr.split(',')
+            filenbr = int(countParts[0])
+            nbrSeen = int(countParts[1])
+            nbrSeen += 1
+            countStr = '{},{}'.format(filenbr, nbrSeen)
+            countByFilename[newFilename] = countStr
+    return countStr
+
+def countDirectory(newDir):
+    dirNbr = 0
+    if newDir not in dirnames:
+        dirnames.append(newDir)
+        dirNbr = len(dirnames)
+    else:
+        dirNbr = dirnames.index(newDir)+1
+    return dirNbr
+
+# main code from here!
 
 dirname = os.path.dirname(root_dirspec)
 basename = os.path.basename(root_dirspec)
-writeFinding('Spin/SPin2 files in FOLDER:\n Root {}:\n {}:'.format(dirname, basename))
-fileSpecList, folderSpecList = contentsOfDir(root_dirspec)
+writeFinding('Spin/Spin2 files in FOLDER:\n Root {}:\n {}:'.format(dirname, basename))
+genFileListFromFolder(root_dirspec, 1, '')
 
-if len(fileSpecList) > 0:
-    listFilenames(fileSpecList)
+writeFinding('Stats for FOLDER:\n Root {}:\n {}:'.format(dirname, basename))
+writeFinding('\t{} directories containing: '.format(len(dirnames)))
+writeFinding('\t\t{} Unique filenames'.format(len(countByFilename.keys())))
+writeFinding('\t\t({} Unique files where content is diff.)'.format(len(filenamesByMD5sum.keys())))
 
-sortedFolderSpecList = sorted(folderSpecList, key=str.casefold)
+maxCount = 0
+writeFinding('Alphabetical list of files with nbr of times found:')
+sortedFilenamesList = sorted(countByFilename.keys(), key=str.casefold)
+for filename in sortedFilenamesList:
+    countStr = countByFilename[filename]
+    countParts = countStr.split(',')
+    fileCount = int(countParts[1])
+    if fileCount > maxCount:
+        maxCount = fileCount
+    writeFinding('\t{}x {}'.format(countParts[1], filename))
 
-for dirspec in sortedFolderSpecList:
-    basename = os.path.basename(dirspec)
-    print_line('Scanning folder=[{}]   {}'.format(basename, dirspec), verbose=True)
-    fileSpecList, folderSpecList = contentsOfDir(dirspec)
-    print_line('files=[{}]'.format(fileSpecList), debug=True)
-    print_line('folders=[{}]'.format(folderSpecList), debug=True)
+writeFinding('Alphabetical list of files appearing more than once:')
+foundOne = False
+for fileCount in range(2, maxCount+1):
+    countStrSuffix = ',{}'.format(fileCount)
+    didShowTitle = False
+    for filename in sortedFilenamesList:
+        countStr = countByFilename[filename]
+        if countStr.endswith(countStrSuffix):
+            if not didShowTitle:
+                writeFinding('\tFiles appearing {} times:'.format(fileCount))
+                didShowTitle = True
+            uniqCount = countOfUniqFilesNamed(filename)
+            writeFinding('\t\t{}  ({} unique versions)'.format(filename, uniqCount))
+            foundOne = True
+if not foundOne:
+    writeFinding('\t-- No files appearing more than once --')
 
-    spinFileSpecs = spinFilesInList(fileSpecList)
-    if len(spinFileSpecs) > 0 and not basename.startswith('.'):
-        writeFinding('\n {}:'.format(basename))
-        listFilenames(spinFileSpecs)
+writeFinding('Identical files with more than one name:')
+foundOne = False
+for md5sum in filenamesByMD5sum.keys():
+    filenameList = filenamesByMD5sum[md5sum]
+    if fileNameSep in filenameList:
+        fileNames = filenameList.split(fileNameSep)
+        writeFinding('\t{} Files with md5:[{}]:'.format(len(fileNames), md5sum))
+        for filename in fileNames:
+            uniqCount = countOfUniqFilesNamed(filename)
+            writeFinding('\t\t{}  ({} unique versions)'.format(filename, uniqCount))
+            foundOne = True
+if not foundOne:
+    writeFinding('\t-- No files found with more than one name --')
+
 
 
 write_fp.close()
