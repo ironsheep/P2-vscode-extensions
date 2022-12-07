@@ -796,7 +796,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (haveLabel) {
         let newName = lineParts[nameIndex];
-        if (!this._spin2ReservedWords(newName)) {
+        if (!this._isSpin2ReservedWords(newName)) {
           const nameType: string = isDataDeclarationLine ? "variable" : "label";
           this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
           this._setGlobalToken(newName, {
@@ -1391,6 +1391,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
     if (!isDataDeclarationLine) {
       // process assembly code
+      this._logPASM("  -- reportDATPasmDecl NOT Decl lineParts=[" + lineParts + "]");
       let argumentOffset = 0;
       if (lineParts.length > 1) {
         let minNonLabelParts: number = 1;
@@ -1500,6 +1501,17 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             currentOffset += currArgumentLen + 1;
           }
         }
+      } else if (this._isSpin2ReservedWords(lineParts[0])) {
+        const namePart: string = lineParts[argumentOffset];
+        let nameOffset: number = line.indexOf(namePart, currentOffset);
+        this._logPASM("  --  DAT Pasm ILLEGAL use of Pasm2 name=[" + namePart + "](" + nameOffset + 1 + ")");
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: namePart.length,
+          tokenType: "variable",
+          tokenModifiers: ["illegalUse"],
+        });
       }
     } else {
       // process data declaration
@@ -1516,6 +1528,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         tokenSet.push(newToken);
       });
     }
+
     return tokenSet;
   }
 
@@ -3134,7 +3147,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return reservedStatus;
   }
 
-  private _spin2ReservedWords(name: string): boolean {
+  private _isSpin2ReservedWords(name: string): boolean {
     const spin2InstructionsOfNote: string[] = [
       "alignl",
       "alignw",
@@ -3808,7 +3821,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "sumz",
       "test",
       "testn",
-      "testp",
       "tjnz",
       "tjz",
       "waitcnt",
