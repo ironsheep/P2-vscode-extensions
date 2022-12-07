@@ -303,17 +303,15 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         } else if (currState == eParseState.inDat) {
           // process a class(static) variable line
-          if (trimmedNonCommentLine.length > 6) {
-            if (trimmedNonCommentLine.toUpperCase().includes("ORG")) {
-              // ORG, ORGF, ORGH
-              const nonStringLine: string = this._removeDoubleQuotedStrings(trimmedNonCommentLine);
-              if (nonStringLine.toUpperCase().includes("ORG")) {
-                this._logPASM("- (" + (i + 1) + "): pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
-                prePasmState = currState;
-                currState = eParseState.inDatPasm;
-                this._getDAT_Declaration(0, line); // let's get possible label on this ORG statement
-                continue;
-              }
+          if (trimmedNonCommentLine.length > 6 && trimmedNonCommentLine.toUpperCase().includes("ORG")) {
+            // ORG, ORGF, ORGH
+            const nonStringLine: string = this._removeDoubleQuotedStrings(trimmedNonCommentLine);
+            if (nonStringLine.toUpperCase().includes("ORG")) {
+              this._logPASM("- (" + (i + 1) + "): pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
+              prePasmState = currState;
+              currState = eParseState.inDatPasm;
+              this._getDAT_Declaration(0, line); // let's get possible label on this ORG statement
+              continue;
             }
           }
           this._getDAT_Declaration(0, line);
@@ -779,21 +777,33 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this._getNonCommentLineRemainder(currentOffset, line);
     let lineParts: string[] = this._getNonWhiteLineParts(dataDeclNonCommentStr);
-    // remember this object name so we can annotate a call to it
-    let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[0]);
-    const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this._isDatStorageType(lineParts[1]) ? true : false;
-    if (haveLabel) {
+    this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
+    if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
+      // remember this object name so we can annotate a call to it
+      let nameIndex: number = 0;
+      let typeIndex: number = 1;
+      let maxParts: number = 2;
+      if (lineParts[0].toUpperCase() == "DAT") {
+        nameIndex = 1;
+        typeIndex = 2;
+        maxParts = 3;
+      }
+      let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[nameIndex]);
+      const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this._isDatStorageType(lineParts[typeIndex]) ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
-      let newName = lineParts[0];
-      if (!this._spin2ReservedWords(newName)) {
-        const nameType: string = isDataDeclarationLine ? "variable" : "label";
-        this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-        this._setGlobalToken(newName, {
-          tokenType: nameType,
-          tokenModifiers: [],
-        });
+      if (haveLabel) {
+        let newName = lineParts[nameIndex];
+        if (!this._spin2ReservedWords(newName)) {
+          const nameType: string = isDataDeclarationLine ? "variable" : "label";
+          this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
+          this._setGlobalToken(newName, {
+            tokenType: nameType,
+            tokenModifiers: [],
+          });
+        }
       }
     }
   }
@@ -1212,20 +1222,19 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private _reportDAT_ValueDeclarationCode(lineNumber: number, startingOffset: number, line: string, allowLocal: boolean, showDebug: boolean, isDatPasm: boolean): IParsedToken[] {
     const tokenSet: IParsedToken[] = [];
     //this._logMessage(' DBG _reportDAT_ValueDeclarationCode(#' + lineNumber + ', ofs=' + startingOffset + ')');
-    this._logDAT("- process ValueDeclaration line(" + (lineNumber + 1) + "): line=[" + line + "]");
+    this._logDAT("- process ValueDeclaration line(" + (lineNumber + 1) + "): line=[" + line + "]: startingOffset=(" + startingOffset + ")");
 
     // process data declaration
     let currentOffset: number = this._skipWhite(line, startingOffset);
     const dataValueInitStr = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
+    this._logDAT("- ln(" + (lineNumber + 1) + "): dataValueInitStr=[" + dataValueInitStr + "]");
     if (dataValueInitStr.length > 1) {
-      if (showDebug) {
-        this._logMessage("  -- reportDataValueInit dataValueInitStr=[" + dataValueInitStr + "]");
-      }
+      this._logDAT("  -- reportDataValueInit dataValueInitStr=[" + dataValueInitStr + "]");
+
       let lineParts: string[] = this._getNonWhiteDataInitLineParts(dataValueInitStr);
       const argumentStartIndex: number = this._isDatStorageType(lineParts[0]) ? 1 : 0;
-      if (showDebug) {
-        this._logMessage("  -- lineParts=[" + lineParts + "]");
-      }
+      this._logDAT("  -- lineParts=[" + lineParts + "]");
+
       // process remainder of line
       if (lineParts.length < 2) {
         return tokenSet;
@@ -2599,7 +2608,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;

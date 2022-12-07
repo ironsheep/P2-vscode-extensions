@@ -22,6 +22,22 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.7.2] 2022-12-06
+
+Update Spin highlighting (syntax and/or semantic parser fixes)
+
+- Spin: Recognize label or data declaration on DAT line
+- Spin: Recognize non-float decimal numbers with exponents
+
+Update Spin2 highlighting (syntax and/or semantic parser fixes)
+
+- Spin2: Recognize label or data declaration on DAT line
+- Spin2: Recognize non-float decimal numbers with exponents
+- Spin2: Recognize `debug_main` and `debug_coginit` compile time directives
+- Spin2: Recognize event names in pasm2 correctly
+
+**NOTE:** *There is no change in our "Known Issues" list for this release.*
+
 ## [1.7.1] 2022-12-05
 
 Update to keyboard mapping: All key mapping now reenabled and Align mode now fully functional

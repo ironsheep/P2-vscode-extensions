@@ -110,18 +110,20 @@ Spin/SPin2 files in FOLDER:
 		- Simple_Serial.spin @done(2022-12-05)
 	
 	4x4 Keypad driver TG:
-		- 4x4_Keypad.spin
-		- 4x4_Keypad_Demo.spin
-		- Debug_Lcd.spin
-		- Serial_Lcd.spin
-		- Simple_Numbers.spin
-		- Simple_Serial.spin
+		- 4x4_Keypad.spin @done(2022-12-06)
+		- 4x4_Keypad_Demo.spin @done(2022-12-06)
+		- Debug_Lcd.spin @done(2022-12-06)
+		- Serial_Lcd.spin @done(2022-12-06)
+		- Simple_Numbers.spin @done(2022-12-06)
+		- Simple_Serial.spin @done(2022-12-06)
 	
 	4x4 Keypad Reader DEMO:
 		- 4x4 keypad Reader DEMO.spin
+			- BAD multi-line block comment: {...}
 		- 4x4 Keypad Reader.spin
-		- VGA.spin
-		- VGA_Text.spin
+			- BAD multi-line block comment: {...}
+		- VGA.spin @done(2022-12-06)
+		- VGA_Text.spin @done(2022-12-06)
 	
 	6-pole IIR Filter - Floatmath - pasm:
 		- filter_rc6f_asm.spin @done(2022-12-05)
@@ -137,32 +139,34 @@ Spin/SPin2 files in FOLDER:
 		- 7-Segment_01.spin @done(2022-12-05)
 	
 	74C922 Keypad Driver:
-		- 74c922buffer.spin
-		- 74c922demo.spin
-		- Parallax Serial Terminal.spin
+		- 74c922buffer.spin @done(2022-12-06)
+		- 74c922demo.spin @done(2022-12-06)
+		- Parallax Serial Terminal.spin @done(2022-12-06)
 	
 	74C92X Keypad Buffer and Driver:
-		- 74c92Xbuffer.spin
-		- 74c92Xdemo.spin
-		- 74c92Xsearchdemo.spin
+		- 74c92Xbuffer.spin @done(2022-12-06)
+		- 74c92Xdemo.spin @done(2022-12-06)
+		- 74c92Xsearchdemo.spin @done(2022-12-06)
 	
 	74HC595 Regular and MultiPWM Shift Register Driver:
 		- 74HC595_MultiPWM.spin
+			- BAD lot's of coloring issues... symbol on DAT line being one
 		- 74HC595_Regular.spin
-		- Demo_74HC595_MultiPWM.spin
-		- Demo_Regular_74HC595.spin
-		- Demo_Simple_74HC595.spin
-		- Simple_74HC595.spin
-		- TV.spin
-		- TV_Text.spin
+			- BAD lot's of coloring issues... symbol on DAT line being one
+		- Demo_74HC595_MultiPWM.spin @done(2022-12-06)
+		- Demo_Regular_74HC595.spin @done(2022-12-06)
+		- Demo_Simple_74HC595.spin @done(2022-12-06)
+		- Simple_74HC595.spin @done(2022-12-06)
+		- TV.spin @done(2022-12-06)
+		- TV_Text.spin @done(2022-12-06)
 	
 	74hc597 driver:
-		- 74HC597.spin
+		- 74HC597.spin @done(2022-12-06)
 	
 	7705&7706 driver:
-		- AD7706-2wire.spin
-		- adc_test.spin
-		- FullDuplexSerial.spin
+		- AD7706-2wire.spin @done(2022-12-06)
+		- adc_test.spin @done(2022-12-06)
+		- FullDuplexSerial.spin @done(2022-12-06)
 	
 	8255 Programmable Peripheral Interface Driver:
 		- demo-ppi8255.spin

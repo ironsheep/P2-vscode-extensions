@@ -344,17 +344,15 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         } else if (currState == eParseState.inDat) {
           // process a class(static) variable line
-          if (trimmedNonCommentLine.length > 6) {
-            if (trimmedNonCommentLine.toUpperCase().includes("ORG")) {
-              // ORG, ORGF, ORGH
-              const nonStringLine: string = this._removeDoubleQuotedStrings(trimmedNonCommentLine);
-              if (nonStringLine.toUpperCase().includes("ORG")) {
-                this._logPASM("- (" + (i + 1) + "): pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
-                prePasmState = currState;
-                currState = eParseState.inDatPasm;
-                this._getDAT_Declaration(0, line); // let's get possible label on this ORG statement
-                continue;
-              }
+          if (trimmedNonCommentLine.length > 6 && trimmedNonCommentLine.toUpperCase().includes("ORG")) {
+            // ORG, ORGF, ORGH
+            const nonStringLine: string = this._removeDoubleQuotedStrings(trimmedNonCommentLine);
+            if (nonStringLine.toUpperCase().includes("ORG")) {
+              this._logPASM("- (" + (i + 1) + "): pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
+              prePasmState = currState;
+              currState = eParseState.inDatPasm;
+              this._getDAT_Declaration(0, line); // let's get possible label on this ORG statement
+              continue;
             }
           }
           this._getDAT_Declaration(0, line);
@@ -832,18 +830,23 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           //this._logCON('  -- lineParts=[' + lineParts + ']');
           for (let index = 0; index < lineParts.length; index++) {
             let enumConstant: string = lineParts[index];
-            // our enum name can have a step offset
-            if (enumConstant.includes("[")) {
-              // it does, isolate name from offset
-              const enumNameParts: string[] = enumConstant.split("[");
-              enumConstant = enumNameParts[0];
-            }
-            if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/)) {
-              this._logCON("  -- GLBL enumConstant=[" + enumConstant + "]");
-              this._setGlobalToken(enumConstant, {
-                tokenType: "enumMember",
-                tokenModifiers: ["readonly"],
-              });
+            // use _isDebugInvocation to filter out use of debug invocation command from constant def'
+            if (this._isDebugInvocation(enumConstant)) {
+              continue; // yep this is not a constant
+            } else {
+              // our enum name can have a step offset
+              if (enumConstant.includes("[")) {
+                // it does, isolate name from offset
+                const enumNameParts: string[] = enumConstant.split("[");
+                enumConstant = enumNameParts[0];
+              }
+              if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/)) {
+                this._logCON("  -- C GLBL enumConstant=[" + enumConstant + "]");
+                this._setGlobalToken(enumConstant, {
+                  tokenType: "enumMember",
+                  tokenModifiers: ["readonly"],
+                });
+              }
             }
           }
         }
@@ -859,20 +862,32 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this._getNonCommentLineRemainder(currentOffset, line);
     let lineParts: string[] = this._getNonWhiteLineParts(dataDeclNonCommentStr);
-    // remember this object name so we can annotate a call to it
-    let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[0]);
-    const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this._isDatStorageType(lineParts[1]) ? true : false;
-    if (haveLabel) {
+    this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
+    if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
+      // remember this object name so we can annotate a call to it
+      let nameIndex: number = 0;
+      let typeIndex: number = 1;
+      let maxParts: number = 2;
+      if (lineParts[0].toUpperCase() == "DAT") {
+        nameIndex = 1;
+        typeIndex = 2;
+        maxParts = 3;
+      }
+      let haveLabel: boolean = this._isDatOrPasmLabel(lineParts[nameIndex]);
+      const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this._isDatStorageType(lineParts[typeIndex]) ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
-      let newName = lineParts[0];
-      const nameType: string = isDataDeclarationLine ? "variable" : "label";
-      this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-      this._setGlobalToken(newName, {
-        tokenType: nameType,
-        tokenModifiers: [],
-      });
+      if (haveLabel) {
+        let newName = lineParts[nameIndex];
+        const nameType: string = isDataDeclarationLine ? "variable" : "label";
+        this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
+        this._setGlobalToken(newName, {
+          tokenType: nameType,
+          tokenModifiers: [],
+        });
+      }
     }
   }
 
@@ -1190,7 +1205,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               enumConstant = enumAssignmentParts[0].trim();
               const enumExistingName: string = enumAssignmentParts[1].trim();
               if (enumExistingName.substr(0, 1).match(/[a-zA-Z_]/)) {
-                this._logCON("  -- GLBL enumConstant=[" + enumConstant + "]");
+                this._logCON("  -- A GLBL enumConstant=[" + enumConstant + "]");
                 // our enum name can have a step offset
                 const nameOffset = line.indexOf(enumExistingName, currentOffset);
                 tokenSet.push({
@@ -1202,8 +1217,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 });
               }
             }
-            if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/)) {
-              this._logCON("  -- GLBL enumConstant=[" + enumConstant + "]");
+            if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/) && !this._isDebugInvocation(enumConstant)) {
+              this._logCON("  -- B GLBL enumConstant=[" + enumConstant + "]");
               // our enum name can have a step offset
               const nameOffset = line.indexOf(enumConstant, currentOffset);
               tokenSet.push({
@@ -1565,6 +1580,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                     tokenType: "variable",
                     tokenModifiers: ["readonly", "missingDeclaration"],
                   });
+                } else {
+                  this._logPASM("  --  DAT Pasm WHAT IS THIS?? name=[" + namePart + "](" + nameOffset + 1 + ")");
                 }
               }
               if (possibleNameSet.length > 1) {
@@ -3256,7 +3273,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;
@@ -4179,6 +4196,16 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     ];
     const searchName: string = name.endsWith("_") ? name.substr(0, name.length - 1) : name;
     const reservedStatus: boolean = debugMethodOfNote.indexOf(searchName.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
+  private _isDebugInvocation(name: string): boolean {
+    const debugExec: string[] = [
+      // debug overridable CONSTANTS
+      "debug_main",
+      "debug_coginit",
+    ];
+    const reservedStatus: boolean = debugExec.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
 

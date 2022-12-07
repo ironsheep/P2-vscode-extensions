@@ -123,6 +123,9 @@
           "include": "#number"
         },
         {
+          "include": "#debug_constants"
+        },
+        {
           "include": "#spin2_float_conversions"
         },
         {
@@ -179,6 +182,10 @@
         }
       ]
     },
+    "debug_constants": {
+      "name": "support.function.debug.methods.spin2",
+      "match": "(?i)\\b(DEBUG_MAIN|DEBUG_COGINIT)\\b"
+    },
     "debug_functions": {
       "name": "support.function.debug.methods.spin2",
       "match": "(?i)\\b(FDEC(_ARRAY|_REG_ARRAY)?|(S|U)(DEC|HEX|BIN)(_BYTE|_LONG|_WORD|_REG_ARRAY|_BYTE_ARRAY|_LONG_ARRAY|_WORD_ARRAY)?(_)?|ZSTR(_)?|LSTR(_)?|debug|DEBUG_(BAUD|COGS|DELAY|DISPLAY_LEFT|DISPLAY_TOP|ENABLE|HEIGHT|LEFT|LOG_SIZE|PIN_TX|PIN_RX|TIMESTAMP|TOP|WIDTH|WINDOWS_OFF)|DLY|PC_(KEY|MOUSE)|DOWNLOAD_BAUD)\\b"
@@ -193,6 +200,10 @@
         {
           "name": "constant.numeric.base10.spin2",
           "match": "\\b([0-9][0-9_]*)\\b"
+        },
+        {
+          "name": "constant.numeric.base10.spin2",
+          "match": "\\b([0-9]+)[eE][\\+\\-]?[0-9]+\\b"
         }
       ]
     },
@@ -348,6 +359,9 @@
     "pasm_language_elements": {
       "name": "meta.block.pasm.elements.spin2",
       "patterns": [
+        {
+          "include": "#event_constants"
+        },
         {
           "include": "#smartpins_constants"
         },
@@ -624,6 +638,9 @@
           "include": "#debug_functions"
         },
         {
+          "include": "#event_constants"
+        },
+        {
           "include": "#smartpins_constants"
         },
         {
@@ -681,10 +698,6 @@
           "match": "(?i)\\b(CALL|REG(EXEC|LOAD))\\b"
         },
         {
-          "name": "constant.language.events-interrupts.spin2",
-          "match": "(?i)\\bEVENT_(INT|CT1|CT2|CT3|SE1|SE2|SE3|SE4|PAT|FBW|XMT|XFI|XRO|XRL|ATN|QMT)\\b"
-        },
-        {
           "name": "constant.language.coginit-symbols.spin2",
           "match": "(?i)\\b(COGEXEC|HUBEXEC|COGEXEC_NEW|HUBEXEC_NEW|COGEXEC_NEW_PAIR|HUBEXEC_NEW_PAIR)\\b"
         },
@@ -705,6 +718,10 @@
           "match": "(?i)\\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)\\b"
         }
       ]
+    },
+    "event_constants": {
+      "name": "constant.language.events-interrupts.spin2",
+      "match": "(?i)\\bEVENT_(INT|CT1|CT2|CT3|SE1|SE2|SE3|SE4|PAT|FBW|XMT|XFI|XRO|XRL|ATN|QMT)\\b"
     },
     "smartpins_constants": {
       "name": "meta.block.spin.language.spin2",
