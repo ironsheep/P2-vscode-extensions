@@ -62,6 +62,7 @@ opt_verbose = False
 opt_useTestFile = False
 opt_write = False
 opt_topdir = False
+opt_copyMarks = False
 
 default_empty_fspec = ''
 
@@ -70,17 +71,21 @@ parser = argparse.ArgumentParser(description=project_name, epilog='For further d
 parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
 parser.add_argument("-d", "--debug", help="show debug output", action="store_true")
 parser.add_argument("-o", "--outfile", help="specify output file name", default=default_empty_fspec)
+parser.add_argument("-f", "--fromfile", help="specify input file name for marks to copy", default=default_empty_fspec)
 parser.add_argument("-r", "--rootdir", help="specify starting root directory", default=default_empty_fspec)
 parse_args = parser.parse_args()
 
 opt_verbose = parse_args.verbose
 opt_debug = parse_args.debug
+from_filename = parse_args.fromfile
 output_filename = parse_args.outfile
 root_dirspec = parse_args.rootdir
 if len(output_filename) > 0:
     opt_write = True
 if len(root_dirspec) > 0:
     opt_topdir = True
+if len(from_filename) > 0:
+    opt_copyMarks = True
 
 print_line(script_info, info=True)
 if opt_verbose:
@@ -96,7 +101,14 @@ if not opt_topdir:
     print_line('ERROR: need top folder name to list, missing -t directive', error=True)
     os._exit(1)
 
+marks_fp = None
 write_fp = open(output_filename,'w')
+if opt_write:
+    print_line('Writing output to [{}]'.format(output_filename), info=True)
+
+if opt_copyMarks:
+    print_line('Copying marks from [{}]'.format(from_filename), info=True)
+    marks_fp = open(from_filename,'r')
 
 def writeFinding(message):
     write_fp.write('{}\n'.format(message))
@@ -165,8 +177,20 @@ def listFilenames(fileSpecList, containerDir, depth):
         writeFinding('\n {:0>3d}-{}:  {}:'.format(dirNbr, depth, containerDir))
         sortedList = sorted(spinFileList, key=str.casefold)
         for filename in sortedList:
+            fileDeetsDict = getMarksFor(containerDir, filename)
+            fileDoneFlag = ''
+            fileNotes = []
+            if len(fileDeetsDict) > 0:
+                if markKeyDone in fileDeetsDict.keys():
+                    doneStr = fileDeetsDict[markKeyDone]
+                    fileDoneFlag = ' {}'.format(doneStr)
+                if markKeyNotes in fileDeetsDict.keys():
+                    fileNotes = fileDeetsDict[markKeyNotes]
             countStr = countFilename(filename)
-            writeFinding('\t\t- {} [{}]'.format(filename, countStr))
+            writeFinding('\t\t- {} [{}]{}'.format(filename, countStr, fileDoneFlag))
+            if len(fileNotes) > 0:
+                for noteTxt in fileNotes:
+                    writeFinding('\t\t\t- {}'.format(noteTxt))
 
 def genFileListFromFolder(startingDirSpec, depth, dirParent):
     baseDirName = os.path.basename(startingDirSpec)
@@ -283,6 +307,164 @@ def countDirectory(newDir):
     return dirNbr
 
 # main code from here!
+
+marksByDirByFilename = {}
+markFileMarksByFilename = {}
+markDir = ''
+markFile = ''
+markMarks = {}
+markFileNotes = []
+
+markKeyDone = 'Done'
+markKeyNotes = 'Notes'
+
+endAfterLines = 21
+
+debugDir = '?xyzzy?'  #'4-bit Parallel LCD driver'
+
+def getMarksFor(dirName, filename):
+    #showDebug = False
+    showDebug = (dirName == debugDir)
+    foundDirName = ''
+    # early check, find the first perfect match
+    #  this avoids problem of aborting at dual imperfect matches
+    isPerfect = False
+    for possDirName in marksByDirByFilename.keys():
+          if dirName == possDirName:
+            foundDirName = possDirName
+            isPerfect = True
+            break   # stop checking we have our first
+    if showDebug:
+        print_line('(SD!) marks: perfect [{}], isPerfect={}'.format(foundDirName, isPerfect), warning=True)
+    for possDirName in marksByDirByFilename.keys():
+        if dirName == possDirName:
+            if len(foundDirName) > 0 and dirName == foundDirName and isPerfect == False:
+                print_line('marks: dirName=[{}] MATCHes Have Duplicate!?! 1:{} 2:{}'.format(dirName, foundDirName, possDirName), error=True)
+                os._exit(1) # this should NOT happen!
+            foundDirName = possDirName
+        elif dirName in possDirName:
+            if len(foundDirName) > 0:
+                if dirName != foundDirName:
+                    print_line('marks: dirName=[{}] isPerfect={}, MATCHes MORE than one! 1:{} 2:{}'.format(dirName, isPerfect, foundDirName, possDirName), error=True)
+                    os._exit(1) # this should NOT happen!
+            else:
+                foundDirName = possDirName
+    # foundDirName is our match
+    if showDebug:
+        print_line('(SD!) marks: aft imperfect [{}], isPerfect={}'.format(foundDirName, isPerfect), warning=True)
+    fileDeets = {}
+    if len(foundDirName) > 0:
+        filesInDirDict = marksByDirByFilename[foundDirName]
+        if showDebug:
+            print_line('getMarksFor({}//): files=[{}]'.format(dirName, filesInDirDict.keys()), info=True)
+        for possFileName in filesInDirDict.keys():
+            if filename == possFileName:
+                fileDeets = filesInDirDict[filename]
+    if showDebug:
+        print_line('getMarksFor({}//{}): [{}]'.format(dirName, filename, fileDeets), info=True)
+    return fileDeets
+
+def saveFileMarks():
+    global markMarks
+    global markFileMarksByFilename
+    # if we know of a file...
+    if len(markFile) > 0:
+        # finish the file detail dict
+        # if we have notes save them
+        if len(markFileNotes) > 0:
+            markMarks[markKeyNotes] = markFileNotes
+        # finish the file entry for this dir
+        if len(markMarks) > 0:
+            markFileMarksByFilename[markFile] = markMarks
+            #showDebug = False
+    showDebug = (markDir == debugDir)
+    if showDebug:
+        print_line('marks: fileName=[{}//{}] = [{}]'.format(markDir, markFile, markMarks), info=True)
+    clearFileInfo()
+
+def clearFileInfo():
+    global markFile
+    global markMarks
+    global markFileNotes
+    markFile = ''
+    markMarks = {}
+    markFileNotes = []
+
+def debugShowMarks():
+    #print_line('      marksByDirByFilename=[{}]'.format(marksByDirByFilename), warning=True)
+    for dirName in marksByDirByFilename.keys():
+        print_line('marks: -- {} --'.format(dirName), info=True)
+        fileMarksByFilename = marksByDirByFilename[dirName]
+        for fileName in fileMarksByFilename.keys():
+            fileDetails = fileMarksByFilename[fileName]
+            print_line('        {}:   [{}]'.format(fileName, fileDetails), info=True)
+
+if opt_copyMarks:
+    # ---------------------------------------------------
+    #  load prior marks so we can merge them with new
+    # ---------------------------------------------------
+    markLines = marks_fp.readlines()
+    for markLine in markLines:
+        markLine = markLine.strip('\n')
+        print_line('marks: markLine=[{}]'.format(markLine), debug=True)
+        # special abort while testing
+        #endAfterLines -= 1
+        #if endAfterLines < 1:
+        #    debugShowMarks()
+        #    os._exit(1) # so we can eval result'
+
+        if len(markLine) > 0:
+            if markLine.startswith('\t') and markLine.endswith(':'):
+                # -- have dir entry to capture --
+                # done with this file, clear container (dir, file) info
+                # finish the file detail dict
+                saveFileMarks()
+                # save our list of files for this dir
+                if len(markFileMarksByFilename) > 0 and len(markDir) > 0:
+                    marksByDirByFilename[markDir] = markFileMarksByFilename
+                showDebug = (markDir == debugDir)
+                if showDebug:
+                    print_line('marks: dirName=[{}] = [{}]'.format(markDir, markFileMarksByFilename), info=True)
+                # empty all saves, readying for next
+                markFileMarksByFilename = {}
+                # now capture new dir
+                markDir = markLine.strip()
+                markDir = markDir[:len(markDir)-1]
+                print_line('marks: markDir=[{}]'.format(markDir), debug=True)
+
+            elif markLine.startswith('\t\t- '):
+                # -- have file name to capture --
+                # save prior file info if present
+                saveFileMarks()
+                # now capture these new file marks
+                markFile = markLine.strip()[2:]
+                if '@done' in markFile:
+                    # have done mark to capture
+                    fileParts = markFile.strip().split('@done')
+                    # get name witout done mark
+                    markFile = fileParts[0].strip()
+                    # record our done mark
+                    markMarks[markKeyDone] = '@done{}'.format(fileParts[1].strip())
+                showDebug = (markDir == debugDir)
+                if showDebug:
+                    print_line('marks: markFile=[{}],  markMarks=[{}]'.format(markFile, markMarks), info=True)
+
+            elif markLine.startswith('\t\t\t- '):
+                # -- have notation to capture --
+                fileNote = markLine.strip()[2:]
+                markFileNotes.append(fileNote)
+                print_line('marks: markFileNotes=[{}]'.format(markFileNotes), debug=True)
+
+    # save last entry if not already
+    if len(markFile) > 0:
+        # finish the file detail dict
+        saveFileMarks()
+        # save our list of files for this dir
+        if len(markFileMarksByFilename) > 0 and len(markDir) > 0:
+            marksByDirByFilename[markDir] = markFileMarksByFilename
+
+    #debugShowMarks()
+    #os._exit(1) # so we can eval result'
 
 dirname = os.path.dirname(root_dirspec)
 basename = os.path.basename(root_dirspec)

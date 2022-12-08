@@ -33,32 +33,6 @@ y		res	1
 
 ' -----------------------------------------------------------------
 
-PUB go() | Phase, Head, Tail, Diff, HeadPtr, HeadData, TailPtr, TailPtrOpp, TailData, TailDataOpp, Fade, FadeOpp, Modulus, ModulusOpp, FinalData
-
-  'Configure PLOT
-  debug("`plot p pos 330 100 size 350 350 update")      ' <----  NOT colored correctly!
-  debug("`p origin 175 175 polar -256 textsize 14 textstyle 1") ' <----  NOT colored correctly!
-
-  'Configure SCOPE
-  debug("`scope s pos 700 100 size 700 810 samples 701 rate 1 linesize 3 textsize 12") ' <----  NOT colored correctly!
-  debug("`s 'HeadData' -10000 10000 170 620 15 $FF0000") ' <----  NOT colored correctly!
-  debug("`s 'TailData' -10000 10000 170 420 15 $00FFFF")
-  debug("`s 'Weight' 0 128 170 420 0 $007F7F")
-  debug("`s 'TailDataOpp' -10000 10000 170 220 15 $FFFF00")
-  debug("`s 'WeightOpp' 0 128 170 220 0 $7F7F00")
-  debug("`s 'Final' -10000 10000 170 20 15 $00FF00")
-  debug("`s 'Mod' -10000 10000 170 20 15 $003F3F")
-  debug("`s 'ModOpp' -10000 10000 170 20 15 $3F3F00")
-
-  'Configure FFT
-  debug("`fft f pos 40 100 size 256 200 samples 256 rate 1 textsize 12 logscale") ' <----  NOT colored correctly!
-  debug("`f 'Final' 0 10000 170 15 15")
-
-  'Configure SPECTRO
-  debug("`spectro t pos 380 1983 depth 300 samples 256 rate 10 luma8x %100 mag 0 range 1000 logscale", dly(200)) ' <----  NOT colored correctly!
-
-' -----------------------------------------------------------------
-
 PRI showbmp(letter, image_address, lut_offset, lut_size, image_longs) | i
   image_address += lut_offset
   debug(``#(letter) lutcolors `uhex_long_array_(image_address, lut_size))
