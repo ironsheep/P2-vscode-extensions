@@ -22,7 +22,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.7.2] 2022-12-06
+## [1.7.2] 2022-12-07
 
 Update Spin highlighting (syntax and/or semantic parser fixes)
 
@@ -35,11 +35,18 @@ Update Spin2 highlighting (syntax and/or semantic parser fixes)
 - Spin2: Recognize non-float decimal numbers with exponents
 - Spin2: Recognize `debug_main` and `debug_coginit` compile time directives
 - Spin2: Recognize event names in pasm2 correctly
-- Spin2: Fix cases where 'debug' used without parenthesis causes extension crash
+- Spin2: Fix cases where `debug` used without parenthesis causes extension crash
 - Spin2: Recognize coginit constants (some pasm2 cases were being missed)
-- Spin2: Add recognition of LutColors directive in debug statements with run-time termainal assignment
+- Spin2: Add recognition of LutColors directive in debug statements with run-time terminal assignment
+- Spin2: Recognize `modcz` operand constants
 
-**NOTE:** *There is no change in our "Known Issues" list for this release.*
+### - Known Issues w/v1.7.2
+
+- We haven't yet learned how to control the ending position of the edit cursor. So in many cases when using selection, not an insert point, the cursor may end up not being where you might expect it to be after pressing TAB or Shift+TAB. We are looking into how to solve this. Even tho' this problem exists the formatting ability this new service provides is well worth this minor headache. We will keep looking for a means to get this under control.
+- The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
+- Syntax highlight of DAT section sometimes fails... (although it is less often now...)
+- Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
+- *I'm sure there are more issues...*
 
 ## [1.7.1] 2022-12-05
 
@@ -55,7 +62,6 @@ Update to keyboard mapping: All key mapping now reenabled and Align mode now ful
 - The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
 
 ## [1.7.0] 2022-12-02
 
@@ -77,7 +83,6 @@ Fun Update!   First release of two **NEW** features and more.
 - The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
 
 ## [1.6.1] 2022-11-29
 
@@ -94,7 +99,6 @@ Minor update to the formal release (*clean up muli-line behavior, clean up in-li
 - The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-
 
 ## [1.6.0] 2022-11-28
 

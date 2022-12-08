@@ -126,3 +126,13 @@ pasm_program	debug			'do a DEBUG at the start of the program to open debugger
 		jmp	#.loop
 
 		long	0[12]		'fill with some NOP's to make it easy to see the code above
+' -----------------------------------------------------------------
+DAT
+        org
+        ' $1F8..$1F9 = ptra_, ptrb_
+' $1FA..$1FF = direct
+' $200..$3FF = lut
+'
+rdreg		modz	_clr		wz	'force read   BUG: "_clr" is RED
+
+' -----------------------------------------------------------------

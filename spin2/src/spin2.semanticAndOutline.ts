@@ -1570,6 +1570,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   !this._isBinaryOperator(namePart) &&
                   !this._isBuiltinReservedWord(namePart) &&
                   !this._isCoginitReservedSymbol(namePart) &&
+                  !this._isPasmModczOperand(namePart) &&
                   !this._isDebugMethod(namePart) &&
                   !bIsAlsoDebugLine
                 ) {
@@ -3287,7 +3288,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;
@@ -4360,6 +4361,45 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return reservedStatus;
   }
 
+  private _isPasmModczOperand(name: string): boolean {
+    const pasmModczOperand: string[] = [
+      "_clr",
+      "_nc_and_nz",
+      "_nz_and_nc",
+      " _gt",
+      "_nc_and_z",
+      "_z_and_nc",
+      "_nc",
+      "_ge",
+      "_c_and_nz",
+      "_nz_and_c",
+      "_nz",
+      "_ne",
+      "_c_ne_z",
+      "_z_ne_c",
+      "_nc_or_nz",
+      "_nz_or_nc",
+      "_c_and_z",
+      "_z_and_c",
+      "_c_eq_z",
+      "_z_eq_c",
+      "_z",
+      "_e",
+      "_nc_or_z",
+      "_z_or_nc",
+      "_c",
+      "_lt",
+      "_c_or_nz",
+      "_nz_or_c",
+      "_c_or_z",
+      "_z_or_c",
+      "_le",
+      "_set",
+    ];
+    const reservedStatus: boolean = pasmModczOperand.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
   private _isSpinBuiltinMethod(name: string): boolean {
     const spinMethodNames: string[] = [
       "akpin",
@@ -4446,7 +4486,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private _isPasmReservedWord(name: string): boolean {
     const pasmReservedswordsOfNote: string[] = [
-      //  EVENT_(INT|CT1|CT2|CT3|SE1|SE2|SE3|SE4|PAT|FBW|XMT|XFI|XRO|XRL|ATN|QMT)
       "ijmp1",
       "ijmp2",
       "ijmp3",
@@ -4475,10 +4514,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "addbits",
       "true",
       "false",
-      //'eventse1', 'eventse2', 'eventse3', 'eventse4',
-      //'eventct1', 'eventct2', 'eventct3', 'eventct4',
-      //'eventpat', 'eventfbw', 'eventxmt', 'eventxfi',
-      //'eventxro', 'eventxrl', 'eventatn', 'eventqmt'
     ];
     const reservedStatus: boolean = pasmReservedswordsOfNote.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
@@ -4975,8 +5010,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     if (name.length > 2) {
       const checkType: string = name.toUpperCase();
       // yeah, FILE too!  (oddly enough)
-      if (checkType == "BYTEFIT" || checkType == "WORDFIT" || checkType == "BYTE" || checkType == "WORD" || checkType == "LONG" || checkType == "RES" || checkType == "FILE") {
+      if (checkType == "FILE") {
         returnStatus = true;
+      } else {
+        returnStatus = this._isDatStorageType(name);
       }
     }
     return returnStatus;
@@ -4986,8 +5023,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let returnStatus: boolean = false;
     if (name.length > 2) {
       const checkType: string = name.toUpperCase();
-      if (checkType == "BYTEFIT" || checkType == "WORDFIT" || checkType == "BYTE" || checkType == "WORD" || checkType == "LONG" || checkType == "RES") {
+      if (checkType == "RES") {
         returnStatus = true;
+      } else {
+        returnStatus = this._isStorageType(name);
       }
     }
     return returnStatus;

@@ -2621,7 +2621,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin1DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;

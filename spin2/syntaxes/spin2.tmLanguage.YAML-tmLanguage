@@ -249,6 +249,8 @@ repository:
             -
                 include: '#coginit_constants'
             -
+                include: '#modcz_constants'
+            -
                 name: storage.modifier.pasm2
                 match: '(?i)\b(ORG(F|H)?|FIT)\b'
             -
@@ -446,6 +448,8 @@ repository:
             -
                 include: '#coginit_constants'
             -
+                include: '#modcz_constants'
+            -
                 name: storage.type.pasm.spin2
                 match: '(?i)\b(BYTE|WORD|BYTEFIT|WORDFIT|LONG)\b'
             -
@@ -499,6 +503,9 @@ repository:
     event_constants:
         name: constant.language.events-interrupts.spin2
         match: '(?i)\bEVENT_(INT|CT1|CT2|CT3|SE1|SE2|SE3|SE4|PAT|FBW|XMT|XFI|XRO|XRL|ATN|QMT)\b'
+    modcz_constants:
+        name: constant.language.modcz.operands.spin2
+        match: '(?i)\b((_c(_and_nz|_and_z|eq_z|ne_z|or_nz|or_z)?|_(clr|e|ge|gt|le|lt|ne|set)?|_nc(_and_nz|and_z|or_nz|or_z)?|_nz(_and_c|_and_nc|_or_c|_or_nc)?|_z(_and_c|_and_nc|_eq_c|_ne_c|_or_c|_or_nc)?))\b'
     smartpins_constants:
         name: meta.block.spin.language.spin2
         patterns:
