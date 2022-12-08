@@ -35,6 +35,9 @@ Update Spin2 highlighting (syntax and/or semantic parser fixes)
 - Spin2: Recognize non-float decimal numbers with exponents
 - Spin2: Recognize `debug_main` and `debug_coginit` compile time directives
 - Spin2: Recognize event names in pasm2 correctly
+- Spin2: Fix cases where 'debug' used without parenthesis causes extension crash
+- Spin2: Recognize coginit constants (some pasm2 cases were being missed)
+- Spin2: Add recognition of LutColors directive in debug statements with run-time termainal assignment
 
 **NOTE:** *There is no change in our "Known Issues" list for this release.*
 

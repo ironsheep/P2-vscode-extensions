@@ -45,6 +45,9 @@ repository:
     cog_register_names:
         name: constant.language.cog-register-names.spin2
         match: '(?i)\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|IN(A|B)|OUT(A|B))\b'
+    coginit_constants:
+        name: constant.language.coginit.names.spin2
+        match: '(?i)\b((COG|HUB)EXEC(_NEW|NEW_PAIR)?)\b'
     comment:
         patterns:
             -
@@ -216,6 +219,8 @@ repository:
             -
                 include: '#string'
             -
+                include: '#coginit_constants'
+            -
                 include: '#debug_functions'
             -
                 include: '#pasm_language_elements'
@@ -241,6 +246,8 @@ repository:
                 include: '#streamer_constants'
             -
                 include: '#cog_register_names'
+            -
+                include: '#coginit_constants'
             -
                 name: storage.modifier.pasm2
                 match: '(?i)\b(ORG(F|H)?|FIT)\b'
@@ -436,6 +443,8 @@ repository:
                 include: '#streamer_constants'
             -
                 include: '#cog_register_names'
+            -
+                include: '#coginit_constants'
             -
                 name: storage.type.pasm.spin2
                 match: '(?i)\b(BYTE|WORD|BYTEFIT|WORDFIT|LONG)\b'

@@ -1447,7 +1447,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // handle name in 1 column
     const firstName: string = lineParts.length > 0 ? lineParts[0] : "";
     const secondName: string = lineParts.length > 1 ? lineParts[1] : "";
-    const bIsAlsoDebugLine: boolean = firstName.toLowerCase() == "debug" || secondName.toLowerCase() == "debug" ? true : false;
+    const bIsAlsoDebugLine: boolean = inLinePasmRHSStr.toLowerCase().indexOf("debug(") != -1 ? true : false;
     if (bIsAlsoDebugLine) {
       const partialTokenSet: IParsedToken[] = this._reportDebugStatement(lineNumber, startingOffset, line);
       partialTokenSet.forEach((newToken) => {
@@ -1569,6 +1569,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   !this._isPasmConditional(namePart) &&
                   !this._isBinaryOperator(namePart) &&
                   !this._isBuiltinReservedWord(namePart) &&
+                  !this._isCoginitReservedSymbol(namePart) &&
                   !this._isDebugMethod(namePart) &&
                   !bIsAlsoDebugLine
                 ) {
@@ -2073,7 +2074,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       //}
       this._logSPIN("  -- possNames=[" + possNames + "]");
       const firstName: string = possNames.length > 0 ? possNames[0] : "";
-      const bIsDebugLine: boolean = firstName.toLowerCase() == "debug" ? true : false;
+      const bIsDebugLine: boolean = nonStringAssignmentRHSStr.toLowerCase().indexOf("debug(") != -1 ? true : false;
       for (let index = 0; index < possNames.length; index++) {
         let possibleName = possNames[index];
         // special code to handle case of var.[bitfield] leaving name a 'var.'
@@ -2129,7 +2130,15 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               });
             }
             // we use bIsDebugLine in next line so we don't flag debug() arguments!
-            else if (!this._isSpinReservedWord(namePart) && !this._isSpinBuiltinMethod(namePart) && !this._isBuiltinReservedWord(namePart) && !this._isDebugMethod(namePart) && !bIsDebugLine) {
+            else if (
+              !this._isSpinReservedWord(namePart) &&
+              !this._isSpinBuiltinMethod(namePart) &&
+              !this._isBuiltinReservedWord(namePart) &&
+              !this._isCoginitReservedSymbol(namePart) &&
+              !this._isDebugMethod(namePart) &&
+              !bIsDebugLine &&
+              !this._isDebugInvocation(namePart)
+            ) {
               // NO DEBUG FOR ELSE, most of spin control elements come through here!
               //else {
               //    this._logSPIN('  -- UNKNOWN?? name=[' + namePart + '] - name-get-breakage??');
@@ -2207,7 +2216,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this._logPASM("  -- reportInLinePasmDecl lineParts=[" + lineParts + "]");
     const firstName: string = lineParts.length > 0 ? lineParts[0] : "";
     const secondName: string = lineParts.length > 1 ? lineParts[1] : "";
-    const bIsAlsoDebugLine: boolean = firstName.toLowerCase() == "debug" || secondName.toLowerCase() == "debug" ? true : false;
+    const bIsAlsoDebugLine: boolean = inLinePasmRHSStr.toLowerCase().indexOf("debug(") != -1 ? true : false;
     if (bIsAlsoDebugLine) {
       const partialTokenSet: IParsedToken[] = this._reportDebugStatement(lineNumber, startingOffset, line);
       partialTokenSet.forEach((newToken) => {
@@ -2599,6 +2608,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // get line parts - we only care about first one
     const debugStatementStr = this._getDebugStatement(currentOffset, line);
     this._logDEBUG(" -- rptDbg debugStatementStr=[" + debugStatementStr + "]");
+    if (debugStatementStr.length == 0) {
+      return tokenSet;
+    }
     // now record the comment if we have one
     const commentRHSStrOffset: number = currentOffset + debugStatementStr.length;
     const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
@@ -2721,7 +2733,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                       !this._isSpinBuiltinMethod(newParameter) &&
                       !this._isBuiltinReservedWord(newParameter)
                     ) {
-                      // 1 xyzzy
                       this._logDEBUG("  -- rptDbg 1 unkParam=[" + newParameter + "]");
                       tokenSet.push({
                         line: lineNumber,
@@ -2803,7 +2814,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 }
                 symbolOffset = line.indexOf(newParameter, symbolOffset);
                 this._logDEBUG("  -- rptDbg ?check? [" + newParameter + "] symbolOffset=" + symbolOffset);
-                const bIsParameterName: boolean = this._isNameWithTypeFeed(newParameter, eDisplayType);
+                let bIsParameterName: boolean = this._isNameWithTypeFeed(newParameter, eDisplayType);
+                if (isRuntimeNamed && newParameter.toLowerCase() == "lutcolors") {
+                  bIsParameterName = true;
+                }
                 if (bIsParameterName) {
                   this._logDEBUG("  -- rptDbg newParam=[" + newParameter + "]");
                   tokenSet.push({
@@ -2848,7 +2862,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                       });
                     } else {
                       // handle unknown-name case
-                      const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false; // 2 xyzzy
+                      const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
                       if (
                         paramIsSymbolName &&
                         this._isDebugMethod(newParameter) == false &&
@@ -2859,7 +2873,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                         !this._isSpinBuiltinMethod(newParameter) &&
                         !this._isBuiltinReservedWord(newParameter)
                       ) {
-                        this._logDEBUG("  -- rptDbg 2 unkParam=[" + newParameter + "]");
+                        this._logDEBUG("  -- rptDbg 2 unkParam=[" + newParameter + "]"); // XYZZY LutColors
                         tokenSet.push({
                           line: lineNumber,
                           startCharacter: symbolOffset,
@@ -2924,7 +2938,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 });
               } else {
                 // handle unknown-name case
-                const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false; // 3 xyzzy
+                const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
                 if (
                   paramIsSymbolName &&
                   !this._isDebugMethod(newParameter) &&
@@ -4204,6 +4218,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       // debug overridable CONSTANTS
       "debug_main",
       "debug_coginit",
+      "debug",
     ];
     const reservedStatus: boolean = debugExec.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
@@ -4302,14 +4317,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "posx",
       "negx",
       "pi",
-      //
-      "newcog",
-      "cogexec",
-      "hubexec",
-      "cogexec_new",
-      "hubexec_new",
-      "cogexec_new_pair",
-      "hubexec_new_pair",
     ];
     let reservedStatus: boolean = spinInstructionsOfNote.indexOf(name.toLowerCase()) != -1;
     if (reservedStatus == false) {
@@ -4320,6 +4327,21 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
     return reservedStatus;
   }
+  private _isCoginitReservedSymbol(name: string): boolean {
+    const coginitSymbolOfNote: string[] = [
+      //
+      "newcog",
+      "cogexec",
+      "hubexec",
+      "cogexec_new",
+      "hubexec_new",
+      "cogexec_new_pair",
+      "hubexec_new_pair",
+    ];
+    const reservedStatus: boolean = coginitSymbolOfNote.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
   private _isBinaryOperator(name: string): boolean {
     const binaryOperationsOfNote: string[] = ["sar", "ror", "rol", "rev", "zerox", "signx", "sca", "scas", "frac", "addbits", "addpins", "and", "or", "xor"];
     const reservedStatus: boolean = binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;

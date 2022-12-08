@@ -88,3 +88,41 @@ ma_adpcm_bufferbase long @adpcm_buffers
 
 adpcm_buffers
 ' -----------------------------------------------------------------
+DAT
+		org
+
+		setq	dbase_init		'restart cog 0 with interpreter
+		coginit	#hubexec,##launch_spin
+
+dbase_init	long	320_000_000				'$38 - compiler supplies initial dbase value
+'
+' Unaligned data
+'
+		orgh
+
+DAT
+        org
+launch_spin	loc	ptrb,#\$80000		'point to zeroes in empty hub space
+
+' -----------------------------------------------------------------
+CON _clkfreq = 200_000_000
+
+    'debug_main				'uncomment to single-step through everything, even COGINITs
+    'debug_coginit			'uncomment to break on COGINITs
+
+PUB go() | i
+
+  coginit(newcog, @pasm_program,0)	'start another cog with a PASM program (another debugger will open)
+
+  repeat				'keep looping while incrementing a variable
+    i++
+    debug				'break everytime through the loop if "DEBUG" is selected (default)
+
+DAT		org
+
+pasm_program	debug			'do a DEBUG at the start of the program to open debugger
+.loop		add	pa,#1		'select "MAIN" in the debugger to single-step
+		sub	pb,#2
+		jmp	#.loop
+
+		long	0[12]		'fill with some NOP's to make it easy to see the code above

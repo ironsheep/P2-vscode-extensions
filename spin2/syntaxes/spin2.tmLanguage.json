@@ -70,6 +70,10 @@
       "name": "constant.language.cog-register-names.spin2",
       "match": "(?i)\\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|IN(A|B)|OUT(A|B))\\b"
     },
+    "coginit_constants": {
+      "name": "constant.language.coginit.names.spin2",
+      "match": "(?i)\\b((COG|HUB)EXEC(_NEW|NEW_PAIR)?)\\b"
+    },
     "comment": {
       "patterns": [
         {
@@ -333,6 +337,9 @@
           "include": "#string"
         },
         {
+          "include": "#coginit_constants"
+        },
+        {
           "include": "#debug_functions"
         },
         {
@@ -370,6 +377,9 @@
         },
         {
           "include": "#cog_register_names"
+        },
+        {
+          "include": "#coginit_constants"
         },
         {
           "name": "storage.modifier.pasm2",
@@ -648,6 +658,9 @@
         },
         {
           "include": "#cog_register_names"
+        },
+        {
+          "include": "#coginit_constants"
         },
         {
           "name": "storage.type.pasm.spin2",
