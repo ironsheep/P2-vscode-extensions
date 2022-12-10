@@ -5,6 +5,8 @@
 
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE) 
+[![Release][Release-shield]](https://github.com/ironsheep/P2-vscode-extensions/releases) 
+[![GitHub issues][Issues-shield]](https://github.com/ironsheep/P2-vscode-extensions/issues)
 
 **Spin2 Extension**: 
 [![Version][marketplace-version]](https://marketplace.visualstudio.com/items?itemName=ironsheepproductionsllc.spin2) 
@@ -80,6 +82,8 @@ Patrick (GitHub [Entomy](https://github.com/Entomy)) for a spin1 extension which
 
 Jay B. Harlow for contributing the initial elastic tabs feature.
 
+George (GitHub [DrMerfy](https://github.com/DrMerfy)) for the latest [VSCode-Overtype](https://marketplace.visualstudio.com/items?itemName=DrMerfy.overtype) extension which provided the foundation to which we could add the Align mode.
+
 ## License
 
 Copyright © 2022 Iron Sheep Productions, LLC. All rights reserved.<br />
@@ -98,3 +102,7 @@ Follow these links for more information:
 [marketplace-rating]: https://vsmarketplacebadge.apphb.com/rating-short/ironsheepproductionsllc.spin2.svg
 
 [license-shield]: https://camo.githubusercontent.com/bc04f96d911ea5f6e3b00e44fc0731ea74c8e1e9/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f6c6963656e73652f69616e74726963682f746578742d646976696465722d726f772e7376673f7374796c653d666f722d7468652d6261646765
+
+[Release-shield]: https://img.shields.io/github/release/ironsheep/P2-vscode-extensions/all.svg
+
+[Issues-shield]: https://img.shields.io/github/issues/ironsheep/P2-vscode-extensions.svg
