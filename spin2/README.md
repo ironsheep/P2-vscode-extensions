@@ -1,6 +1,6 @@
 # P1 and P2 Syntax highlighting and Code Navigation for VSCode
 
-This Extension is continually in development. Things may not totally work correctly. See _Support_, below, for how to report issues.
+This Extension is continually in development. Things may, occasionally, not work correctly. See _Support_, below, for how to report issues.
 
 ## ABOUT
 
@@ -36,7 +36,7 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 - Place cursor on line and press `TAB` or `Shift-TAB` to indent or outdent the text
 - Place cursor on line and press `Ctrl+Alt+Tab` to generate tab location comment
 - Supports the InsertMode operations à la Propeller Tool (*INSERT / OVERTYPE / ALIGN modes*) see [Insert Mode for Spin/Spin2](https://github.com/ironsheep/P2-vscode-extensions/blob/main/InsertMode.md) for more detailed info on this InsertMode feature.
-
+- **Tab Sets** You can choose between `Propeller Tool`(*Default*), `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 
 ## Possible Conflicts with other VSCode Extensions
 
@@ -59,3 +59,11 @@ We are working on fixes to the following issues we've seen during our testing. H
 ## Reporting Issues
 
 An active list of issues is maintained at github. [P2-vscode-extensions/Issues](https://github.com/ironsheep/P2-vscode-extensions/issues). When you want to report something missing, not working right, or even request a new feature please submit an issue. By doing so you will be able to track progress against the request and learn of the new version containing your fix/enhancement when it is available.
+
+---
+
+> If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices!
+>
+> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep) &nbsp;&nbsp; -OR- &nbsp;&nbsp; [![Patreon](./Images/patreon.png)](https://www.patreon.com/IronSheep?fan_landing=true)[Patreon.com/IronSheep](https://www.patreon.com/IronSheep?fan_landing=true)
+
+---

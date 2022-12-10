@@ -13,7 +13,6 @@ Work to appear in upcoming releases:
 
 Possible next additions:
 
-- Add Named TAB configurations (have "Propeller Tool" tabs and your own custom set of tabs)
 - Add Hover popups for `PUB` and `PRI` method signature (help text)
 - Add Hover popups for pasm instructions (help text for each instruction)
 - Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
@@ -21,6 +20,14 @@ Possible next additions:
 - Add spin2 instruction templates as Snippets (*for instructions with two or more parameters*)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.7.3] 2022-12-09
+
+Minor update to Extension Settings
+
+- Add Named TAB configurations (select between `Propeller Tool`, `IronSheep` or your own custom `User1` tabs)
+- The extension default is `Propeller Tool`
+- The `IronSheep` configuration is derived from Propeller Tool but realigned to "tabstop: 4" (every 4 spaces)
 
 ## [1.7.2] 2022-12-07
 

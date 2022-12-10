@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -168,7 +168,17 @@
             "default": false,
             "description": "Enable/disable Spin2 Tabstops."
           },
-          "spinElasticTabstops.blocks": {
+          "spinElasticTabstops.choice": {
+            "type": "string",
+            "default": "PropellerTool",
+            "enum": [
+              "PropellerTool",
+              "IronSheep",
+              "User1"
+            ],
+            "description": "Select desired set of Tabstops"
+          },
+          "spinElasticTabstops.blocks.PropellerTool": {
             "type": "object",
             "properties": {
               "type": "array",
@@ -186,6 +196,190 @@
                   18,
                   32,
                   56,
+                  78,
+                  80
+                ]
+              },
+              "var": {
+                "tabStops": [
+                  2,
+                  8,
+                  22,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "obj": {
+                "tabStops": [
+                  2,
+                  8,
+                  16,
+                  18,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "pub": {
+                "tabStops": [
+                  2,
+                  4,
+                  6,
+                  8,
+                  10,
+                  12,
+                  14,
+                  16,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "pri": {
+                "tabStops": [
+                  2,
+                  4,
+                  6,
+                  8,
+                  10,
+                  12,
+                  14,
+                  16,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "dat": {
+                "tabStops": [
+                  8,
+                  14,
+                  24,
+                  32,
+                  48,
+                  56,
+                  80
+                ]
+              }
+            }
+          },
+          "spinElasticTabstops.blocks.IronSheep": {
+            "type": "object",
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "default": {
+              "con": {
+                "tabStops": [
+                  4,
+                  8,
+                  16,
+                  20,
+                  32,
+                  44,
+                  56,
+                  68,
+                  80
+                ]
+              },
+              "var": {
+                "tabStops": [
+                  4,
+                  12,
+                  24,
+                  28,
+                  32,
+                  44,
+                  56,
+                  68,
+                  80
+                ]
+              },
+              "obj": {
+                "tabStops": [
+                  4,
+                  8,
+                  16,
+                  20,
+                  32,
+                  44,
+                  56,
+                  68,
+                  80
+                ]
+              },
+              "pub": {
+                "tabStops": [
+                  4,
+                  8,
+                  12,
+                  16,
+                  20,
+                  24,
+                  28,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "pri": {
+                "tabStops": [
+                  4,
+                  8,
+                  12,
+                  16,
+                  20,
+                  24,
+                  28,
+                  32,
+                  56,
+                  80
+                ]
+              },
+              "dat": {
+                "tabStops": [
+                  4,
+                  16,
+                  20,
+                  24,
+                  28,
+                  48,
+                  52,
+                  56,
+                  60,
+                  64,
+                  68,
+                  80
+                ]
+              }
+            }
+          },
+          "spinElasticTabstops.blocks.User1": {
+            "type": "object",
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "default": {
+              "con": {
+                "tabStops": [
+                  2,
+                  8,
+                  16,
+                  18,
+                  32,
+                  56,
+                  76,
+                  77,
+                  78,
                   80
                 ]
               },

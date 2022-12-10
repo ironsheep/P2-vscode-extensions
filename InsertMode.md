@@ -1,23 +1,21 @@
-# Insert Modes for Spin/Spin2 VSCode Extensions
+# Edit Modes for Spin/Spin2 VSCode Extensions
 
 
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE) 
 
 
-Recreation of [Parallax Propeller Tool](https://www.parallax.com/package/propeller-tool-software-for-windows-spin-assembly-2/) Insert Modes: Overtype, Insert, and Align for VSCode
+Recreation of [Parallax Propeller Tool](https://www.parallax.com/package/propeller-tool-software-for-windows-spin-assembly-2/) Edit Modes: Overtype, Insert, and Align for VSCode
 
 ## Features
 
 Adds an overtype mode to vscode based editors, plus a couple of bells and whistles.
 
-### Basic Insert Mode Usage
+### Edit Mode Usage
 
-The Insert Mode support for Spin/Spin2 provides three modes: Overtype, Insert and Align.
+The Edit Mode support for Spin/Spin2 provides three modes: **Overtype**, **Insert** and **Align**.
 
-The aptly named **Overtype mode** allows one to type over and replace existing characters in one's text editor. The most common scenario for overtype mode is when it's activated by accident by an unsuspecting user who can't figure out why the computer is eating all the words they already typed.
-
-To rotate through all insert modes, press the `Insert` key. If you don't have an `Insert` key, you can press `Fn+Enter` (on Mac). As an alternative you can also click on the Insert/Overtype/Align label to rotate through the insert modes.
+To rotate through all Edit Modes, press the `Insert` key. If you don't have an `Insert` key, you can press `Fn+Enter` (on Mac). If these don't work for you then `F11` also steps through the modes. As an alternative you can also click on the Insert/Overtype/Align label to rotate through the Edit Modes.
 
 If, instead, you wish to toggle back and forth between the Insert and Align modes only, press `Ctrl+Shift+I` (on Windows and Linux) or `Cmd+Shift+I` (on Mac)
 
@@ -29,25 +27,122 @@ If you don't care for these keybindings, you can customize them in your Keyboard
 |`Ctrl+Shift+I` (on Windows and Linux) </br>`Cmd+Shift+I` (on Mac) | `spin2.insertMode.toggle`:</br>Rotate thru: Insert -> Align -> and back to Insert...
 
 
-### Visual Demo: Overtype vs. Insert modes
+#### Edit Mode: Insert 
+
+This mode is your everyday typing mode. Where your cursor is you type and characters are entered shoving text to the right of the cursor to the right.
+
+#### Edit Mode: Overtype
+
+The aptly named **Overtype mode** allows one to type over and replace existing characters in one's text editor. The most common scenario for overtype mode is when it's activated by accident by an unsuspecting user who can't figure out why the computer is eating all the words they already typed.
+
+
+#### Edit Mode: Visual Demo: Overtype vs. Insert
 
 ![Basic demo](DOCs/demo-basic.gif)
 
+
+#### Edit Mode: Align
+
+*(Excerpt from Parallax "Propeller Tool" help)*:
+
+The **Align mode** is a special version of Edit Mode designed specifically for maintaining source code.  To understand Align mode we first need to consider common programming techniques. There are two very common practices used when writing modern source code:
+
+- indention of code
+- alignment of comments to the right of code
+
+It is also common for source code to be viewed and edited using more than one editor application. Historically, programmers have used either tabs or spaces for indention and alignment porposes, both of which prove problematic. Tab characters cause alignment issues because some ediros use different sized tab setting than others. Both tab and space characters cause alignment issues because future edits cause right-side comments to shift out of alignment. 
+
+For our spin code this alignment problem is solved first by disallowing tab characters (Tab key presses emit the proper number of space characters), and second by providing the Align Edit mode. While in Align mode characters inserted into a line affect the neighboring characters but not characters separated by more than one space. The result is that comments and other items separated by more than one space maintain their intended alignment for as long as possible.
+
+Note: This Align mode affects the behavior of the [Tab], [Shift+Tab], [Backspace], and [Delete] keys as well as pasting copied text.
+
+Since the Align mode maintains existing alignments as much as possible, much less time is wasted relaigning elements due to future edits by the programmer.  Additionally, since spaces are used instead of tab characters, the code maintains the same look and feel in any editor that displays it with a mono-spaced font.
+
+The Align mode isn't perfect for all situations, however. We recommend you use Insert mode for most code writing and briefly switch to Align mode to maintain existing code where alignment is a concern. The [Insert] key (or [F11]) rotates the mode through Insert -> Overwrite -> Align and back to Insert again.  The Ctrl+Shift+I (Cmd+Shift+I on mac) key shortcut toggles onlyh between Insert and Align modes.  A little practice with the Align and Insert modes will help you write code more time-efficiently.
+
+Note: since this Align mode is provided by our Spin2 VSCode extension, non-spin source (without the .spin or .spin2 extension) is not presented with align mode.
+
+The higher-level language (spin or spin2) for the propeller is fairly similar to python in that it has code indented to veriaous levels followed by comments:
+
+##### Example spin2 code:
+
+```spin
+PUB stopAfterTime(nTime, eTimeUnits) | timeNow
+'' Stops the motor, after {time} specified in {timeUnits} [DTU_MILLISEC or DTU_SEC] has elapsed.
+'' USE WITH:  driveAtPower()
+'' Will ABORT if {time} < 1
+    if nTime < 1                                   ' units make sense? (positive?)
+        abort                                      ' NO: abort
+
+    case eTimeUnits                                ' ensure we have a valid request
+        DTU_MILLISEC:
+        DTU_SEC:
+        other:
+            abort
+
+    if eTimeUnits == DTU_SEC                       ' want result in seconds
+        timeNow := getms()
+        motorStopMSecs := timeNow + (nTime * 1_000)
+    else
+        timeNow := getms()                         ' wants milliseconds
+        motorStopMSecs := timeNow + nTime
+
+PUB stopMotor()
+'' Stops the motor, killing any motion that was still in progress
+''  AFFECTED BY:holdAtStop()
+    setTargetAccel(0)
+
+PUB emergencyCutoff()
+'' EMERGENCY-Stop - Immediately stop motor, killing any motion that was still in progress
+    e_stop := TRUE
+    setTargetAccel(0)
+```
+
+While our lower-level propeller assembly code (pasm, pasm2) has, typically four or five columns to be aligned.
+
+##### Example pasm2 code:
+
+```pasm
+DAT
+        org
+.chr
+              call      #hsync                          'do hsync
+
+              add       font_line, #$08                 ' increment chr line selector
+              cmpsub    font_line, #$20         wz
+    if_z      add       font_base, #$080                ' increment top/middle/bottom lines selector
+    if_z      cmpsub    font_base, #$180        wz
+    if_z      add       screen_base, #cols              ' increment screen pointer and row
+    if_z      incmod    rowx, #rows-1           wz
+    if_nz     jmp       #.line                          ' loop until all rows output
+
+
+              callpa    #14, #blank                     ' bottom blanks
+
+              mov       pa, #10                         ' low vertical syncs
+.vsync1       xcont     m_880, #sync_color2
+              call      #hsync
+              djnz      pa, #.vsync1
+              
+              ...
+```
+
+**Formatting pasm code** - Aligning code like this is where Align mode shines!
+
 ### Settings: Global or per-editor
 
-It's bad enough that you have to keep track of that damn overtype indicator at the bottom of the window... but you want to have a separate overtype setting for *each editor?*
-
-Fine.
+By default the Edit Mode setting is for all open editor windows.  However, if you wish it to be unique to each open editor window then we have a setting for you!
 
 ```json
 "spinInsertMode.perEditor": true
 ```
 
-> Sets the insert/overtype mode per editor.
+> Sets the insert/overtype mode per editor.</br>
+> Default: false
 
 ### Settings: Overtype Paste behavior
 
-If you want to enable "Hard Mode", you can turn on overtype paste mode. This setting applies overtype behavior to when you paste text into your editor. Here are the rules:
+If you want to enable it, you can turn on overtype paste mode. This setting applies overtype behavior to when you paste text into your editor. Here are the rules:
 
 - If you paste part of a line of text into another line of text, the clipboard contents will overwrite characters until it's done pasting, unless it hits the end of the line first, in which case it'll just extend that line.
 - If you already have some text selected when you paste, that text will *always* be overwritten, even if the contents of the clipboard are smaller.
@@ -57,16 +152,17 @@ If you want to enable "Hard Mode", you can turn on overtype paste mode. This set
 Some additional tips for using overtype paste:
 
 - Don't forget your Undo shortcut(s).
-- I know this doesn't work like [insert editor here]. Every single freaking editor handles overtype paste differently. It's not my fault.
-- If you think you have a saner way to handle this, for the love of everything warm and cuddly, let us know.
+- I know this doesn't work like [insert editor here]. Every single editor handles overtype paste differently. 
+- If you think you have a better way to handle this, please let us know.
 
-Without further ado...
+And here's the setting:
 
 ```json
 "spinInsertMode.overtypePaste": true
 ```
 
-> When in overtype mode, uses overtype behavior when pasting text.
+> When in overtype mode, uses overtype behavior when pasting text.</br>
+> Default: false
 
 ### Settings: Enable Align Mode
 
@@ -93,7 +189,7 @@ Don't worry, we've got just the setting for you!
 "spinInsertMode.labelAlignMode": "Aln"
 ```
 
-> Shows an abbreviated overtype status (`Ovr`) in the status bar if active, an abbreviated align status (`Aln`) in the status bar if activ and nothing for the "normal" insert mode.
+> Shows an abbreviated overtype status (`Ovr`) in the status bar if active, an abbreviated align status (`Aln`) in the status bar if activ and nothing for the "normal" Edit Mode.
 
 ```json
 "spinInsertMode.labelInsertMode": "",
@@ -101,7 +197,7 @@ Don't worry, we've got just the setting for you!
 "spinInsertMode.labelAlignMode": ""
 ```
 
-> Disable showing the insert mode status in the status bar completely.
+> Disable showing the Edit Mode status in the status bar completely.
 
 ### Settings: Overtype cursor style
 
@@ -118,7 +214,7 @@ Set the `spinInsertMode.secondaryCursorStyle` to either one of:
 e.g.
 
 ```json
-"spinInsertMode.secondaryCursorStyle": "underline"
+"spinInsertMode.secondaryCursorStyle": "block"
 ```
 
 > Sets the overtype cursor style.</br>

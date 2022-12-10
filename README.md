@@ -22,8 +22,9 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 - **Syntax and Semantic Highlighting** for both Spin and Pasm
 - **Syntax and Semantic Highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols as well as all debug() statements with parameter validation for all display types
 - **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
+- **Tab Sets** You can choose between `Propeller Tool`, `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 - File navigation from **Outline View**
-- Insert Mode support à la Parallax **Propeller Tool** [Insert, Overtype and Align]
+- **Edit Mode** support à la Parallax **Propeller Tool** [Insert, Overtype and Align]
 - Works with your favorite VSCode themes
 - Offers companion Theme (Two themes: Syntax+Semantic, and Syntax only - mostly used during semantic highlighting development)
 
@@ -62,14 +63,14 @@ This repository contains a single subproject which is the vscode extension:
 - SPIN2/SPIN and PASM2/PASM syntax Highlighting and code navigation [spin2](./spin2) - *Builds*
 
 
----
-
-> If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices! 
-> 
-> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep)
 
 ---
 
+> If you like my work and/or this has helped you in some way then feel free to help me out for a couple of :coffee:'s or :pizza: slices!
+>
+> [![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/ironsheep) &nbsp;&nbsp; -OR- &nbsp;&nbsp; [![Patreon](./DOCs/patreon.png)](https://www.patreon.com/IronSheep?fan_landing=true)[Patreon.com/IronSheep](https://www.patreon.com/IronSheep?fan_landing=true)
+
+---
 
 ## Credits
 
@@ -77,32 +78,7 @@ Ray [Cluso99] in our [Propeller 2 Forums](https://forums.parallax.com/categories
 
 Patrick (GitHub [Entomy](https://github.com/Entomy)) for a spin1 extension which helped me get further along with this one.
 
-
-## Older install info (for reference only)
-
-If you had downloaded the .vsix.zip from our [Propeller 2 Forum thread](https://forums.parallax.com/discussion/170068/visual-studio-code-editor-for-p1-amp-p2-spin-amp-pasm#latest) then skip to the next section "**Load Extention into vscode**".
-
-While it's no longer needed, we still maintain our [Releases Page](https://github.com/ironsheep/P2-vscode-extensions/releases).
-
-### Manually Load Extension into vscode
-
-Now that you have downloaded the .vsix.zip file simply unzip it to get the .vsix file.
-
-Open a Command window (on linux, macos, rpi open a terminal window) and cd to the directory containing this file. 
-
-Execute this command:
-
-```bash
-code --install-extension {filename}.vsix
-```
-
-*(replacing {filename} with the name of your file, of course.)*
-
-After restarting VSCode you should be ready to start editing spin2 code.  Enjoy!
-
-NOTE: to activate one of the experimental themes distributed with this extension using Ctl-K Ctl-T (on macOS Cmd-K, Cmd-T) and select "Spin2 Ironsheep" or "Spin2 Cluso99".  Of course, your favorte themes should work as well.
-
-
+Jay B. Harlow for contributing the initial elastic tabs feature.
 
 ## License
 
@@ -112,8 +88,6 @@ Licensed under the MIT License. <br>
 Follow these links for more information:
 
 ### [Copyright](copyright) | [License](LICENSE)
-
-
 
 [maintenance-shield]: https://img.shields.io/badge/maintainer-stephen%40ironsheep%2ebiz-blue.svg?style=for-the-badge
 

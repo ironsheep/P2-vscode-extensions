@@ -6,7 +6,9 @@ import { toNamespacedPath } from "path";
 // src/spin2.extension.ts
 
 import * as vscode from "vscode";
+
 import { Formatter } from "./spin.tabFormatter";
+import { tabConfiguration, reloadTabConfiguration } from "./spin.tabFormatter.configuration";
 
 import { overtypeBeforePaste, overtypeBeforeType } from "./spin.insertMode.behavior";
 import { configuration, reloadConfiguration } from "./spin.insertMode.configuration";
@@ -219,6 +221,9 @@ function getShowInStatusBar(): boolean {
 const onDidChangeConfiguration = () => {
   const previousPerEditor = configuration.perEditor;
   const previousShowInStatusBar = getShowInStatusBar();
+
+  // tell formatter that is might have changed, too
+  formatter.updateTabConfiguration();
 
   const updated = reloadConfiguration();
   if (!updated) {

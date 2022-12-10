@@ -6,6 +6,8 @@ import * as vscode from "vscode";
 import { EndOfLine } from "vscode";
 import { getMode, eInsertMode, modeName } from "./spin.insertMode.mode";
 
+import { tabConfiguration, reloadTabConfiguration } from "./spin.tabFormatter.configuration";
+
 // ----------------------------------------------------------------------------
 //  this file contains routines for tabbing the code: ==> or <==
 
@@ -34,17 +36,22 @@ export interface Blocks {
  *
  */
 export class Formatter {
-  readonly config = vscode.workspace.getConfiguration("spinElasticTabstops");
-  readonly blocks = this.config.get<Blocks>("blocks")!;
-  readonly blocksConfig = this.config.inspect<Blocks>("blocks");
+  private config = tabConfiguration;
 
-  readonly tabSize = this.config.get<number>("editor.tabSize");
-  readonly useTabStops = this.config.get<number>("editor.useTabStops");
+  private tabset: string = tabConfiguration.tabSet;
+  //readonly selectedSet: string = this.tabset == "PropellerTool" ? "default" : this.tabset;
 
-  readonly enable = this.config.get<boolean>("enable");
-  readonly timeout = this.config.get<number>("timeout");
-  readonly maxLineCount = this.config.get<number>("maxLineCount");
-  readonly maxLineLength = this.config.get<number>("maxLineLength");
+  //readonly tabsSelection: string = `blocks.${this.selectedSet}`;
+  private blocks = tabConfiguration.blocks;
+  //readonly blocksConfig = this.config.inspect<Blocks>("blocks");
+
+  private tabSize = tabConfiguration.tabSize;
+  //readonly useTabStops = this.config.get<number>("editor.useTabStops");
+
+  private enable = tabConfiguration.enable;
+  //readonly timeout = this.config.get<number>("timeout");
+  //readonly maxLineCount = this.config.get<number>("maxLineCount");
+  //readonly maxLineLength = this.config.get<number>("maxLineLength");
 
   readonly blockIdentifierREgEx1 = /^(?<block>(con|var|obj|pub|pri|dat))\s+/;
   readonly blockIdentifierREgEx2 = /^(?<block>(con|var|obj|pub|pri|dat))$/;
@@ -63,10 +70,16 @@ export class Formatter {
     }
   }
 
+  //export const configuration = loadConfiguration();
+
   constructor(outputChannel: vscode.OutputChannel | undefined, formatDebugLogEnabled: boolean) {
     this.tabbingDebugLogEnabled = formatDebugLogEnabled;
     // save output channel
     this.tabbinglog = outputChannel;
+    const jsonConfig: string = JSON.stringify(this.config, null, 4);
+    this._logMessage(`+ (DBG) config=(${jsonConfig})`);
+    const jsonBlocks: string = JSON.stringify(this.blocks, null, 4);
+    this._logMessage(`+ (DBG) blocks=(${jsonBlocks})`);
   }
 
   // Editor Tab Size - "editor.tabSize"
@@ -83,6 +96,22 @@ export class Formatter {
   isEnbled(): boolean {
     const bEnableStatus: boolean = this.enable ? true : false;
     return bEnableStatus;
+  }
+
+  updateTabConfiguration() {
+    this._logMessage(`+ (DBG) updateTabConfiguration()`);
+    if (reloadTabConfiguration()) {
+      this._logMessage(`+ (DBG) updateTabConfiguration()  DID reload!`);
+      this.config = tabConfiguration;
+
+      this.tabset = tabConfiguration.tabSet;
+
+      this.blocks = tabConfiguration.blocks;
+
+      this.tabSize = tabConfiguration.tabSize;
+
+      this.enable = tabConfiguration.enable;
+    }
   }
 
   /**
