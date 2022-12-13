@@ -21,6 +21,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.7.4] 2022-12-13
+
+Minor highlighting update
+
+- Constant declarations now identified correctly
+- Spin builtin methods now identified so other themes can render them better
+
 ## [1.7.3] 2022-12-09
 
 Minor update to Extension Settings

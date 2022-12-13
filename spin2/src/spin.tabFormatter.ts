@@ -76,10 +76,10 @@ export class Formatter {
     this.tabbingDebugLogEnabled = formatDebugLogEnabled;
     // save output channel
     this.tabbinglog = outputChannel;
-    const jsonConfig: string = JSON.stringify(this.config, null, 4);
-    this._logMessage(`+ (DBG) config=(${jsonConfig})`);
-    const jsonBlocks: string = JSON.stringify(this.blocks, null, 4);
-    this._logMessage(`+ (DBG) blocks=(${jsonBlocks})`);
+    //const jsonConfig: string = JSON.stringify(this.config, null, 4);
+    //this._logMessage(`+ (DBG) config=(${jsonConfig})`);
+    //const jsonBlocks: string = JSON.stringify(this.blocks, null, 4);
+    //this._logMessage(`+ (DBG) blocks=(${jsonBlocks})`);
   }
 
   // Editor Tab Size - "editor.tabSize"

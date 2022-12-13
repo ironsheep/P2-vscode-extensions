@@ -27,16 +27,31 @@ comment block
 
 ```spin
  "string"
- 'string'
 ```
 
-Regarding methods or functions: we're using methods as spin objects are just that, objects.
+### Regarding methods or functions
+
+We're using methods since spin objects are just that, objects. So, PUB and PRI declared routines are `methods`, while we use `functions` as the built-in routines of the spin/spin2 language.   We base this on:
+
+---
+
+**Function**: A Function is a reusable piece of code. It can have input data on which it can operate (i.e. arguments) and it can also return data by having a return type. It is the concept of procedural and functional programming languages.
+
+**Method**: The working of the method is similar to a function i.e. it also can have input parameters/arguments and can also return data by having a return type but has two important differences when compared to a function.
+
+1. A method is associated or related to the instance of the object it is called using.
+2. A method is limited to operating on data inside the class in which the method is contained.
+3. It is a concept of object-oriented programming language.
+
+---
+
+Now let's look at the contribution from each code block:
 
 ## SECTION: CON
 
 This section contains global constant declarations.
 
-Returns from this section: `variable.readonly.definition`, `operator`, `number`, `variable.readonly`
+Returns from this section: `variable.readonly.definition`, `operator`, `number`, `variable.readonly`, 
 
 ## SECTION: VAR
 
@@ -50,22 +65,26 @@ This is also class-data, class variables: `property.declaration.static`, `type`.
 
 ## SECTION: PUB
 
-This section declares a class public method: `method.declaration`.
+This section declares a class-public method: `method.declaration`.
+
+There are optional passed parameters, return values and local variables: `parameter.declaration.readonly`, `parameter.declaration.local.return`, and `variable.declaration.local`
 
 ## SECTION: PRI
 
-This section declares a class private method: `method.declaration.static`.
+This section declares a class-private method: `method.declaration.static`.
+
+There are optional passed parameters, return values and local variables: `parameter.declaration.readonly`, `parameter.declaration.local.return`, and `variable.declaration.local`
 
 ## SECTION: OBJ
 
 This section effectively imports other classes and names their instances.
 Instances can be an array of class instances.
 
-Returns from this section: `variable.class`, `operator`, `number`, `string`, `variable.readonly`
+Returns from this section: `variable.namespace.declaration`, `operator`, `number`, and `meta.object.filename`
 
 ## Examples
 
-This is a collection of notable examples with each predicting what will be emitted by the semantic parser.
+This is a collection of notable examples with each predicting what will be emitted by the syntax and semantic parsers.
 
 ### Example: Section Names (CON, DAT, OBJ, VAR)
 
@@ -77,8 +96,8 @@ CON { Timing }
 
 ... returns:
 
-- `keyword` start(1,1), end(1,3)
-- `comment` start(1,5), end(1,14)
+- `keyword.block.con` | `meta.block.con.language.spin`
+- `comment.block` 
 
 ### Example: Comments
 
@@ -90,7 +109,7 @@ CON { Timing }
 
 ... returns:
 
-- `comment` start(1,1), end(1,16)
+- `comment.line` 
 
 **Sample Code:**
 
@@ -100,7 +119,7 @@ CON { Timing }
 
 ... returns:
 
-- `comment.document` start(1,1), end(1,17)
+- `comment.line.documentation`
 
 **Sample Code:**
 
@@ -112,7 +131,7 @@ CON { Timing }
 
 ... returns:
 
-- `comment` start(1,1), end(3,1)
+- `comment.block`
 
 **Sample Code:**
 
@@ -124,7 +143,7 @@ CON { Timing }
 
 ... returns:
 
-- `comment.document` start(1,1), end(3,1)
+- `comment.block.documentation` 
 
 ### Example: CON
 
@@ -138,12 +157,12 @@ This section defines constants. They can be defined literally.
 
 ... returns:
 
-| text                   | type                            | start       | end       |
-| ---------------------- | ------------------------------- | ----------- | --------- |
-| DIGIT_NOVALUE          | `variable.readonly.declaration` | start(1,5)  | end(1,18) |
-| =                      | `operator`                      | start(1,20) | end(1,20) |
-| -2                     | `number`                        | start(1,22) | end(1,23) |
-| ' digit value when ... | `comment`                       | start(1,27) | end(1,54) |
+| text                   | semantic type                            | syntax (textmate) type        |
+| --- | --- |--- |
+| DIGIT_NOVALUE          | `variable.readonly.declaration` |  |
+| =                      | `operator`                      |  |
+| -2                     |                         | constant.numeric.base10 |
+| ' digit value when ... | `comment`                       |  `comment.line` |
 
 They can be defined based on earlier constants in the section.
 
@@ -155,12 +174,12 @@ They can be defined based on earlier constants in the section.
 
 ... returns:
 
-| text             | type                            | start       | end       |
-| ---------------- | ------------------------------- | ----------- | --------- |
-| FIVE_K           | `variable.readonly.declaration` | start(1,5)  | end(1,10) |
-| =                | `operator`                      | start(1,12) | end(1,12) |
-| FIVE_THOUSAND    | `variable.readonly`             | start(1,14) | end(1,26) |
-| ' alias this ... | `comment`                       | start(1,30) | end(1,50) |
+| text             | semantic type                            | syntax (textmate) type      |
+| --- | --- |--- |
+| FIVE_K           | `variable.readonly.declaration` |  |
+| =                | `operator`                      | |
+| FIVE_THOUSAND    | `variable.readonly`             |  |
+| ' alias this ... | `comment`                       |  `comment.line` |
 
 They can be defined based on constants in other objects, too!
 
@@ -172,16 +191,36 @@ They can be defined based on constants in other objects, too!
 
 ... returns:
 
-| text               | type                            | start       | end         |
-| ------------------ | ------------------------------- | ----------- | ----------- | --------- |
-| DIGIT_NOVALUE      | `variable.readonly.declaration` | start(1,5)  | end(1,18)   |
-| =                  | `operator`                      | start(1,20) | end(1,20)   |
-| user               | `class                          | namespace`  | start(1,22) | end(1,23) |
-| .                  | `operator`                      | start(1,22) | end(1,23)   |
-| DIGIT_NOVALUE      | `variable.readonly`             | start(1,22) | end(1,23)   |
-| ' expose consta... | `comment`                       | start(1,27) | end(1,54)   |
+| text               | semantic type                            | syntax (textmate) type        |
+| --- | --- |--- |
+| DIGIT_NOVALUE      | `variable.readonly.declaration` |   |
+| =                  | `operator`                      |  |
+| user               | `namespace.module` |
+| .                  | `operator`                      |   |
+| DIGIT_NOVALUE      | `variable.readonly`             |   |
+| ' expose consta... | `comment`                       |  `comment.line` |
 
-**NOTE** Should `class` really be `namespace` ???
+They can be defined enumerations:
+
+**Sample Code:**
+
+```spin 
+#0, ST_UNKNOWN, ST_FORWARD, ST_REVERSE      ' param values
+```
+
+... returns:
+
+| text               | semantic type                            | syntax (textmate) type        |
+| --- | --- |--- |
+| #     |  |   |
+| 0     |  |  `constant.numeric.base10.spin` |
+| ,                  | `operator`                      |  |
+| ST_UNKNOWN               | `enumMember.declaration.readonly` |
+| ,                  | `operator`                      |   |
+| ST_FORWARD      | `enumMember.declaration.readonly`             |   |
+| ,                  | `operator`                      |   |
+| ST_REVERSE      | `enumMember.declaration.readonly`             |   |
+| ' param values | `comment`                       |  `comment.line`  |
 
 ### Example: PUB, PRI
 
@@ -195,12 +234,12 @@ PUB null()
 
 ... returns:
 
-| text | type                 | start       | end       |
-| ---- | -------------------- | ----------- | --------- |
-| PUB  | `keyword`            | start(1,1)  | end(1,3)  |
-| null | `method.declaration` | start(1,5)  | end(1,8)  |
-| \(   | `operator`           | start(1,9)  | end(1,9)  |
-| \)   | `operator`           | start(1,10) | end(1,10) |
+| text | semantic type                 | syntax (textmate) type          |
+| --- | --- |--- |
+| PUB  | `keyword`            | `keyword.block.pub.spin` |
+| null | `method.declaration` |   |
+| \(   | `operator`           | |
+| \)   | `operator`           | |
 
 Typical private method with a single return value and local variables:
 
@@ -212,28 +251,28 @@ PRI validateBmpFile(pBmpFileImage) : bValidStatus, lengthInBytes | pFileHeader, 
 
 ... returns:
 
-| text            | type                                 | start        | end        |
-| --------------- | ------------------------------------ | ------------ | ---------- |
-| PRI             | `keyword`                            | start(1,1)   | end(1,3)   |
-| validateBmpFile | `method.declaration.static`          | start(1,5)   | end(1,19)  |
-| \(              | `operator`                           | start(1,20)  | end(1,20)  |
-| pBmpFileImage   | `parameter.declaration.readonly`     | start(1,21)  | end(1,33)  |
-| \)              | `operator`                           | start(1,34)  | end(1,34)  |
-| :               | `operator`                           | start(1,36)  | end(1,36)  |
-| bValidStatus    | `parameter.declaration.local.return` | start(1,38)  | end(1,49)  |
-| ,               | `operator`                           | start(1,50)  | end(1,50)  |
-| lengthInBytes   | `parameter.declaration.local.return` | start(1,52)  | end(1,64)  |
-| \|              | `operator`                           | start(1,66)  | end(1,6)   |
-| pFileHeader     | `variable.declaration.local`         | start(1,68)  | end(1,78)  |
-| ,               | `operator`                           | start(1,79)  | end(1,79)  |
-| i               | `variable.declaration.local`         | start(1,81)  | end(1,81)  |
-| ,               | `operator`                           | start(1,82)  | end(1,82)  |
-| iStart          | `variable.declaration.local`         | start(1,84)  | end(1,89)  |
-| ,               | `operator`                           | start(1,90)  | end(1,90)  |
-| iEnd            | `variable.declaration.local`         | start(1,92)  | end(1,95)  |
-| ,               | `operator`                           | start(1,96)  | end(1,96)  |
-| pLastByte       | `variable.declaration.local`         | start(1,98)  | end(1,106) |
-| ' notes         | `comment`                            | start(1,109) | end(1,116) |
+| text            | semantic type                                 | syntax (textmate) type         |
+| --- | --- |--- |
+| PRI             | `keyword`                            |  `keyword.block.pri.spin`  |
+| validateBmpFile | `method.declaration.static`          |  |
+| \(              | `operator`                           |   |
+| pBmpFileImage   | `parameter.declaration.readonly`     |  |
+| \)              | `operator`                           |   |
+| :               | `operator`                           |  |
+| bValidStatus    | `parameter.declaration.local.return` |  |
+| ,               | `operator`                           |   |
+| lengthInBytes   | `parameter.declaration.local.return` |   |
+| \|              | `operator`                           |   |
+| pFileHeader     | `variable.declaration.local`         |   |
+| ,               | `operator`                           |   |
+| i               | `variable.declaration.local`         |   |
+| ,               | `operator`                           |   |
+| iStart          | `variable.declaration.local`         | |
+| ,               | `operator`                           |  |
+| iEnd            | `variable.declaration.local`         |   |
+| ,               | `operator`                           |  |
+| pLastByte       | `variable.declaration.local`         |  |
+| ' notes         | `comment`                            | |
 
 ### Example: OBJ
 
@@ -247,11 +286,11 @@ This section imports objects to be used.
 
 ... returns:
 
-| text                    | type       | start                  | end        |
-| ----------------------- | ---------- | ---------------------- | ---------- | --------- |
-| pixels                  | `class     | namespace.declaration` | start(1,5) | end(1,10) |
-| :                       | `operator` | start(1,25)            | end(1,25)  |
-| "isp_hub75_screenUtils" | `string`   | start(1,27)            | end(1,49)  |
+| text                    | semantic type       | syntax (textmate) type        |
+| --- | --- |--- |
+| pixels                  | `namespace.declaration` |  |
+| :                       | `operator` |   |
+| "isp\_hub75_screenUtils" | `meta.object.filename`   |   |
 
 **NOTE** Should `class` really be `namespace` ???
 
@@ -263,13 +302,13 @@ This section imports objects to be used.
 
 ... returns:
 
-| text                    | type                | start                  | end        |
-| ----------------------- | ------------------- | ---------------------- | ---------- | -------- |
-| digit                   | `class              | namespace.declaration` | start(1,5) | end(1,9) |
-| [                       | `operator`          | start(1,10)            | end(1,10)  |
-| MAX_DIGITS              | `variable.readonly` | start(1,11)            | end(1,20)  |
-| ]                       | `operator`          | start(1,21)            | end(1,21)  |
-| :                       | `operator`          | start(1,25)            | end(1,25)  |
-| "isp_hub75_screenUtils" | `string`            | start(1,27)            | end(1,42)  |
+| text                    | semantic type                | syntax (textmate) type        |
+| --- | --- |--- |
+| digit                   | `namespace.declaration` | `entity.name.object.language.spin`|
+| [                       | `operator`          |  |
+| MAX_DIGITS              | `variable.readonly` |  |
+| ]                       | `operator`          |  |
+| :                       | `operator`          |   |
+| "isp_hub75_screenUtils" |             | `meta.object.filename.spin` |
 
 **NOTE** Should `class` really be `namespace` ???

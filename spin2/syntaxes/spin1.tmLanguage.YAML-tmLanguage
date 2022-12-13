@@ -44,7 +44,7 @@ repository:
             name: constant.language.control.configuration.spin
             match: (?i)\b(XINPUT|XTAL(1|2|3)|RC(FAST|SLOW)|PLL(1|2|4|8|16)X)\b
       cog_functions:
-            name: keyword.spin.methods.cog_control
+            name: support.function.cog_control
             match: (?i)\b(COG(ID|NEW|INIT|STOP)|REBOOT)\b
       cog_register_names:
             name: variable.language.cog-register-names.spin
@@ -181,13 +181,13 @@ repository:
             name: meta.return-type.spin
             match: (?i)\b(RESULT)\b
       lock_functions:
-            name: keyword.spin.methods.process_control.spin
+            name: support.function.process_control.spin
             match: (?i)\b(LOCK(CLR|NEW|RET|SET))\b
       wait_functions:
-            name: keyword.spin.methods.waiting.spin
+            name: support.function.waiting.spin
             match: (?i)\b(WAIT(CNT|PEQ|PNE|VID))\b
       memory_functions:
-            name: keyword.spin.methods.memory.spin
+            name: support.function.memory.spin
             match: (?i)\b((BYTE|WORD|LONG)(FILL|MOVE)|LOOK(UPZ?|DOWNZ?)|STR(SIZE|COMP))\b
       storage_types:
             name: storage.type.pasm
