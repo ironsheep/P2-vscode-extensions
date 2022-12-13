@@ -25,8 +25,8 @@ Possible next additions:
 
 Minor highlighting update
 
-- Constant declarations now identified correctly
-- Spin builtin methods now identified so other themes can render them better
+- Constant declarations are now identified correctly
+- Spin builtin methods are now identified so other themes can render them better
 
 ## [1.7.3] 2022-12-09
 
