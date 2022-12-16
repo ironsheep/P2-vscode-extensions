@@ -1,0 +1,54 @@
+'' Doc comment
+''
+{{
+  Doc comment
+}}
+CON
+    CLKFREQ = 200_000_000
+    _clkfreq = CLKFREQ
+
+OBJ
+    color                       : "isp_hub75_color"
+    digit[color.NBR_DIGITS]     : "isp_hub75_7seg"
+
+PUB main(bDoNothing) : ok | idx
+    if bDoNothing
+        bDoNothing := TRUE ' yep we're doing nothing
+
+    DEBUG("clock frequency: ", udec(CLKFREQ), 13, 10)
+
+    debug(`term logTerm pos 100 460 size 40 10 textsize 16 color green)
+    debug(`plot screen pos 1560 120 size 640 480 backcolor black update)
+
+    ok := coginit(newcog, @pasm_program,0) + 1  'start another cog with a PASM program (another debugger will open)
+
+    repeat        'keep looping while incrementing a variable
+        idx++
+        debug        'break everytime through the loop if "DEBUG" is selected (default)
+
+PRI testMethod(param1) : bStatus | index
+    index := 0
+    bStatus := param1 + index + 1
+
+VAR
+    LONG  simpleVar[2]
+
+DAT
+    myString    byte    "test string",0
+    effs        byte    $ff[8]
+
+DAT
+                org
+
+pasm_program    debug                               ' do a DEBUG at the start of the program to open debugger
+.loop           add     pa,#1                       ' select "MAIN" in the debugger to single-step
+                sub     pb,#2                   wc
+    if_c        jmp     #.loop
+                jmp     #pasm_program
+
+:loop           add     pa,#1                       ' select "MAIN" in the debugger to single-step
+                sub     pb,#2                   wc
+    if_c        jmp     #:loop
+                jmp     #pasm_program
+
+testVariable   long  0[12]                          ' fill with some NOP's to make it easy to see the code above

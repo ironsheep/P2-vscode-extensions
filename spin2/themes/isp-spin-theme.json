@@ -251,8 +251,12 @@
     // colors
     "string": "#ba4343", // debug() strings
     "comment": "#538054", // single line non-doc comments
-    "label": "#9a5849", // pasm labels
-    "label.declaration": "#9a5849", // pasm labels
+    "label": "#9C775D", // pasm labels
+    "label.declaration": "#9C775D", // pasm labels
+    "label.static": "#99605C", // pasm local labels
+    "label.declaration.static": "#99605C", // pasm local labels
+    "label.static.illegalUse": "#ff0000", // pasm local labels
+    "label.declaration.static.illegalUse": "#ff0000", // pasm local labels
     "variable": "#8bc4e3", // class global variable
     "variable.modification": "#8bc4e3", // class global variable
     "variable.instance": "#64bfb9", // instance global varable
@@ -279,7 +283,7 @@
     "displayType": "#b37746", // debug() display type
     "displayName": "#5d59a0", // debug() display userName
     "displayName.declaration": "#5d59a0", // debug() display userName
-    "setupParameter": "#aaac61", // debug() display type
+    "setupParameter": "#aaac61", // debug() setup parameter name
     "feedParameter": "#b4a666", // debug() display type
     // things from typescript
     "parameter.declaration": "#b68ce3", // TypeScript: passed parameters .ts
