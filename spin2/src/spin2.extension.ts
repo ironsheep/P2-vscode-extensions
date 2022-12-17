@@ -10,10 +10,10 @@ import * as vscode from "vscode";
 import { Formatter } from "./spin.tabFormatter";
 import { tabConfiguration, reloadTabConfiguration } from "./spin.tabFormatter.configuration";
 
-import { overtypeBeforePaste, overtypeBeforeType } from "./spin.insertMode.behavior";
-import { configuration, reloadConfiguration } from "./spin.insertMode.configuration";
-import { getMode, resetModes, toggleMode, toggleMode2State, eInsertMode, modeName } from "./spin.insertMode.mode";
-import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.insertMode.statusBarItem";
+import { overtypeBeforePaste, overtypeBeforeType } from "./spin.editMode.behavior";
+import { configuration, reloadConfiguration } from "./spin.editMode.configuration";
+import { getMode, resetModes, toggleMode, toggleMode2State, eEditMode, modeName } from "./spin.editMode.mode";
+import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.editMode.statusBarItem";
 import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semanticAndOutline";
 import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
 
@@ -178,10 +178,10 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
       default:
         cursorStyle = configuration.defaultCursorStyle;
         break;
-      case eInsertMode.OVERTYPE:
+      case eEditMode.OVERTYPE:
         cursorStyle = configuration.secondaryCursorStyle;
         break;
-      case eInsertMode.ALIGN:
+      case eEditMode.ALIGN:
         cursorStyle = configuration.ternaryCursorStyle;
         break;
     }
@@ -253,7 +253,7 @@ const onDidChangeConfiguration = () => {
 
 function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;
-  var editMode: eInsertMode = eInsertMode.INSERT;
+  var editMode: eEditMode = eEditMode.INSERT;
   if (editor == undefined) {
     //logFormatMessage("* VSCode type (early)");
     vscode.commands.executeCommand("default:type", args);
@@ -270,10 +270,10 @@ function typeCommand(args: { text: string }) {
   if (editor != undefined) {
     editMode = getMode(editor);
   }
-  if (editor != undefined && formatter.isEnbled() && editMode == eInsertMode.OVERTYPE) {
+  if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.OVERTYPE) {
     logFormatMessage("* OVERTYPE type");
     overtypeBeforeType(editor, args.text, false);
-  } else if (editor != undefined && formatter.isEnbled() && editMode == eInsertMode.ALIGN) {
+  } else if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.ALIGN) {
     formatter.alignBeforeType(editor, args.text, false);
   } else {
     //logFormatMessage("* VSCode type");
@@ -287,7 +287,7 @@ function deleteLeftCommand() {
   var bAlignEdit: boolean = editor != undefined && formatter.isEnbled();
   if (editor != undefined) {
     const editMode = getMode(editor);
-    if (editMode != eInsertMode.ALIGN) {
+    if (editMode != eEditMode.ALIGN) {
       bAlignEdit = false;
     }
   }
@@ -303,7 +303,7 @@ function deleteLeftCommand() {
 function deleteRightCommand() {
   const editor = vscode.window.activeTextEditor;
   logFormatMessage("* deleteRight");
-  if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
+  if (formatter.isEnbled() && editor && getMode(editor) == eEditMode.ALIGN) {
     formatter.alignDelete(editor, true);
     return null;
   } else {
@@ -316,12 +316,12 @@ function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
   const editor = vscode.window.activeTextEditor;
   if (editor != undefined) {
     logFormatMessage("* paste");
-    if (getMode(editor) == eInsertMode.OVERTYPE && configuration.overtypePaste) {
+    if (getMode(editor) == eEditMode.OVERTYPE && configuration.overtypePaste) {
       // TODO: Make paste work with align
       logFormatMessage("* OVERTYPE paste");
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
-    } else if (formatter.isEnbled() && getMode(editor) == eInsertMode.ALIGN && !args.pasteOnNewLine) {
+    } else if (formatter.isEnbled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
       formatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {

@@ -1,8 +1,8 @@
 "use strict";
 import * as vscode from "vscode";
 
-import { configuration } from "./spin.insertMode.configuration";
-import { eInsertMode } from "./spin.insertMode.mode";
+import { configuration } from "./spin.editMode.configuration";
+import { eEditMode } from "./spin.editMode.mode";
 
 let statusBarItem: vscode.StatusBarItem | null;
 
@@ -29,7 +29,7 @@ export const destroyStatusBarItem = () => {
   statusBarItem = null;
 };
 
-export const updateStatusBarItem = (insertMode: eInsertMode | null) => {
+export const updateStatusBarItem = (insertMode: eEditMode | null) => {
   if (statusBarItem == null) {
     return;
   }
@@ -44,13 +44,13 @@ export const updateStatusBarItem = (insertMode: eInsertMode | null) => {
 
   let sbiText;
 
-  if (insertMode == eInsertMode.OVERTYPE) {
+  if (insertMode == eEditMode.OVERTYPE) {
     sbiText = configuration.labelOvertypeMode;
     statusBarItem.tooltip = "Overtype Mode, click to change to Align Mode (if enabled) or Insert Mode";
-  } else if (insertMode == eInsertMode.INSERT) {
+  } else if (insertMode == eEditMode.INSERT) {
     sbiText = configuration.labelInsertMode;
     statusBarItem.tooltip = "Insert Mode, click to change to Overtype Mode";
-  } else if (insertMode == eInsertMode.ALIGN) {
+  } else if (insertMode == eEditMode.ALIGN) {
     sbiText = configuration.labelAlignMode;
     statusBarItem.tooltip = "Align Mode, click to change to Insert Mode";
   }

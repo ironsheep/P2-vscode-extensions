@@ -4,7 +4,7 @@
 
 import * as vscode from "vscode";
 import { EndOfLine } from "vscode";
-import { getMode, eInsertMode, modeName } from "./spin.insertMode.mode";
+import { getMode, eEditMode, modeName } from "./spin.editMode.mode";
 
 import { tabConfiguration, reloadTabConfiguration } from "./spin.tabFormatter.configuration";
 
@@ -736,7 +736,7 @@ export class Formatter {
               this._logMessage(`    line#${currLine} > after-DELETE cursor-[${cursorPos.line}:${cursorPos.character}]`);
               // since we are single line we could have putback text to put it back in if we need!
               // if we are in align mode, let's count this change
-              if (getMode(editor) == eInsertMode.ALIGN) {
+              if (getMode(editor) == eEditMode.ALIGN) {
                 // see if we have double-white-space to manipulate...
                 let doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, textLeftEdgePos);
                 if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
@@ -756,7 +756,7 @@ export class Formatter {
               //cursorPos = cursorPos.with(currLine, cursorPos.character + nbrSpacesToInsert);
               //this._logMessage(` - line#${currLine} afterINSERT cursor-[${cursorPos.line}:${cursorPos.character}]`);
               // if we are in align mode, let's count this change
-              if (getMode(editor) == eInsertMode.ALIGN) {
+              if (getMode(editor) == eEditMode.ALIGN) {
                 // see if we have double-white-space to manipulate...
                 let doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, textLeftEdgePos);
                 if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
@@ -888,11 +888,11 @@ export class Formatter {
             this._logMessage(`    line#${currLine} pushed DELETE spaces [${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}], tabStop: ${nextTabStopToLeft})`);
             results.push(vscode.TextEdit.delete(range));
             // if we are in align mode, let's count this change
-            const currMode: eInsertMode = getMode(editor);
+            const currMode: eEditMode = getMode(editor);
             const currModeName: string = modeName(currMode);
             this._logMessage(`    Editor Mode = [${currModeName}]`);
 
-            if (currMode == eInsertMode.ALIGN) {
+            if (currMode == eEditMode.ALIGN) {
               // see if we have double-white-space to manipulate...
               const doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, deleteEnd);
               if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
@@ -926,7 +926,7 @@ export class Formatter {
       vscode.commands.executeCommand("default:type", { text: text });
       return;
     }
-    if (getMode(editor) != eInsertMode.ALIGN) {
+    if (getMode(editor) != eEditMode.ALIGN) {
       this._logMessage(`* alnBT ABORT, not in Align mode`);
       return; // bail if not in Align Mode!
     }
@@ -991,7 +991,7 @@ export class Formatter {
    * @return Nothing
    */
   alignDelete(editor: vscode.TextEditor, isRight: boolean) {
-    if (getMode(editor) != eInsertMode.ALIGN) {
+    if (getMode(editor) != eEditMode.ALIGN) {
       this._logMessage(`* alnDEL ABORT, not in Align mode`);
       return; // bail if not in Align Mode!
     }
