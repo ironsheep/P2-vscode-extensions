@@ -253,26 +253,51 @@ const onDidChangeConfiguration = () => {
 
 function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;
-  const firstChar: number = args.text.charCodeAt(0);
-  if (args.text.length == 1 && firstChar < 0x20) {
-    logFormatMessage("* type [0x" + firstChar.toString(16) + "](" + args.text.length + ")");
-  } else {
-    logFormatMessage("* type [" + args.text + "](" + args.text.length + ")");
+  var editMode: eInsertMode = eInsertMode.INSERT;
+  if (editor == undefined) {
+    //logFormatMessage("* VSCode type (early)");
+    vscode.commands.executeCommand("default:type", args);
+    return;
   }
-  if (editor && getMode(editor) == eInsertMode.OVERTYPE) {
+  if (formatDebugLogEnabled) {
+    const firstChar: number = args.text.charCodeAt(0);
+    if (args.text.length == 1 && firstChar < 0x20) {
+      logFormatMessage("* type [0x" + firstChar.toString(16) + "](" + args.text.length + ")");
+    } else {
+      logFormatMessage("* type [" + args.text + "](" + args.text.length + ")");
+    }
+  }
+  if (editor != undefined) {
+    editMode = getMode(editor);
+  }
+  if (editor != undefined && formatter.isEnbled() && editMode == eInsertMode.OVERTYPE) {
+    logFormatMessage("* OVERTYPE type");
     overtypeBeforeType(editor, args.text, false);
-  } else if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
+  } else if (editor != undefined && formatter.isEnbled() && editMode == eInsertMode.ALIGN) {
     formatter.alignBeforeType(editor, args.text, false);
-  } else vscode.commands.executeCommand("default:type", args);
+  } else {
+    //logFormatMessage("* VSCode type");
+    vscode.commands.executeCommand("default:type", args);
+  }
 }
 
 function deleteLeftCommand() {
   const editor = vscode.window.activeTextEditor;
   logFormatMessage("* deleteLeft");
-  if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
+  var bAlignEdit: boolean = editor != undefined && formatter.isEnbled();
+  if (editor != undefined) {
+    const editMode = getMode(editor);
+    if (editMode != eInsertMode.ALIGN) {
+      bAlignEdit = false;
+    }
+  }
+  if (bAlignEdit && editor != undefined) {
     formatter.alignDelete(editor, false);
     return null;
-  } else return vscode.commands.executeCommand("deleteLeft");
+  } else {
+    //logFormatMessage("* VSCode deleteLeft");
+    return vscode.commands.executeCommand("deleteLeft");
+  }
 }
 
 function deleteRightCommand() {
@@ -281,21 +306,26 @@ function deleteRightCommand() {
   if (formatter.isEnbled() && editor && getMode(editor) == eInsertMode.ALIGN) {
     formatter.alignDelete(editor, true);
     return null;
-  } else return vscode.commands.executeCommand("deleteRight");
+  } else {
+    //logFormatMessage("* VSCode deleteRight");
+    return vscode.commands.executeCommand("deleteRight");
+  }
 }
 
 function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
   const editor = vscode.window.activeTextEditor;
-  if (editor) {
+  if (editor != undefined) {
     logFormatMessage("* paste");
     if (getMode(editor) == eInsertMode.OVERTYPE && configuration.overtypePaste) {
       // TODO: Make paste work with align
+      logFormatMessage("* OVERTYPE paste");
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
     } else if (formatter.isEnbled() && getMode(editor) == eInsertMode.ALIGN && !args.pasteOnNewLine) {
       formatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {
+      //logFormatMessage("* VSCode paste");
       return vscode.commands.executeCommand("default:paste", args);
     }
   }
