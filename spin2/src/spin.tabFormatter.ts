@@ -945,13 +945,13 @@ export class Formatter {
 
             // handle alignment
             if (typeSel.isSingleLine) {
-              let typeSize = editor.document.offsetAt(typeSel.end) - editor.document.offsetAt(typeSel.start);
+              let typeSize: number = editor.document.offsetAt(typeSel.end) - editor.document.offsetAt(typeSel.start);
               if (typeSize > 1) undoStop = true;
               if (typeSize != text.length) {
-                let spaceDiff = text.length - typeSize;
-                let currWord = editor.document.getWordRangeAtPosition(typeSel.end, this.alignWordExpr);
+                let spaceDiff: number = text.length - typeSize;
+                let currWord: vscode.Range | undefined = editor.document.getWordRangeAtPosition(typeSel.end, this.alignWordExpr);
                 if (!currWord) currWord = editor.document.getWordRangeAtPosition(typeSel.end.translate(0, +1), this.alignWordExpr);
-                let spacesAfter;
+                let spacesAfter: vscode.Range | undefined = undefined;
                 if (currWord && !currWord.end.isEqual(lineEndPosition)) {
                   spacesAfter = editor.document.getWordRangeAtPosition(currWord.end, / {2,}/);
                 } else if (!typeSel.end.isEqual(lineEndPosition)) {
@@ -961,7 +961,7 @@ export class Formatter {
                 }
                 if (spacesAfter && typeSize < text.length) {
                   // remove spaces if possible
-                  let spaceCount = editor.document.offsetAt(spacesAfter.end) - editor.document.offsetAt(spacesAfter.start);
+                  let spaceCount: number = editor.document.offsetAt(spacesAfter.end) - editor.document.offsetAt(spacesAfter.start);
                   edit.delete(new vscode.Range(spacesAfter.end.translate(0, -Math.min(spaceDiff, spaceCount - 1)), spacesAfter.end));
                 } else if (spacesAfter && typeSize > text.length) {
                   // Add spaces
@@ -1004,32 +1004,53 @@ export class Formatter {
         if (selection.isEmpty) {
           if (selection.start.character == 0 && !isRight) {
             // Delete at beginning of line
-            if (selection.start.line == 0) return selection;
-            let linelen = editor.document.lineAt(selection.start.line - 1).range.end.character;
-            range = new vscode.Range(new vscode.Position(selection.start.line - 1, linelen), selection.start);
+            if (selection.start.line > 0) {
+              let linelen: number = editor.document.lineAt(selection.start.line - 1).range.end.character;
+              range = new vscode.Range(new vscode.Position(selection.start.line - 1, linelen), selection.start);
+            }
           } else {
             range = new vscode.Range(selection.start, selection.start.translate(0, isRight ? +1 : -1));
           }
         }
-        let wordRange = editor.document.getWordRangeAtPosition(range.end.translate(0, +1), this.alignWordExpr) || range;
-        let checkRange = new vscode.Range(range.end, range.end.translate(0, +2));
-
-        let rangeSize = editor.document.offsetAt(range.end) - editor.document.offsetAt(range.start); // WTF why isn't there an API for this??????
-
-        let rangeEndtoEndOfLine = new vscode.Range(range.end, editor.document.lineAt(range.end).range.end);
-
+        let wordRange: vscode.Range = editor.document.getWordRangeAtPosition(range.end.translate(0, +1), this.alignWordExpr) || range;
+        let checkRange: vscode.Range = new vscode.Range(range.end, range.end.translate(0, +2));
+        let rangeSize: number = editor.document.offsetAt(range.end) - editor.document.offsetAt(range.start); // WTF why isn't there an API for this??????
+        let rangeEndtoEndOfLine: vscode.Range = new vscode.Range(range.end, editor.document.lineAt(range.end).range.end);
+        this._logMessage(
+          `*          wordRange=[${wordRange.start.line}:${wordRange.start.character} - ${wordRange.end.character}], checkRange=[${checkRange.start.line}:${checkRange.start.character} - ${checkRange.end.character}]`
+        );
+        this._logMessage(
+          `*          range=[${range.start.line}:${range.start.character} - ${range.end.character}], rangeSize(${rangeSize}), rangeEndtoEndOfLine=[${rangeEndtoEndOfLine.start.line}:${rangeEndtoEndOfLine.start.character} - ${rangeEndtoEndOfLine.end.character}]`
+        );
         if (!range.isSingleLine) {
+          const rngLen: number = range.end.character - range.start.character + 1;
+          this._logMessage(`*  DELETE  range=[${range.start.line}:${range.start.character} - ${range.end.character}](${rngLen})`);
           edit.delete(range);
         } else if (rangeEndtoEndOfLine.isEmpty || editor.document.getText(rangeEndtoEndOfLine).match(/^ +$/)) {
-          edit.delete(range.union(rangeEndtoEndOfLine));
+          let unionRange: vscode.Range = range.union(rangeEndtoEndOfLine);
+          const rngLen: number = unionRange.end.character - unionRange.start.character + 1;
+          this._logMessage(`*  DELETE  unionRange=[${unionRange.start.line}:${unionRange.start.character} - ${unionRange.end.character}](${rngLen})`);
+          edit.delete(unionRange);
         } else if (editor.document.getText(checkRange) === "  " || wordRange.isEmpty) {
           if (!editor.document.getText(range).match(/^ +$/)) {
+            const rngLen: number = range.end.character - range.start.character + 1;
+            this._logMessage(`*  REPLACE  range=[${range.start.line}:${range.start.character} - ${range.end.character}](${rngLen}) with ' '(${rangeSize})`);
             edit.replace(range, " ".repeat(rangeSize));
+          } else {
+            this._logMessage(`*  DUAL SPACE not FOUND`);
           }
         } else {
+          const rngLen: number = range.end.character - range.start.character + 1;
+          this._logMessage(`*  DELETE  range=[${wordRange.start.line}:${range.start.character} - ${range.end.character}](${rngLen})`);
           edit.delete(range);
-          if (!wordRange.end.isEqual(rangeEndtoEndOfLine.end)) edit.insert(wordRange.end, " ".repeat(rangeSize));
+          if (!wordRange.end.isEqual(rangeEndtoEndOfLine.end)) {
+            const rngLen: number = wordRange.end.character - wordRange.start.character + 1;
+            this._logMessage(`*  INSERT  wordRange=[${wordRange.start.line}:${wordRange.start.character} - ${wordRange.end.character}](${rngLen}) with ' '(${rangeSize})`);
+            edit.insert(wordRange.end, " ".repeat(rangeSize));
+          }
         }
+        const rngLen: number = range.end.character - range.start.character + 1;
+        this._logMessage(`*  SELECT  range=[${range.start.line}:${range.start.character} - ${range.end.character}](${rngLen})`);
         return new vscode.Selection(range.start, range.start);
       });
     });

@@ -21,6 +21,19 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+Upcoming fixes:
+
+- Correct tab behavior in Align edit mode (no longer refuses to add spaces when already at tabstop)
+- Correct delete (left/Right) in Align edit mode
+
+## [1.7.5] 2022-12-16
+
+Minor highlighting update
+
+- Add offset color for local vs. global pasm labels
+- Detect and Flag invalid local pasm label syntax version: pasm1 vs. pasm2
+- Correct backspace behavior (no longer removes more than one character)
+
 ## [1.7.4] 2022-12-13
 
 Minor highlighting update
