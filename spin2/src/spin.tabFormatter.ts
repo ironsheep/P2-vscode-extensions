@@ -1004,58 +1004,86 @@ export class Formatter {
         this._logMessage(
           `* alnDEL enabled=[${this.enable}], isRight=[${isRight}], selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
         );
+
+        // TEST CASES
+        //   delete left at head of line removes line-end of prior line
+        //   delete right at end of line removes line end of this line
+        //   insert point in work
+        //   insert point in spaces
+        //   selection within single line
+
+        let { firstLine, lastLine, lineCount } = this.lineNumbersFromSelection(editor.document, selection);
+        const bWholeLines: boolean = firstLine != lastLine;
+        this._logMessage(`  -- firstLine=[${firstLine}], lastLine=[${lastLine}], lineCount-[${lineCount}]`);
+        const lastLineText: string = editor.document.lineAt(lastLine).text;
+        this._logMessage(`  -- last line of sel. preDEL=[${lastLineText}](${lastLineText.length})`);
+
         let range: vscode.Range = selection;
+        let cursorRange: vscode.Range = range;
+        if (selection.isSingleLine && !selection.isEmpty) {
+          // if we have part of a line then place cursor at start of delete
+          cursorRange = range.with(range.start, range.start);
+        } else if (bWholeLines) {
+          // if we have multi-line then place cursor at start of delete
+          cursorRange = range.with(range.start, range.start);
+        }
+        let rngLen: number = range.end.character - range.start.character;
+        // if selection spans multiple lines we don't insert anything after delete
+        let bNoInsert: boolean = bWholeLines ? true : false;
         if (selection.isEmpty) {
-          if (selection.start.character == 0 && !isRight) {
-            // Delete at beginning of line
-            if (selection.start.line > 0) {
-              let linelen: number = editor.document.lineAt(selection.start.line - 1).range.end.character;
-              range = new vscode.Range(new vscode.Position(selection.start.line - 1, linelen), selection.start);
+          rngLen = 1; // all of the following are 1 char long (even tho' some are len-ends)
+          // are we deleting left from start of line?
+          if (selection.end.character == 0 && !isRight) {
+            // YES, remove line end from prior line
+            const priorLine: number = lastLine > 0 ? lastLine - 1 : lastLine;
+            const priorLineText: string = editor.document.lineAt(priorLine).text;
+            const priorLineLast: vscode.Position = range.end.with(priorLine, priorLineText.length);
+            range = range.with(priorLineLast, range.end);
+            bNoInsert = true;
+            // cursor range is good
+          }
+          // are we deleting right from end of line?
+          else if (selection.end.character == lastLineText.length && isRight) {
+            // YES, remove line end from this line
+            const endPlusOne: vscode.Position = range.end.with(range.end.line + 1, 0);
+            range = range.with(range.start, endPlusOne);
+            bNoInsert = true;
+            // cursor range is good
+          } else {
+            // then simply delete 1 char left or right
+            if (isRight) {
+              // from right
+              const endPlusOne: vscode.Position = range.end.with(range.end.line, range.end.character + 1);
+              range = range.with(range.start, endPlusOne);
+            } else {
+              // from left
+              const endMinusOne: vscode.Position = range.end.with(range.end.line, range.end.character - 1);
+              range = range.with(endMinusOne, range.end);
             }
-          } else {
-            range = new vscode.Range(selection.start, selection.start.translate(0, isRight ? +1 : -1));
           }
         }
-        let wordRange: vscode.Range = editor.document.getWordRangeAtPosition(range.end.translate(0, +1), this.alignWordExpr) || range;
-        let checkRange: vscode.Range = new vscode.Range(range.end, range.end.translate(0, +2));
-        let rangeSize: number = editor.document.offsetAt(range.end) - editor.document.offsetAt(range.start); // WTF why isn't there an API for this??????
-        let rangeEndtoEndOfLine: vscode.Range = new vscode.Range(range.end, editor.document.lineAt(range.end).range.end);
-        this._logMessage(
-          `*          wordRange=[${wordRange.start.line}:${wordRange.start.character} - ${wordRange.end.character}], checkRange=[${checkRange.start.line}:${checkRange.start.character} - ${checkRange.end.character}]`
-        );
-        this._logMessage(
-          `*          range=[${range.start.line}:${range.start.character} - ${range.end.character}], rangeSize(${rangeSize}), rangeEndtoEndOfLine=[${rangeEndtoEndOfLine.start.line}:${rangeEndtoEndOfLine.start.character} - ${rangeEndtoEndOfLine.end.character}]`
-        );
-        if (!range.isSingleLine) {
-          const rngLen: number = range.end.character - range.start.character + 1;
-          this._logMessage(`*  DELETE  range=[${range.start.line}:${range.start.character} - ${range.end.character}](${rngLen})`);
-          edit.delete(range);
-        } else if (rangeEndtoEndOfLine.isEmpty || editor.document.getText(rangeEndtoEndOfLine).match(/^ +$/)) {
-          let unionRange: vscode.Range = range.union(rangeEndtoEndOfLine);
-          const rngLen: number = unionRange.end.character - unionRange.start.character + 1;
-          this._logMessage(`*  DELETE  unionRange=[${unionRange.start.line}:${unionRange.start.character} - ${unionRange.end.character}](${rngLen})`);
-          edit.delete(unionRange);
-        } else if (editor.document.getText(checkRange) === "  " || wordRange.isEmpty) {
-          if (!editor.document.getText(range).match(/^ +$/)) {
-            const rngLen: number = range.end.character - range.start.character + 1;
-            this._logMessage(`*  REPLACE  range=[${range.start.line}:${range.start.character} - ${range.end.character}](${rngLen}) with ' '(${rangeSize})`);
-            edit.replace(range, " ".repeat(rangeSize));
-          } else {
-            this._logMessage(`*  DUAL SPACE not FOUND`);
-          }
-        } else {
-          const rngLen: number = range.end.character - range.start.character + 1;
-          this._logMessage(`*  DELETE  range=[${wordRange.start.line}:${range.start.character} - ${range.end.character}](${rngLen})`);
-          edit.delete(range);
-          if (!wordRange.end.isEqual(rangeEndtoEndOfLine.end)) {
-            const rngLen: number = wordRange.end.character - wordRange.start.character + 1;
-            this._logMessage(`*  INSERT  wordRange=[${wordRange.start.line}:${wordRange.start.character} - ${wordRange.end.character}](${rngLen}) with ' '(${rangeSize})`);
-            edit.insert(wordRange.end, " ".repeat(rangeSize));
+
+        this._logMessage(`*  DELETE  range=[${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}](${rngLen})`);
+        edit.delete(range);
+
+        if (!bNoInsert) {
+          // grab the text of the current selected line
+          const currLineText: string = editor.document.lineAt(lastLine).text;
+          // now use selection to skip whitespace to right of cursor
+          const cursorPos: vscode.Position = selection.end;
+          const replaceLen: number = rngLen;
+
+          const textLeftEdge: vscode.Position = this.locateLeftTextEdge(currLineText, cursorPos);
+          const doubleWhitePos: vscode.Position = this.locateDoubleWhiteLeftEdge(currLineText, textLeftEdge);
+          this._logMessage(`  -- postDEL=[${currLineText}](${currLineText.length})`);
+
+          if (doubleWhitePos.line != 0 && doubleWhitePos.character != 0) {
+            this._logMessage(`*  INSERT  ' '(${replaceLen}) at=[${doubleWhitePos.line}:${doubleWhitePos.character}]`);
+            edit.insert(doubleWhitePos, " ".repeat(replaceLen));
           }
         }
-        const rngLen: number = range.end.character - range.start.character + 1;
-        this._logMessage(`*  SELECT  range=[${range.start.line}:${range.start.character} - ${range.end.character}](${rngLen})`);
-        return new vscode.Selection(range.start, range.start);
+        this._logMessage(`*  CURSOR  range=[${cursorRange.start.line}:${cursorRange.start.character} - ${cursorRange.end.line}:${cursorRange.end.character}](${rngLen})`);
+        return new vscode.Selection(cursorRange.start, cursorRange.start);
       });
     });
   }

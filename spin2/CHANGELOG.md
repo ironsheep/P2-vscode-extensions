@@ -24,7 +24,14 @@ Possible next additions:
 Upcoming fixes:
 
 - Correct tab behavior in Align edit mode (no longer refuses to add spaces when already at tabstop)
-- Correct delete (left/Right) in Align edit mode
+
+## [1.7.5] 2022-12-16
+
+Minor tabbing update
+
+- `end` and `endasm` are now positioned using DAT tabstops
+- Corrected delete (left/Right) behavior in Align edit mode
+
 
 ## [1.7.5] 2022-12-16
 
