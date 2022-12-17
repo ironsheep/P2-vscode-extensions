@@ -224,8 +224,9 @@ export class Formatter {
     //  if we find one of the ORGs and NOT END then we return DAT so as to use
     //   DAT tabs in the PUB section for inline PASM
     let blockName: string = "";
-    let bFoundOrg = false;
-    let bFoundEnd = false;
+    let bFoundOrg: boolean = false;
+    let bFoundEnd: boolean = false;
+    let bottomLine: number = selection.end.line;
     for (let lineIndex = selection.anchor.line; lineIndex >= 0; lineIndex--) {
       const line = document.lineAt(lineIndex);
       if (line.text.length < 3) {
@@ -250,7 +251,10 @@ export class Formatter {
           matchEnd = line.text.toLowerCase().match(this.endIdentifierREgEx2);
         }
         if (matchEnd) {
-          bFoundEnd = true;
+          // if we are sitting on the END line we need to still be in DAT tabs
+          if (lineIndex != bottomLine) {
+            bFoundEnd = true;
+          }
         }
         //this._logMessage(`   -- matchOrg-[${matchOrg}]`);
       }
