@@ -65,8 +65,8 @@ The following are specific `Tab` cases with intended outcomes. Each case is prec
 
 #### [TIP2] insert point in white
 
-- Tab inserts spaces left of cursor to the next tab-stop. 
-- The cursor and all line content to the right of the cursor move to the new tab-stop.
+- Tab inserts spaces left of cursor moving text to right of the cursor to the next tab-stop. 
+- The cursor is left to left of text that moved.
 
 #### [Group TSE1-4] ---  1st char (left-most) of selection is whitespace  ---
 
@@ -84,12 +84,13 @@ For each of the selections in this group:
 ##### [TSE1] Selection is all white (and DOES span a tab-stop)</br>[TSE2] Selection starts in white, ends in non-white (and whitespace DOES span a tab-stop)
 
 - Spaces are then removed from the left of this cursor postion to move the text left to the prior tab stop. 
-- The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+- The cursor ends up a tthe left edge of the text that was to the right of it.
 
 ##### [TSE3] Selection is all white (and DOES NOT span a tab-stop)</br>[TSE4] Selection starts in white, ends in non-white (and whitespace DOES NOT span a tab-stop)
 
 - If text is already at a tab-stop then nothing happens. Otherwise (if text was not at a tab-stop) then spaces are then inserted to the left of this new cursor postion to the next tab stop.
-- The cursor ends up moving to this new tab-stop along with any text that was to the right of it.
+- The cursor ends up a tthe left edge of the text that was to the right of it.
+
 
 #### [Group TSE5,6] ---  1st char of selection is NOT whitespace  ---
 

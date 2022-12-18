@@ -37,30 +37,29 @@ CON
 
 DAT  { hub data }
 
-'-------+-----+---------+-------+---------------+-------+-----------------------+
-        mbox_copy       long    0
+'---+-----------+---+---+---+-------------------+---+---+---+---+---+-----------+
+    mbox_copy       long    0
     mbox_command    long    0
-                 mbox_status     long    0
-        mbox_debug         long    0
+    mbox_status     long    0
+    mbox_debug      long    0
 
-'-------+-----+---------+-------+---------------+-------+-----------------------+
-        rx                 long    0
+    rx              long    0
 
-'-------+-----+---------+-------+---------------+-------+-----------------------+
-        str_sd_err      byte    "ERROR",0
+    str_sd_err      byte    "ERROR",0
 
     orgh
-_hubTxStr   mov rx,#1
-            ret
+'---+-----------+---+---+---+-------------------+---+---+---+---+---+-----------+
+_hubTxStr       mov     rx, #1
+                ret
 
-_hubTx   mov rx,#1
-            ret
+_hubTx          mov     rx, #1
+                ret
 
-_hubTxCR   mov rx,#1
-            ret
+_hubTxCR        mov     rx, #1
+                ret
 
-_hubMonitor   mov rx,#1
-            ret
+_hubMonitor     mov     rx, #1
+                ret
 
 PUB sample_spin() | i
 

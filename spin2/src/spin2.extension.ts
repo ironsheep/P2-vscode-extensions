@@ -91,14 +91,18 @@ export const activate = (context: vscode.ExtensionContext) => {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
           var textEdits = await formatter.indentTabStop(document, editor);
+          let [cursorSelect, bShouldSelect] = formatter.indentEndingSelection();
           applyTextEdits(document, textEdits!);
+          if (bShouldSelect) {
+            formatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
+            editor.selection = cursorSelect;
+          }
         } catch (error) {
           await vscode.window.showErrorMessage("Formatter TAB Problem");
           console.error(error);
         }
       })
     );
-
     const outdentTabStopCommand = "spin2.outdentTabStop";
 
     context.subscriptions.push(
@@ -108,7 +112,12 @@ export const activate = (context: vscode.ExtensionContext) => {
           const editor = vscode.window.activeTextEditor!;
           const document = editor.document!;
           var textEdits = await formatter.outdentTabStop(document, editor);
+          let [cursorSelect, bShouldSelect] = formatter.outdentEndingSelection();
           applyTextEdits(document, textEdits!);
+          if (bShouldSelect) {
+            formatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
+            editor.selection = cursorSelect;
+          }
           console.log();
         } catch (error) {
           await vscode.window.showErrorMessage("Formatter Shift+TAB Problem");
