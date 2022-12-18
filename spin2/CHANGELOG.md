@@ -21,16 +21,14 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-Upcoming fixes:
 
-- Correct tab behavior in Align edit mode (no longer refuses to add spaces when already at tabstop)
-
-## [1.7.5] 2022-12-16
+## [1.7.6] 2022-12-17
 
 Minor tabbing update
 
-- `end` and `endasm` are now positioned using DAT tabstops
+- `end` and `endasm` are now positioned using **In-line Pasm** tabstops
 - Corrected delete (left/Right) behavior in Align edit mode
+- Cursor now positions as expected after TAB / SHIFT+TAB (this didn't work before)
 
 
 ## [1.7.5] 2022-12-16
