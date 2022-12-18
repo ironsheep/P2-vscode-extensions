@@ -15,8 +15,8 @@ I'm also expecting to document building and download with various tools such as 
 
 On this Page:
 
-- [VSCode development of P2 Projects](#vscode-development-of-p2-projects)
-- [Tasks in VScode](#tasks-in-vscode)
+- [VSCode development of P2 Projects](#vscode-development-of-p2-projects) - background behind why things are organized this way
+- [Tasks in VScode](#tasks-in-vscode) - this provides more detail about vscode tasks and lists what work is still needing to be done 
 - [P2 Code Development with FlexProp on macOS](#p2-code-development-with-flexprop-on-macos)
 - [P2 Code Development with FlexProp on Windows](#p2-code-development-with-flexprop-on-windows)
 - [P2 Code Development with FlexProp on Raspberry Pi](#p2-code-development-with-flexprop-on-raspberry-pi)
@@ -25,7 +25,9 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
+- [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
+*The "P2 Code Development..." sections provide step-by-step setup instructions *
 
 ### Latest Updates
 
@@ -127,6 +129,8 @@ See: [VSCode "Tasks" Reference Page](https://code.visualstudio.com/docs/editor/t
 There are a number of types of tasks and places Task definitions live. These include [Auto-detected Tasks](https://code.visualstudio.com/docs/editor/tasks#_task-autodetection), [User level tasks](https://code.visualstudio.com/docs/editor/tasks#_user-level-tasks), and [Custom Tasks](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks).  Tasks when run, can be crafted to depend upon the running of other tasks  See: [Compound Tasks](https://code.visualstudio.com/docs/editor/tasks#_compound-tasks)  Some tasks can be [run in background](https://code.visualstudio.com/docs/editor/tasks#_background-watching-tasks) such as file watchers which execute when a file has been changed.
 
 When you run VScode on multiple operating systems and want to be able to run a projects tasks on whichever machine you are on then you can specify os-specific alternatives to be used withing the task. See [Operating system specific properties](https://code.visualstudio.com/docs/editor/tasks#_operating-system-specific-properties)
+
+Another VSCode mechanism we are determining if it will be useful is the: [Task Provider Extension](https://code.visualstudio.com/api/extension-guides/task-provider). If we find this is useful we can add a Task Provder element to our existing extension in order to facilitate our updating task files we use for P1 and P2 development.
 
 ...More TBA...
 
