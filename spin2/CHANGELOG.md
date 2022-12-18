@@ -22,7 +22,7 @@ Possible next additions:
 - Add additional Snippets as the community identifies them
 
 
-## [1.7.6] 2022-12-17
+## [1.7.7] 2022-12-17
 
 Minor tabbing update
 
@@ -30,6 +30,7 @@ Minor tabbing update
 - Corrected delete (left/Right) behavior in Align edit mode
 - Cursor now positions as expected after TAB / SHIFT+TAB (this didn't work before)
 
+**NOTE**: *originally released as v1.7.6 which failed to codesign and had to be re-released*
 
 ## [1.7.5] 2022-12-16
 
