@@ -11,8 +11,29 @@ This document is being developed over time as I prove a working environment for 
 
 I'm also expecting to document building and download with various tools such as FlexProp, PNut, download with direct attached boards via USB, download via Wifi with the Wx boards attached to our development board, with more compilers as they come ready for multi-platform use, etc.
 
+## Table of Contents
+
+On this Page:
+
+- [VSCode development of P2 Projects](#vscode-development-of-p2-projects)
+- [Tasks in VScode](#tasks-in-vscode)
+- [P2 Code Development with FlexProp on macOS](#p2-code-development-with-flexprop-on-macos)
+- [P2 Code Development with FlexProp on Windows](#p2-code-development-with-flexprop-on-windows)
+- [P2 Code Development with FlexProp on Raspberry Pi](#p2-code-development-with-flexprop-on-raspberry-pi)
+- [P2 Code Development with PNut on Windows](#p2-code-development-with-pnut-on-windows)
+
+Additional pages:
+
+- [TOP Level README](README.md) - Back to the top page of this repo
+
+
+### Latest Updates
+
 ```
 Latest Updates:
+18 Dec 2022
+- Added this Table of Contents as I'm reviewing this work
+- I'm preparating to improving how we do installation of our tools accross the platforms and where we store the tasks we want to use during development
 28 Apr 2021
 - convert tasks.json files to use settings.json file which now contains our toplevel filename
 - update narrative herein to describe our new settings.json file
@@ -28,7 +49,7 @@ Latest Updates:
 - Add section presenting configuration for running flexspin on Raspberry Pi's
 ```
 
-### VSCode development of P2 Projects
+## VSCode development of P2 Projects
 
 By choosing to adopt the Custom Tasks described in this document along with the keybindings your work flow is now quite sweet.
 
