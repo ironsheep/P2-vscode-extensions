@@ -46,6 +46,8 @@ Additional pages:
 Latest Updates:
 19 Dec 2022
 - Started this page
+- Certified for use on MacOS
+- Testing underway for Raspberry Pi then Windows
 ```
 
 ## VSCode development of P2 Projects
@@ -100,18 +102,78 @@ If I'm updating to a new verison I do the following:
 - Create a new empty `/Applications/flexprop` folder
 - Move all of the content of the `flexprop` folder (created during the unzip) to the `/Applications/flexprop` folder
 
-#### Install flexprop: RaspiOS
+#### Setup and Configure for P2 development: RaspiOS
 
-On my Mac's, I install the FlexProp into a folder which I've created at `/opt/flexprop` and I [set the PATH](#os-raspios) to point to the `/opt/flexprop/bin` directory. I move all of the content of the `flexprop` folder (created during the unzip) to the `/opt/flexprop` folder. 
+##### The Rasperry Pi OS (RaspiOS)
 
-#### Update flexprop: RaspiOS
+On my raspberry Pi's I run **rspios** as distributed by [raspberrypi.org](https://www.raspberrypi.org/) from the [downloads page](https://www.raspberrypi.org/software/operating-systems)
+
+I tend to want the best performance from my gear so on my RPi-3's and RPi-4's I tend to run the 64bit raspios.
+
+I've been doing this for quite a while and have a small farm of RPi's. I tend to place the image on a uSD card and then boot from it initially with a keyboard and screen attached.  I then "welcome" my new machine to my network and time zone and give it a hostname unique and generally fortelling of this purpose of this new RPi.  I also end up running the classic update sequence to ensure my new machine has the latest software available as well as all the latest security patches:
+
+```bash
+# my update process which I run each time when I first log into my machine after a bit of time away
+$ sudo apt-get update
+$ sudo apt-get dist-upgrade
+```
+
+After the new RPi can boot and automatically attach to my network I then remove the screen and keyboard.  I run most my RPi's remotely and "headless" (meaning no screen/keyboard attached.)
+
+##### Using the Parallax PropPlug on Raspbery Pi's
+
+The Parallax PropPlug has a custom parallax VID:PID USB pair and as such is not, by default, recognized by raspiOS when you first plug in the PropPlug.
+
+The fix is to add a custom udev rules file as decribed in [FTDI Technical Note 101](https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_101_Customising_FTDI_VID_PID_In_Linux(FT_000081).pdf)
+
+I added the file `/etc/udev/rules.d/99-usbftdi.rules`
+
+```bash
+$ sudo vi /etc/udev/rules.d/99-usbftdi.rules
+```
+and then added the content:
+
+```bash
+# For FTDI FT232 & FT245 USB devices with Vendor ID = 0x0403, Product ID = 0x6001
+SYSFS{idProduct}==”6001”, SYSFS{idVendor}==”0403”, RUN+=”/sbin/modprobe –q ftdi- sio product=0x6001 vendor=0x0403”
+```
+
+After this file was saved, I rebooted the RPi.  After the RPi came back up I plugged in the PropPlug I saw /dev/ttyUSB0 appear as my PropPlug.  
+
+##### Install flexprop: RaspiOS
+
+Installing the flexprop toolset on the Raspberry Pi (*raspos, or any debian derivative, Ubuntu, etc.*) is a breeze when you follow [Eric's instructions that just work!](https://github.com/totalspectrum/flexprop#building-from-source)
+
+In my case, I used Eric's suggestion to instruct the build/install process to install to `/opt/flexprop`. When you get to the build step in his instructions use:
+
+ ```bash
+ $ # ensure clean build environment
+ $ make clean
+ $ # build flexprop then install flexprop in /opt/flexprop
+ $ sudo make install INSTALL=/opt/flexprop
+ ```
+
+Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the flexprop bin directory.  Now if you are running interactively on this RPi you can reference the flexprop or loadp2 executables by name and they will run.
+
+
+##### Update flexprop: RaspiOS
 
 If I'm updating to a new verison I do the following:
 
-- Remove `/opt/flexprop-prior`
-- Move the `/opt/flexprop` to `/opt/flexprop-prior` 
-- Create a new empty `/opt/flexprop` folder
-- Move all of the content of the `flexprop` folder (created during the unzip) to the `/opt/flexprop` folder
+```bash
+# remove old prior version
+sudo rm -rf /opt/flexprop-prior
+# move current to prior
+sudo mv /opt/flexprop /opt/flexprop-prior
+# navigate to source tree
+cd ~/src/flexprop
+# erase prior build
+make clean
+# update to latest in repo
+git pull
+# build flexprop then install flexprop in /opt/flexprop
+sudo make install INSTALL=/opt/flexprop
+```
 
 
 #### Install flexprop: Windows
@@ -442,13 +504,13 @@ And our DownloadP2 task can reference the binary file using `${config:topLevel}.
 
 ## P2 Code Development with flexprop on macOS
 
-To complete your setup so you can use flexprop on your mac under VScode you'll need to install flexprop and then:
+To complete your setup so you can use flexprop on your mac under VScode you'll need to:
 
 One time:
 
-- Install FlexProp for all users to use on your mac
+- Install FlexProp for all users to use on your Mac
 - Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
-- Install a common keybinding (*works across all your P2 projects*)
+- Install our common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
     - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
@@ -462,13 +524,13 @@ For each P2 Project:
 
 ## P2 Code Development with flexprop on Windows
 
-To complete your setup so you can use flexprop on your Windows machine under VScode you'll need to install flexprop and then:
+To complete your setup so you can use flexprop on your Windows machine under VScode you'll need to:
 
 One time:
 
 - Install FlexProp for all users to use on your windows machine
 - Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
-- Install a common keybinding (works across all your P2 projects)
+- Install our common keybinding (works across all your P2 projects)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
     - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
@@ -481,13 +543,14 @@ For each P2 Project:
 
 ## P2 Code Development with flexprop on Raspberry Pi
 
-To complete your setup so you can use flexprop on your Raspberry Pi under VScode you'll need to install flexprop and then:
+To complete your setup so you can use flexprop on your Raspberry Pi under VScode you'll need to:
 
 One time:
 
+- Install FlexProp for all users to use on your RPi
 - Enable USB PropPlug recognition on RPi
 - Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
-- Install a common keybinding (*works across all your P2 projects*)
+- Install our common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
     - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
@@ -496,57 +559,6 @@ For each P2 Project:
 
 - Install a settings.json file identiyfing the project top-level file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
-
-    
-### The Rasperry Pi OS
-
-On my raspberry Pi's I run **rspios** as distributed by [raspberrypi.org](https://www.raspberrypi.org/) from the [downloads page](https://www.raspberrypi.org/software/operating-systems)
-
-I tend to want the best performance from my gear so on my RPi-3's and RPi-4's I tend to run the 64bit raspios.
-
-I've been doing this for quite a while and have a small farm of RPi's. I tend to place the image on a uSD card and then boot from it initially with a keyboard and screen attached.  I then "welcome" my new machine to my network and time zone and give it a hostname unique and generally fortelling of this purpose of this new RPi.  I also end up running the classic update sequence to ensure my new machine has the latest software available as well as all the latest security patches:
-
-```bash
-# my update process which I run each time when I first log into my machine after a bit of time away
-$ sudo apt-get update
-$ sudo apt-get dist-upgrade
-```
-
-After the new RPi can boot and automatically attach to my network I then remove the screen and keyboard.  I run most my RPi's remotely and "headless" (meaning no screen/keyboard attached.)
-
-## Using the Parallax PropPlug on Raspbery Pi's
-
-The Parallax PropPlug has a custom parallax VID:PID USB pair and as such is not, by default, recognized by raspiOS when you first plug in the PropPlug.
-
-The fix is to add a custom udev rules file as decribed in [FTDI Technical Note 101](https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_101_Customising_FTDI_VID_PID_In_Linux(FT_000081).pdf)
-
-I added the file **/etc/udev/rules.d/99-usbftdi.rules**
-
-```bash
-$ sudo vi /etc/udev/rules.d/99-usbftdi.rules
-```
-and then added the content:
-
-```bash
-# For FTDI FT232 & FT245 USB devices with Vendor ID = 0x0403, Product ID = 0x6001
-SYSFS{idProduct}==”6001”, SYSFS{idVendor}==”0403”, RUN+=”/sbin/modprobe –q ftdi- sio product=0x6001 vendor=0x0403”
-```
-
-After this file was saved, I rebooted the RPi.  After the RPi came back up I plugged in the PropPlug I saw /dev/ttyUSB0 appear as my PropPlug.  
-
-### flexprop install specifics: Raspberry Pi
-
-Installing the flexprop toolset on the Raspberry Pi (*raspos, or any debian derivative, Ubuntu, etc.*) is a breeze when you follow [Eric's instructions that just work!](https://github.com/totalspectrum/flexprop#building-from-source)
-
-In my case, I used Eric's suggestion to instruct the build/install process to install to /opt/flexprop. When you get to the build step in his instructions use:
-
- ```bash
- $ make install INSTALL=/opt/flexprop
- ```
-
-Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the flexprop bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
-
-
 
 ## P2 Code Development with PNut on Windows
 
