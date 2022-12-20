@@ -121,7 +121,7 @@ TBA
 
 ### Installing PNut
 
-TBA
+The PNut compiler/debug tool does not have a standard install location. So we will likely have many locations amongst all of us P2 users. You have to take note of where you installed PNut and then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. 
 
 #### Install PNut: Windows
 
@@ -397,9 +397,16 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
 
  In between the [] you can place your new **key bindings**. You should end up with something like:
  
+**NOTE: in the following you may wish to use `cmd` in place of `ctrl` for macOS to remain consistent with other VSCode settings on your Mac!**
+ 
 ```json
 // Place your key bindings in this file to override the defaultsauto[]
 [
+  {
+    "key": "ctrl+shift+d",
+    "command": "workbench.action.tasks.runTask",
+    "args": "downloadP2"
+  },
   {
     "key": "F8",
     "command": "workbench.action.tasks.build",
@@ -422,7 +429,7 @@ This adds new keyboard short cuts to our tasks:
 
 - CompileP2 - Compile current file  [ctrl-shift-B], **[F8]**
 - CompileTopP2 - Compile the top-file of this project
-- DownloadP2 - Download the binary to RAM in our connected P2 **[F10]**
+- DownloadP2 - Download the binary to RAM in our connected P2 **[ctrl+shift+d] or [F10]**
 - FlashP2 - Download and write the binary to FLASH in our connected P2 **[F11]**
 
 ## P2 Code Development with flexprop on macOS
@@ -432,9 +439,8 @@ To complete your setup so you can use flexprop on your mac under VScode you'll n
 One time:
 
 - Install FlexProp for all users to use on your mac
-- Add our tasks to the user tasks.json file
-    - Make sure the paths to your compiler and loader binaries are correct
-- Install a common keybinding (works accross all your P2 projects)
+- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
+- Install a common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
     - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
@@ -446,365 +452,23 @@ For each P2 Project:
 
 
 
-### Add custom tasks for compileP2, compileTopP2, and downloadP2
-
-In your project folder create a directory named ".vscode" (if it's not already there.)
-
-In this new directory create a **.vscode/settings.json** file containing the following contents.
-
-```json
-{
-   "topLevel": "jm_p2-es_matrix_control_demo",
-}
-
-```
-
-*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
-
-In this new directory create a **.vscode/tasks.json** file containing the following contents.
-
-Here is a project-specific file we can use on macOS: `.vscode/tasks.json` but it really supports all three of our OS'es.
-
-```json
-{
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "compileP2",
-            "type": "shell",
-    		  "osx": {
-                "command": "flexspin.mac",
-    		  },
-    		  "windows": {
-                "command": "flexspin.exe",
-    		  },
-    		  "linux": {
-                "command": "flexspin",
-    		  },
-            "args": [
-                "-2",
-                "-Wabs-paths",
-                "-Wmax-errors=99",
-                "${fileBasename}"
-            ],
-            "problemMatcher": {
-                "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}/src"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
-            },
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "compileTopP2",
-            "type": "shell",
-            "osx": {
-                "command": "flexspin.mac",
-            },
-            "windows": {
-                "command": "flexspin.exe",
-            },
-            "linux": {
-                "command": "flexspin",
-            },
-            "args": [
-                "-2",
-                "-Wabs-paths",
-                "-Wmax-errors=99",
-                "${config:topLevel}.spin2"
-            ],
-            "problemMatcher": {
-                "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
-            },
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-        },
-        {
-            "label": "downloadP2",
-            "type": "shell",
-            "args": [
-                "-b230400",
-                "${config:topLevel}.binary",
-                "-t"
-            ],
-            "osx": {
-                "command": "loadp2.mac",
-            },
-            "windows": {
-                "command": "loadp2.exe",
-            },
-            "linux": {
-                "command": "loadp2",
-                "args": [
-                    "-b230400",
-                    "${config:topLevel}.binary",
-                    "-t",
-                    "-p/dev/ttyUSB0"
-                ],
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-            "dependsOn": [
-                "compileTopP2"
-            ]
-        }
-    ]
-}
-```
-
-This provides the commands to be run for:
-
-- CompileP2 - Compile current file  [cmd-shift-B]
-- CompileTopP2 - Compile the top-file of this project
-- DownloadP2 - Download the binary to our connected P2  [cmd-shift-D -if keybindings are added.]
-
-As written, download will always be preceeded by a CompileTop.
-
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
-
-### Add Keyboard Shortcut for the Download task
-
-This is the keybinding I used for mapping download to a key sequence.
-
-You get to this file by:
-
-1. Opening the Keyboard shortcuts list [cmd-K, cmd-S or Menu: Code->Preferences->Keyboard Shortcuts]
-2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
-
-Contents I used for file: **keybindings.json**:
-
-```json
-// Place your key bindings in this file to override the defaults
-[
-    {
-        "key": "shift+cmd+d",
-        "command": "workbench.action.tasks.runTask",
-        "args": "downloadP2"
-    }
-
-]
-```
-
-*NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
-
 ## P2 Code Development with flexprop on Windows
 
 To complete your setup so you can use flexprop on your Windows machine under VScode you'll need to install flexprop and then:
 
 One time:
 
-- Install a common keybinding (works accross all your P2 projects)
-- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
-    - "Error Lens" which adds the compile errors messages to the associated line of code
-    - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+- Install FlexProp for all users to use on your windows machine
+- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
+- Install a common keybinding (works across all your P2 projects)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
+    - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
+    - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
 
 For each P2 Project:
 
-- Install a tasks.json file
-    - Make sure the names of your compiler and loader binaries are correct
 - Install a settings.json file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
-
-### flexprop install specifics: Windows
-
-The flexprop toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the flexprop bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
-
-
-### Add custom tasks for compileP2, compileTopP2, and downloadP2
-
-In your project folder create a directory named ".vscode" (if it's not already there.)
-
-In this new directory create a **.vscode/settings.json** file containing the following contents.
-
-```json
-{
-   "topLevel": "jm_p2-es_matrix_control_demo",
-}
-
-```
-
-*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
-
-In this new directory create a **.vscode/tasks.json** file containing the following contents.
-
-Here is a project-specific file we can use on Windows: `.vscode/tasks.json` but it really supports all three of our OS'es.
-
-```json
-{
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "compileP2",
-            "type": "shell",
-    		  "osx": {
-                "command": "flexspin.mac",
-    		  },
-    		  "windows": {
-                "command": "flexspin.exe",
-    		  },
-    		  "linux": {
-                "command": "flexspin",
-    		  },
-            "args": [
-                "-2",
-                "-Wabs-paths",
-                "-Wmax-errors=99",
-                "${fileBasename}"
-            ],
-            "problemMatcher": {
-                "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}/src"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
-            },
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "compileTopP2",
-            "type": "shell",
-            "osx": {
-                "command": "flexspin.mac",
-            },
-            "windows": {
-                "command": "flexspin.exe",
-            },
-            "linux": {
-                "command": "flexspin",
-            },
-            "args": [
-                "-2",
-                "-Wabs-paths",
-                "-Wmax-errors=99",
-                "${config:topLevel}.spin2"
-            ],
-            "problemMatcher": {
-                "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
-            },
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-        },
-        {
-            "label": "downloadP2",
-            "type": "shell",
-            "args": [
-                "-b230400",
-                "${config:topLevel}.binary",
-                "-t"
-            ],
-            "osx": {
-                "command": "loadp2.mac",
-            },
-            "windows": {
-                "command": "loadp2.exe",
-            },
-            "linux": {
-                "command": "loadp2",
-                "args": [
-                    "-b230400",
-                    "${config:topLevel}.binary",
-                    "-t",
-                    "-p/dev/ttyUSB0"
-                ],
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-            "dependsOn": [
-                "compileTopP2"
-            ]
-        }
-    ]
-}
-
-```
-
-This provides the commands to be run for:
-
-- CompileP2 - Compile current file  [ctrl-shift-B]
-- CompileTopP2 - Compile the top-file of this project
-- DownloadP2 - Download the binary to our connected P2  [ctrl-shift-D -if keybindings are added.]
-
-As written, download will always be preceeded by a CompileTop.
-
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
-
-### Add Keyboard Shortcut for the Download task
-
-This is the keybinding I used for mapping download to a key sequence.
-
-You get to this file by:
-
-1. Opening the Keyboard shortcuts list [ctrl-K, ctrl-S or Menu: Code->Preferences->Keyboard Shortcuts]
-2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
-
-Contents I used for file: **keybindings.json**:
-
-```json
-// Place your key bindings in this file to override the defaults
-[
-    {
-        "key": "ctrl+shift+d",
-        "command": "workbench.action.tasks.runTask",
-        "args": "downloadP2"
-    }
-
-]
-```
-
-*NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
 
 
 ## P2 Code Development with flexprop on Raspberry Pi
@@ -812,16 +476,16 @@ Contents I used for file: **keybindings.json**:
 To complete your setup so you can use flexprop on your Raspberry Pi under VScode you'll need to install flexprop and then:
 
 One time:
+
 - Enable USB PropPlug recognition on RPi
-- Install a common keybinding (works accross all your P2 projects)
-- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
-    - "Error Lens" which adds the compile errors messages to the associated line of code
-    - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
+- Install a common keybinding (*works across all your P2 projects*)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
+    - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
+    - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
 
 For each P2 Project:
 
-- Install a tasks.json file
-    - Make sure the names of your compiler and loader binaries are correct
 - Install a settings.json file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
@@ -875,176 +539,6 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
 Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the flexprop bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 
-### Add custom tasks for compileP2, compileTopP2, and downloadP2
-
-In your project folder create a directory named ".vscode" (if it's not already there.)
-
-In this new directory create a **.vscode/settings.json** file containing the following contents.
-
-```json
-{
-   "topLevel": "jm_p2-es_matrix_control_demo",
-}
-
-```
-
-*(of course, you will want to replace "jm\_p2-es\_matrix\_control_demo" with the name of your top-level file.)*
-
-In this new directory create a **.vscode/tasks.json** file containing the following contents.
-
-Here is a project-specific file we can use on raspiOS: `.vscode/tasks.json` but it really supports all three of our OS'es.
-
-```json
-{
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "compileP2",
-            "type": "shell",
-    		  "osx": {
-                "command": "flexspin.mac",
-    		  },
-    		  "windows": {
-                "command": "flexspin.exe",
-    		  },
-    		  "linux": {
-                "command": "flexspin",
-    		  },
-            "args": [
-                "-2",
-                "-Wabs-paths",
-                "-Wmax-errors=99",
-                "${fileBasename}"
-            ],
-            "problemMatcher": {
-                "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}/src"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
-            },
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "compileTopP2",
-            "type": "shell",
-            "osx": {
-                "command": "flexspin.mac",
-            },
-            "windows": {
-                "command": "flexspin.exe",
-            },
-            "linux": {
-                "command": "flexspin",
-            },
-            "args": [
-                "-2",
-                "-Wabs-paths",
-                "-Wmax-errors=99",
-                "${config:topLevel}.spin2"
-            ],
-            "problemMatcher": {
-                "owner": "Spin2",
-                "fileLocation": ["autoDetect", "${workspaceFolder}"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
-            },
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-        },
-        {
-            "label": "downloadP2",
-            "type": "shell",
-            "args": [
-                "-b230400",
-                "${config:topLevel}.binary",
-                "-t"
-            ],
-            "osx": {
-                "command": "loadp2.mac",
-            },
-            "windows": {
-                "command": "loadp2.exe",
-            },
-            "linux": {
-                "command": "loadp2",
-                "args": [
-                    "-b230400",
-                    "${config:topLevel}.binary",
-                    "-t",
-                    "-p/dev/ttyUSB0"
-                ],
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "panel": "new",
-                "focus": true
-            },
-            "dependsOn": [
-                "compileTopP2"
-            ]
-        }
-    ]
-}
-```
-
-This provides the commands to be run for:
-
-- CompileP2 - Compile current file  [ctrl-shift-B]
-- CompileTopP2 - Compile the top-file of this project
-- DownloadP2 - Download the binary to our connected P2  [ctrl-shift-D -if keybindings are added.]
-
-As written, download will always be preceeded by a CompileTop.
-
-NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our `.vscode/settings.json` file.
-
-NOTE2: loadp2 on linux requires the specification of our usb device so you see in this file in the task "downloadP2" we, for linux, see us specifying that loadp2 should use port `/dev/ttyUSB0`.
-
-### Add Keyboard Shortcut for the Download task
-
-This is the keybinding I used for mapping download to a key sequence.
-
-You get to this file by:
-
-1. Opening the Keyboard shortcuts list [ctrl-K, ctrl-S or Menu: Code->Preferences->Keyboard Shortcuts]
-2. Opening the file Keyboard Shortcuts (JSON) by pressing the document icon left of the play arow icon at the top right of the Keyboard Shortcuts window.
-
-Contents I used for file: **keybindings.json**:
-
-```json
-// Place your key bindings in this file to override the defaults
-[
-    {
-        "key": "ctrl+shift+d",
-        "command": "workbench.action.tasks.runTask",
-        "args": "downloadP2"
-    }
-
-]
-```
-
-*NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
-
 
 ## P2 Code Development with PNut on Windows
 
@@ -1052,16 +546,16 @@ To complete your setup so you can use PNut on your Windows machine under VScode 
 
 One time:
 
-- Install a common keybinding (works accross all your P2 projects)
-- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated"
-    - "Error Lens" which adds the compile errors messages to the associated line of code
-    - "Explorer Exclude" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+- Install a tasks.json file (*works across all your P2 projects*)
+    - Make sure the names of your compiler and loader binaries are correct (we use the .bat file to run PNut, we don't refer to PNut.exe directly!
+- Install a common keybinding (*works across all your P2 projects*)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
+    - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
+    - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
 
 For each P2 Project:
 
--- Install a tasks.json file
-    - Make sure the names of your compiler and loader binaries are correct (we use the .bat file to run PNut, we don't refer to PNut.exe directly!
-- Install a settings.json file
+- Install a settings.json file idenityfing project top-level file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 
@@ -1070,7 +564,7 @@ For each P2 Project:
 The PNut compiler/debug tool does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the PNUt directory when you installed PNut.  These tasks now just expect to be able to reference the batch file by name and it will run.
 
 
-### Add custom tasks for compileP2, compileTopP2, downloadP2, and flashP2
+### Add top-level file identification for build tasks
 
 In your project folder create a directory named ".vscode" (if it's not already there.)
 
@@ -1236,17 +730,31 @@ Contents I used for file: **keybindings.json**:
 ```json
 // Place your key bindings in this file to override the defaults
 [
-    {
-        "key": "ctrl+shift+d",
-        "command": "workbench.action.tasks.runTask",
-        "args": "downloadP2"
-    },
-    {
-        "key": "ctrl+shift+f",
-        "command": "workbench.action.tasks.runTask",
-        "args": "flashP2"
-    }
-
+  {
+    "key": "ctrl+shift+d",
+    "command": "workbench.action.tasks.runTask",
+    "args": "downloadP2"
+  },
+  {
+    "key": "ctrl+shift+f",
+    "command": "workbench.action.tasks.runTask",
+    "args": "flashP2"
+  },
+  {
+    "key": "F8",
+    "command": "workbench.action.tasks.build",
+    "args": "compileP2"
+  },
+  {
+    "key": "F10",
+    "command": "workbench.action.tasks.runTask",
+    "args": "downloadP2"
+  },
+  {
+    "key": "F11",
+    "command": "workbench.action.tasks.runTask",
+    "args": "flashP2"
+  }
 ]
 ```
 
