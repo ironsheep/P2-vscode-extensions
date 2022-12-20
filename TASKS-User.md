@@ -44,9 +44,12 @@ Additional pages:
 
 ```
 Latest Updates:
+20 Dec 2022
+- Raspberry Pi instructions tested and ready for use!
+- Testing underway for Windows
 19 Dec 2022
 - Started this page
-- Certified for use on MacOS
+- MacOS instructions tested and ready for use!
 - Testing underway for Raspberry Pi then Windows
 ```
 
@@ -83,7 +86,7 @@ There is nothing worse than trying to remember where you installed a specific to
 
 ### Installing FlexSpin
 
-We get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases) and upacked the zip file producing a `flexprop` folder containing the new version.  
+On the Raspberry Pi platform we'll use `git(1)` to download the FlexProp souce, but on the MacOS and Windows machines we get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases) and upacking the zip file to produce a `flexprop` folder containing the new version.  
 
 **NOTE**: *The flexprop toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.  Alternatively, it should be safe to just follow what I do in these instructions explictly.  This has the benefit that more of us will be able to help each other out with tools problems as more of us will be set up the same.*
 
@@ -98,7 +101,7 @@ On my Mac's, I install the FlexProp into a folder which I've created at `/Applic
 If I'm updating to a new verison I do the following:
 
 - Remove `/Applications/flexprop-prior`
-- Move the `/Applications/flexprop` to `/Applications/flexprop-prior` 
+- Rename the `/Applications/flexprop` to `/Applications/flexprop-prior` 
 - Create a new empty `/Applications/flexprop` folder
 - Move all of the content of the `flexprop` folder (created during the unzip) to the `/Applications/flexprop` folder
 
@@ -147,11 +150,11 @@ Installing the flexprop toolset on the Raspberry Pi (*raspos, or any debian deri
 In my case, I used Eric's suggestion to instruct the build/install process to install to `/opt/flexprop`. When you get to the build step in his instructions use:
 
  ```bash
- $ # ensure clean build environment
- $ make clean
- $ # build flexprop then install flexprop in /opt/flexprop
- $ sudo make install INSTALL=/opt/flexprop
+ # build flexprop then install flexprop in /opt/flexprop
+ sudo make install INSTALL=/opt/flexprop
  ```
+ 
+ (**NOTE** *We use `sudo` because the normal user is not able to write in the /opt tree.*)
 
 Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the flexprop bin directory.  Now if you are running interactively on this RPi you can reference the flexprop or loadp2 executables by name and they will run.
 
@@ -260,13 +263,13 @@ We'll configure our compileP2 task to be the default.
 
 We'll add a downloadP2 task and assign command-shift-D to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result.
 
-**TODO-1**: We need to ensure download doesn't proceed if compile fails
+We'll add a flashP2 task and assign command-shift-F to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result and write it to FLASH.
 
-**TODO-2**: We actually need two download tasks: (1) download to RAM, (2) download to FLASH.
+**TODO-1**: We need to ensure download or flash doesn't proceed if compile fails
 
 #### More Advanced building
 
-**TODO-3**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
+**TODO-2**: We'll also test using the file-watch technology to automatically compile and download our project files when they are modified.
 
 ### Adding the P2 Tasks
 
@@ -350,7 +353,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "group": {
         "kind": "build",
-        "isDefault": true
+        "isDefault": false
       }
     },
     {
@@ -375,7 +378,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "group": {
         "kind": "test",
-        "isDefault": true
+        "isDefault": false
       },
       "dependsOn": ["compileTopP2"]
     },
@@ -401,7 +404,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "group": {
         "kind": "test",
-        "isDefault": true
+        "isDefault": false
       },
       "dependsOn": ["compileTopP2"]
     }
@@ -415,7 +418,7 @@ This provides the commands to be run for:
 - DownloadP2 - Download the binary to RAM in our connected P2
 - FlashP2 - Download and write the binary to FLASH in our connected P2
 
-As written, DownloadP2 and FlashP2 will always be preceeded by a CompileTopP2.
+As written, downloadP2 and flashP2 will always be preceeded by a compileTopP2.
 
 NOTE: VSCode does not have any concept of top-level file. So we added a custom build task invoked by the downloadP2 task to first compile the top-level file. This top-level filename must be customized for each project by configuring the filename specified by the "topLevel" named value in our project `.vscode/settings.json` file.
 
@@ -783,7 +786,7 @@ Contents I used for file: **keybindings.json**:
 
 ## License
 
-Copyright © 2021 Iron Sheep Productions, LLC. All rights reserved.<br />
+Copyright © 2022 Iron Sheep Productions, LLC. All rights reserved.<br />
 Licensed under the MIT License. <br>
 <br>
 Follow these links for more information:
