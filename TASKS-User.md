@@ -25,6 +25,9 @@ On this Page:
   - [Installing FlexSpin](#installing-flexspin)
   - [Installing PNut](#installing-pnut)
 - [Tasks in VScode](#tasks-in-vscode) - this provides more detail about vscode tasks and lists work that is still needing to be done 
+  - [Adding the P2 Tasks](#adding-the-p2-tasks)
+  - [Adding our Custom Keybindings](#adding-our-custom-keybindings)
+  - [Adding our notion of Top-level file for tasks to use](#adding-our-notion-of-top-level-file-for-tasks-to-use)
 - [P2 Code Development with flexprop on macOS](#p2-code-development-with-flexprop-on-macos)
 - [P2 Code Development with flexprop on Windows](#p2-code-development-with-flexprop-on-windows)
 - [P2 Code Development with flexprop on Raspberry Pi](#p2-code-development-with-flexprop-on-raspberry-pi)
@@ -202,34 +205,6 @@ We'll add a downloadP2 task and assign command-shift-D to it. It will depend upo
 #### More Advanced building
 
 **TODO-3**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
-
-### Adding our notion of Top-level file for our tasks to use
-
-In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task a DownloadP2 download task, and in some cases a FlashP2 task.
-
-When we request a download or flash the automation will first compile the top-level project source which produces a new binary. It is this new binary that will be downloaded/flashed.
-
-We have multiple tasks that need to know the name of our top-level file. So we add a new settings file with a topLevel value to our project:
-
-**.vscode/settings.json** file contains the following contents:
-
-```json
-{
-   "topLevel": "jm_p2-es_matrix_control_demo",
-}
-
-```
-
-Once we have this file in place, then our `tasks.json` file can access this value using the form: `${config:topLevel}`
-
-
-Now our CompileTopP2 task can create the toplevel filename using  `${config:topLevel}.spin2`
-
-You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
-
-And our DownloadP2 task can reference the binary file using `${config:topLevel}.binary`
-
-**NOTE** the PNut flasher is special in that it wants the .spin2 filename not a .binary filename so you'll see `${config:topLevel}.spin2` being used in the PNut FlashP2 task.
 
 ### Adding the P2 Tasks
 
@@ -436,6 +411,34 @@ This adds new keyboard short cuts to our tasks:
 - CompileTopP2 - Compile the top-file of this project
 - DownloadP2 - Download the binary to RAM in our connected P2 **[ctrl+shift+d] or [F10]**
 - FlashP2 - Download and write the binary to FLASH in our connected P2 **[ctrl+shift+f] or [F11]**
+
+### Adding our notion of Top-level file for tasks to use
+
+In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task a DownloadP2 download task, and in some cases a FlashP2 task.
+
+When we request a download or flash the automation will first compile the top-level project source which produces a new binary. It is this new binary that will be downloaded/flashed.
+
+We have multiple tasks that need to know the name of our top-level file. So we add a new settings file with a topLevel value to our project:
+
+**.vscode/settings.json** file contains the following contents:
+
+```json
+{
+   "topLevel": "jm_p2-es_matrix_control_demo",
+}
+
+```
+
+Once we have this file in place, then our `tasks.json` file can access this value using the form: `${config:topLevel}`
+
+
+Now our CompileTopP2 task can create the toplevel filename using  `${config:topLevel}.spin2`
+
+You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and replace this name with the name of your top-level file. 
+
+And our DownloadP2 task can reference the binary file using `${config:topLevel}.binary`
+
+**NOTE** the PNut flasher is special in that it wants the .spin2 filename not a .binary filename so you'll see `${config:topLevel}.spin2` being used in the PNut FlashP2 task.
 
 ## P2 Code Development with flexprop on macOS
 
