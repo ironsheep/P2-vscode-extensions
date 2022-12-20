@@ -59,8 +59,8 @@ Iterate until your project works as desired:
 - Make changes to file(s)
 - Compile the files to see if they compile cleanly (cmd-shift-B) on which ever file you are editing
 - Once the files compile cleanly
-- Download and test (cmd-shift-D, F10) [if you use keybindings shown in examples on this page]
-- Alternatively, download your project to FLASH and test (F11) [if you use keybindings shown in examples on this page]
+- Download and test (ctrl-shift-D, F10) [if you use keybindings shown in examples on this page]
+- Alternatively, download your project to FLASH and test (ctrl-shift-F, F11) [if you use keybindings shown in examples on this page]
 
 ### Being consistent in your machine configuration
 
