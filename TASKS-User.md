@@ -408,6 +408,11 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
     "args": "downloadP2"
   },
   {
+    "key": "ctrl+shift+f",
+    "command": "workbench.action.tasks.runTask",
+    "args": "flashP2"
+  },
+  {
     "key": "F8",
     "command": "workbench.action.tasks.build",
     "args": "compileP2"
@@ -430,7 +435,7 @@ This adds new keyboard short cuts to our tasks:
 - CompileP2 - Compile current file  [ctrl-shift-B], **[F8]**
 - CompileTopP2 - Compile the top-file of this project
 - DownloadP2 - Download the binary to RAM in our connected P2 **[ctrl+shift+d] or [F10]**
-- FlashP2 - Download and write the binary to FLASH in our connected P2 **[F11]**
+- FlashP2 - Download and write the binary to FLASH in our connected P2 **[ctrl+shift+f] or [F11]**
 
 ## P2 Code Development with flexprop on macOS
 
@@ -447,7 +452,7 @@ One time:
 
 For each P2 Project:
 
-- Install a settings.json file to identify the top-level file in this workspace
+- Install a settings.json file identiyfing the project top-level file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 
@@ -467,7 +472,7 @@ One time:
 
 For each P2 Project:
 
-- Install a settings.json file
+- Install a settings.json file identiyfing the project top-level file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 
@@ -486,7 +491,7 @@ One time:
 
 For each P2 Project:
 
-- Install a settings.json file
+- Install a settings.json file identiyfing the project top-level file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
     
@@ -555,7 +560,7 @@ One time:
 
 For each P2 Project:
 
-- Install a settings.json file idenityfing project top-level file
+- Install a settings.json file identiyfing the project top-level file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
 
