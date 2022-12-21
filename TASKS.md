@@ -4,9 +4,11 @@
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE)
 
-NOTE: This page describes creating tasks **unique to each project/workspace**. If, instead, you wish to have your P2 compile and download tasks common to all your projects then go to the [Global Tasks](TASKS-User.md) page.
+**NOTE**: This page describes creating tasks **unique to each project/workspace**. 
 
+Please refer, instead, to our **new page**: Where you configure your P2 compile and download tasks to be common to all your projects then go to the [Global Tasks](TASKS-User.md) page.
 
+### **-- OLD PAGE --**
 ## Automating Build and Download to our P2 development boards
 
 This document is being developed over time as we prove-out a working environment for each of our target platforms. 
