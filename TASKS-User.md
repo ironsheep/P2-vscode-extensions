@@ -47,7 +47,7 @@ Additional pages:
 Latest Updates:
 20 Dec 2022
 - Raspberry Pi instructions tested and ready for use!
-- Windows instructions tested and ready for use!
+- Windows instructions tested and ready for use (both flexprop and PNut)!
 - (PNut tasks are now merged into our task list. They just don't do anyting on non-windows platforms)
 19 Dec 2022
 - Started this page
