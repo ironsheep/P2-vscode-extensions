@@ -79,7 +79,7 @@ To complete your setup so you can use flexprop on your mac under VScode you'll n
 One time:
 
 - Install FlexProp for all users to use on your Mac
-- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
+- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(*Make sure the paths to your compiler and loader binaries are correct*)
 - Install our common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
@@ -97,7 +97,7 @@ To complete your setup so you can use flexprop on your Windows machine under VSc
 One time:
 
 - Install FlexProp for all users to use on your windows machine
-- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
+- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(*Make sure the paths to your compiler and loader binaries are correct*)
 - Install our common keybinding (works across all your P2 projects)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
@@ -116,7 +116,7 @@ One time:
 
 - Install FlexProp for all users to use on your RPi
 - Enable USB PropPlug recognition on RPi
-- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(Make sure the paths to your compiler and loader binaries are correct)
+- Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(*Make sure the paths to your compiler and loader binaries are correct*)
 - Install our common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
@@ -134,7 +134,7 @@ To complete your setup so you can use PNut on your Windows machine under VScode 
 One time:
 
 - Install a tasks.json file (*works across all your P2 projects*)
-    - Make sure the names of your compiler and loader binaries are correct (we use the .bat file to run PNut, we don't refer to PNut.exe directly!
+    - *Make sure the names of your compiler and loader binaries are correct (we use the .bat file to run PNut, we don't refer to PNut.exe directly!)*
 - Install a common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
