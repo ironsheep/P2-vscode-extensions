@@ -284,6 +284,8 @@ Download the latest .zip file from [PNut/Spin2 Latest Version](https://forums.pa
 
 Propeller Tool installs into `C:\Program Files (x86)\Parallax Inc\Propeller Tool\`. So I just created a sibling directory: `C:\Program Files (x86)\Parallax Inc\PNut\` and copy all of the unpacked files into that directory.
 
+**NOTE:** *if you experience problems with the tasks running PNut it is generally that the .bat files are not identifying the pnut executable by the correct name. At each install check the content of `\PNut\pnut_shell.bat` and `\PNut\pnut_report.bat` and make sure the pnut versioned name is correct with what's in the folder.  Occasionally Chip forgets to modify these .bat files before release.*
+
 I right-mouse on the PNut_{version}.exe file and select "**Pin to taskbar**".
 
 I then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. In my case I added a path segment pointing to `C:\Program Files (x86)\Parallax Inc\PNut\`.
@@ -298,6 +300,8 @@ I haven't found the need to keep any prior version. I simply:
 - Select all content within `C:\Program Files (x86)\Parallax Inc\PNut\` and Delete it
 - Move all of unpacked content into the now empty folder `C:\Program Files (x86)\Parallax Inc\PNut\`
 - I right-mouse on the newly copied PNut_{version}.exe file and select "**Pin to taskbar**".
+
+**NOTE:** *if you experience problems with the tasks running PNut it is generally that the .bat files are not identifying the pnut executable by the correct name. At each install check the content of `\PNut\pnut_shell.bat` and `\PNut\pnut_report.bat` and make sure the pnut versioned name is correct with what's in the folder.  Occasionally Chip forgets to modify these .bat files before release.*
 
 ### Setting paths for your P2 Compilers/Tools
 
