@@ -388,16 +388,19 @@ To define the tasks we are going to use with our P2 development in most of our p
 To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the command search dialog. Then type in "tasks". Lower down in the resulting filtered list you should now see "**Tasks: Open User Tasks**".  Select it and you should now have a file open in the editor which should contain at least:
 
 ```json
+{
   // See https://go.microsoft.com/fwlink/?LinkId=733558
   // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [
   ]
+}
 ```
 
  In between the [] you can place your new task definitions. You should end up with something like:
 
 ```json
+{
   "version": "2.0.0",
   "tasks": [
     {
@@ -635,6 +638,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       }
     }
     ]
+}
 ```
 
 This provides the following **Build** and **Test** tasks:
