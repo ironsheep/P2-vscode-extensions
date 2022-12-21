@@ -52,7 +52,7 @@ In VSCode search for the "spin2" extension and install it.  It's that easy!  Aft
 
 There are two companion documents in this Repository:
 
-1. [Configuring User Tasks](TASKS_User.md) which advises on how to automate your P2 Development when using VScode
+1. [Configuring User Tasks](TASKS-User.md) which advises on how to automate your P2 Development when using VScode
 2. [VSCode Extensions](EXTENSIONS.md) we find useful in our own P2 development
 
 Also, here are a couple of really useful VSCode sources:
