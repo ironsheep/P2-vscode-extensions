@@ -238,8 +238,10 @@ export class Formatter {
     //  if we find one of the ORGs and NOT END then we return DAT so as to use
     //   DAT tabs in the PUB section for inline PASM
     let blockName: string = "";
-    let bFoundOrg: boolean = false;
-    let bFoundEnd: boolean = false;
+    let bBelowOrg: boolean = false;
+    let bAboveEnd: boolean = true;
+    let matchOrg: RegExpMatchArray | null = null;
+    let matchEnd: RegExpMatchArray | null = null;
     let bottomLine: number = selection.end.line;
     for (let lineIndex = selection.anchor.line; lineIndex >= 0; lineIndex--) {
       const line = document.lineAt(lineIndex);
@@ -248,41 +250,42 @@ export class Formatter {
       }
       //this.logMessage(`  -- line=[${line.text}]`);
 
-      if (bFoundOrg == false) {
-        let matchOrg = line.text.toLowerCase().match(this.orgIdentifierREgEx1);
+      if (matchOrg == null) {
+        matchOrg = line.text.toLowerCase().match(this.orgIdentifierREgEx1);
         if (!matchOrg) {
           matchOrg = line.text.toLowerCase().match(this.orgIdentifierREgEx2);
         }
         if (matchOrg) {
-          bFoundOrg = true;
+          bBelowOrg = true;
+          // if we are sitting on the ORG line we need to be in PUB/PRI tabs
+          if (lineIndex == bottomLine) {
+            bBelowOrg = false;
+          }
         }
         //this.logMessage(`   -- matchOrg-[${matchOrg}]`);
       }
 
-      if (bFoundEnd == false) {
-        let matchEnd = line.text.toLowerCase().match(this.endIdentifierREgEx1);
+      if (matchEnd == null) {
+        matchEnd = line.text.toLowerCase().match(this.endIdentifierREgEx1);
         if (!matchEnd) {
           matchEnd = line.text.toLowerCase().match(this.endIdentifierREgEx2);
         }
         if (matchEnd) {
-          // if we are sitting on the END line we need to still be in DAT tabs
-          if (lineIndex != bottomLine) {
-            bFoundEnd = true;
-          }
+          bAboveEnd = false;
         }
-        //this.logMessage(`   -- matchOrg-[${matchOrg}]`);
+        //this.logMessage(`   -- matchEnd-[${matchEnd}]`);
       }
 
       let match = line.text.toLowerCase().match(this.blockIdentifierREgEx1);
       if (!match) {
         match = line.text.toLowerCase().match(this.blockIdentifierREgEx2);
       }
-      //const match = line.text.match(this.blockIdentifier);
-      //this.logMessage(`   -- match-[${match}]`);
+
       if (match) {
+        this.logMessage(`   -- match-[${match}], bBelowOrg=[${bBelowOrg}], bAboveEnd=[${bAboveEnd}]`);
         blockName = match.groups?.block ?? "";
         if (blockName.length > 0) {
-          if (bFoundOrg && !bFoundEnd && (blockName.toUpperCase() == "PUB" || blockName.toUpperCase() == "PRI")) {
+          if (bBelowOrg && bAboveEnd && (blockName.toUpperCase() == "PUB" || blockName.toUpperCase() == "PRI")) {
             blockName = "dat";
           }
         }
