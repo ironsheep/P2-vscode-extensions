@@ -1,18 +1,49 @@
-# VSCode Tasks
+# VSCode - Local Project defined Tasks
 
 
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE)
 
+**NOTE**: This page describes creating tasks **unique to each project/workspace**. 
 
+Please refer, instead, to our **new page**: Where you configure your P2 compile and download tasks to be common to all your projects then go to the [Global Tasks](TASKS-User.md) page.
+
+### **-- OLD PAGE --**
 ## Automating Build and Download to our P2 development boards
 
-This document is being developed over time as I prove a working environment for each of my target platforms.  I'm expecting to document building on **Windows**, **MacOS**, and **RaspiOS** (the Raspberry Pi OS).
+This document is being developed over time as we prove-out a working environment for each of our target platforms. 
 
-I'm also expecting to document building and download with various tools such as FlexProp, PNut, download with direct attached boards via USB, download via Wifi with the Wx boards attached to our development board, with more compilers as they come ready for multi-platform use, etc.
+To date, we have installations, compilation and downloading from **Windows**, **MacOS**, and **RaspiOS** (the Raspberry Pi OS - a Debian derived distribution).  *This RaspiOS method should also work for any other Debian derived distribution such as Ubuntu or, of course, Debian itself.*
+
+Also, to date, we have building and download for **flexprop** and **PNut** (*PNut is widows or windows emulator only.*) with direct USB-attached boards.
+
+In the future, we are also expecting to document building and download with via Wifi with the Wx boards attached to our development board, and with more compilers as they come ready for multi-platform use, etc.
+
+## Table of Contents
+
+On this Page:
+
+- [VSCode development of P2 Projects](#vscode-development-of-p2-projects) - background behind why things are organized this way
+- [Tasks in VScode](#tasks-in-vscode) - this provides more detail about vscode tasks and lists what work is still needing to be done 
+- [P2 Code Development with flexprop on macOS](#p2-code-development-with-flexprop-on-macos)
+- [P2 Code Development with flexprop on Windows](#p2-code-development-with-flexprop-on-windows)
+- [P2 Code Development with flexprop on Raspberry Pi](#p2-code-development-with-flexprop-on-raspberry-pi)
+- [P2 Code Development with PNut on Windows](#p2-code-development-with-pnut-on-windows)
+
+Additional pages:
+
+- [TOP Level README](README.md) - Back to the top page of this repo
+- [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
+
+*The "P2 Code Development..." sections provide step-by-step setup instructions *
+
+### Latest Updates
 
 ```
 Latest Updates:
+18 Dec 2022
+- Added this Table of Contents as I'm reviewing this work
+- I'm preparating to improving how we do installation of our tools accross the platforms and where we store the tasks we want to use during development
 28 Apr 2021
 - convert tasks.json files to use settings.json file which now contains our toplevel filename
 - update narrative herein to describe our new settings.json file
@@ -28,7 +59,7 @@ Latest Updates:
 - Add section presenting configuration for running flexspin on Raspberry Pi's
 ```
 
-### VSCode development of P2 Projects
+## VSCode development of P2 Projects
 
 By choosing to adopt the Custom Tasks described in this document along with the keybindings your work flow is now quite sweet.
 
@@ -51,7 +82,7 @@ I have mostly macs for development but I also have a Windows machine and a numbe
 - **Synchronize your VSCode settings and extensions** automatically by installing and using the **Settings Sync** VScode extension. Any changes you make to one machine then will be sync'd to your other VScode machines.
 
 - **Be very consistent in where you install tools** for each type of OS.  (e.g., for all Windows machines make sure you install say, flexprop, in the same location on each Windows machine.) By being consistant your tasks will run no matter which machine your are running on. 
-There is nothing worse than trying to remember where you installed a specific tool on the machine you are currently logged into. Because you install say FlexProp in the same place on all your Raspberry Pi's you will know where to find it no matter which RPi you are logged in to.
+There is nothing worse than trying to remember where you installed a specific tool on the machine you are currently logged into. Because you install say flexprop in the same place on all your Raspberry Pi's you will know where to find it no matter which RPi you are logged in to.
 
     - All like operating systems should have a specific tool installed in the same location on each. (e.g., all Windows machines have Flexspin installed in one location, all macOS machines have FlexSpin installed in a different location that on Windows but it is the same location across all Macs, etc.)
     - During installation of a tool on a machine, finish the process by configuring the PATH to the tool so that terminals/consoles can access the tool by name. This allows VSCode to run the tool from its build tasks.json file without needing to know where the tool is installed!  On Windows machines this is done by editing the User Environment from within the Settings Application. On Mac's and Linux machines (RPi's) this is done by editing the shell configuration file (e.g., Bash you edit the ~/.bashrc file)
@@ -72,20 +103,20 @@ On MacOS this is really shell dependent. I tend to stick with [Bash](https://www
 On my Macs I install the flexprop folder into my /Applications folder.  I then edit my .bash_profile and add the following line.  (*I have multiple lines such as this for various tools I've installed.*)
 
 ```bash
-export PATH=${PATH}:/Applications/Flexprop/bin
+export PATH=${PATH}:/Applications/flexprop/bin
 ```
 
-From here on when I start new terminal windows or VSCode they can now get to the FlexProp binaries by name without using the path to them.
+From here on when I start new terminal windows or VSCode they can now get to the flexprop binaries by name without using the path to them.
 
 #### OS: RaspiOS
 
 On my raspberry Pi's I run [**rspios**](https://www.raspberrypi.org/software/operating-systems) which is a Debain GNU Linux derived distribution. [Fun! See [The Periodic Table of Liux Distros](https://distrowatch.com/dwres.php?resource=family-tree)]
 
-So, as you might have guessed, I use Bash here too.  On RPi I tend to install special tools from others, as well as those I make, under /opt.  So, in the case of FlexProp I install it on all my RPis into `/opt/flexprop/`.
+So, as you might have guessed, I use Bash here too.  On RPi I tend to install special tools from others, as well as those I make, under /opt.  So, in the case of flexprop I install it on all my RPis into `/opt/flexprop/`.
 
 Unlike my Macs which have .bash_profile, my RPis have, instead, a .profile file.  So here I edit the RPi ~/.profile.  I'm using the pattern for "optionally installed tools" so that I can sync this .profile between my many RPi's.
 
-I edit my ~/.profile and add the path to FlexProp.  (*I have multiple groups of lines such as this for various tools I've installed.*)
+I edit my ~/.profile and add the path to flexprop.  (*I have multiple groups of lines such as this for various tools I've installed.*)
 
 ```bash
 # set PATH so it includes optional install of flexprop/bin if it exists
@@ -94,7 +125,7 @@ if [ -d "/opt/flexprop/bin" ] ; then
 fi
 ```
 
-From here on when I start new terminal windows or VSCode they can now get to the FlexProp binaries by name without using the path to them.
+From here on when I start new terminal windows or VSCode they can now get to the flexprop binaries by name without using the path to them.
 
 
 ## Tasks in VScode
@@ -106,6 +137,8 @@ See: [VSCode "Tasks" Reference Page](https://code.visualstudio.com/docs/editor/t
 There are a number of types of tasks and places Task definitions live. These include [Auto-detected Tasks](https://code.visualstudio.com/docs/editor/tasks#_task-autodetection), [User level tasks](https://code.visualstudio.com/docs/editor/tasks#_user-level-tasks), and [Custom Tasks](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks).  Tasks when run, can be crafted to depend upon the running of other tasks  See: [Compound Tasks](https://code.visualstudio.com/docs/editor/tasks#_compound-tasks)  Some tasks can be [run in background](https://code.visualstudio.com/docs/editor/tasks#_background-watching-tasks) such as file watchers which execute when a file has been changed.
 
 When you run VScode on multiple operating systems and want to be able to run a projects tasks on whichever machine you are on then you can specify os-specific alternatives to be used withing the task. See [Operating system specific properties](https://code.visualstudio.com/docs/editor/tasks#_operating-system-specific-properties)
+
+Another VSCode mechanism we are determining if it will be useful is the: [Task Provider Extension](https://code.visualstudio.com/api/extension-guides/task-provider). If we find this is useful we can add a Task Provder element to our existing extension in order to facilitate our updating task files we use for P1 and P2 development.
 
 ...More TBA...
 
@@ -120,13 +153,13 @@ We'll configure our compileP2 task to be the default.
 We'll add a downloadP2 task and assign command-shift-D to it. It will depend upon the compile task which makes it run first and then we download the newly compiled result.
 
 
-**TODO1**: We need to ensure download doesn't proceed if compile fails
+**TODO-1**: We need to ensure download doesn't proceed if compile fails
 
-**TODO2**: We actually need two download tasks: (1) download to RAM, (2) download to FLASH.
+**TODO-2**: We actually need two download tasks: (1) download to RAM, (2) download to FLASH.
 
 #### More Advanced building
 
-**TODO**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
+**TODO-3**: We'll also test using the file-watch technoology to automatically compile and download our project files when they are modified.
 
 ### Adding our notion of Top-level file to our tasks
 
@@ -158,9 +191,9 @@ And our DownloadP2 task can reference the binary file using `${config:topLevel}.
 
 
 
-## P2 Code Development with FlexProp on macOS
+## P2 Code Development with flexprop on macOS
 
-To complete your setup so you can use FlexProp on your mac under VScode you'll need to install FlexProp and then:
+To complete your setup so you can use flexprop on your mac under VScode you'll need to install flexprop and then:
 
 One time:
 
@@ -176,11 +209,11 @@ For each P2 Project:
 - Install a settings.json file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
-### FlexProp install specifics: macOS
+### flexprop install specifics: macOS
 
-The FlexProp toolset does not have a standard installed location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
+The flexprop toolset does not have a standard installed location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.
 
-In my case, on my Mac's, I install the folder at /Applications/Flexprop and I've [set the PATH](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-macos) to point to the /Applications/Flexprop/bin directory.  Depending on how you obtained the FlexProp install file you may have bin/flexspin or bin/flexspin.mac and likewise bin/loadp2 or bin/loadp2.mac.  This tasks.json file shows the .mac suffixes. If your install doesn't have them then you will need to modify your `tasks.json` file.  The three lines are: 
+In my case, on my Mac's, I install the folder at /Applications/flexprop and I've [set the PATH](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-macos) to point to the /Applications/flexprop/bin directory.  Depending on how you obtained the flexprop install file you may have bin/flexspin or bin/flexspin.mac and likewise bin/loadp2 or bin/loadp2.mac.  This tasks.json file shows the .mac suffixes. If your install doesn't have them then you will need to modify your `tasks.json` file.  The three lines are: 
 
 - "command": "flexspin.mac",  (in the "compileP2" task)
 - "command": "flexspin.mac",  (in the "compileTopP2" task)
@@ -357,9 +390,9 @@ Contents I used for file: **keybindings.json**:
 
 *NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
 
-## P2 Code Development with FlexProp on Windows
+## P2 Code Development with flexprop on Windows
 
-To complete your setup so you can use FlexProp on your Windows machine under VScode you'll need to install FlexProp and then:
+To complete your setup so you can use flexprop on your Windows machine under VScode you'll need to install flexprop and then:
 
 One time:
 
@@ -375,9 +408,9 @@ For each P2 Project:
 - Install a settings.json file
     - Make sure the name of your top-level file is correctly placed in this settings.json file
 
-### FlexProp install specifics: Windows
+### flexprop install specifics: Windows
 
-The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the FlexProp bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
+The flexprop toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  To normalize this you [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-windows) in your windows settings app. to point to the flexprop bin directory when you installed flexprop.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2
@@ -550,9 +583,9 @@ Contents I used for file: **keybindings.json**:
 *NOTE: if you change the label values in our tasks, more specifically the downloadP2 task, then this file has to be changed as well!*
 
 
-## P2 Code Development with FlexProp on Raspberry Pi
+## P2 Code Development with flexprop on Raspberry Pi
 
-To complete your setup so you can use FlexProp on your Raspberry Pi under VScode you'll need to install FlexProp and then:
+To complete your setup so you can use flexprop on your Raspberry Pi under VScode you'll need to install flexprop and then:
 
 One time:
 - Enable USB PropPlug recognition on RPi
@@ -605,9 +638,9 @@ SYSFS{idProduct}==”6001”, SYSFS{idVendor}==”0403”, RUN+=”/sbin/modprob
 
 After this file was saved, I rebooted the RPi.  After the RPi came back up I plugged in the PropPlug I saw /dev/ttyUSB0 appear as my PropPlug.  
 
-### FlexProp install specifics: Raspberry Pi
+### flexprop install specifics: Raspberry Pi
 
-Installing the FlexProp toolset on the Raspberry Pi (*raspos, or any debian derivative, Ubuntu, etc.*) is a breeze when you follow [Eric's instructions that just work!](https://github.com/totalspectrum/flexprop#building-from-source)
+Installing the flexprop toolset on the Raspberry Pi (*raspos, or any debian derivative, Ubuntu, etc.*) is a breeze when you follow [Eric's instructions that just work!](https://github.com/totalspectrum/flexprop#building-from-source)
 
 In my case, I used Eric's suggestion to instruct the build/install process to install to /opt/flexprop. When you get to the build step in his instructions use:
 
@@ -615,7 +648,7 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
  $ make install INSTALL=/opt/flexprop
  ```
 
-Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the FlexProp bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
+Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the flexprop bin directory.  These tasks now just expect to be able to reference the executable by name and it will run.
 
 
 ### Add custom tasks for compileP2, compileTopP2, and downloadP2

@@ -31,7 +31,11 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 - Offers companion Theme (Two themes: Syntax+Semantic, and Syntax only - mostly used during semantic highlighting development)
 
 ### Up next
-- Build and Download support (using external compiler(s) and download tool(s)) - *Still figuring this out but follow along with me as I drop HOW-TOs in [Configuring Tasks](TASKS.md)*
+These are not yet definate but I'm:
+
+- Looking into adding a setting to our extension allowing one to change a "PNut Enable Debug" setting which would be used when building with on windows with PNut
+- Looking into developing a Task Provider (to be built into our extension) which would recognize the tools installed and the OS and then provide only the tasks appropriate for the OS with the tools installed.
+
 
 ### Future directions
 
@@ -48,7 +52,7 @@ In VSCode search for the "spin2" extension and install it.  It's that easy!  Aft
 
 There are two companion documents in this Repository:
 
-1. [Configuring Tasks](TASKS.md) which advises on how to automate your P2 Development when using VScode
+1. [Configuring User Tasks](TASKS-User.md) which advises on how to automate your P2 Development when using VScode
 2. [VSCode Extensions](EXTENSIONS.md) we find useful in our own P2 development
 
 Also, here are a couple of really useful VSCode sources:
