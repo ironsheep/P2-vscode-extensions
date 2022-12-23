@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.7.8",
+  "version": "1.8.0",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -160,6 +160,16 @@
       }
     ],
     "configuration": [
+      {
+        "title": "Spin2 Extension Behaviors",
+        "properties": {
+          "spinExtensionBehavior.highlightFlexspinDirectives": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable recognition/validation of flexspin preprocessor directives."
+          }
+        }
+      },
       {
         "title": "Spin2 Tabstops",
         "properties": {

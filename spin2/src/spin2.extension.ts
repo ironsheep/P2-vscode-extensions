@@ -1,6 +1,6 @@
 "use strict";
 
-import { toNamespacedPath } from "path";
+//import { toNamespacedPath } from "path";
 //import { stringify } from 'querystring';
 //import { createStringLiteralFromNode, EndOfLineState } from 'typescript';
 // src/spin2.extension.ts
@@ -8,8 +8,6 @@ import { toNamespacedPath } from "path";
 import * as vscode from "vscode";
 
 import { Formatter } from "./spin.tabFormatter";
-import { tabConfiguration, reloadTabConfiguration } from "./spin.tabFormatter.configuration";
-
 import { overtypeBeforePaste, overtypeBeforeType } from "./spin.editMode.behavior";
 import { configuration, reloadConfiguration } from "./spin.editMode.configuration";
 import { getMode, resetModes, toggleMode, toggleMode2State, eEditMode, modeName } from "./spin.editMode.mode";

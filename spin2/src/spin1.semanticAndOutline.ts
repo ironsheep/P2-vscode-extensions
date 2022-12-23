@@ -1,9 +1,9 @@
 "use strict";
-
 // src/spin1.semanticAndOutline.ts
 
 import * as vscode from "vscode";
-import { Z_UNKNOWN } from "zlib";
+//import { Z_UNKNOWN } from "zlib";
+import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -201,9 +201,11 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
     if (cancelToken) {
     } // silence our compiler for now... TODO: we should adjust loop so it can break on cancelToken.isCancellationRequested
+    this._resetForNewDocument();
+    this._logMessage("* Config: spinExtensionBehavior.highlightFlexspinDirectives: [" + this.configuration.highlightFlexspin + "]");
+
     const allTokens = this._parseText(document.getText());
     const builder = new vscode.SemanticTokensBuilder();
-    this._resetForNewDocument();
     allTokens.forEach((token) => {
       builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.ptTokenType), this._encodeTokenModifiers(token.ptTokenModifiers));
     });
@@ -214,6 +216,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private localTokens = new Map<string, RememberedToken>();
   private localPasmTokensByMethodName = new Map<string, Map<string, RememberedToken>>();
   private conEnumInProgress: boolean = false;
+
+  private configuration = semanticConfiguration;
 
   // list of directives found in file
 
@@ -236,6 +240,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.localPasmTokensByMethodName.clear();
     this.conEnumInProgress = false;
     this.currentMethodName = "";
+    if (reloadSemanticConfiguration()) {
+      this.configuration = semanticConfiguration;
+    }
   }
 
   private _encodeTokenModifiers(strTokenModifiers: string[]): number {
@@ -281,6 +288,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const trimmedLine = line.trim();
       const trimmedNonCommentLine = this._getNonCommentLineRemainder(0, line);
       const sectionStatus = this._isSectionStartLine(line);
+      const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
         let closingOffset = line.indexOf("}");
@@ -298,6 +306,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currState = priorState;
         }
         //  DO NOTHING Let Syntax highlighting do this
+        continue;
+      } else if (this._isFlexspinPreprocessorDirective(lineParts[0])) {
+        this._getPreProcessor_Declaration(0, i + 1, line);
         continue;
       } else if (sectionStatus.isSectionStart) {
         currState = sectionStatus.inProgressStatus;
@@ -433,6 +444,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const line = lines[i];
       const trimmedLine = line.trim();
       const sectionStatus = this._isSectionStartLine(line);
+      const lineParts: string[] = trimmedLine.split(/[ \t]/);
       // TODO: UNDONE add filter which corrects for syntax inability to mark 'comments when more than one "'" present on line!
       //if (trimmedLine.length > 2 && trimmedLine.includes("'")) {
       //    const partialTokenSet: IParsedToken[] = this._possiblyMarkBrokenSingleLineComment(i, 0, line);
@@ -456,6 +468,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currState = priorState;
         }
         //  DO NOTHING Let Syntax highlighting do this
+      } else if (this._isFlexspinPreprocessorDirective(lineParts[0])) {
+        const partialTokenSet: IParsedToken[] = this._reportPreProcessorLine(i, 0, line);
+        partialTokenSet.forEach((newToken) => {
+          this._logPreProc("=> PreProc: " + this._tokenString(newToken, line));
+          tokenSet.push(newToken);
+        });
+        continue;
       } else if (sectionStatus.isSectionStart) {
         currState = sectionStatus.inProgressStatus;
         this._logState("  -- ln:" + (i + 1) + " currState=[" + currState + "]");
@@ -477,7 +496,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           if (line.length > 3) {
             const partialTokenSet: IParsedToken[] = this._reportCON_DeclarationLine(i, 3, line);
             partialTokenSet.forEach((newToken) => {
-              this._logOBJ("=> CON: " + this._tokenString(newToken, line));
+              this._logCON("=> CON: " + this._tokenString(newToken, line));
               tokenSet.push(newToken);
             });
           }
@@ -580,7 +599,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           this._logCON("- process CON line(" + (i + 1) + "):  trimmedLine=[" + trimmedLine + "]");
           const partialTokenSet: IParsedToken[] = this._reportCON_DeclarationLine(i, 0, line);
           partialTokenSet.forEach((newToken) => {
-            this._logOBJ("=> CON: " + this._tokenString(newToken, line));
+            this._logCON("=> CON: " + this._tokenString(newToken, line));
             tokenSet.push(newToken);
           });
         }
@@ -618,7 +637,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           } else {
             const partialTokenSet: IParsedToken[] = this._reportDAT_DeclarationLine(i, 0, line);
             partialTokenSet.forEach((newToken) => {
-              this._logOBJ("=> DAT: " + this._tokenString(newToken, line));
+              this._logDAT("=> DAT: " + this._tokenString(newToken, line));
               tokenSet.push(newToken);
             });
           }
@@ -629,7 +648,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           this._logVAR("- process VAR line(" + (i + 1) + "):  trimmedLine=[" + trimmedLine + "]");
           const partialTokenSet: IParsedToken[] = this._reportVAR_DeclarationLine(i, 0, line);
           partialTokenSet.forEach((newToken) => {
-            this._logOBJ("=> VAR: " + this._tokenString(newToken, line));
+            this._logVAR("=> VAR: " + this._tokenString(newToken, line));
             tokenSet.push(newToken);
           });
         }
@@ -650,7 +669,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           // in DAT sections we end with FIT or just next section
           const partialTokenSet: IParsedToken[] = this._reportDAT_PasmCode(i, 0, line);
           partialTokenSet.forEach((newToken) => {
-            this._logOBJ("=> DAT: " + this._tokenString(newToken, line));
+            this._logPASM("=> DAT: " + this._tokenString(newToken, line));
             tokenSet.push(newToken);
           });
           const lineParts: string[] = trimmedLine.split(/[ \t]/);
@@ -677,6 +696,25 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return tokenSet;
   }
 
+  private _getPreProcessor_Declaration(startingOffset: number, lineNbr: number, line: string): void {
+    if (this.configuration.highlightFlexspin) {
+      let currentOffset: number = this._skipWhite(line, startingOffset);
+      const nonCommentConstantLine = this._getNonCommentLineRemainder(currentOffset, line);
+      // get line parts - we only care about first one
+      const lineParts: string[] = nonCommentConstantLine.split(/[ \t=]/);
+      this._logPreProc("  - ln:" + lineNbr + " GetPreProcDecl lineParts=[" + lineParts + "]");
+      const directive: string = lineParts[0];
+      const symbolName: string | undefined = lineParts.length > 1 ? lineParts[1] : undefined;
+      if (this._isFlexspinPreprocessorDirective(directive)) {
+        // check a valid preprocessor line for a declaration
+        if (symbolName != undefined && directive.toLowerCase() == "#define") {
+          this._logPreProc("  -- new PreProc Symbol=[" + symbolName + "]");
+          this._setGlobalToken(symbolName, new RememberedToken("variable", ["readonly"]));
+        }
+      }
+    }
+  }
+
   private _getCON_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    DIGIT_NO_VALUE = -2   ' digit value when NOT [0-9]
     //  -or-     _clkmode = xtal1 + pll16x
@@ -687,7 +725,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const nonCommentConstantLine = this._getNonCommentLineRemainder(currentOffset, line);
       this._logCON("  - ln:" + lineNbr + " GetCONDecl nonCommentConstantLine=[" + nonCommentConstantLine + "]");
 
-      const haveEnumDeclaration: boolean = nonCommentConstantLine.indexOf("#") != -1;
+      const haveEnumDeclaration: boolean = nonCommentConstantLine.startsWith("#");
       const containsMultiAssignments: boolean = nonCommentConstantLine.indexOf(",") != -1;
       let statements: string[] = [nonCommentConstantLine];
       if (!haveEnumDeclaration && containsMultiAssignments) {
@@ -919,13 +957,94 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
   }
 
+  private _reportPreProcessorLine(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
+    const tokenSet: IParsedToken[] = [];
+    // skip Past Whitespace
+    let currentOffset: number = this._skipWhite(line, startingOffset);
+    const nonCommentConstantLine = this._getNonCommentLineRemainder(currentOffset, line);
+    // get line parts - we only care about first one
+    const lineParts: string[] = nonCommentConstantLine.split(/[ \t=]/);
+    this._logPreProc("  - ln:" + lineNumber + " reportPreProc lineParts=[" + lineParts + "]");
+    const directive: string = lineParts[0];
+    const symbolName: string | undefined = lineParts.length > 1 ? lineParts[1] : undefined;
+    if (this.configuration.highlightFlexspin) {
+      if (this._isFlexspinPreprocessorDirective(directive)) {
+        // record the directive
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: 0,
+          length: directive.length,
+          ptTokenType: "keyword",
+          ptTokenModifiers: ["control", "directive"],
+        });
+        const hasSymbol: boolean =
+          directive.toLowerCase() == "#define" ||
+          directive.toLowerCase() == "#ifdef" ||
+          directive.toLowerCase() == "#ifndef" ||
+          directive.toLowerCase() == "#elseifdef" ||
+          directive.toLowerCase() == "#elseifndef";
+        if (hasSymbol && symbolName != undefined) {
+          const nameOffset = line.indexOf(symbolName, currentOffset);
+          this._logPreProc("  -- GLBL symbolName=[" + symbolName + "]");
+          let referenceDetails: RememberedToken | undefined = undefined;
+          if (this._isGlobalToken(symbolName)) {
+            referenceDetails = this._getGlobalToken(symbolName);
+            this._logPreProc("  --  FOUND preProc global " + this._rememberdTokenString(symbolName, referenceDetails));
+          }
+          if (referenceDetails != undefined) {
+            // record a constant declaration!
+            const updatedModificationSet: string[] = directive.toLowerCase() == "#define" ? this._modifiersWith(referenceDetails.modifiers, "declaration") : referenceDetails.modifiers;
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: symbolName.length,
+              ptTokenType: referenceDetails.type,
+              ptTokenModifiers: updatedModificationSet,
+            });
+          } else if (this._isFlexspinReservedWord(symbolName)) {
+            // record a constant reference
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: symbolName.length,
+              ptTokenType: "variable",
+              ptTokenModifiers: ["readonly"],
+            });
+          } else {
+            // record an unknown name
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: symbolName.length,
+              //ptTokenType: "variable",
+              //ptTokenModifiers: ["readonly", "missingDeclaration"],
+              ptTokenType: "comment",
+              ptTokenModifiers: ["line"],
+            });
+          }
+        }
+      }
+    } else {
+      //  DO NOTHING we don't highlight these (flexspin support not enabled)
+      tokenSet.push({
+        line: lineNumber,
+        startCharacter: 0,
+        length: lineParts[0].length,
+        ptTokenType: "macro",
+        ptTokenModifiers: ["directive", "illegalUse"],
+      });
+    }
+
+    return tokenSet;
+  }
+
   private _reportCON_DeclarationLine(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
     const tokenSet: IParsedToken[] = [];
     // skip Past Whitespace
     let currentOffset: number = this._skipWhite(line, startingOffset);
     const nonCommentConstantLine = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
 
-    const haveEnumDeclaration: boolean = nonCommentConstantLine.indexOf("#") != -1;
+    const haveEnumDeclaration: boolean = nonCommentConstantLine.startsWith("#");
     const containsMultiAssignments: boolean = nonCommentConstantLine.indexOf(",") != -1;
     this._logCON("- reportConstant haveEnum=(" + haveEnumDeclaration + "), containsMulti=(" + containsMultiAssignments + "), nonCommentConstantLine=[" + nonCommentConstantLine + "]");
     let statements: string[] = [nonCommentConstantLine];
@@ -2579,6 +2698,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   // adjust following true/false to show specific parsing debug
   private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
+  private showPreProc: boolean = true;
   private showCON: boolean = true;
   private showOBJ: boolean = true;
   private showDAT: boolean = true;
@@ -2602,6 +2722,12 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private _logSPIN(message: string): void {
     if (this.showSpinCode) {
+      this._logMessage(message);
+    }
+  }
+
+  private _logPreProc(message: string): void {
+    if (this.showPreProc) {
       this._logMessage(message);
     }
   }
@@ -3720,6 +3846,38 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "wordmove",
     ];
     const reservedStatus: boolean = spinMethodNames.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
+  private _isFlexspinPreprocessorDirective(name: string): boolean {
+    const flexspinDirectiveOfNote: string[] = ["#define", "#ifdef", "#ifndef", "#else", "#elseifdef", "#elseifndef", "#endif", "#error", "#include", "#warn", "#undef"];
+    const reservedStatus: boolean = flexspinDirectiveOfNote.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
+  private _isFlexspinReservedWord(name: string): boolean {
+    const flexspinReservedswordsOfNote: string[] = [
+      "__propeller__",
+      "__propeller2__",
+      "__p2__",
+      "__flexspin__",
+      "__spincvt__",
+      "__spin2pasm__",
+      "__spin2cpp__",
+      "__have_fcache__",
+      "__cplusplus__",
+      "__date__",
+      "__file__",
+      "__line__",
+      "__time__",
+      "__version__",
+      "__debug__",
+      "__output_asm__",
+      "__output_bytecode__",
+      "__output_c__",
+      "__output_cpp__",
+    ];
+    const reservedStatus: boolean = flexspinReservedswordsOfNote.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
 

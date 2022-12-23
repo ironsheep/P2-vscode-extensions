@@ -22,6 +22,16 @@ Possible next additions:
 - Add additional Snippets as the community identifies them
 
 
+## [1.8.0] 2022-12-23
+
+Add [optional] FlexSpin preprocessor support (P1 & P2), Repair semantic highlight (P2)
+
+- Add new extension setting to enable recognition of FlexSpin Preprocessor Directives (Default: disabled)
+- Adds flagging of Preprocessor directive lines as unknown when FlexSpin support is not enabled
+- Fix P2 recognition of _RET_ directive in Pasm2
+- Fix P2 recognition of built-in _set, _clr variables in Pasm2
+- Fix P1 & P2 recognition of constants when assignment uses #> and <# operators
+
 ## [1.7.8] 2022-12-22
 
 Minor tabbing update
