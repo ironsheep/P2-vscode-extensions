@@ -57,9 +57,13 @@ _hubTx          mov     rx, #1
 
 _hubTxCR        mov     rx, #1
                 ret
-
+.loop
 _hubMonitor     mov     rx, #1
-                ret
+                djz     #.loop
+        _ret_   jmp     #exit
+
+testValue       long    4551
+exit            ret
 
 PUB sample_spin() | i
 
@@ -105,6 +109,31 @@ priv_status     res 1
     repeat $10000
         debug(`e `uhex_(byte[i+0] >> 6 + byte[i+1] >> 5 << 2 + byte[i+2] >> 5 << 5 ))
         debug(`f `uhex_(byte[i+0] >> 3 + byte[i+1] >> 2 << 5 + byte[i+2] >> 3 << 11))
+
+  {{
+    }}
+
+    {
+        {
+        }
+    }       ' <--- BAD!!!
+
+DAT
+
+'---+-----------+---+---+---+-------------------+---+---+---+---+---+-----------+
+audio           org     0
+                mov     ptrb,#0             ' A tail pointer for the buffer
+                rdbyte  priv_status,  ##mbox_status   wz  ' get status
+.blkloop
+                setq    #3-1
+.nextBlock      djnz    blkleft,#.blkloop
+                wrz     tmp
+        _ret_   getptr  datptr
+
+priv_status     res 1
+blkleft         res 1
+datptr          res 1
+tmp             res 1
 
 DAT
     image1 file "bird_lut1.bmp"

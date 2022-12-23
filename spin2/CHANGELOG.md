@@ -22,6 +22,14 @@ Possible next additions:
 - Add additional Snippets as the community identifies them
 
 
+## [1.7.8] 2022-12-22
+
+Minor tabbing update
+
+- Ensure `org`, `asm` and `end`, `endasm` lines use PUB/PRI tabstops 
+- Ensure Deconflict "Tab" with "Tab to Autocomplete"
+- Adjust auto-closing pairs behavior (dialing things in slowly)
+
 ## [1.7.7] 2022-12-17
 
 Minor tabbing update

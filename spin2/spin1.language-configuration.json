@@ -1,20 +1,26 @@
 {
   "comments": {
-    "lineCommentDoc": "''",
     "lineComment": "'",
-    "blockCommentDoc": ["{{", "}}"],
-    "blockComment": ["{", "}"]
+    "blockComment": ["{", "}"],
+    "lineCommentDoc": "''",
+    "blockCommentDoc": ["{{", "}}"]
   },
   "brackets": [
     ["{", "}"],
     ["[", "]"],
     ["(", ")"]
   ],
-  "autoClosingPairs": [{ "open": "(", "close": ")", "notIn": ["string", "comment"] }],
+  "autoClosingPairs": [
+    { "open": "{", "close": "}", "notIn": ["string", "comment"] },
+    { "open": "[", "close": "]", "notIn": ["string", "comment"] },
+    { "open": "(", "close": ")", "notIn": ["string", "comment"] },
+    { "open": "\"", "close": "\"", "notIn": ["string", "comment"] }
+  ],
   "surroundingPairs": [
     ["{", "}"],
     ["[", "]"],
     ["(", ")"],
     ["\"", "\""]
-  ]
+  ],
+  "wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)"
 }
