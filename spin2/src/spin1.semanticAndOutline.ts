@@ -3725,7 +3725,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       "x_4adc8_0p_4dac8_wflong",
       "x_4p_1dac4_wfbyte",
       "x_4p_2dac2_wfbyte",
-      "x_4p_4dac1_wf_byte",
+      "x_4p_4dac1_wfbyte",
       "x_8p_1dac8_wfbyte",
       "x_8p_2dac4_wfbyte",
       "x_8p_4dac2_wfbyte",

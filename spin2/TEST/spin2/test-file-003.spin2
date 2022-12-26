@@ -1024,7 +1024,7 @@ DAT { instructions by group }
         X_4ADC8_0P_4DAC8_WFLONG
         X_4P_1DAC4_WFBYTE
         X_4P_2DAC2_WFBYTE
-        X_4P_4DAC1_WF_BYTE
+        X_4P_4DAC1_WFBYTE
         X_8P_1DAC8_WFBYTE
         X_8P_2DAC4_WFBYTE
         X_8P_4DAC2_WFBYTE
