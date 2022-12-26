@@ -4,8 +4,24 @@
 //import { deepStrictEqual } from "assert";
 
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
+import { ParseUtils } from "./spin2.utils";
 
 import * as vscode from "vscode";
+
+enum eParseState {
+  Unknown = 0,
+  inCon,
+  inDat,
+  inObj,
+  inPub,
+  inPri,
+  inVar,
+  inPasmInline,
+  inDatPasm,
+  inMultiLineComment,
+  inMultiLineDocComment,
+  inNothing,
+}
 
 // ============================================================================
 //  this file contains both an outline provider
@@ -16,16 +32,87 @@ import * as vscode from "vscode";
 //   OUTLINE Provider
 //
 export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
+  private parseUtils = new ParseUtils();
+  public constructor() {
+    if (this.spin2OutlineLogEnabled) {
+      if (this.spin2OutlineLog === undefined) {
+        //Create output channel
+        this.spin2OutlineLog = vscode.window.createOutputChannel("Spin2 Outline DEBUG");
+        this._logMessage("Spin2 Outline log started.");
+      } else {
+        this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+      }
+    }
+  }
   public provideDocumentSymbols(document: vscode.TextDocument, _token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
     return new Promise((resolve, _reject) => {
       let symbols: vscode.DocumentSymbol[] = [];
 
+      let currState: eParseState = eParseState.inCon; // compiler defaults to CON at start!
+      let priorState: eParseState = currState;
+      let prePasmState: eParseState = currState;
+
       for (let i = 0; i < document.lineCount; i++) {
         let line = document.lineAt(i);
+        const trimmedLine = line.text.trim();
+        const trimmedNonCommentLine = this.parseUtils.getNonCommentLineRemainder(0, line.text);
+
         let linePrefix: string = line.text;
         let lineHasComment: boolean = false;
         let commentOffset: number = 0;
         let commentLength: number = 0;
+
+        const sectionStatus = this._isSectionStartLine(line.text);
+        if (sectionStatus.isSectionStart) {
+          currState = sectionStatus.inProgressStatus;
+        }
+
+        // skip all {{ --- }} multi-line doc comments
+        if (currState == eParseState.inMultiLineDocComment) {
+          // in multi-line doc-comment, hunt for end '}}' to exit
+          let closingOffset = line.text.indexOf("}}");
+          if (closingOffset != -1) {
+            // have close, comment ended
+            currState = priorState;
+          }
+          //  DO NOTHING Let Syntax highlighting do this
+          continue;
+        } else if (currState == eParseState.inMultiLineComment) {
+          // in multi-line non-doc-comment, hunt for end '}' to exit
+          let closingOffset = line.text.indexOf("}");
+          if (closingOffset != -1) {
+            // have close, comment ended
+            currState = priorState;
+          }
+          //  DO NOTHING Let Syntax highlighting do this
+          continue;
+        } else if (trimmedLine.startsWith("{{")) {
+          // process multi-line doc comment
+          let openingOffset = line.text.indexOf("{{");
+          const closingOffset = line.text.indexOf("}}", openingOffset + 2);
+          if (closingOffset != -1) {
+            // is single line comment, just ignore it
+          } else {
+            // is open of multiline comment
+            priorState = currState;
+            currState = eParseState.inMultiLineDocComment;
+            //  DO NOTHING Let Syntax highlighting do this
+          }
+          continue;
+        } else if (trimmedLine.startsWith("{")) {
+          // process possible multi-line non-doc comment
+          // do we have a close on this same line?
+          let openingOffset = line.text.indexOf("{");
+          const closingOffset = line.text.indexOf("}", openingOffset + 1);
+          if (closingOffset == -1) {
+            // is open of multiline comment
+            priorState = currState;
+            currState = eParseState.inMultiLineComment;
+            //  DO NOTHING Let Syntax highlighting do this
+            continue;
+          }
+        }
+
         if (line.text.length > 2) {
           const lineParts: string[] = linePrefix.split(/[ \t]/);
           linePrefix = lineParts.length > 0 ? lineParts[0].toUpperCase() : "";
@@ -47,38 +134,258 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
           }
         }
 
-        if (linePrefix == "CON" || linePrefix == "DAT" || linePrefix == "VAR" || linePrefix == "OBJ") {
-          let sectionComment = lineHasComment ? line.text.substr(commentOffset, commentLength) : "";
-          const marker_symbol = new vscode.DocumentSymbol(linePrefix + " " + sectionComment, "", vscode.SymbolKind.Field, line.range, line.range);
+        if (sectionStatus.isSectionStart) {
+          if (linePrefix == "PUB" || linePrefix == "PRI") {
+            // start PUB/PRI
+            let methodScope: string = "Public";
+            if (line.text.startsWith("PRI")) {
+              methodScope = "Private";
+            }
+            let methodName: string = line.text.substr(3).trim();
+            if (methodName.includes("'")) {
+              const lineParts: string[] = methodName.split("'");
+              methodName = lineParts[0].trim();
+            }
+            if (methodName.includes("{")) {
+              const lineParts: string[] = methodName.split("{");
+              methodName = lineParts[0].trim();
+            }
+            if (methodName.includes("|")) {
+              const lineParts: string[] = methodName.split("|");
+              methodName = lineParts[0].trim();
+            }
+            // NOTE this changed to METHOD when we added global labels which are to be Functions!
+            const cmd_symbol = new vscode.DocumentSymbol(linePrefix + " " + methodName, "", vscode.SymbolKind.Method, line.range, line.range);
 
-          symbols.push(marker_symbol);
-        } else if (linePrefix == "PUB" || linePrefix == "PRI") {
-          let methodScope: string = "Public";
-          if (line.text.startsWith("PRI")) {
-            methodScope = "Private";
-          }
-          let methodName: string = line.text.substr(3).trim();
-          if (methodName.includes("'")) {
-            const lineParts: string[] = methodName.split("'");
-            methodName = lineParts[0].trim();
-          }
-          if (methodName.includes("{")) {
-            const lineParts: string[] = methodName.split("{");
-            methodName = lineParts[0].trim();
-          }
-          if (methodName.includes("|")) {
-            const lineParts: string[] = methodName.split("|");
-            methodName = lineParts[0].trim();
-          }
+            symbols.push(cmd_symbol);
+          } else {
+            // start CON/VAR/OBJ/DAT
+            let sectionComment = lineHasComment ? line.text.substr(commentOffset, commentLength) : "";
+            const marker_symbol = new vscode.DocumentSymbol(linePrefix + " " + sectionComment, "", vscode.SymbolKind.Field, line.range, line.range);
 
-          const cmd_symbol = new vscode.DocumentSymbol(linePrefix + " " + methodName, "", vscode.SymbolKind.Function, line.range, line.range);
+            symbols.push(marker_symbol);
+          }
+        } else {
+          let global_label: string | undefined = undefined;
+          if (trimmedNonCommentLine.length > 0) {
+            //this._logMessage("  * [" + currState + "] ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+            // NOT a section start
+            if (currState == eParseState.inPasmInline) {
+              // process pasm (assembly) lines
+              if (trimmedLine.length > 0) {
+                this._logMessage("    scan inPasmInline ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+                const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
+                if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
+                  currState = prePasmState;
+                  this._logMessage("    scan END-InLine ln:" + (i + 1) + " POP currState=[" + currState + "]");
+                  // and ignore rest of this line
+                  continue;
+                }
+                // didn't leave this state check for new global label
+                global_label = this._getSPIN_PasmDeclaration(0, line.text);
+              }
+            } else if (currState == eParseState.inDatPasm) {
+              // process pasm (assembly) lines
+              if (trimmedLine.length > 0) {
+                this._logMessage("    scan inDatPasm ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+                const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
+                if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
+                  this._logMessage("  - (" + (i + 1) + "): pre-scan DAT PASM line trimmedLine=[" + trimmedLine + "]");
+                  currState = prePasmState;
+                  this._logMessage("    scan END DATPasm ln:" + (i + 1) + " POP currState=[" + currState + "]");
+                  // and ignore rest of this line
+                  continue;
+                }
+                // didn't leave this state check for new global label
+                global_label = this._getDAT_PasmDeclaration(0, line.text); // let's get possible label on this ORG statement
+              }
+            } else if (currState == eParseState.inDat) {
+              this._logMessage("    scan inDat ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+              if (trimmedNonCommentLine.length > 6 && trimmedNonCommentLine.toUpperCase().includes("ORG")) {
+                // ORG, ORGF, ORGH
+                const nonStringLine: string = this.parseUtils.removeDoubleQuotedStrings(trimmedNonCommentLine);
+                if (nonStringLine.toUpperCase().includes("ORG")) {
+                  this._logMessage("  - pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
+                  prePasmState = currState;
+                  currState = eParseState.inDatPasm;
+                  this._logMessage("    scan START DATPasm ln:" + (i + 1) + " PUSH currState=[" + prePasmState + "]");
+                  // and ignore rest of this line
+                  global_label = this._getDAT_PasmDeclaration(0, line.text); // let's get possible label on this ORG statement
+                }
+              } else {
+                global_label = this._getDAT_Declaration(0, line.text);
+              }
+            } else if (currState == eParseState.inPub || currState == eParseState.inPri) {
+              // Detect start of INLINE PASM - org detect
+              // NOTE: The directives ORGH, ALIGNW, ALIGNL, and FILE are not allowed within in-line PASM code.
+              if (trimmedLine.length > 0) {
+                this._logMessage("    scan inPub/inPri ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+                const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
+                if (lineParts.length > 0 && (lineParts[0].toUpperCase() == "ORG" || lineParts[0].toUpperCase() == "ORGF")) {
+                  // Only ORG, not ORGF or ORGH
+                  this._logMessage("  - (" + (i + 1) + "): outline PUB/PRI line trimmedLine=[" + trimmedLine + "]");
+                  prePasmState = currState;
+                  currState = eParseState.inPasmInline;
+                  this._logMessage("    scan START-InLine ln:" + (i + 1) + " PUSH currState=[" + prePasmState + "]");
+                  // and ignore rest of this line
+                  continue;
+                }
+              }
+            }
+            if (global_label != undefined) {
+              // was Variable: sorta OK (image good, color bad)
+              // was Constant: sorta OK (image good, color bad)   SAME
+              const global_symbol = new vscode.DocumentSymbol(global_label, "", vscode.SymbolKind.Constant, line.range, line.range);
 
-          symbols.push(cmd_symbol);
+              symbols.push(global_symbol);
+            }
+          }
         }
       }
 
       resolve(symbols);
     });
+  }
+  private spin2OutlineLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2OutlineLog: any = undefined;
+
+  private _logMessage(message: string): void {
+    if (this.spin2OutlineLog != undefined) {
+      //Write to output window.
+      this.spin2OutlineLog.appendLine(message);
+    }
+  }
+
+  private _isSectionStartLine(line: string): {
+    isSectionStart: boolean;
+    inProgressStatus: eParseState;
+  } {
+    // return T/F where T means our string starts a new section!
+    let startStatus: boolean = false;
+    let inProgressState: eParseState = eParseState.Unknown;
+    if (line.length > 2) {
+      const lineParts: string[] = line.split(/[ \t]/);
+      if (lineParts.length > 0) {
+        const sectionName: string = lineParts[0].toUpperCase();
+        startStatus = true;
+        if (sectionName === "CON") {
+          inProgressState = eParseState.inCon;
+        } else if (sectionName === "DAT") {
+          inProgressState = eParseState.inDat;
+        } else if (sectionName === "OBJ") {
+          inProgressState = eParseState.inObj;
+        } else if (sectionName === "PUB") {
+          inProgressState = eParseState.inPub;
+        } else if (sectionName === "PRI") {
+          inProgressState = eParseState.inPri;
+        } else if (sectionName === "VAR") {
+          inProgressState = eParseState.inVar;
+        } else {
+          startStatus = false;
+        }
+      }
+    }
+    if (startStatus) {
+      this._logMessage("** isSectStart line=[" + line + "], enum(" + inProgressState + ")");
+    }
+    return {
+      isSectionStart: startStatus,
+      inProgressStatus: inProgressState,
+    };
+  }
+
+  private _getDAT_Declaration(startingOffset: number, line: string): string | undefined {
+    // HAVE    bGammaEnable        BYTE   TRUE               ' comment
+    //         didShow             byte   FALSE[256]
+    //                             byte   FALSE[256]
+    let newGlobalLabel: string | undefined = undefined;
+    let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
+    // get line parts - we only care about first one
+    const dataDeclNonCommentStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
+    let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
+    this._logMessage("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
+    if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
+      // remember this object name so we can annotate a call to it
+      let nameIndex: number = 0;
+      let typeIndex: number = 1;
+      let maxParts: number = 2;
+      if (lineParts[0].toUpperCase() == "DAT") {
+        nameIndex = 1;
+        typeIndex = 2;
+        maxParts = 3;
+      }
+      let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[nameIndex]);
+      const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[typeIndex]) ? true : false;
+      let lblFlag: string = haveLabel ? "T" : "F";
+      let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
+      this._logMessage("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
+      if (haveLabel) {
+        let newName = lineParts[nameIndex];
+        if (
+          !newName.toLowerCase().startsWith("debug") &&
+          !this.parseUtils.isPasmReservedWord(newName) &&
+          !this.parseUtils.isSpinBuiltInVariable(newName) &&
+          !this.parseUtils.isBuiltinReservedWord(newName)
+        ) {
+          if (!isDataDeclarationLine && !newName.startsWith(".") && !newName.startsWith(":") && !newName.includes("#")) {
+            newGlobalLabel = newName;
+          }
+          this._logMessage("  -- GLBL gddcl newName=[" + newGlobalLabel + "]");
+          //this._setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
+        }
+      }
+    }
+    return newGlobalLabel;
+  }
+
+  private _getDAT_PasmDeclaration(startingOffset: number, line: string): string | undefined {
+    // HAVE    bGammaEnable        BYTE   TRUE               ' comment
+    //         didShow             byte   FALSE[256]
+    let newGlobalLabel: string | undefined = undefined;
+    let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
+    // get line parts - we only care about first one
+    const datPasmRHSStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
+    const lineParts: string[] = this.parseUtils.getNonWhiteLineParts(datPasmRHSStr);
+    //this._logPASM('- GetDATPasmDecl lineParts=[' + lineParts + ']');
+    // handle name in 1 column
+    let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
+    const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
+    if (haveLabel && !isDataDeclarationLine && !lineParts[0].startsWith(".") && !lineParts[0].startsWith(":") && !lineParts[0].includes("#")) {
+      const labelName: string = lineParts[0];
+      if (
+        !this.parseUtils.isReservedPasmSymbols(labelName) &&
+        !labelName.toUpperCase().startsWith("IF_") &&
+        !labelName.toUpperCase().startsWith("_RET_") &&
+        !labelName.toUpperCase().startsWith("DEBUG")
+      ) {
+        // org in first column is not label name, nor is if_ conditional
+        newGlobalLabel = labelName;
+        this._logMessage("  -- DAT PASM GLBL newGlobalLabel=[" + newGlobalLabel + "]");
+        //this._setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
+      }
+    }
+    return newGlobalLabel;
+  }
+
+  private _getSPIN_PasmDeclaration(startingOffset: number, line: string): string | undefined {
+    // HAVE    next8SLine ' or .nextLine in col 0
+    //         nPhysLineIdx        long    0
+    let newGlobalLabel: string | undefined = undefined;
+    let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
+    // get line parts - we only care about first one
+    const inLinePasmRHSStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
+    const lineParts: string[] = this.parseUtils.getNonWhiteLineParts(inLinePasmRHSStr);
+    //this._logPASM('- GetInLinePasmDecl lineParts=[' + lineParts + ']');
+    // handle name in 1 column
+    const labelName: string = lineParts[0];
+    let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(labelName);
+    const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
+    if (haveLabel && !isDataDeclarationLine && !labelName.startsWith(".") && !labelName.startsWith(":") && !labelName.toLowerCase().startsWith("debug") && !labelName.includes("#")) {
+      newGlobalLabel = labelName;
+      this._logMessage("  -- Inline PASM newGlobalLabel=[" + newGlobalLabel + "]");
+    }
+    return newGlobalLabel;
   }
 }
 
@@ -182,21 +489,6 @@ class RememberedToken {
 interface IFilteredStrings {
   lineNoQuotes: string;
   lineParts: string[];
-}
-
-enum eParseState {
-  Unknown = 0,
-  inCon,
-  inDat,
-  inObj,
-  inPub,
-  inPri,
-  inVar,
-  inPasmInline,
-  inDatPasm,
-  inMultiLineComment,
-  inMultiLineDocComment,
-  inNothing,
 }
 
 enum eDebugDisplayType {
