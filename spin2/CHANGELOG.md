@@ -21,6 +21,14 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.8.2] 2023-01-02
+
+Minor Outline/Navigation update for P1
+
+- Add global Pasm labels to outline
+- This finishes the delivery of showing Global Labels within the outline for both P1 and P2
+
+
 ## [1.8.1] 2022-12-26
 
 Minor Outline/Navigation update for P2

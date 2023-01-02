@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 //  this file contains both an outline provider
 //    and our semantic highlighting provider
 //
-class RememberedToken {
+export class RememberedToken {
   _type: string;
   _modifiers: string[] = [];
   constructor(type: string, modifiers: string[] | undefined) {
@@ -28,16 +28,35 @@ class RememberedToken {
 //  Shared Data Storage for what our current document contains
 //
 export class DocumentFindings {
-  private tokenSet = new Map<string, RememberedToken>();
+  private globalTokens;
+  private localTokens;
+
   private outputChannel: vscode.OutputChannel | undefined = undefined;
   private bLogEnabled: boolean = false;
-  private bDataLoaded: boolean = false;
-
+  public constructor(isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
+    this.bLogEnabled = isLogging;
+    this.outputChannel = logHandle;
+    this.logTokenMessage("* gTOK ready");
+    this.globalTokens = new TokenSet(isLogging, logHandle);
+    this.localTokens = new TokenSet(isLogging, logHandle);
+  }
+  private logTokenMessage(message: string): void {
+    if (this.bLogEnabled && this.outputChannel != undefined) {
+      // Write to output window.
+      this.outputChannel.appendLine(message);
+    }
+  }
+}
+export class TokenSet {
   public constructor(isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
     this.bLogEnabled = isLogging;
     this.outputChannel = logHandle;
     this.logTokenMessage("* gTOK ready");
   }
+
+  private tokenSet = new Map<string, RememberedToken>();
+  private outputChannel: vscode.OutputChannel | undefined = undefined;
+  private bLogEnabled: boolean = false;
 
   private logTokenMessage(message: string): void {
     if (this.bLogEnabled && this.outputChannel != undefined) {
@@ -57,13 +76,6 @@ export class DocumentFindings {
   public clear(): void {
     this.tokenSet.clear();
     this.logTokenMessage("* gTOK clear() now " + this.length() + " tokens");
-  }
-  public isReady(): boolean {
-    return this.bDataLoaded;
-  }
-
-  public setLoaded(bState: boolean): void {
-    this.bDataLoaded = bState;
   }
 
   public length(): number {
