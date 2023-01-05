@@ -262,7 +262,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     this.containerDocSymbol = newSymbol;
   }
 
-  private spin2OutlineLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2OutlineLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private spin2OutlineLog: any = undefined;
 
   private _logMessage(message: string): void {

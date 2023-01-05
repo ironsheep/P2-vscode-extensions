@@ -184,7 +184,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     this.containerDocSymbol = newSymbol;
   }
 
-  private spin1OutlineLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1OutlineLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private spin1OutlineLog: any = undefined;
 
   private _logMessage(message: string): void {
