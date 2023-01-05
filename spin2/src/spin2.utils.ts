@@ -990,10 +990,15 @@ export class ParseUtils {
       "ptrb",
       "addpins",
       "clkfreq_",
+      "clkmode_",
       "pa",
       "pb",
       "clkfreq",
       "_clkfreq",
+      "_rcfast",
+      "_rcslow",
+      "_xinfreq",
+      "_xtlfreq",
       "round",
       "float",
       "trunc",
@@ -1382,6 +1387,63 @@ export class ParseUtils {
     return instructionStatus;
   }
 
+  public isPasm1Instruction(name: string): boolean {
+    const pasm1Instructions: string[] = [
+      "absneg",
+      "addabs",
+      "clkset",
+      "hubop",
+      "jmpret",
+      "lockclr",
+      "lockset",
+      "max",
+      "maxs",
+      "min",
+      "mins",
+      "movd",
+      "movi",
+      "movs",
+      "subabs",
+      "waitcnt",
+      "waitpeq",
+      "waitpne",
+      "waitvid",
+    ];
+    const instructionStatus: boolean = pasm1Instructions.indexOf(name.toLowerCase()) != -1;
+    return instructionStatus;
+  }
+
+  public isPasm1Variable(name: string): boolean {
+    const pasm1Variables: string[] = [
+      "_clkmode",
+      "_free",
+      "_stack",
+      "cnt",
+      "xtal1",
+      "xtal2",
+      "xtal3",
+      "rcfast",
+      "rcslow",
+      "pll1x",
+      "pll2x",
+      "pll4x",
+      "pll8x",
+      "pll16x",
+      "ctra",
+      "ctrb",
+      "frqa",
+      "frqb",
+      "phsa",
+      "phsb",
+      "vcfg",
+      "vscl",
+      "par",
+      "spr",
+    ];
+    const instructionStatus: boolean = pasm1Variables.indexOf(name.toLowerCase()) != -1;
+    return instructionStatus;
+  }
+
   public isPasmNonArgumentInstruction(name: string): boolean {
     const pasmNonArgumentInstructions: string[] = [
       "nop",
@@ -1447,6 +1509,17 @@ export class ParseUtils {
     return illegalStatus;
   }
 
+  public isPasm1Conditional(name: string): boolean {
+    let returnStatus: boolean = false;
+    if (name.length >= 2) {
+      const checkType: string = name.toUpperCase();
+      if (checkType == "NR" || checkType == "WR" || checkType == "IF_ALWAYS" || checkType == "IF_NEVER") {
+        returnStatus = true;
+      }
+    }
+    return returnStatus;
+  }
+
   public isPasmConditional(name: string): boolean {
     let returnStatus: boolean = false;
     if (name.length >= 2) {
@@ -1484,6 +1557,10 @@ export class ParseUtils {
       } else if (this.isIllegalInlinePasmDirective(name)) {
         haveLabelStatus = false;
       } else if (this.isPasmInstruction(name)) {
+        haveLabelStatus = false;
+      } else if (this.isPasm1Conditional(name)) {
+        haveLabelStatus = false;
+      } else if (this.isPasm1Instruction(name)) {
         haveLabelStatus = false;
       } else if (this.isPasmNonArgumentInstruction(name)) {
         haveLabelStatus = false;

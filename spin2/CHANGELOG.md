@@ -21,6 +21,16 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.8.3] 2023-01-04
+
+Minor Syntax/Semantic recognizer update - Adds help for porting p1 code to p2
+
+- Syntax P1 & P2: Recognize nested {} and {{}} comments 
+- Semantic P2: if () missing after method name (mark it as unknown - RED -> error)
+  - NOTE: we can't do this for "object method calls" until we have a full language server. (It's coming!)
+- Semantic P2: If () missing after spin built-in method name (mark it as unknown - RED -> error)
+- Semantic P2: Flag P1 specific variables, mnemonics, methods as RED -> error so we know what needs conversion to P2
+
 ## [1.8.2] 2023-01-02
 
 Minor Outline/Navigation update for P1

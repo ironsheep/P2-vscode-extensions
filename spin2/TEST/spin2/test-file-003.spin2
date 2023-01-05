@@ -27,7 +27,9 @@ PUB testingStrings()
 DAT
 ' CON DECLARATIONS
 ' PASM ONLY!  Use ASMCLK? See SPIN DOC P28
+                clkfreq_
                 _clkfreq
+                clkmode_
                 _rcfast
                 _rcslow
                 _xinfreq

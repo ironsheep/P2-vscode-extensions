@@ -37,6 +37,8 @@ repository:
             name: comment.block.spin
             begin: "{"
             end: "}"
+            patterns:
+                - include:     "#block_comment"
       clock_constants_settable:
             name: constant.language.control.configuration.spin
             match: (?i)\b(_CLKFREQ|_CLKMODE|_XINFREQ)\b
@@ -63,7 +65,7 @@ repository:
             match: (?i)\b(TRUE|FALSE|(POS|NEG)X|PI)\b
       constant_block:
             name: meta.block.constant.spin
-            begin: (?i)^CON\b
+            begin: '(?i)^(CON)(\s+|\s*$)'
             end: (?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b
             beginCaptures:
                   "0":
@@ -94,7 +96,7 @@ repository:
                                     - include: "#allocation_constants"
       data_block:
             name: meta.block.data.spin
-            begin: (?i)^DAT\b
+            begin: '(?i)^(DAT)(\s+|\s*$)'
             end: (?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b
             beginCaptures:
                   "0":
@@ -156,6 +158,8 @@ repository:
             name: comment.block.documentation.spin
             begin: "{{"
             end: "}}"
+            patterns:
+                - include:     "#doc_block_comment"
       doc_line_comment:
             name: comment.line.documentation.spin
             match: "''.*$"
@@ -228,7 +232,7 @@ repository:
             match: (?i)\b(\+(\+|=)?|-(-|=)?|\^(\^|=)?|\|(\||=)?|~(~|>)?=?|\?|\|<|>\||!|NOT|@@?|:?=|\*(\*|=)?|/(/|=)?|#>=?|<#=?|<<?=?|>>?=?|<-=?|->=?|><=?|&=|AND=?|OR=?|===?|<>=?|=[<>]=?)\b
       private_block:
             name: meta.block.private.spin
-            begin: (?i)^PRI\b
+            begin: '(?i)^(PRI)(\s+|\s*$)'
             end: (?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b
             beginCaptures:
                   "0":
@@ -254,23 +258,11 @@ repository:
                   - include: "#control_flow"
       public_block:
             name: meta.block.public.spin
-            begin: (?i)^(PUB)(?:\s+((?:\w|\d)+)(?:(\()(.*)(\)))?\s*(?:(\|)\s*((\w|_)+))?)?
+            begin: '(?i)^(PUB)(\s+|\s*$)'
             end: (?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b
             beginCaptures:
-                  "1":
+                  "0":
                         name: keyword.block.pub.spin
-                  "2":
-                        name: entity.name.function.spin
-                  "3":
-                        name: punctuation.spin
-                  "4":
-                        name: meta.parameter.spin
-                  "5":
-                        name: punctuation.spin
-                  "6":
-                        name: punctuation.spin
-                  "7":
-                        name: meta.return-type.spin
             patterns:
                   - include: "#comment"
                   - include: "#constants"
@@ -312,7 +304,7 @@ repository:
                         name: punctuation.definition.string.spin
       variable_block:
             name: meta.block.variable.spin
-            begin: (?i)^VAR\b
+            begin: '(?i)^(VAR)(\s+|\s*$)'
             end: (?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT))\b
             beginCaptures:
                   "0":

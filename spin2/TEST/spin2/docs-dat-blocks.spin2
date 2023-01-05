@@ -63,14 +63,14 @@ Loop        ADD OUTA,#1         ' to Spin2 code, @IncPins is the hub address of 
             ORG $200            ' set cog-exec mode, cog address = $200, cog limit = $400 (LUT, default limit)
             ORG $300,$380       ' set cog-exec mode, cog address = $300, cog limit = $380 (LUT)
 
-            ADD reg,#1          ' in cog-exec mode, instructions force alignment to cog/LUT registers
+            ADD register,#1          ' in cog-exec mode, instructions force alignment to cog/LUT registers
 
             ORGF $040           ' fill to cog address $040 with zeros (no symbol allowed before ORGF)
 
             FIT $020            ' test to make sure cog address has not exceeded $020
 
 x           RES 1               ' reserve 1 register, advance cog address by 1, don't advance hub address
-reg         RES 1               ' reserve 1 register, advance cog address by 1, don't advance hub address
+register    RES 1               ' reserve 1 register, advance cog address by 1, don't advance hub address
 z           RES 1               ' reserve 1 register, advance cog address by 1, don't advance hub address
 buff        RES 16              ' reserve 16 registers, advance cog address by 16, don't advance hub address
 

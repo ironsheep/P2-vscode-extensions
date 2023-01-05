@@ -42,6 +42,8 @@ repository:
         name: comment.block.spin2
         begin: '{'
         end: '}'
+        patterns:
+            - include:     "#block_comment"
     cog_register_names:
         name: constant.language.cog-register-names.spin2
         match: '(?i)\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|IN(A|B)|OUT(A|B))\b'
@@ -148,6 +150,8 @@ repository:
         name: comment.block.documentation.spin2
         begin: '{{'
         end: '}}'
+        patterns:
+            - include:     "#doc_block_comment"
     doc_line_comment:
         name: comment.line.documentation.spin2
         match: "''.*$"
@@ -276,7 +280,7 @@ repository:
                 match: '(?i)\b(W(C|Z|CZ)|(AND|OR|XOR)(C|Z))\b'
             -
                 name: constant.language.clock-register-names.spin2
-                match: '(?i)\b(_rc(fast|slow)|_?clkfreq_?|(_x(in|tl)freq))\b'
+                match: '(?i)\b(_rc(fast|slow)|_clkfreq|(clkfreq|clkmode)_|(_x(in|tl)freq))\b'
             -
                 name: keyword.pasm.instruction.hub-ram.pasm2
                 match: '(?i)\b(POP(A|B)|PUSH(A|B)|WR(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG)\b'
@@ -363,40 +367,26 @@ repository:
                 include: '#spin2_float_conversions'
     private_block:
         name: meta.block.private.spin2
-        begin: '(?i)^(PRI)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
+        begin: '(?i)^(PRI)(\s+|\s*$)'
         end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
-            '1':
+            '0':
                 name: keyword.block.pri.spin2
-            '2':
-                name: entity.name.function.spin
-            '3':
-                name: meta.parameter.spin
-            '4':
-                name: meta.return-type.spin
         patterns:
-            -
-                include: '#spin_language'
-            -
-                include: '#pasm_language_inline'
+            - include: "#comment"
+            - include: '#spin_language'
+            - include: '#pasm_language_inline'
     public_block:
         name: meta.block.public.spin
-        begin: '(?i)^(PUB)\s+(\w+)\s*\((?:(.*))?\)(?:\s*\:\s*(\w+))?'
+        begin: '(?i)^(PUB)(\s+|\s*$)'
         end: '(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\s+|\s*$))'
         beginCaptures:
-            '1':
+            '0':
                 name: keyword.block.pub.spin2
-            '2':
-                name: entity.name.function.spin
-            '3':
-                name: meta.parameter.spin
-            '4':
-                name: meta.return-type.spin
         patterns:
-            -
-                include: '#spin_language'
-            -
-                include: '#pasm_language_inline'
+            - include: "#comment"
+            - include: '#spin_language'
+            - include: '#pasm_language_inline'
     quaternary_number:
         name: constant.numeric.quaternary.spin2
         match: (\%\%[0-3][0-3_]*)\b

@@ -64,7 +64,12 @@
     "block_comment": {
       "name": "comment.block.spin2",
       "begin": "{",
-      "end": "}"
+      "end": "}",
+      "patterns": [
+        {
+          "include": "#block_comment"
+        }
+      ]
     },
     "cog_register_names": {
       "name": "constant.language.cog-register-names.spin2",
@@ -218,7 +223,12 @@
     "doc_block_comment": {
       "name": "comment.block.documentation.spin2",
       "begin": "{{",
-      "end": "}}"
+      "end": "}}",
+      "patterns": [
+        {
+          "include": "#doc_block_comment"
+        }
+      ]
     },
     "doc_line_comment": {
       "name": "comment.line.documentation.spin2",
@@ -418,7 +428,7 @@
         },
         {
           "name": "constant.language.clock-register-names.spin2",
-          "match": "(?i)\\b(_rc(fast|slow)|_?clkfreq_?|(_x(in|tl)freq))\\b"
+          "match": "(?i)\\b(_rc(fast|slow)|_clkfreq|(clkfreq|clkmode)_|(_x(in|tl)freq))\\b"
         },
         {
           "name": "keyword.pasm.instruction.hub-ram.pasm2",
@@ -542,23 +552,17 @@
     },
     "private_block": {
       "name": "meta.block.private.spin2",
-      "begin": "(?i)^(PRI)\\s+(\\w+)\\s*\\((?:(.*))?\\)(?:\\s*\\:\\s*(\\w+))?",
+      "begin": "(?i)^(PRI)(\\s+|\\s*$)",
       "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\\s+|\\s*$))",
       "beginCaptures": {
-        "1": {
+        "0": {
           "name": "keyword.block.pri.spin2"
-        },
-        "2": {
-          "name": "entity.name.function.spin"
-        },
-        "3": {
-          "name": "meta.parameter.spin"
-        },
-        "4": {
-          "name": "meta.return-type.spin"
         }
       },
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "include": "#spin_language"
         },
@@ -569,23 +573,17 @@
     },
     "public_block": {
       "name": "meta.block.public.spin",
-      "begin": "(?i)^(PUB)\\s+(\\w+)\\s*\\((?:(.*))?\\)(?:\\s*\\:\\s*(\\w+))?",
+      "begin": "(?i)^(PUB)(\\s+|\\s*$)",
       "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\\s+|\\s*$))",
       "beginCaptures": {
-        "1": {
+        "0": {
           "name": "keyword.block.pub.spin2"
-        },
-        "2": {
-          "name": "entity.name.function.spin"
-        },
-        "3": {
-          "name": "meta.parameter.spin"
-        },
-        "4": {
-          "name": "meta.return-type.spin"
         }
       },
       "patterns": [
+        {
+          "include": "#comment"
+        },
         {
           "include": "#spin_language"
         },

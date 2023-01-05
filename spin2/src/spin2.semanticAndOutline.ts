@@ -79,7 +79,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
           continue;
         } else if (currState == eParseState.inMultiLineComment) {
           // in multi-line non-doc-comment, hunt for end '}' to exit
-          let closingOffset = line.text.indexOf("}");
+          let closingOffset = trimmedLine.indexOf("}");
           if (closingOffset != -1) {
             // have close, comment ended
             currState = priorState;
@@ -102,8 +102,8 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
         } else if (trimmedLine.startsWith("{")) {
           // process possible multi-line non-doc comment
           // do we have a close on this same line?
-          let openingOffset = line.text.indexOf("{");
-          const closingOffset = line.text.indexOf("}", openingOffset + 1);
+          let openingOffset = trimmedLine.indexOf("{");
+          const closingOffset = trimmedLine.indexOf("}", openingOffset + 1);
           if (closingOffset == -1) {
             // is open of multiline comment
             priorState = currState;
@@ -246,6 +246,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
       resolve(symbols);
     });
   }
+
   private spin2OutlineLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private spin2OutlineLog: any = undefined;
 
@@ -303,7 +304,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
     let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
-    this._logMessage("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    this._logMessage("- OLn GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
     let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
     if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
       // remember this object name so we can annotate a call to it
@@ -319,19 +320,24 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
       const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[typeIndex]) ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
-      this._logMessage("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
+      this._logMessage("- OLn GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (haveLabel) {
         let newName = lineParts[nameIndex];
         if (
           !newName.toLowerCase().startsWith("debug") &&
           !this.parseUtils.isPasmReservedWord(newName) &&
           !this.parseUtils.isSpinBuiltInVariable(newName) &&
-          !this.parseUtils.isBuiltinReservedWord(newName)
+          !this.parseUtils.isSpinReservedWord(newName) &&
+          !this.parseUtils.isBuiltinReservedWord(newName) &&
+          // add pasm1 detect
+          !this.parseUtils.isPasm1Instruction(newName) &&
+          !this.parseUtils.isPasm1Variable(newName) &&
+          !this.parseUtils.isPasm1Conditional(newName)
         ) {
           if (!isDataDeclarationLine && !newName.startsWith(".") && !newName.startsWith(":") && !newName.includes("#")) {
             newGlobalLabel = newName;
           }
-          this._logMessage("  -- GLBL gddcl newName=[" + newGlobalLabel + "]");
+          this._logMessage("  -- OLn GLBL gddcl newName=[" + newGlobalLabel + "]");
           //this._setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
         }
       }
@@ -604,7 +610,27 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
-        let closingOffset = line.indexOf("}");
+        // ALLOW {...} on same line without closing!
+        let nestedOpeningOffset: number = -1;
+        let closingOffset: number = -1;
+        let currOffset: number = 0;
+        let bFoundOpenClosePair: boolean = false;
+        do {
+          nestedOpeningOffset = trimmedLine.indexOf("{", currOffset);
+          if (nestedOpeningOffset != -1) {
+            bFoundOpenClosePair = false;
+            // we have an opening {
+            closingOffset = trimmedLine.indexOf("}", nestedOpeningOffset);
+            if (closingOffset != -1) {
+              // and we have a closing, ignore this see if we have next
+              currOffset = closingOffset + 1;
+              bFoundOpenClosePair = true;
+            } else {
+              currOffset = nestedOpeningOffset + 1;
+            }
+          }
+        } while (nestedOpeningOffset != -1 && bFoundOpenClosePair);
+        closingOffset = trimmedLine.indexOf("}", currOffset);
         if (closingOffset != -1) {
           // have close, comment ended
           currState = priorState;
@@ -804,12 +830,49 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       //}
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
-        let closingOffset = line.indexOf("}");
+        // ALLOW {...} on same line without closing!
+        this._logMessage("    hunt for '}' ln:" + (i + 1) + " trimmedLine=[" + trimmedLine + "]");
+        let nestedOpeningOffset: number = -1;
+        let closingOffset: number = -1;
+        let currOffset: number = 0;
+        let bFoundOpenClosePair: boolean = false;
+        let bFoundNestedOpen: boolean = false;
+        do {
+          nestedOpeningOffset = trimmedLine.indexOf("{", currOffset);
+          if (nestedOpeningOffset != -1) {
+            bFoundOpenClosePair = false;
+            bFoundNestedOpen = true;
+            // we have an opening {
+            closingOffset = trimmedLine.indexOf("}", nestedOpeningOffset);
+            if (closingOffset != -1) {
+              // and we have a closing, ignore this see if we have next
+              currOffset = closingOffset + 1;
+              bFoundOpenClosePair = true;
+              this._logMessage("    skip {...} ln:" + (i + 1) + " nestedOpeningOffset=(" + nestedOpeningOffset + "), closingOffset=(" + closingOffset + ")");
+            } else {
+              currOffset = nestedOpeningOffset + 1;
+            }
+          }
+        } while (nestedOpeningOffset != -1 && bFoundOpenClosePair);
+        closingOffset = trimmedLine.indexOf("}", currOffset);
         if (closingOffset != -1) {
           // have close, comment ended
+          this._logMessage("    FOUND '}' ln:" + (i + 1) + " trimmedLine=[" + trimmedLine + "]");
           currState = priorState;
         }
-        //  DO NOTHING Let Syntax highlighting do this
+        // mark this line as doc comment
+        let nameOffset: number = line.indexOf(trimmedLine);
+        if (trimmedLine.length == 1) {
+          nameOffset = 0;
+        }
+        tokenSet.push({
+          line: i,
+          startCharacter: nameOffset,
+          length: trimmedLine.length,
+          ptTokenType: "comment",
+          ptTokenModifiers: ["line"],
+        });
+        continue;
       } else if (currState == eParseState.inMultiLineDocComment) {
         // in multi-line doc-comment, hunt for end '}}' to exit
         let closingOffset = line.indexOf("}}");
@@ -1145,7 +1208,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           // get line parts - we only care about first one
           const lineParts: string[] = line.substr(currentOffset).split(/[ \t=]/);
           const newName = lineParts[0];
-          if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
+          if (newName.substr(0, 1).match(/[a-zA-Z_]/) && !this.parseUtils.isPasm1Variable(newName)) {
             this._logCON("  -- GLBL GetCONDecl newName=[" + newName + "]");
             // remember this object name so we can annotate a call to it
             this._setGlobalToken(newName, new RememberedToken("variable", ["readonly"]));
@@ -1153,11 +1216,15 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         } else {
           // recognize enum values getting initialized
           const lineParts: string[] = conDeclarationLine.split(/[ \t,]/);
+          this._logCON("  -- GetCONDecl enumDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
           //this._logCON('  -- lineParts=[' + lineParts + ']');
           for (let index = 0; index < lineParts.length; index++) {
             let enumConstant: string = lineParts[index];
             // use parseUtils.isDebugInvocation to filter out use of debug invocation command from constant def'
             if (this.parseUtils.isDebugInvocation(enumConstant)) {
+              continue; // yep this is not a constant
+            } else if (this.parseUtils.isPasm1Variable(enumConstant)) {
+              this._logCON("  -- GLBL PASM1 skipped=[" + enumConstant + "]");
               continue; // yep this is not a constant
             } else {
               // our enum name can have a step offset
@@ -1185,7 +1252,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
     let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
-    this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    //this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
     let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
     if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
       // remember this object name so we can annotate a call to it
@@ -1201,9 +1268,19 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[typeIndex]) ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
-      this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
-      if (haveLabel) {
-        let newName = lineParts[nameIndex];
+      let newName = lineParts[nameIndex];
+      this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + "), newName=[" + newName + "], label=" + lblFlag + ", daDecl=" + dataDeclFlag);
+      if (
+        haveLabel &&
+        !this.parseUtils.isPasmReservedWord(newName) &&
+        !this.parseUtils.isSpinBuiltInVariable(newName) &&
+        !this.parseUtils.isSpinReservedWord(newName) &&
+        !this.parseUtils.isBuiltinReservedWord(newName) &&
+        // add pasm1 detect
+        !this.parseUtils.isPasm1Instruction(newName) &&
+        !this.parseUtils.isPasm1Variable(newName) &&
+        !this.parseUtils.isPasm1Conditional(newName)
+      ) {
         const nameType: string = isDataDeclarationLine ? "variable" : "label";
         var labelModifiers: string[] = [];
         if (!isDataDeclarationLine) {
@@ -1232,7 +1309,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
     if (haveLabel) {
       const labelName: string = lineParts[0];
-      if (!this.parseUtils.isReservedPasmSymbols(labelName) && !labelName.toUpperCase().startsWith("IF_") && !labelName.toUpperCase().startsWith("_RET_")) {
+      if (!this.parseUtils.isReservedPasmSymbols(labelName) && !labelName.toUpperCase().startsWith("IF_") && !labelName.toUpperCase().startsWith("_RET_") && !labelName.startsWith(":")) {
         // org in first column is not label name, nor is if_ conditional
         const labelType: string = isDataDeclarationLine ? "variable" : "label";
         var labelModifiers: string[] = [];
@@ -1508,7 +1585,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               startCharacter: nameOffset,
               length: lhsConstantName.length,
               ptTokenType: "variable",
-              ptTokenModifiers: ["readonly", "missingDeclaration"],
+              ptTokenModifiers: ["illegalUse"],
             });
           }
           // remove front LHS of assignment and process remainder
@@ -1565,7 +1642,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                     startCharacter: nameOffset,
                     length: matchLen,
                     ptTokenType: "variable",
-                    ptTokenModifiers: ["readonly", "missingDeclaration"],
+                    ptTokenModifiers: ["illegalUse"],
                   });
                 }
               }
@@ -1620,7 +1697,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 });
               }
             }
-            if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/) && !this.parseUtils.isDebugInvocation(enumConstant)) {
+            if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/) && !this.parseUtils.isDebugInvocation(enumConstant) && !this.parseUtils.isPasm1Variable(enumConstant)) {
               this._logCON("  -- B GLBL enumConstant=[" + enumConstant + "]");
               // our enum name can have a step offset
               const nameOffset = line.indexOf(enumConstant, currentOffset);
@@ -1630,6 +1707,17 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 length: enumConstant.length,
                 ptTokenType: "enumMember",
                 ptTokenModifiers: ["declaration", "readonly"],
+              });
+            } else if (this.parseUtils.isPasm1Variable(enumConstant)) {
+              // our SPIN1 name
+              this._logCON("  -- B GLBL bad SPIN1=[" + enumConstant + "]");
+              const nameOffset = line.indexOf(enumConstant, currentOffset);
+              tokenSet.push({
+                line: lineNumber,
+                startCharacter: nameOffset,
+                length: enumConstant.length,
+                ptTokenType: "variable",
+                ptTokenModifiers: ["illegalUse"],
               });
             }
             currentOffset += enumConstant.length + 1;
@@ -1647,7 +1735,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
     let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
-    this._logVAR("- rptDataDeclLn lineParts=[" + lineParts + "]");
+    this._logVAR("- rptDataDeclLn lineParts=[" + lineParts + "](" + lineParts.length + ")");
     // remember this object name so we can annotate a call to it
     if (lineParts.length > 1) {
       if (this.parseUtils.isStorageType(lineParts[0]) || lineParts[0].toUpperCase() == "FILE" || lineParts[0].toUpperCase() == "ORG") {
@@ -1713,6 +1801,15 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             length: newName.length,
             ptTokenType: referenceDetails.type,
             ptTokenModifiers: referenceDetails.modifiers,
+          });
+        } else if (this.parseUtils.isPasm1Instruction(newName) || this.parseUtils.isPasm1Conditional(newName) || this.parseUtils.isPasm1Variable(newName)) {
+          this._logMessage("  --  ERROR pasm1 name=[" + newName + "]");
+          tokenSet.push({
+            line: lineNumber,
+            startCharacter: currentOffset,
+            length: newName.length,
+            ptTokenType: "variable",
+            ptTokenModifiers: ["illegalUse"],
           });
         }
       }
@@ -1846,7 +1943,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const inLinePasmRHSStr = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
     const lineParts: string[] = this.parseUtils.getNonWhitePasmLineParts(inLinePasmRHSStr);
     currentOffset = line.indexOf(inLinePasmRHSStr, currentOffset);
-    this._logPASM("  -- reportDATPasmDecl lineParts=[" + lineParts + "]");
     // handle name in 1 column
     const bIsAlsoDebugLine: boolean = inLinePasmRHSStr.toLowerCase().indexOf("debug(") != -1 ? true : false;
     if (bIsAlsoDebugLine) {
@@ -1858,6 +1954,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
     let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
+    this._logPASM("  -- reportDATPasmDecl lineParts=[" + lineParts + "], haveLabel=(" + haveLabel + "), isDataDeclarationLine=(" + isDataDeclarationLine + ")");
     // TODO: REWRITE this to handle "non-label" line with unknown op-code!
     if (haveLabel) {
       // process label/variable name - starting in column 0
@@ -1880,20 +1977,42 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           ptTokenModifiers: updatedModificationSet,
         });
         haveLabel = true;
-      } else {
-        if (labelName.toLowerCase() != "debug" && bIsAlsoDebugLine) {
-          // hrmf... no global type???? this should be a label?
-          this._logPASM("  --  DAT Pasm ERROR NOT A label=[" + labelName + "](" + (0 + 1) + ")");
-          const nameOffset = line.indexOf(labelName, currentOffset);
-          tokenSet.push({
-            line: lineNumber,
-            startCharacter: nameOffset,
-            length: labelName.length,
-            ptTokenType: "variable", // color this offender!
-            ptTokenModifiers: ["illegalUse"],
-          });
-          haveLabel = true;
-        }
+      } else if (labelName.startsWith(":")) {
+        // hrmf... no global type???? this should be a label?
+        this._logPASM("  --  DAT Pasm ERROR Spin1 label=[" + labelName + "](" + (0 + 1) + ")");
+        const nameOffset = line.indexOf(labelName, currentOffset);
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: labelName.length,
+          ptTokenType: "variable", // color this offender!
+          ptTokenModifiers: ["illegalUse"],
+        });
+        haveLabel = true;
+      } else if (labelName.toLowerCase() != "debug" && bIsAlsoDebugLine) {
+        // hrmf... no global type???? this should be a label?
+        this._logPASM("  --  DAT Pasm ERROR NOT A label=[" + labelName + "](" + (0 + 1) + ")");
+        const nameOffset = line.indexOf(labelName, currentOffset);
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: labelName.length,
+          ptTokenType: "variable", // color this offender!
+          ptTokenModifiers: ["illegalUse"],
+        });
+        haveLabel = true;
+      } else if (this.parseUtils.isPasm1Instruction(labelName)) {
+        // hrmf... no global type???? this should be a label?
+        this._logPASM("  --  DAT Pasm1 BAD label=[" + labelName + "](" + (0 + 1) + ")");
+        const nameOffset = line.indexOf(labelName, currentOffset);
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: labelName.length,
+          ptTokenType: "variable", // color this offender!
+          ptTokenModifiers: ["illegalUse"],
+        });
+        haveLabel = true;
       }
     }
     if (!isDataDeclarationLine) {
@@ -1906,6 +2025,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           argumentOffset++;
           minNonLabelParts++;
         }
+        this._logPASM("  -- DAT PASM !dataDecl lineParts=[" + lineParts + "](" + lineParts.length + "), argumentOffset=(" + argumentOffset + "), minNonLabelParts=(" + minNonLabelParts + ")");
         if (lineParts[argumentOffset].toUpperCase().startsWith("IF_") || lineParts[argumentOffset].toUpperCase().startsWith("_RET_")) {
           // skip our conditional
           argumentOffset++;
@@ -1982,7 +2102,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                     startCharacter: nameOffset,
                     length: namePart.length,
                     ptTokenType: "variable",
-                    ptTokenModifiers: ["readonly", "missingDeclaration"],
+                    ptTokenModifiers: ["illegalUse"],
                   });
                 } else {
                   this._logPASM("  --  DAT Pasm WHAT IS THIS?? name=[" + namePart + "](" + (nameOffset + 1) + ")");
@@ -2006,7 +2126,29 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
             currentOffset += currArgumentLen + 1;
           }
+          if (this.parseUtils.isPasm1Instruction(likelyInstructionName)) {
+            const nameOffset: number = line.indexOf(likelyInstructionName, 0);
+            this._logPASM("  --  DAT A Pasm1 BAD instru=[" + likelyInstructionName + "](" + (nameOffset + 1) + ")");
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: likelyInstructionName.length,
+              ptTokenType: "variable",
+              ptTokenModifiers: ["illegalUse"],
+            });
+          }
         }
+      } else if (lineParts.length == 1 && this.parseUtils.isPasm1Instruction(lineParts[0])) {
+        const likelyInstructionName: string = lineParts[0];
+        const nameOffset: number = line.indexOf(likelyInstructionName, 0);
+        this._logPASM("  --  DAT B Pasm1 BAD instru=[" + likelyInstructionName + "](" + (nameOffset + 1) + ")");
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: likelyInstructionName.length,
+          ptTokenType: "variable",
+          ptTokenModifiers: ["illegalUse"],
+        });
       }
     } else {
       // process data declaration
@@ -2493,6 +2635,14 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           } else if (this._isGlobalToken(namePart)) {
             referenceDetails = this._getGlobalToken(namePart);
             this._logSPIN("  --  FOUND global name=[" + namePart + "]");
+            if (referenceDetails != undefined && referenceDetails?.type == "method") {
+              const methodCall = namePart + "(";
+              const addressOf = "@" + namePart;
+              if (!nonStringAssignmentRHSStr.includes(methodCall) && !nonStringAssignmentRHSStr.includes(addressOf)) {
+                this._logSPIN("  --  MISSING parens on method=[" + namePart + "]");
+                referenceDetails = undefined;
+              }
+            }
           }
           if (referenceDetails != undefined) {
             this._logSPIN("  --  SPIN RHS name=[" + namePart + "](" + (nameOffset + 1) + ")");
@@ -2514,6 +2664,15 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 ptTokenType: "storageType",
                 ptTokenModifiers: [],
               });
+            } else if (this.parseUtils.isSpinBuiltinMethod(namePart) && !nonStringAssignmentRHSStr.includes(namePart + "(")) {
+              this._logSPIN("  --  SPIN MISSING PARENS name=[" + namePart + "]");
+              tokenSet.push({
+                line: lineNumber,
+                startCharacter: nameOffset,
+                length: namePart.length,
+                ptTokenType: "method",
+                ptTokenModifiers: ["builtin", "missingDeclaration"],
+              });
             }
             // we use bIsDebugLine in next line so we don't flag debug() arguments!
             else if (
@@ -2522,6 +2681,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               !this.parseUtils.isBuiltinReservedWord(namePart) &&
               !this.parseUtils.isCoginitReservedSymbol(namePart) &&
               !this.parseUtils.isDebugMethod(namePart) &&
+              !this.parseUtils.isDebugSymbol(namePart) &&
               !bIsDebugLine &&
               !this.parseUtils.isDebugInvocation(namePart)
             ) {
@@ -3860,15 +4020,19 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const commentRHSStrOffset: number = currentOffset + nonCommentLHSStr.length;
     const commentOffset: number = line.indexOf("'", commentRHSStrOffset);
     const bHaveDocComment: boolean = line.indexOf("''", commentOffset) != -1;
-    if (commentOffset != -1 && !bHaveDocComment) {
-      const newToken: IParsedToken = {
-        line: lineNumber,
-        startCharacter: commentOffset,
-        length: line.length - commentOffset + 1,
-        ptTokenType: "comment",
-        ptTokenModifiers: ["line"],
-      };
-      tokenSet.push(newToken);
+    this._logMessage("  -- gnwclrc commentOffset=(" + commentOffset + "), bHaveDocComment=[" + bHaveDocComment + "], line=[" + line + "]");
+    if (commentOffset != -1) {
+      if (!bHaveDocComment) {
+        const newToken: IParsedToken = {
+          line: lineNumber,
+          startCharacter: commentOffset,
+          length: line.length - commentOffset + 1,
+          ptTokenType: "comment",
+          ptTokenModifiers: ["line"],
+        };
+        //this._logMessage("=> CMT: " + this._tokenString(newToken, line));
+        tokenSet.push(newToken);
+      }
     }
     return nonCommentLHSStr;
   }

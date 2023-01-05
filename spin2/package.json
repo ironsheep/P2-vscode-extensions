@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",

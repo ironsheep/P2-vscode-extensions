@@ -225,7 +225,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
     let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
-    this._logMessage("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    //this._logMessage("- Oln GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
     let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
     if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
       // remember this object name so we can annotate a call to it
@@ -241,19 +241,20 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
       const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[typeIndex]) ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
-      this._logMessage("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
+      this._logMessage("- Oln GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (haveLabel) {
         let newName = lineParts[nameIndex];
         if (
           !newName.toLowerCase().startsWith("debug") &&
           !this.parseUtils.isPasmReservedWord(newName) &&
+          !this.parseUtils.isSpinReservedWord(newName) &&
           !this.parseUtils.isSpinBuiltInVariable(newName) &&
           !this.parseUtils.isBuiltinReservedWord(newName)
         ) {
           if (!isDataDeclarationLine && !newName.startsWith(".") && !newName.startsWith(":") && !newName.includes("#")) {
             newGlobalLabel = newName;
+            this._logMessage("  -- Oln GLBL gddcl newName=[" + newGlobalLabel + "]");
           }
-          this._logMessage("  -- GLBL gddcl newName=[" + newGlobalLabel + "]");
           //this._setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
         }
       }
@@ -995,7 +996,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (haveLabel) {
         let newName = lineParts[nameIndex];
-        if (!this.parseUtils.isSpin2ReservedWords(newName)) {
+        if (!this.parseUtils.isSpin2ReservedWords(newName) && !this.parseUtils.isSpinReservedWord(newName) && !this.parseUtils.isBuiltinReservedWord(newName)) {
           const nameType: string = isDataDeclarationLine ? "variable" : "label";
           var labelModifiers: string[] = [];
           if (!isDataDeclarationLine) {
@@ -1468,6 +1469,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           !this.parseUtils.isPasmInstruction(newName) &&
           !this.parseUtils.isPasmConditional(newName) &&
           !this.parseUtils.isDatStorageType(newName) &&
+          !this.parseUtils.isBuiltinReservedWord(newName) &&
+          !this.parseUtils.isSpinReservedWord(newName) &&
           !newName.toUpperCase().startsWith("IF_")
         ) {
           this._logDAT("  --  DAT rDdl MISSING name=[" + newName + "]");

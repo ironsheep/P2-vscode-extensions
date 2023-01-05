@@ -278,6 +278,7 @@ export class ParseUtils {
       "false",
       "posx",
       "negx",
+      "pi",
     ];
     let reservedStatus: boolean = spinInstructionsOfNote.indexOf(name.toLowerCase()) != -1;
     if (reservedStatus == false) {
