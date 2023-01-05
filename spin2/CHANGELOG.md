@@ -21,6 +21,14 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.8.4] 2023-01-05
+
+Minor Outline adjustments for P1 and P2
+
+- Repair parsing of long(...) code -- recognize long when adjacent paren. (issue #14)
+- Move global labels under their enclosing DAT section, creating more descriptive outline hierarchy (issue #13)
+
+
 ## [1.8.3] 2023-01-04
 
 Minor Syntax/Semantic recognizer update - Adds help for porting p1 code to p2

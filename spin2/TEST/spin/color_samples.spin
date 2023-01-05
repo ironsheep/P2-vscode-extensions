@@ -24,11 +24,11 @@ PRI testMethod(param1) : bStatus | index
 VAR
     LONG  simpleVar[2]
 
-DAT
+DAT ' no pasm
     myString    byte    "test string",0
     effs        byte    $ff[8]
 
-DAT
+DAT ' with pasm
                 org
 pasm_program                                        ' do a DEBUG at the start of the program to open debugger
 .loop           add     par,#1                      ' select "MAIN" in the debugger to single-step

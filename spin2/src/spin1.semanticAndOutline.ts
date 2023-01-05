@@ -41,6 +41,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
       }
     }
   }
+  private containerDocSymbol: vscode.DocumentSymbol | undefined = undefined;
   public provideDocumentSymbols(document: vscode.TextDocument, _token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
     return new Promise((resolve, _reject) => {
       let symbols: vscode.DocumentSymbol[] = [];
@@ -89,9 +90,9 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
           if (linePrefix == "CON" || linePrefix == "DAT" || linePrefix == "VAR" || linePrefix == "OBJ") {
             // start CON/VAR/OBJ/DAT
             let sectionComment = lineHasComment ? line.text.substr(commentOffset, commentLength) : "";
-            const marker_symbol = new vscode.DocumentSymbol(linePrefix + " " + sectionComment, "", vscode.SymbolKind.Field, line.range, line.range);
-
-            symbols.push(marker_symbol);
+            const blockSymbol = new vscode.DocumentSymbol(linePrefix + " " + sectionComment, "", vscode.SymbolKind.Field, line.range, line.range);
+            this.setContainerSymbol(blockSymbol, symbols);
+            //symbols.push(blockSymbol);
           } else if (linePrefix == "PUB" || linePrefix == "PRI") {
             // start PUB/PRI
             let methodScope: string = "Public";
@@ -113,9 +114,9 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
             }
 
             // NOTE this changed to METHOD when we added global labels which are to be Functions!
-            const cmd_symbol = new vscode.DocumentSymbol(linePrefix + " " + methodName, "", vscode.SymbolKind.Method, line.range, line.range);
-
-            symbols.push(cmd_symbol);
+            const methodSymbol = new vscode.DocumentSymbol(linePrefix + " " + methodName, "", vscode.SymbolKind.Method, line.range, line.range);
+            this.setContainerSymbol(methodSymbol, symbols);
+            symbols.push(methodSymbol);
           }
         } else {
           let global_label: string | undefined = undefined;
@@ -157,18 +158,33 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
             if (global_label != undefined) {
               // was Variable: sorta OK (image good, color bad)
               // was Constant: sorta OK (image good, color bad)   SAME
-              const global_symbol = new vscode.DocumentSymbol(global_label, "", vscode.SymbolKind.Constant, line.range, line.range);
-
-              symbols.push(global_symbol);
+              const labelSymbol = new vscode.DocumentSymbol(global_label, "", vscode.SymbolKind.Constant, line.range, line.range);
+              if (this.containerDocSymbol != undefined) {
+                this.containerDocSymbol.children.push(labelSymbol);
+              } else {
+                symbols.push(labelSymbol);
+              }
             }
           }
         }
       }
-
+      // if we have one last unpushed, push it
+      if (this.containerDocSymbol != undefined) {
+        symbols.push(this.containerDocSymbol);
+        this.containerDocSymbol = undefined;
+      }
       resolve(symbols);
     });
   }
-  private spin1OutlineLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+
+  private setContainerSymbol(newSymbol: vscode.DocumentSymbol, symbolSet: vscode.DocumentSymbol[]): void {
+    if (this.containerDocSymbol != undefined) {
+      symbolSet.push(this.containerDocSymbol);
+    }
+    this.containerDocSymbol = newSymbol;
+  }
+
+  private spin1OutlineLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private spin1OutlineLog: any = undefined;
 
   private _logMessage(message: string): void {
@@ -224,7 +240,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
-    let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
+    let lineParts: string[] = this.parseUtils.getNonWhiteNParenLineParts(dataDeclNonCommentStr);
     //this._logMessage("- Oln GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
     let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
     if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
@@ -269,8 +285,8 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
     // get line parts - we only care about first one
     const datPasmRHSStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
-    const lineParts: string[] = this.parseUtils.getNonWhiteLineParts(datPasmRHSStr);
-    //this._logPASM('- GetDATPasmDecl lineParts=[' + lineParts + ']');
+    const lineParts: string[] = this.parseUtils.getNonWhiteNParenLineParts(datPasmRHSStr);
+    this._logMessage("- Oln GetPasmDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
     // handle name in 1 column
     let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
@@ -284,7 +300,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
       ) {
         // org in first column is not label name, nor is if_ conditional
         newGlobalLabel = labelName;
-        this._logMessage("  -- DAT PASM GLBL newGlobalLabel=[" + newGlobalLabel + "]");
+        this._logMessage("  -- DAT Oln PASM GLBL newGlobalLabel=[" + newGlobalLabel + "]");
         //this._setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
       }
     }

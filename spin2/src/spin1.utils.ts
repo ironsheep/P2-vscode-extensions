@@ -188,6 +188,14 @@ export class ParseUtils {
     return lineParts;
   }
 
+  public getNonWhiteNParenLineParts(line: string): string[] {
+    let lineParts: string[] | null = line.match(/[^ \t\()]+/g);
+    if (lineParts === null) {
+      lineParts = [];
+    }
+    return lineParts;
+  }
+
   public getCommaDelimitedNonWhiteLineParts(line: string): string[] {
     let lineParts: string[] | null = line.match(/[^ \t,]+/g);
     if (lineParts === null) {
