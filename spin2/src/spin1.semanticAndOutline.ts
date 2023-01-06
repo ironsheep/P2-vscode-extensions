@@ -116,7 +116,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
             // NOTE this changed to METHOD when we added global labels which are to be Functions!
             const methodSymbol = new vscode.DocumentSymbol(linePrefix + " " + methodName, "", vscode.SymbolKind.Method, line.range, line.range);
             this.setContainerSymbol(methodSymbol, symbols);
-            symbols.push(methodSymbol);
+            //symbols.push(methodSymbol);
           }
         } else {
           let global_label: string | undefined = undefined;
@@ -1080,28 +1080,31 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const isPrivate = methodType.indexOf("PRI") != -1;
     //skip Past Whitespace
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
+    const remainingNonCommentLineStr: string = this.parseUtils.getNonCommentLineRemainder(0, line);
     const startNameOffset = currentOffset;
     // find open paren
-    currentOffset = line.indexOf("(", startNameOffset); // in spin1 ()'s are optional!
+    currentOffset = remainingNonCommentLineStr.indexOf("(", startNameOffset); // in spin1 ()'s are optional!
     if (currentOffset == -1) {
-      currentOffset = line.indexOf(":", startNameOffset);
+      currentOffset = remainingNonCommentLineStr.indexOf(":", startNameOffset);
       if (currentOffset == -1) {
-        currentOffset = line.indexOf("|", startNameOffset);
+        currentOffset = remainingNonCommentLineStr.indexOf("|", startNameOffset);
         if (currentOffset == -1) {
-          currentOffset = line.indexOf(" ", startNameOffset);
+          currentOffset = remainingNonCommentLineStr.indexOf(" ", startNameOffset);
           if (currentOffset == -1) {
-            currentOffset = line.indexOf("'", startNameOffset);
+            currentOffset = remainingNonCommentLineStr.indexOf("'", startNameOffset);
+            // if nothibng found...
             if (currentOffset == -1) {
-              currentOffset = line.length;
+              currentOffset = remainingNonCommentLineStr.length;
             }
           }
         }
       }
     }
+
     let nameLength = currentOffset - startNameOffset;
     const methodName = line.substr(startNameOffset, nameLength).trim();
     const nameType: string = isPrivate ? "private" : "public";
-    this._logSPIN("  -- GLBL GetMethodDecl newName=[" + methodName + "](" + nameType + ")");
+    this._logSPIN("  -- GLBL GetMethodDecl newName=[" + methodName + "](" + methodName.length + "), type=[" + methodType + "], currentOffset=[" + currentOffset + "]");
     this.currentMethodName = methodName; // notify of latest method name so we can track inLine PASM symbols
     // remember this method name so we can annotate a call to it
     const refModifiers: string[] = isPrivate ? ["static"] : [];
@@ -1834,7 +1837,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const isPrivate = methodType.indexOf("PRI") != -1;
     //skip Past Whitespace
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
-    const spineDeclarationLHSStr = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
+    const spineDeclarationLHSStr = this._getNonCommentLineReturnComment(lineNumber, 0, line, tokenSet);
     if (spineDeclarationLHSStr) {
     } // we don't use this string, we called this to record our rhs comment!
     // -----------------------------------
@@ -1843,18 +1846,18 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const startNameOffset: number = currentOffset;
 
     // find open paren - skipping past method name
-    currentOffset = line.indexOf("(", startNameOffset); // in spin1 ()'s are optional!
+    currentOffset = spineDeclarationLHSStr.indexOf("(", startNameOffset); // in spin1 ()'s are optional!
     const openParenOffset: number = currentOffset;
     if (currentOffset == -1) {
-      currentOffset = line.indexOf(":", startNameOffset);
+      currentOffset = spineDeclarationLHSStr.indexOf(":", startNameOffset);
       if (currentOffset == -1) {
-        currentOffset = line.indexOf("|", startNameOffset);
+        currentOffset = spineDeclarationLHSStr.indexOf("|", startNameOffset);
         if (currentOffset == -1) {
-          currentOffset = line.indexOf(" ", startNameOffset);
+          currentOffset = spineDeclarationLHSStr.indexOf(" ", startNameOffset);
           if (currentOffset == -1) {
-            currentOffset = line.indexOf("'", startNameOffset);
+            currentOffset = spineDeclarationLHSStr.indexOf("'", startNameOffset);
             if (currentOffset == -1) {
-              currentOffset = line.length;
+              currentOffset = spineDeclarationLHSStr.length;
             }
           }
         }
@@ -2750,22 +2753,22 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             const arrayCloseOffset: number = line.indexOf("]", currentOffset);
             const arrayReference: string = line.substr(arrayOpenOffset + 1, arrayCloseOffset - arrayOpenOffset - 1);
             const arrayReferenceParts: string[] = arrayReference.split(/[ \t\/\*\+\<\>]/);
-            this._logVAR("  --  arrayReferenceParts=[" + arrayReferenceParts + "]");
+            this._logVAR("  --  arrayReferenceParts=[" + arrayReferenceParts + "](" + arrayReferenceParts.length + ")");
             for (let index = 0; index < arrayReferenceParts.length; index++) {
               const referenceName = arrayReferenceParts[index];
               if (referenceName.substr(0, 1).match(/[a-zA-Z_]/)) {
                 let possibleNameSet: string[] = [];
                 // is it a namespace reference?
-                if (referenceName.includes(".")) {
-                  possibleNameSet = referenceName.split(".");
+                if (referenceName.includes("#")) {
+                  possibleNameSet = referenceName.split("#");
                 } else {
                   possibleNameSet = [referenceName];
                 }
-                this._logVAR("  --  possibleNameSet=[" + possibleNameSet + "]");
+                this._logVAR("  --  possibleNameSet=[" + possibleNameSet + "](" + possibleNameSet.length + ")");
                 const namePart = possibleNameSet[0];
                 if (this._isGlobalToken(namePart)) {
                   const referenceDetails: RememberedToken | undefined = this._getGlobalToken(namePart);
-                  const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "." + possibleNameSet[1];
+                  const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "#" + possibleNameSet[1];
                   const nameOffset = line.indexOf(searchString, currentOffset);
                   if (referenceDetails != undefined) {
                     this._logVAR("  --  FOUND global name=[" + namePart + "]");

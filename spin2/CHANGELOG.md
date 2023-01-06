@@ -21,6 +21,14 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.8.5] 2023-01-05
+
+Minor Semantic/Outline fixes for P1
+
+- Repair parsing of PUB/PRI method names (fix distraction by comment content)
+- Repair parsing of object constants being used as array length specification
+- Repair double-entries of PUB/PRI names in P1 Outline
+
 ## [1.8.4] 2023-01-05
 
 Minor Outline adjustments for P1 and P2
