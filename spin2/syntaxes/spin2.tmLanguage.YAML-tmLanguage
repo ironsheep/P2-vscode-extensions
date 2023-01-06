@@ -1,10 +1,8 @@
 $schema: 'https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json'
 name: spin2
 patterns:
-    -
-        include: '#comment'
-    -
-        include: '#block'
+    - include: '#comment'
+    - include: '#block'
 repository:
     array_index:
         name: meta.array.index.spin2
@@ -26,24 +24,18 @@ repository:
     block:
         name: meta.block.spin2
         patterns:
-            -
-                include: '#constant_block'
-            -
-                include: '#variable_block'
-            -
-                include: '#object_block'
-            -
-                include: '#public_block'
-            -
-                include: '#private_block'
-            -
-                include: '#data_block'
+            - include: '#constant_block'
+            - include: '#variable_block'
+            - include: '#object_block'
+            - include: '#public_block'
+            - include: '#private_block'
+            - include: '#data_block'
     block_comment:
         name: comment.block.spin2
         begin: '{'
         end: '}'
         patterns:
-            - include:     "#block_comment"
+            - include: "#block_comment"
     cog_register_names:
         name: constant.language.cog-register-names.spin2
         match: '(?i)\b(PR(0|1|2|3|4|5|6|7)|IJMP(1|2|3)|IRET(1|2|3)|P(A|B)|PTR(A|B)|DIR(A|B)|IN(A|B)|OUT(A|B))\b'
@@ -52,14 +44,10 @@ repository:
         match: '(?i)\b((COG|HUB)EXEC(_NEW|NEW_PAIR)?)\b'
     comment:
         patterns:
-            -
-                include: '#doc_block_comment'
-            -
-                include: '#block_comment'
-            -
-                include: '#doc_line_comment'
-            -
-                include: '#line_comment'
+            - include: '#doc_block_comment'
+            - include: '#block_comment'
+            - include: '#doc_line_comment'
+            - include: '#line_comment'
     configuration:
         name: keyword.control.configuration.spin2
         match: '(?i)\b(CHIPVER|_?CLKMODE|_?CLKFREQ|CLKSET|_XINFREQ|_STACK|_FREE|RCFAST|RCSLOW|XINPUT|XTAL[1-3]|PLL(1|2|4|8|16)X)\b'
@@ -74,28 +62,17 @@ repository:
             '0':
                 name: keyword.block.con.spin2
         patterns:
-            -
-                include: '#comment'
-            -
-                include: '#configuration'
-            -
-                include: '#configuration'
-            -
-                include: '#constants'
-            -
-                include: '#string'
-            -
-                include: '#number'
-            -
-                include: '#debug_constants'
-            -
-                include: '#spin2_float_conversions'
-            -
-                include: '#spin2_field_operations'
-            -
-                include: '#spin2_unary_operators'
-            -
-                include: '#spin2_binary_operators'
+            - include: '#comment'
+            - include: '#configuration'
+            - include: '#configuration'
+            - include: '#constants'
+            - include: '#string'
+            - include: '#number'
+            - include: '#debug_constants'
+            - include: '#spin2_float_conversions'
+            - include: '#spin2_field_operations'
+            - include: '#spin2_unary_operators'
+            - include: '#spin2_binary_operators'
     constant_operators:
         name: keyword.operator.constant-math.spin2
         match: '(\=|\/|\*|\+|\-|\\)'
@@ -107,24 +84,15 @@ repository:
             '0':
                 name: keyword.block.dat.spin2
         patterns:
-            -
-                include: '#comment'
-            -
-                include: '#constants'
-            -
-                include: '#string'
-            -
-                include: '#number'
-            -
-                include: '#debug_functions'
-            -
-                include: '#includes_dat'
-            -
-                include: '#array_index'
-            -
-                include: '#pasm_language'
-            -
-                include: '#spin2_binary_operators'
+            - include: '#comment'
+            - include: '#constants'
+            - include: '#string'
+            - include: '#number'
+            - include: '#debug_functions'
+            - include: '#includes_dat'
+            - include: '#array_index'
+            - include: '#pasm_language'
+            - include: '#spin2_binary_operators'
     debug_constants:
         name: support.function.debug.methods.spin2
         match: '(?i)\b(DEBUG_MAIN|DEBUG_COGINIT)\b'
@@ -151,7 +119,7 @@ repository:
         begin: '{{'
         end: '}}'
         patterns:
-            - include:     "#doc_block_comment"
+            - include: "#doc_block_comment"
     doc_line_comment:
         name: comment.line.documentation.spin2
         match: "''.*$"
@@ -170,21 +138,13 @@ repository:
         captures:
             '1':
                 name: constant.numeric.base16.spin2
-    line_comment:
-        name: comment.line.spin2
-        match: "(?<!debug\\s*\\(`.*)'[^'].*$"
     number:
         patterns:
-            -
-                include: '#quaternary_number'
-            -
-                include: '#binary_number'
-            -
-                include: '#hexadecimal_number'
-            -
-                include: '#float_number'
-            -
-                include: '#decimal_number'
+            - include: '#quaternary_number'
+            - include: '#binary_number'
+            - include: '#hexadecimal_number'
+            - include: '#float_number'
+            - include: '#decimal_number'
     object_block:
         name: meta.block.object.spin2
         begin: '(?i)^(OBJ)(\s+|\s*$)'
@@ -193,8 +153,7 @@ repository:
             '0':
                 name: keyword.block.obj.spin2
         patterns:
-            -
-                include: '#comment'
+            - include: '#comment'
             -
                 name: meta.object-initialization.spin2
                 match: '\b(\w+)(\[.*\])?\s*(:)\s*((\")(\.|[^"])*(\"))'
@@ -212,48 +171,30 @@ repository:
     pasm_language:
         name: meta.block.pasm.language.spin2
         patterns:
-            -
-                include: '#comment'
-            -
-                include: '#constants'
-            -
-                include: '#array_index'
-            -
-                include: '#number'
-            -
-                include: '#string'
-            -
-                include: '#coginit_constants'
-            -
-                include: '#debug_functions'
-            -
-                include: '#pasm_language_elements'
-            -
-                include: '#pasm_storage_alignment'
-            -
-                include: '#pasm_field_operations'
-            -
-                include: '#pasm_only_instructions'
-            -
-                include: '#spin2_float_conversions'
+            - include: '#comment'
+            - include: '#constants'
+            - include: '#array_index'
+            - include: '#number'
+            - include: '#string'
+            - include: '#coginit_constants'
+            - include: '#debug_functions'
+            - include: '#pasm_language_elements'
+            - include: '#pasm_storage_alignment'
+            - include: '#pasm_field_operations'
+            - include: '#pasm_only_instructions'
+            - include: '#spin2_float_conversions'
     pasm_storage_alignment:
         name: storage.modifier.spin2
         match: '(?i)\b(ALIGN(W|L))\b'
     pasm_language_elements:
         name: meta.block.pasm.elements.spin2
         patterns:
-            -
-                include: '#event_constants'
-            -
-                include: '#smartpins_constants'
-            -
-                include: '#streamer_constants'
-            -
-                include: '#cog_register_names'
-            -
-                include: '#coginit_constants'
-            -
-                include: '#modcz_constants'
+            - include: '#event_constants'
+            - include: '#smartpins_constants'
+            - include: '#streamer_constants'
+            - include: '#cog_register_names'
+            - include: '#coginit_constants'
+            - include: '#modcz_constants'
             -
                 name: storage.modifier.pasm2
                 match: '(?i)\b(ORG(F|H)?|FIT)\b'
@@ -349,22 +290,14 @@ repository:
             '1':
                 name: storage.modifier.spin2
         patterns:
-            -
-                include: '#comment'
-            -
-                include: '#constants'
-            -
-                include: '#array_index'
-            -
-                include: '#number'
-            -
-                include: '#debug_functions'
-            -
-                include: '#pasm_language_elements'
-            -
-                include: '#pasm_field_operations'
-            -
-                include: '#spin2_float_conversions'
+            - include: '#comment'
+            - include: '#constants'
+            - include: '#array_index'
+            - include: '#number'
+            - include: '#debug_functions'
+            - include: '#pasm_language_elements'
+            - include: '#pasm_field_operations'
+            - include: '#spin2_float_conversions'
     private_block:
         name: meta.block.private.spin2
         begin: '(?i)^(PRI)(\s+|\s*$)'
@@ -411,34 +344,20 @@ repository:
     spin_language:
         name: meta.block.spin.language.spin2
         patterns:
-            -
-                include: '#comment'
-            -
-                include: '#constants'
-            -
-                include: '#array_index'
-            -
-                include: '#number'
-            -
-                include: '#string'
-            -
-                include: '#spin2_field_operations'
-            -
-                include: '#spin2_float_conversions'
-            -
-                include: '#debug_functions'
-            -
-                include: '#event_constants'
-            -
-                include: '#smartpins_constants'
-            -
-                include: '#streamer_constants'
-            -
-                include: '#cog_register_names'
-            -
-                include: '#coginit_constants'
-            -
-                include: '#modcz_constants'
+            - include: '#comment'
+            - include: '#constants'
+            - include: '#array_index'
+            - include: '#number'
+            - include: '#string'
+            - include: '#spin2_field_operations'
+            - include: '#spin2_float_conversions'
+            - include: '#debug_functions'
+            - include: '#event_constants'
+            - include: '#smartpins_constants'
+            - include: '#streamer_constants'
+            - include: '#cog_register_names'
+            - include: '#coginit_constants'
+            - include: '#modcz_constants'
             -
                 name: storage.type.pasm.spin2
                 match: '(?i)\b(BYTE|WORD|BYTEFIT|WORDFIT|LONG)\b'
@@ -568,14 +487,10 @@ repository:
             '0':
                 name: keyword.block.var.spin2
         patterns:
-            -
-                include: '#comment'
-            -
-                include: '#number'
-            -
-                include: '#array_index'
-            -
-                include: "#pasm_storage_alignment"
+            - include: '#comment'
+            - include: '#number'
+            - include: '#array_index'
+            - include: "#pasm_storage_alignment"
             -
                 match: '(?i)\b(byte|word|bytefit|wordfit|long)\s*(\w+)(\[.*\])?'
                 captures:
@@ -586,4 +501,8 @@ repository:
                         {include: '#constants'},
                         {include: '#array_index'}
                         ]}
+    line_comment:
+        name: comment.line.spin2
+        match: "(?<!debug\\s*\\(`.*)'[^'].*$"
+
 scopeName: source.spin2

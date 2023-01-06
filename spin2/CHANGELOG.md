@@ -21,6 +21,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.8.6] 2023-01-05
+
+Minor Semantic fixes for P1 and P2
+
+- P1 Repair detection/highlight of multi-line doc comments
+- P2 highlight PUB/PRI P1 signatures (without parens) as NEED porting! (color them RED)
+
 ## [1.8.5] 2023-01-05
 
 Minor Semantic/Outline fixes for P1

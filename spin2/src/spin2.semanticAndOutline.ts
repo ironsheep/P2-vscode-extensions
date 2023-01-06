@@ -604,7 +604,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     if (this.spin2DebugLogEnabled) {
       if (this.spin2log === undefined) {
         //Create output channel
-        this.spin2log = vscode.window.createOutputChannel("Spin2 DEBUG");
+        this.spin2log = vscode.window.createOutputChannel("Spin2 Highlight DEBUG");
         this._logMessage("Spin2 log started.");
       } else {
         this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
@@ -875,18 +875,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           this._logMessage("    FOUND '}' ln:" + (i + 1) + " trimmedLine=[" + trimmedLine + "]");
           currState = priorState;
         }
-        // mark this line as doc comment
-        let nameOffset: number = line.indexOf(trimmedLine);
-        if (trimmedLine.length == 1) {
-          nameOffset = 0;
-        }
-        tokenSet.push({
-          line: i,
-          startCharacter: nameOffset,
-          length: trimmedLine.length,
-          ptTokenType: "comment",
-          ptTokenModifiers: ["line"],
-        });
         continue;
       } else if (currState == eParseState.inMultiLineDocComment) {
         // in multi-line doc-comment, hunt for end '}}' to exit
@@ -1365,9 +1353,28 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
     //skip Past Whitespace
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
+    const remainingNonCommentLineStr: string = this.parseUtils.getNonCommentLineRemainder(0, line);
     const startNameOffset = currentOffset;
     // find open paren
-    currentOffset = line.indexOf("(", currentOffset);
+    // find open paren
+    currentOffset = remainingNonCommentLineStr.indexOf("(", startNameOffset); // in spin1 ()'s are optional!
+    if (currentOffset == -1) {
+      currentOffset = remainingNonCommentLineStr.indexOf(":", startNameOffset);
+      if (currentOffset == -1) {
+        currentOffset = remainingNonCommentLineStr.indexOf("|", startNameOffset);
+        if (currentOffset == -1) {
+          currentOffset = remainingNonCommentLineStr.indexOf(" ", startNameOffset);
+          if (currentOffset == -1) {
+            currentOffset = remainingNonCommentLineStr.indexOf("'", startNameOffset);
+            // if nothibng found...
+            if (currentOffset == -1) {
+              currentOffset = remainingNonCommentLineStr.length;
+            }
+          }
+        }
+      }
+    }
+
     let nameLength = currentOffset - startNameOffset;
     const methodName = line.substr(startNameOffset, nameLength).trim();
     const nameType: string = isPrivate ? "private" : "public";
@@ -2191,7 +2198,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const isPrivate = methodType.indexOf("PRI") != -1;
     //skip Past Whitespace
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
-    const spineDeclarationLHSStr = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
+    const spineDeclarationLHSStr = this._getNonCommentLineReturnComment(lineNumber, 0, line, tokenSet);
     if (spineDeclarationLHSStr) {
     } // we don't use this string, we called this to record our rhs comment!
     // -----------------------------------
@@ -2199,24 +2206,59 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     //
     const startNameOffset = currentOffset;
     // find open paren - skipping past method name
-    currentOffset = line.indexOf("(", currentOffset);
+    currentOffset = spineDeclarationLHSStr.indexOf("(", startNameOffset); // in spin1 ()'s are optional!
+    const openParenOffset: number = currentOffset;
+    if (currentOffset == -1) {
+      currentOffset = spineDeclarationLHSStr.indexOf(":", startNameOffset);
+      if (currentOffset == -1) {
+        currentOffset = spineDeclarationLHSStr.indexOf("|", startNameOffset);
+        if (currentOffset == -1) {
+          currentOffset = spineDeclarationLHSStr.indexOf(" ", startNameOffset);
+          if (currentOffset == -1) {
+            currentOffset = spineDeclarationLHSStr.indexOf("'", startNameOffset);
+            if (currentOffset == -1) {
+              currentOffset = spineDeclarationLHSStr.length;
+            }
+          }
+        }
+      }
+    }
     const methodName: string = line.substr(startNameOffset, currentOffset - startNameOffset).trim();
     this.currentMethodName = methodName; // notify of latest method name so we can track inLine PASM symbols
+    const spin2MethodName: string = methodName + "(";
+    this._logSPIN("-reportPubPriSig: spin2MethodName=[" + spin2MethodName + "], startNameOffset=(" + startNameOffset + ")");
+    const bHaveSpin2Method: boolean = line.includes(spin2MethodName);
+    if (bHaveSpin2Method) {
+      const declModifiers: string[] = isPrivate ? ["declaration", "static"] : ["declaration"];
+      tokenSet.push({
+        line: lineNumber,
+        startCharacter: startNameOffset,
+        length: methodName.length,
+        ptTokenType: "method",
+        ptTokenModifiers: declModifiers,
+      });
+      this._logSPIN("-reportPubPriSig: methodName=[" + methodName + "], startNameOffset=(" + startNameOffset + ")");
+    } else {
+      // have a P1 style method declaration, flag it!
+      const declModifiers: string[] = isPrivate ? ["declaration", "static", "illegalUse"] : ["declaration", "illegalUse"];
+      tokenSet.push({
+        line: lineNumber,
+        startCharacter: startNameOffset,
+        length: methodName.length,
+        ptTokenType: "method",
+        ptTokenModifiers: ["illegalUse"],
+      });
+      this._logSPIN("-reportPubPriSig: SPIN1 methodName=[" + methodName + "], startNameOffset=(" + startNameOffset + ")");
+    }
     // record definition of method
-    const declModifiers: string[] = isPrivate ? ["declaration", "static"] : ["declaration"];
-    tokenSet.push({
-      line: lineNumber,
-      startCharacter: startNameOffset,
-      length: methodName.length,
-      ptTokenType: "method",
-      ptTokenModifiers: declModifiers,
-    });
-    this._logSPIN("-reportPubPriSig: methodName=[" + methodName + "](" + startNameOffset + ")");
     // -----------------------------------
     //   Parameters
     //
     // find close paren - so we can study parameters
-    const closeParenOffset = line.indexOf(")", currentOffset);
+    let closeParenOffset: number = -1;
+    if (bHaveSpin2Method) {
+      closeParenOffset = line.indexOf(")", currentOffset);
+    }
     if (closeParenOffset != -1 && currentOffset + 1 != closeParenOffset) {
       // we have parameter(s)!
       const parameterStr = line.substr(currentOffset + 1, closeParenOffset - currentOffset - 1).trim();

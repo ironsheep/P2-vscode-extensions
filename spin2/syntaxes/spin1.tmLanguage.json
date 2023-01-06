@@ -335,10 +335,6 @@
         }
       }
     },
-    "line_comment": {
-      "name": "comment.line.spin",
-      "match": "(?<!debug\\s*\\(`.*)'[^'].*$"
-    },
     "return_var": {
       "name": "meta.return-type.spin",
       "match": "(?i)\\b(RESULT)\\b"
@@ -378,58 +374,57 @@
         }
       ]
     },
-    "object_block": {
-      "name": "meta.block.object.spin",
-      "begin": "(?i)^(OBJ)(\\s+|\\s*$)",
-      "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\\s+|\\s*$))",
-      "beginCaptures": {
-        "0": {
-          "name": "keyword.block.obj.spin"
-        }
+    "object_block": null,
+    "name": "meta.block.object.spin",
+    "begin": "(?i)^(OBJ)(\\s+|\\s*$)",
+    "end": "(?i)^(?=(CON|VAR|OBJ|PUB|PRI|DAT)(\\s+|\\s*$))",
+    "beginCaptures": {
+      "0": {
+        "name": "keyword.block.obj.spin"
+      }
+    },
+    "patterns": [
+      {
+        "include": "#comment"
       },
-      "patterns": [
-        {
-          "include": "#comment"
-        },
-        {
-          "include": "#spin_float_conversions"
-        },
-        {
-          "name": "meta.object-initialization.spin",
-          "match": "\\b(\\w+)(\\[.*\\])?\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
-          "captures": {
-            "1": {
-              "name": "entity.name.object.spin"
-            },
-            "2": {
-              "patterns": [
-                {
-                  "include": "#number"
-                },
-                {
-                  "include": "#constants"
-                },
-                {
-                  "include": "#array_index"
-                }
-              ]
-            },
-            "3": {
-              "name": "punctuation.spin"
-            },
-            "4": {
-              "name": "meta.object.filename.spin"
-            },
-            "5": {
-              "name": "punctuation.spin"
-            },
-            "7": {
-              "name": "punctuation.spin"
-            }
+      {
+        "include": "#spin_float_conversions"
+      },
+      {
+        "name": "meta.object-initialization.spin",
+        "match": "\\b(\\w+)(\\[.*\\])?\\s*(:)\\s*((\\\")(\\.|[^\"])*(\\\"))",
+        "captures": {
+          "1": {
+            "name": "entity.name.object.spin"
+          },
+          "2": {
+            "patterns": [
+              {
+                "include": "#number"
+              },
+              {
+                "include": "#constants"
+              },
+              {
+                "include": "#array_index"
+              }
+            ]
+          },
+          "3": {
+            "name": "punctuation.spin"
+          },
+          "4": {
+            "name": "meta.object.filename.spin"
+          },
+          "5": {
+            "name": "punctuation.spin"
+          },
+          "7": {
+            "name": "punctuation.spin"
           }
         }
-      ]
-    },
+      }
+    ],
     "operator": {
       "name": "keyword.operator.spin",
       "match": "(?i)\\b(\\+(\\+|=)?|-(-|=)?|\\^(\\^|=)?|\\|(\\||=)?|~(~|>)?=?|\\?|\\|<|>\\||!|NOT|@@?|:?=|\\*(\\*|=)?|/(/|=)?|#>=?|<#=?|<<?=?|>>?=?|<-=?|->=?|><=?|&=|AND=?|OR=?|===?|<>=?|=[<>]=?)\\b"
@@ -645,6 +640,10 @@
           }
         }
       ]
+    },
+    "line_comment": {
+      "name": "comment.line.spin",
+      "match": "(?<!debug\\s*\\(`.*)'[^'].*$"
     }
   },
   "scopeName": "source.spin"

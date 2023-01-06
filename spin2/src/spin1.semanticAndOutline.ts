@@ -486,7 +486,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     if (this.spin1DebugLogEnabled) {
       if (this.spin1log === undefined) {
         //Create output channel
-        this.spin1log = vscode.window.createOutputChannel("Spin1 DEBUG");
+        this.spin1log = vscode.window.createOutputChannel("Spin1 Highlight DEBUG");
         this._logMessage("Spin1 log started.");
       } else {
         this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
@@ -507,7 +507,27 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
-        let closingOffset = line.indexOf("}");
+        // ALLOW {...} on same line without closing!
+        let nestedOpeningOffset: number = -1;
+        let closingOffset: number = -1;
+        let currOffset: number = 0;
+        let bFoundOpenClosePair: boolean = false;
+        do {
+          nestedOpeningOffset = trimmedLine.indexOf("{", currOffset);
+          if (nestedOpeningOffset != -1) {
+            bFoundOpenClosePair = false;
+            // we have an opening {
+            closingOffset = trimmedLine.indexOf("}", nestedOpeningOffset);
+            if (closingOffset != -1) {
+              // and we have a closing, ignore this see if we have next
+              currOffset = closingOffset + 1;
+              bFoundOpenClosePair = true;
+            } else {
+              currOffset = nestedOpeningOffset + 1;
+            }
+          }
+        } while (nestedOpeningOffset != -1 && bFoundOpenClosePair);
+        closingOffset = trimmedLine.indexOf("}", currOffset);
         if (closingOffset != -1) {
           // have close, comment ended
           currState = priorState;
@@ -670,12 +690,37 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       //}
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
-        let closingOffset = line.indexOf("}");
+        // ALLOW {...} on same line without closing!
+        this._logMessage("    hunt for '}' ln:" + (i + 1) + " trimmedLine=[" + trimmedLine + "]");
+        let nestedOpeningOffset: number = -1;
+        let closingOffset: number = -1;
+        let currOffset: number = 0;
+        let bFoundOpenClosePair: boolean = false;
+        let bFoundNestedOpen: boolean = false;
+        do {
+          nestedOpeningOffset = trimmedLine.indexOf("{", currOffset);
+          if (nestedOpeningOffset != -1) {
+            bFoundOpenClosePair = false;
+            bFoundNestedOpen = true;
+            // we have an opening {
+            closingOffset = trimmedLine.indexOf("}", nestedOpeningOffset);
+            if (closingOffset != -1) {
+              // and we have a closing, ignore this see if we have next
+              currOffset = closingOffset + 1;
+              bFoundOpenClosePair = true;
+              this._logMessage("    skip {...} ln:" + (i + 1) + " nestedOpeningOffset=(" + nestedOpeningOffset + "), closingOffset=(" + closingOffset + ")");
+            } else {
+              currOffset = nestedOpeningOffset + 1;
+            }
+          }
+        } while (nestedOpeningOffset != -1 && bFoundOpenClosePair);
+        closingOffset = trimmedLine.indexOf("}", currOffset);
         if (closingOffset != -1) {
           // have close, comment ended
+          this._logMessage("    FOUND '}' ln:" + (i + 1) + " trimmedLine=[" + trimmedLine + "]");
           currState = priorState;
         }
-        //  DO NOTHING Let Syntax highlighting do this
+        continue;
       } else if (currState == eParseState.inMultiLineDocComment) {
         // in multi-line doc-comment, hunt for end '}}' to exit
         let closingOffset = line.indexOf("}}");
