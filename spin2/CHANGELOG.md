@@ -25,7 +25,7 @@ Possible next additions:
 
 Minor Semantic fixes for P1 and P2
 
-- P1/P2 Repair detection/highlight of ORG statements with no whitespace around colon
+- P1/P2 Repair detection/highlight of OBJ statements with no whitespace around colon
 - P2 Add parsing/highlight of new constant override syntax in OBJ section (partial, more to do in syntax parsing)
 
 ## [1.8.6] 2023-01-05
