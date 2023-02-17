@@ -1333,14 +1333,31 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
     const remainingNonCommentLineStr: string = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
     //this._logOBJ('- RptObjDecl remainingNonCommentLineStr=[' + remainingNonCommentLineStr + ']');
+    const bHasOverrides: boolean = remainingNonCommentLineStr.includes("|");
+    const overrideParts: string[] = remainingNonCommentLineStr.split("|");
+
     const remainingLength: number = remainingNonCommentLineStr.length;
     if (remainingLength > 0) {
       // get line parts - we only care about first one
-      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\[\:]/);
+      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\|\[\]\:]/);
+      this._logOBJ("  -- GLBL GetOBJDecl lineParts=[" + lineParts + "]");
       const newName = lineParts[0];
       this._logOBJ("  -- GLBL GetOBJDecl newName=[" + newName + "]");
       // remember this object name so we can annotate a call to it
       this._setGlobalToken(newName, new RememberedToken("namespace", []));
+
+      // if we have override parts handle 'em
+      if (bHasOverrides && overrideParts.length > 1) {
+        const overrides: string = overrideParts[1].replace(/[ \t]/, "");
+        const overideSatements: string[] = overrides.split(",");
+        this._logOBJ("  -- GLBL GetOBJDecl overideSatements=[" + overideSatements + "]");
+        for (let index = 0; index < overideSatements.length; index++) {
+          const statementParts: string[] = overideSatements[index].split("=");
+          const overideName: string = statementParts[0].trim();
+          this._logOBJ("  -- GLBL GetOBJDecl overideName=[" + overideName + "]");
+          this._setGlobalToken(overideName, new RememberedToken("variable", ["readonly"]));
+        }
+      }
     }
   }
 
@@ -3020,10 +3037,14 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
     const remainingNonCommentLineStr: string = this._getNonCommentLineReturnComment(lineNumber, currentOffset, line, tokenSet);
     //this._logOBJ('- RptObjDecl remainingNonCommentLineStr=[' + remainingNonCommentLineStr + ']');
+    const bHasOverrides: boolean = remainingNonCommentLineStr.includes("|");
+    const overrideParts: string[] = remainingNonCommentLineStr.split("|");
+
     const remainingLength: number = remainingNonCommentLineStr.length;
+    const bHasColon: boolean = remainingNonCommentLineStr.includes(":");
     if (remainingLength > 0) {
       // get line parts - initially, we only care about first one
-      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\[]/);
+      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\:\[]/);
       this._logOBJ("  --  OBJ lineParts=[" + lineParts + "]");
       const objectName = lineParts[0];
       // object name token must be offset into full line for token
@@ -3098,8 +3119,87 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
       }
+      if (bHasOverrides && overrideParts.length > 1) {
+        // Ex:     child1 : "child" | MULTIPLIER = 3, COUNT = 5        ' override child constants
+        //                            ^^^^^^^^^^^^^^^^^^^^^^^^^   (process this part)
+        const overrides: string = overrideParts[1].replace(/[ \t]/, "");
+        const overideSatements: string[] = overrides.split(",");
+        this._logOBJ("  -- OBJ overideSatements=[" + overideSatements + "]");
+        for (let index = 0; index < overideSatements.length; index++) {
+          const statementParts: string[] = overideSatements[index].split("=");
+          const overideName: string = statementParts[0].trim();
+          const overideValue: string = statementParts[1].trim();
+          this._logOBJ("  -- OBJ overideName=[" + overideName + "], " + overideName + "=[" + " + overideName + " + "]");
+          let nameOffset: number = line.indexOf(overideName, currentOffset);
+          if (this._isGlobalToken(overideName)) {
+            const referenceDetails: RememberedToken | undefined = this._getGlobalToken(overideName);
+            // Token offsets must be line relative so search entire line...
+            if (referenceDetails != undefined) {
+              //const updatedModificationSet: string[] = this._modifiersWithout(referenceDetails.modifiers, "declaration");
+              this._logOBJ("  --  FOUND global name=[" + overideName + "]");
+              tokenSet.push({
+                line: lineNumber,
+                startCharacter: nameOffset,
+                length: overideName.length,
+                ptTokenType: referenceDetails.type,
+                ptTokenModifiers: referenceDetails.modifiers,
+              });
+            }
+          } else {
+            this._logOBJ("  --  OBJ MISSING name=[" + overideName + "]");
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: overideName.length,
+              ptTokenType: "variable",
+              ptTokenModifiers: ["missingDeclaration"],
+            });
+          }
+          currentOffset = nameOffset;
+
+          /*  --- for some reason this is broken --- SO Omitting - let's get support for this in the Syntax side of things
+          // do light check to see if number then highlight as number
+          nameOffset = line.indexOf(overideValue, currentOffset);
+          if (this.isNumeric(overideValue)) {
+            this._logOBJ("  --  FOUND number=[" + overideValue + "]");
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: overideValue.length,
+              ptTokenType: "constant",
+              ptTokenModifiers: ["numeric"],
+            });
+          } else {
+            this._logOBJ("  --  OBJ Unknown Format number=[" + overideName + "]");
+            tokenSet.push({
+              line: lineNumber,
+              startCharacter: nameOffset,
+              length: overideName.length,
+              ptTokenType: "variable",
+              ptTokenModifiers: ["missingDeclaration"],
+            });
+          }
+          currentOffset = nameOffset;
+          */
+        }
+      }
     }
     return tokenSet;
+  }
+
+  private isNumeric(val: any): boolean {
+    // REF https://stackoverflow.com/questions/23437476/in-typescript-how-to-check-if-a-string-is-numeric
+    let desiredNumericStatus: boolean = false;
+    if (val.indexOf("%%") == 0) {
+      desiredNumericStatus = true;
+    } else if (val.indexOf("%") == 0) {
+      desiredNumericStatus = true;
+    } else if (val.indexOf("$") == 0) {
+      desiredNumericStatus = true;
+    } else {
+      desiredNumericStatus = !(val instanceof Array) && val - parseFloat(val) + 1 >= 0;
+    }
+    return desiredNumericStatus;
   }
 
   private _reportVAR_DeclarationLine(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
