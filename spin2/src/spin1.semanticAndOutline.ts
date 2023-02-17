@@ -1112,6 +1112,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     if (remainingLength > 0) {
       // get line parts - we only care about first one
       const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\[\:]/);
+      this._logOBJ("  -- GLBL GetOBJDecl lineParts=[" + lineParts + "]");
       const newName = lineParts[0];
       this._logOBJ("  -- GLBL GetOBJDecl newName=[" + newName + "]");
       // remember this object name so we can annotate a call to it
@@ -2677,7 +2678,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const remainingLength: number = remainingNonCommentLineStr.length;
     if (remainingLength > 0) {
       // get line parts - initially, we only care about first one
-      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\[]/);
+      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\:\[]/);
       this._logOBJ("  --  OBJ lineParts=[" + lineParts + "]");
       const objectName = lineParts[0];
       // object name token must be offset into full line for token

@@ -1,6 +1,6 @@
 ' Run with DEBUG enabled to view
 
-_clkfreq = 300_000_000                                  ' <---  not colored correctly
+_clkfreq = 300_000_000                                  ' <---  not colored correctly (TOP defaults to CON (but syntax, how???)
 
 sprites = 128
 

@@ -33,6 +33,7 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 ### Up next
 These are not yet definate but I'm:
 
+- Looking into providing a full spin/spin2 language server. This would allow all files in the project to contribute symbols, not just the current file being edited
 - Looking into adding a setting to our extension allowing one to change a "PNut Enable Debug" setting which would be used when building with on windows with PNut
 - Looking into developing a Task Provider (to be built into our extension) which would recognize the tools installed and the OS and then provide only the tasks appropriate for the OS with the tools installed.
 
