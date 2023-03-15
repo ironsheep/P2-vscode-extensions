@@ -37,6 +37,7 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
+- [Setup focused on macOS only](TASKS-User-macOS.md) - All macOS notes from within this page
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
 *The "P2 Code Development..." sections provide step-by-step setup instructions *
@@ -45,6 +46,8 @@ Additional pages:
 
 ```
 Latest Updates:
+15 Mar 2023
+- Added macOS specific setup page
 20 Dec 2022
 - Raspberry Pi instructions tested and ready for use!
 - Windows instructions tested and ready for use (both flexprop and PNut)!
