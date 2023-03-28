@@ -756,6 +756,7 @@ export class ParseUtils {
   public isSpinReservedWord(name: string): boolean {
     const spinInstructionsOfNote: string[] = [
       "reg",
+      "field",
       "float",
       "round",
       "trunc",

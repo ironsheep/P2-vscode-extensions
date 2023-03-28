@@ -2540,6 +2540,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                     ptTokenType: "storageType",
                     ptTokenModifiers: [],
                   });
+                  currentOffset += variableNamePart.length;
                 } else {
                   let referenceDetails: RememberedToken | undefined = undefined;
                   if (this._isLocalToken(variableNamePart)) {
@@ -2559,6 +2560,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                       ptTokenType: referenceDetails.type,
                       ptTokenModifiers: modificationArray,
                     });
+                    currentOffset += variableNamePart.length;
                   } else {
                     if (
                       !this.parseUtils.isSpinReservedWord(variableNamePart) &&
@@ -2576,6 +2578,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                         ptTokenType: "variable",
                         ptTokenModifiers: ["modification", "missingDeclaration"],
                       });
+                      currentOffset += variableNamePart.length;
                     }
                   }
                 }
@@ -3597,6 +3600,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                         !this.parseUtils.isBinaryOperator(newParameter) &&
                         !this.parseUtils.isFloatConversion(newParameter) &&
                         !this.parseUtils.isSpinBuiltinMethod(newParameter) &&
+                        !this.parseUtils.isSpinReservedWord(newParameter) &&
                         !this.parseUtils.isBuiltinReservedWord(newParameter)
                       ) {
                         this._logDEBUG("  -- rptDbg 2 unkParam=[" + newParameter + "]"); // XYZZY LutColors

@@ -340,7 +340,7 @@ repository:
         match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC)\b'
     spin2_unary_operators:
         name: keyword.operator.unary.spin2
-        match: '(?i)\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\b'
+        match: '(?i)\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND|FIELD)\b'
     spin_language:
         name: meta.block.spin.language.spin2
         patterns:
@@ -405,7 +405,7 @@ repository:
                 match: '(?i)\b(clkmode_|clkfreq_)\b'
             -
                 name: keyword.operator.unary.spin2
-                match: '(?i)\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\b'
+                match: '(?i)\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND|FIELD)\b'
             -
                 name: keyword.operator.binary.spin2
                 match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|AND|XOR|OR)\b'

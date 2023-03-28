@@ -615,7 +615,7 @@
     },
     "spin2_unary_operators": {
       "name": "keyword.operator.unary.spin2",
-      "match": "(?i)\\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\\b"
+      "match": "(?i)\\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND|FIELD)\\b"
     },
     "spin_language": {
       "name": "meta.block.spin.language.spin2",
@@ -724,7 +724,7 @@
         },
         {
           "name": "keyword.operator.unary.spin2",
-          "match": "(?i)\\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND)\\b"
+          "match": "(?i)\\b(!!|NOT|!|-|FABS|ABS|ENCOD|DECOD|BMASK|ONES|FSQRT|SQRT|Q(LOG|EXP)|REG|AND|FIELD)\\b"
         },
         {
           "name": "keyword.operator.binary.spin2",

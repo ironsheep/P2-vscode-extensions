@@ -17,9 +17,17 @@ Possible next additions:
 - Add Hover popups for pasm instructions (help text for each instruction)
 - Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
 - Investigate and possibly add unique coloring for method pointers
-- Add spin2 instruction templates as Snippets (*for instructions with two or more parameters*)
+- Add spin2 instruction templates as Snippets (_for instructions with two or more parameters_)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.8.8] 2023-03-27
+
+Minor Semantic updates for P2
+
+- P2 Add parsing/highlight of new 'field' accessor
+- P2 Fix highlight of short variable names within line (offset to var was incorrect)
+- P2 Fix highlight of spin-builtin names within debug() lines
 
 ## [1.8.7] 2023-02-16
 
@@ -50,12 +58,11 @@ Minor Outline adjustments for P1 and P2
 - Repair parsing of long(...) code -- recognize long when adjacent paren. (issue #14)
 - Move global labels under their enclosing DAT section, creating more descriptive outline hierarchy (issue #13)
 
-
 ## [1.8.3] 2023-01-04
 
 Minor Syntax/Semantic recognizer update - Adds help for porting p1 code to p2
 
-- Syntax P1 & P2: Recognize nested {} and {{}} comments 
+- Syntax P1 & P2: Recognize nested {} and {{}} comments
 - Semantic P2: if () missing after a method name (mark it as unknown - RED -> error)
   - NOTE: we can't do this for "object method calls" until we have a full language server. (It's coming!)
 - Semantic P2: If () missing after a spin built-in method name (mark it as unknown - RED -> error)
@@ -68,13 +75,11 @@ Minor Outline/Navigation update for P1
 - Add global Pasm labels to outline
 - This finishes the delivery of showing Global Labels within the outline for both P1 and P2
 
-
 ## [1.8.1] 2022-12-26
 
 Minor Outline/Navigation update for P2
 
 - Add global Pasm labels to outline
-
 
 ## [1.8.0] 2022-12-23
 
@@ -83,14 +88,14 @@ Add [optional] FlexSpin preprocessor support (P1 & P2), Repair semantic highligh
 - Add new extension setting to enable recognition of FlexSpin Preprocessor Directives (Default: disabled)
 - Adds flagging of Preprocessor directive lines as unknown when FlexSpin support is not enabled
 - Fix P2 recognition of _RET_ directive in Pasm2
-- Fix P2 recognition of built-in _set, _clr variables in Pasm2
+- Fix P2 recognition of built-in \_set, \_clr variables in Pasm2
 - Fix P1 & P2 recognition of constants when assignment uses #> and <# operators
 
 ## [1.7.8] 2022-12-22
 
 Minor tabbing update
 
-- Ensure `org`, `asm` and `end`, `endasm` lines use PUB/PRI tabstops 
+- Ensure `org`, `asm` and `end`, `endasm` lines use PUB/PRI tabstops
 - Ensure Deconflict "Tab" with "Tab to Autocomplete"
 - Adjust auto-closing pairs behavior (dialing things in slowly)
 
@@ -102,7 +107,7 @@ Minor tabbing update
 - Corrected delete (left/Right) behavior in Align edit mode
 - Cursor now positions as expected after TAB / SHIFT+TAB (this didn't work before)
 
-**NOTE**: *originally released as v1.7.6 which failed to codesign and had to be re-released*
+**NOTE**: _originally released as v1.7.6 which failed to codesign and had to be re-released_
 
 ## [1.7.5] 2022-12-16
 
@@ -151,7 +156,7 @@ Update Spin2 highlighting (syntax and/or semantic parser fixes)
 - The single-quote comment (now only on debug statements) is being handled by the semantic (vs. syntactic) parser this is causing external VSCode extensions to do brace, parenthesis, and bracket paring to be marked within trailing line comments on debug lines
 - Syntax highlight of DAT section sometimes fails... (although it is less often now...)
 - Semantic highlight: the 'modification' attribute is being over-applied, should use more than := as test!!!!
-- *I'm sure there are more issues...*
+- _I'm sure there are more issues..._
 
 ## [1.7.1] 2022-12-05
 
@@ -170,16 +175,16 @@ Update to keyboard mapping: All key mapping now reenabled and Align mode now ful
 
 ## [1.7.0] 2022-12-02
 
-Fun Update!   First release of two **NEW** features and more.
+Fun Update! First release of two **NEW** features and more.
 
 - **NEW** P1 support for .spin files (full syntax and semantic highlighting of the P1 language: spin/pasm)
 - **NEW** Add InsertMode support: [Insert|Overwrite|Align]
 - More changes to tabbing behavior, we're gradually dialing it in
-- P2 Syntax/Semantic highlighting changes - adds support for: 
-   ● New Spin2 'GETCRC(dataptr,crcpoly,bytecount) method
-   ● New Spin2 'STRCOPY(destination,source,maxsize)' method
-   ● DEBUG display BITMAP now validates 'SPARSE color' 
-   ● GRAY, in addition to GREY, now recognized as a color in DEBUG displays
+- P2 Syntax/Semantic highlighting changes - adds support for:
+  ● New Spin2 'GETCRC(dataptr,crcpoly,bytecount) method
+  ● New Spin2 'STRCOPY(destination,source,maxsize)' method
+  ● DEBUG display BITMAP now validates 'SPARSE color'
+  ● GRAY, in addition to GREY, now recognized as a color in DEBUG displays
 
 ### - Known Issues w/v1.7.0
 
@@ -191,7 +196,7 @@ Fun Update!   First release of two **NEW** features and more.
 
 ## [1.6.1] 2022-11-29
 
-Minor update to the formal release (*clean up muli-line behavior, clean up in-line pasm support.*)
+Minor update to the formal release (_clean up muli-line behavior, clean up in-line pasm support._)
 
 - NEW: Fixes detection of in-line pasm by now treating `end` correctly and reverting to PUB/PRI tab use after the `end` statement
 - NEW: Adds support for `asm` and `endasm` **FlexSpin** in-line pasm keywords
