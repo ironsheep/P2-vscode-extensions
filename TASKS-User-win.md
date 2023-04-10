@@ -1,4 +1,4 @@
-# VSCode - User-wide defined Tasks (macOS)
+# VSCode - User-wide defined Tasks (Windows)
 
 
 ![Project Maintenance][maintenance-shield]
@@ -8,11 +8,11 @@
 
 ## Automating Build and Download to our P2 development boards
 
-This document is being developed over time as we prove-out a working environment for macOS. 
+This document is being developed over time as we prove-out a working environment for Windows. 
 
-To date, we have installations, compilation and downloading from **[Windows](TASKS_USer.md)**, **MacOS** (this page), and **[RaspiOS](TASKS_USer.md)** (the Raspberry Pi OS - a Debian derived distribution).
+To date, we have installations, compilation and downloading from **Windows**, [**MacOS**](TASKS-User-macOS.md), and [**RaspiOS**](TASKS-User.md) (the Raspberry Pi OS - a Debian derived distribution).  
 
-Also, to date, we have building and download for **FlexProp** and **PNut** (*PNut is widows or windows emulator only.*) with direct USB-attached boards.
+Also, to date, we have building and download for **flexprop** and **PNut** with USB direct-attached boards.
 
 In the future, we are also expecting to document building and download with via Wifi with the Wx boards attached to our development board, and with more compilers as they come ready for multi-platform use, etc.
 
@@ -21,10 +21,12 @@ In the future, we are also expecting to document building and download with via 
 On this Page:
 
 - [VSCode development of P2 Projects](#vscode-development-of-p2-projects) - basic development life-cycle
-- [P2 Code Development with FlexProp](#enabling-p2-code-development-with-flexprop-on-macos) - setting up
+- [P2 Code Development with flexprop](#enabling-p2-code-development-with-flexprop)- setting up
+- [P2 Code Development with PNut](#enabling-p2-code-development-with-pnut)- setting up
 - [Being consistent in your machine configuration](#being-consistent-in-your-machine-configuration) - why we are doing things this way
 - [Installation and Setup](#development-machine-setup-and-configuration) - preparing your machine for P2 development using tools from within vscode
-  - [Installing FlexProp](#installing-flexprop)
+  - [Installing FlexProp](#installing-FlexProp)
+  - [Installing PNut](#installing-pnut)
 - [Tasks in VScode](#tasks-in-vscode) - this provides more detail about vscode tasks and lists work that is still needing to be done 
   - [Adding the P2 Tasks](#adding-the-p2-tasks)
   - [Adding our Custom Keybindings](#adding-our-custom-keybindings)
@@ -33,7 +35,7 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
-- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes from within this page
+- [Setup focused on macOS only](TASKS-User-macOS.md) - All macOS notes from within this page
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
 *The "P2 Code Development..." sections provide step-by-step setup instructions *
@@ -42,8 +44,8 @@ Additional pages:
 
 ```
 Latest Updates:
-15 Mar 2023
-- Created this file from TASKS-User.md
+10 Apr 2023
+- Awakened this Windows-specific setup page
 ```
 
 ## VSCode development of P2 Projects
@@ -63,15 +65,35 @@ Iterate until your project works as desired:
 - Download and test (ctrl-shift-D, F10) [if you use keybindings shown in examples on this page]
 - Alternatively, download your project to FLASH and test (ctrl-shift-F, F11) [if you use keybindings shown in examples on this page]
 
-## Enabling P2 Code Development with FlexProp on macOS
 
-To complete your setup so you can use FlexProp on your mac under VScode you'll need to:
+## Enabling P2 Code Development with flexprop
+
+To complete your setup so you can use flexprop on your Windows machine under VScode you'll need to:
 
 One time:
 
-- Install FlexProp for all users to use on your Mac
+- Install FlexProp for all users to use on your windows machine
 - Add our tasks to the user tasks.json file (*works across all your P2 projects*)</br>(*Make sure the paths to your compiler and loader binaries are correct*)
-- Install our common keybinding (*works across all your P2 projects*)
+- Install our common keybinding (works across all your P2 projects)
+- Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
+    - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
+    - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
+
+For each P2 Project:
+
+- Install a settings.json file identiyfing the project top-level file
+    - Make sure the name of your top-level file is correctly placed in this settings.json file
+
+
+## Enabling P2 Code Development with PNut
+
+To complete your setup so you can use PNut on your Windows machine under VScode you'll need to install PNut and then:
+
+One time:
+
+- Install a tasks.json file (*works across all your P2 projects*)
+    - *Make sure the names of your compiler and loader binaries are correct (we use the .bat file to run PNut, we don't refer to PNut.exe directly!)*
+- Install a common keybinding (*works across all your P2 projects*)
 - Optionally add a couple of VSCode extensions if you wish to have the features I demonstrated
     - "[Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)" which adds the compile errors messages to the associated line of code
     - "[Explorer Exclude](https://marketplace.visualstudio.com/items?itemName=PeterSchmalfeldt.explorer-exclude)" which allows you to hide file types (e.g., .p2asm, .binary) from the explorer panel
@@ -87,47 +109,88 @@ I have mostly macs for development but I also have a Windows machine and a numbe
 
 - **Synchronize your VSCode settings and extensions** automatically by installing and using the **Settings Sync** VScode extension. Any changes you make to one machine then will be sync'd to your other VScode machines.
 
-- **Be very consistent in where you install tools** for each type of OS.  (e.g., for all Windows machines make sure you install say, FlexProp, in the same location on each Windows machine.) By being consistant your tasks will run no matter which machine your are running on. 
-There is nothing worse than trying to remember where you installed a specific tool on the machine you are currently logged into. Because you install say FlexProp in the same place on all your Raspberry Pi's you will know where to find it no matter which RPi you are logged in to.
+- **Be very consistent in where you install tools** for each type of OS.  (e.g., for all Windows machines make sure you install say, flexprop, in the same location on each Windows machine.) By being consistant your tasks will run no matter which machine your are running on. 
+There is nothing worse than trying to remember where you installed a specific tool on the machine you are currently logged into. Because you install say flexprop in the same place on all your Raspberry Pi's you will know where to find it no matter which RPi you are logged in to.
 
     - All like operating systems should have a specific tool installed in the same location on each. (e.g., all Windows machines have FlexProp installed in one location, all macOS machines have FlexProp installed in a different location that on Windows but it is the same location across all Macs, etc.)
     - During installation of a tool on a machine, finish the process by configuring the PATH to the tool so that terminals/consoles can access the tool by name. This allows VSCode to run the tool from its build tasks.json file without needing to know where the tool is installed!  On Windows machines this is done by editing the User Environment from within the Settings Application. On Mac's and Linux machines (RPi's) this is done by editing the shell configuration file (e.g., Bash you edit the ~/.bashrc file)
 
 ## Development Machine Setup and Configuration
 
-### Installing FlexProp on macOS
+### Installing FlexProp
 
-On MacOS  machines we get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases) and upacking the zip file to produce a `flexprop` folder containing the new version.  
+On Windows machines we get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases) and upacking the zip file to produce a `flexprop` folder containing the new version.  
 
-**NOTE**: *The FlexProp toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.  Alternatively, it should be safe to just follow what I do in these instructions explictly.  This has the benefit that more of us will be able to help each other out with tools problems as more of us will be set up the same.*
+**NOTE**: *The flexprop toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.  Alternatively, it should be safe to just follow what I do in these instructions explictly.  This has the benefit that more of us will be able to help each other out with tools problems as more of us will be set up the same.*
 
 Next we move this new version into place.
 
-#### Install FlexProp
 
-On my Mac's, I install the FlexProp into a folder which I've created at `/Applications/flexprop` and I [set the PATH](#os-macos) to point to the `/Applications/flexprop/bin` directory. I move all of the content of the `flexprop` folder (created during the unzip) to the `/Applications/flexprop` folder. 
+### Setup and Configure for P2 development
 
-#### Update FlexProp
+[**Optional**] if you want to remote into your windows machine from a another desktop running VSCode on your network then you want to install OpenSSH client and server by following: [Install OpenSSH](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui).
 
-If I'm updating to a new verison I do the following:
+#### Install flexprop
 
-- Remove `/Applications/flexprop-prior`
-- Rename the `/Applications/flexprop` to `/Applications/flexprop-prior` 
-- Create a new empty `/Applications/flexprop` folder
-- Move all of the content of the `flexprop` folder (created during the unzip) to the `/Applications/flexprop` folder
+Get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases).  
 
-### Setting paths for your P2 Compilers/Tools on macOS
+Create a directory called "flexprop" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
 
-On MacOS this is really shell dependent. I tend to stick with [Bash](https://www.gnu.org/software/bash/manual/html_node/Introduction.html) as I've used it for many 10s of years now.  [zsh](https://scriptingosx.com/2019/06/moving-to-zsh/) (ZShell) is the new shell on the block (*well, new to mac's not a new shell*.) I avoided moving to it but the concepts are the same.
+Finish up by then [add a new PATH element](#os-windows) and make sure to also create the new Environment Variable `FlexPropDir`.  *The User Tasks expect this environment variable to exist. They use it to locate the flash utility binary file.*
 
-On my Macs I install the flexprop folder into my /Applications folder.  I then edit my .bash_profile and add the following line.  (*I have multiple lines such as this for various tools I've installed.*)
+#### Update flexprop
 
-```bash
-export PATH=${PATH}:/Applications/flexprop/bin
-```
+Like we do on the other platforms here's the suggested update strategy:
 
-From here on when I start new terminal windows we can invoke the flexprop binaries by name without using the path to them.
+- Download and zip the latest version from [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases)
+- Remove any `{flexPropFolder}-prior` (the prior version of flexprop)
+- Rename your existing folder to `{flexPropFolder}-prior`
+- Unpack the .zip into a newly created `{flexPropFolder}`
 
+### Installing PNut
+
+The PNut compiler/debug tool does not have a standard install location. So we will likely have many locations amongst all of us P2 users. You have to take note of where you installed PNut and then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. 
+
+#### Install PNut
+
+Download the latest .zip file from [PNut/Spin2 Latest Version](https://forums.parallax.com/discussion/171196/.../p1?_ga=2.41234594.1818840425.1671330006-1649768518.1600891894) Forum thread into my **Downloads** folder.  Unpack the .zip into its own folder.
+
+Propeller Tool installs into `C:\Program Files (x86)\Parallax Inc\Propeller Tool\`. So I just created a sibling directory: `C:\Program Files (x86)\Parallax Inc\PNut\` and copy all of the unpacked files into that directory.
+
+**NOTE:** *if you experience problems with the tasks running PNut it is generally that the .bat files are not identifying the pnut executable by the correct name. At each install check the content of `\PNut\pnut_shell.bat` and `\PNut\pnut_report.bat` and make sure the pnut versioned name is correct with what's in the folder.  Occasionally Chip forgets to modify these .bat files before release.*
+
+I right-mouse on the PNut_{version}.exe file and select "**Pin to taskbar**".
+
+I then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. In my case I added a path segment pointing to `C:\Program Files (x86)\Parallax Inc\PNut\`.
+
+#### Update PNut
+
+I haven't found the need to keep any prior version. I simply:
+
+- Download the latest version of PNut from [PNut/Spin2 Latest Version](https://forums.parallax.com/discussion/171196/.../p1?_ga=2.41234594.1818840425.1671330006-1649768518.1600891894) into my **Downloads** folder
+- Unpack the .zip file
+- In my taskbar I right-mouse on the PNut icon and select "**Unpin from taskbar**"
+- Select all content within `C:\Program Files (x86)\Parallax Inc\PNut\` and Delete it
+- Move all of unpacked content into the now empty folder `C:\Program Files (x86)\Parallax Inc\PNut\`
+- I right-mouse on the newly copied PNut_{version}.exe file and select "**Pin to taskbar**".
+
+**NOTE:** *if you experience problems with the tasks running PNut it is generally that the .bat files are not identifying the pnut executable by the correct name. At each install check the content of `\PNut\pnut_shell.bat` and `\PNut\pnut_report.bat` and make sure the pnut versioned name is correct with what's in the folder.  Occasionally Chip forgets to modify these .bat files before release.*
+
+### Setting paths for your P2 Compilers/Tools
+
+#### OS: Windows
+
+On windows the search path for programs is maintained by the **Windows Settings App.**  Open Window Settings and search for "environment" and you should see two choices: "**Edit the system environement variables**" and "**Edit enviroment variables for your account**".  If you want the tools to work for all users on this Windows machine then adjust the PATH values by editing the system environment variables.  If, instead, you only need the tools to work for your account then edit the enviroment variables for your account.
+
+You will do this for each of FlexProp and PNut (which ever ones you use.)
+
+If you are using FlexProp, in addition to modifying the PATH variable, you will also need to add a new Environment Variable which points to the FlexProp install folder. 
+
+In the same section you modified for path (system environment or your account environment) using [New...] add a new environment variable `FlexPropPath` which you will set to your install folder using the [Browse Directory...] button after pressing [New...] and typing in the `FlexPropPath` name. The tasks we define will use this environment variable to locate the binary file it needs when downloading to FLASH.
+
+**NOTE** *the above is referring to **Windows 10** settings names. On earlier versions of Windows the concept is the same. Locate the environment values and make the appropriate changes.*
+
+From here on when we start new terminal windows we can invoke the flexprop binaries by name without using the path to them.
 
 ## Tasks in VScode
 
@@ -187,13 +250,13 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       "label": "compileP2",
       "type": "shell",
       "osx": {
-        "command": "/Applications/flexprop/bin/flexpspin.mac"
+        "command": "/Applications/flexprop/bin/flexspin.mac"
       },
       "windows": {
         "command": "flexspin.exe"
       },
       "linux": {
-        "command": "/opt/flexprop/bin/flexprop"
+        "command": "/opt/flexprop/bin/flexspin"
       },
       "args": ["-2", "-Wabs-paths", "-Wmax-errors=99", "${fileBasename}"],
       "problemMatcher": {
@@ -226,7 +289,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         "command": "flexspin.exe"
       },
       "linux": {
-        "command": "/opt/flexprop/bin/flexprop"
+        "command": "/opt/flexprop/bin/flexspin"
       },
       "args": ["-2", "-Wabs-paths", "-Wmax-errors=99", "${config:topLevel}.spin2"],
       "problemMatcher": {
@@ -300,6 +363,122 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         "isDefault": true
       },
       "dependsOn": ["compileTopP2"]
+    },
+    {
+      "label": "compilePNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${fileBasename}", "-c"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s*(warning|error):\\s*(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "focus": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "compileTopPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-c"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "focus": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "downloadPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-r"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "focus": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "flashPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-f"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "focus": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
     }
     ]
 }
@@ -310,14 +489,20 @@ This provides the following **Build** and **Test** tasks:
 Under **Task: Run Build Task**: 
 
 - CompileP2 - Compile current file  [ctrl-shift-B]
+- CompilePNut2 - Compile current file using PNut
 - CompileTopP2 - Compile the top-file of this project
+- CompileTopPNut2 - Compile the top-file of this project using PNut
 
 Under **Task: Run Test Task**: 
 
 - DownloadP2 - Download the binary to RAM in our connected P2
+- DownloadPNut2 - Download the binary to RAM using PNut
 - FlashP2 - Download and write the binary to FLASH in our connected P2
+- FlashPNut2 - Download and write the binary to FLASH using PNut
 
-As written, **downloadP2** and **flashP2** for flexpsin will always be preceeded by a compileTopP2.
+As written, **downloadP2** and **flashP2** for flexpsin will always be preceeded by a compileTopP2, while the **downloadPNut2** and **flashPNut2** do not have any depedencies as they do their own build of the top-level file.
+
+The **downloadPNut2** and **flashPNut2** tasks do NOT enable debug support. The option `-r` is run without debug while `-rd` is run with debug. Likewise, the option `-f` is compile and flash without debug while `-fd` is compile and flash with debug.  Please adjust these values in the task `args:` sections to your need (using debug or not)
 
 **TODO** let's make debug a custom VSCode setting and use the setting in this script to enable/disable debug compilation/use??
 
@@ -375,6 +560,8 @@ This adds new keyboard short cuts to our tasks:
 - DownloadP2 - Download the binary to RAM in our connected P2 **[ctrl+shift+d] or [F10]**
 - FlashP2 - Download and write the binary to FLASH in our connected P2 **[ctrl+shift+f] or [F11]**
 
+NOTE: you can see that these key bindings only refer to the FlexProp tasks. In, instead, you'd like them to use the PNut tasks then you can replace the `P2` command suffix with `PNut2` causing the PNut versions to be run for the shortcuts.
+
 ### Adding our notion of Top-level file for tasks to use
 
 In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task a DownloadP2 download task, and in some cases a FlashP2 task.
@@ -401,9 +588,12 @@ You need to find the line containing "jm\_p2-es\_matrix\_control\_demo" and repl
 
 And our **DownloadP2** task can reference the binary file using `${config:topLevel}.binary`
 
+**NOTE** the PNut flasher is special in that it wants the .spin2 filename not a .binary filename so you'll see `${config:topLevel}.spin2` being used in the **FlashPNut2** task.
+
+
 ## License
 
-Copyright © 2022 Iron Sheep Productions, LLC. All rights reserved.<br />
+Copyright © 2023 Iron Sheep Productions, LLC. All rights reserved.<br />
 Licensed under the MIT License. <br>
 <br>
 Follow these links for more information:

@@ -27,7 +27,7 @@ On this Page:
 - [P2 Code Development with PNut on Windows](#enabling-p2-code-development-with-pnut-on-windows)- setting up
 - [Being consistent in your machine configuration](#being-consistent-in-your-machine-configuration) - why we are doing things this way
 - [Installation and Setup](#development-machine-setup-and-configuration) - preparing your machine for P2 development using tools from within vscode
-  - [Installing FlexSpin](#installing-flexspin)
+  - [Installing FlexProp](#installing-flexprop)
   - [Installing PNut](#installing-pnut)
 - [Tasks in VScode](#tasks-in-vscode) - this provides more detail about vscode tasks and lists work that is still needing to be done 
   - [Adding the P2 Tasks](#adding-the-p2-tasks)
@@ -37,7 +37,8 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
-- [Setup focused on macOS only](TASKS-User-macOS.md) - All macOS notes from within this page
+- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes from within this page
+- [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes from within this page
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
 *The "P2 Code Development..." sections provide step-by-step setup instructions *
@@ -46,6 +47,8 @@ Additional pages:
 
 ```
 Latest Updates:
+10 Apr 2023
+- Added Windows specific setup page
 15 Mar 2023
 - Added macOS specific setup page
 20 Dec 2022
@@ -150,19 +153,19 @@ For each P2 Project:
 
 ## Being consistent in your machine configuration
 
-I have mostly macs for development but I also have a Windows machine and a number of Raspberry PIs (derived from Debian Linux distro.) and even some larger Ubuntu Machines (also derived from Debian Linux distro.).  If you, like me, intend to be able to run VSCode on may of your development machines and you want to make your life easier then there are a couple of things we know already that can help you.
+I have mostly macs for development but I also have a Windows machine and a number of Raspberry PIs (derived from Debian Linux distro.) and even some larger Ubuntu Machines (also derived from Debian Linux distro.).  If you, like me, intend to be able to run VSCode on many of your development machines and you want to make your life easier then there are a couple of things we know already that can help you.
 
 - **Synchronize your VSCode settings and extensions** automatically by installing and using the **Settings Sync** VScode extension. Any changes you make to one machine then will be sync'd to your other VScode machines.
 
 - **Be very consistent in where you install tools** for each type of OS.  (e.g., for all Windows machines make sure you install say, flexprop, in the same location on each Windows machine.) By being consistant your tasks will run no matter which machine your are running on. 
 There is nothing worse than trying to remember where you installed a specific tool on the machine you are currently logged into. Because you install say flexprop in the same place on all your Raspberry Pi's you will know where to find it no matter which RPi you are logged in to.
 
-    - All like operating systems should have a specific tool installed in the same location on each. (e.g., all Windows machines have Flexspin installed in one location, all macOS machines have FlexSpin installed in a different location that on Windows but it is the same location across all Macs, etc.)
+    - All like operating systems should have a specific tool installed in the same location on each. (e.g., all Windows machines have FlexProp installed in one location, all macOS machines have FlexProp installed in a different location that on Windows but it is the same location across all Macs, etc.)
     - During installation of a tool on a machine, finish the process by configuring the PATH to the tool so that terminals/consoles can access the tool by name. This allows VSCode to run the tool from its build tasks.json file without needing to know where the tool is installed!  On Windows machines this is done by editing the User Environment from within the Settings Application. On Mac's and Linux machines (RPi's) this is done by editing the shell configuration file (e.g., Bash you edit the ~/.bashrc file)
 
 ## Development Machine Setup and Configuration
 
-### Installing FlexSpin
+### Installing FlexProp
 
 On the Raspberry Pi platform we'll use `git(1)` to download the FlexProp souce, but on the MacOS and Windows machines we get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases) and upacking the zip file to produce a `flexprop` folder containing the new version.  
 
@@ -507,7 +510,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "windows": {
         "command": "loadp2.exe",
-        "args": ["-b230400", "@0=${env:FlexSpinPath}/board/P2ES_flashloader.bin,@8000+${config:topLevel}.binary", "-t", "-k"]
+        "args": ["-b230400", "@0=${env:FlexPropPath}/board/P2ES_flashloader.bin,@8000+${config:topLevel}.binary", "-t", "-k"]
       },
       "linux": {
         "command": "/opt/flexprop/bin/loadp2",
