@@ -147,6 +147,8 @@ Like we do on the other platforms here's the suggested update strategy:
 - Rename your existing folder to `{flexPropFolder}-prior`
 - Unpack the .zip into a newly created `{flexPropFolder}`
 
+**NOTE:** We use this move-aside technique for updating the FlexProp compiler.  When a language compiler is updated more frequently it is not uncommon to one or twice a year experience a breaking change in how the new compiler handles your existing code.  Assuming the version you are moving aside works well against all your projects, we move it aside and install the new version. Should you find that the new version doesn't work well against one of your projects you will still have the prior version so you can build the project with the older version that would fail with the new version.  *You can always skip this move-aside step if you don't care about this issue.*
+
 ### Installing PNut
 
 The PNut compiler/debug tool does not have a standard install location. So we will likely have many locations amongst all of us P2 users. You have to take note of where you installed PNut and then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. 
@@ -452,6 +454,35 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       }
     },
     {
+      "label": "downloadDebugPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-rd"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "shared",
+        "focus": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
       "label": "flashPNut2",
       "type": "shell",
       "command": "echo",
@@ -497,14 +528,17 @@ Under **Task: Run Test Task**:
 
 - DownloadP2 - Download the binary to RAM in our connected P2
 - DownloadPNut2 - Download the binary to RAM using PNut
+- DownloadDebugPNut2 - Compile with Debug enabled, then Download the binary to RAM using PNut
 - FlashP2 - Download and write the binary to FLASH in our connected P2
 - FlashPNut2 - Download and write the binary to FLASH using PNut
 
-As written, **downloadP2** and **flashP2** for flexpsin will always be preceeded by a compileTopP2, while the **downloadPNut2** and **flashPNut2** do not have any depedencies as they do their own build of the top-level file.
+As written, **downloadP2** and **flashP2** for flexpsin will always be preceeded by a compileTopP2, while the **downloadPNut2**, **downloadDebugPNut2**, and **flashPNut2** do not have any depedencies as they do their own build of the top-level file.
 
 The **downloadPNut2** and **flashPNut2** tasks do NOT enable debug support. The option `-r` is run without debug while `-rd` is run with debug. Likewise, the option `-f` is compile and flash without debug while `-fd` is compile and flash with debug.  Please adjust these values in the task `args:` sections to your need (using debug or not)
 
-**TODO** let's make debug a custom VSCode setting and use the setting in this script to enable/disable debug compilation/use??
+For quick use without your needing to modify anything to enable debug we've added **downloadDebugPNut2** which allows you to compile and run from RAM with Debug enabled.
+
+**TODO** ?? let's make debug a custom VSCode setting and use the setting in this script to enable/disable debug compilation/use ??
 
 ### Adding our Custom Keybindings
 
@@ -520,7 +554,6 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
 
  In between the [] you can place your new **key bindings**. You should end up with something like:
  
-**NOTE: in the following you may wish to use `cmd` in place of `ctrl` for macOS to remain consistent with other VSCode settings on your Mac!**
  
 ```json
 // Place your key bindings in this file to override the defaultsauto[]
@@ -560,11 +593,58 @@ This adds new keyboard short cuts to our tasks:
 - DownloadP2 - Download the binary to RAM in our connected P2 **[ctrl+shift+d] or [F10]**
 - FlashP2 - Download and write the binary to FLASH in our connected P2 **[ctrl+shift+f] or [F11]**
 
-NOTE: you can see that these key bindings only refer to the FlexProp tasks. In, instead, you'd like them to use the PNut tasks then you can replace the `P2` command suffix with `PNut2` causing the PNut versions to be run for the shortcuts.
+NOTE: you can see that these key bindings only refer to the FlexProp tasks. In, instead, you'd like them to use the PNut tasks then you can replace the `P2` command suffix with `PNut2` causing the PNut versions to be run for the shortcuts.   
+
+Here's an example invoking PNut instead of FlexProp:
+
+```json
+// Place your key bindings in this file to override the defaultsauto[]
+[
+  {
+    "key": "ctrl+shift+d",
+    "command": "workbench.action.tasks.runTask",
+    "args": "downloadPNut2"
+  },
+  {
+    "key": "ctrl+shift+f",
+    "command": "workbench.action.tasks.runTask",
+    "args": "flashPNut2"
+  },
+  {
+    "key": "F8",
+    "command": "workbench.action.tasks.build",
+    "args": "compilePNut2"
+  },
+  {
+    "key": "F10",
+    "command": "workbench.action.tasks.runTask",
+    "args": "downloadPNut2"
+  },
+  {
+    "key": "ctrl+F10",
+    "command": "workbench.action.tasks.runTask",
+    "args": "downloadDebugPNut2"
+  },
+  {
+    "key": "F11",
+    "command": "workbench.action.tasks.runTask",
+    "args": "flashPNut2"
+  }
+]
+```
+
+This adds new keyboard short cuts to our tasks:
+
+- CompilePNut2 - Compile current file  [ctrl-shift-B], **[F8]**
+- CompileTopPNut2 - Compile the top-file of this project
+- DownloadPNut2 - Download the binary to RAM in our connected P2 **[ctrl+shift+d] or [F10]**
+- DownloadDebugPNut2 - Compile the project with debug enabled, Download the binary to RAM in our connected P2 **[ctrl+F10]**
+- FlashPNut2 - Download and write the binary to FLASH in our connected P2 **[ctrl+shift+f] or [F11]**
+
 
 ### Adding our notion of Top-level file for tasks to use
 
-In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 build task a DownloadP2 download task, and in some cases a FlashP2 task.
+In order to support our notion of top-level file and to prevent us from occassionally compiling and downloading a file other than the project top-level file we've adopted the notion of adding a CompileTopP2 (CompileTopPNut2) build task a DownloadP2 (DownloadPNut2) download task, and in some cases a FlashP2 (FlashPNut2) task.
 
 When we request a download or flash the automation will first compile the top-level project source which produces a new binary. It is this new binary that will be downloaded/flashed.
 

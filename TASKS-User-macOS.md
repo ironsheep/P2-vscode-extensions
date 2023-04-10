@@ -116,6 +116,8 @@ If I'm updating to a new verison I do the following:
 - Create a new empty `/Applications/flexprop` folder
 - Move all of the content of the `flexprop` folder (created during the unzip) to the `/Applications/flexprop` folder
 
+**NOTE:** We use this move-aside technique for updating the FlexProp compiler.  When a language compiler is updated more frequently it is not uncommon to one or twice a year experience a breaking change in how the new compiler handles your existing code.  Assuming the version you are moving aside works well against all your projects, we move it aside and install the new version. Should you find that the new version doesn't work well against one of your projects you will still have the prior version so you can build the project with the older version that would fail with the new version.  *You can always skip this move-aside step if you don't care about this issue.*
+
 ### Setting paths for your P2 Compilers/Tools on macOS
 
 On MacOS this is really shell dependent. I tend to stick with [Bash](https://www.gnu.org/software/bash/manual/html_node/Introduction.html) as I've used it for many 10s of years now.  [zsh](https://scriptingosx.com/2019/06/moving-to-zsh/) (ZShell) is the new shell on the block (*well, new to mac's not a new shell*.) I avoided moving to it but the concepts are the same.
