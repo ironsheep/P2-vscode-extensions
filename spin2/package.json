@@ -555,12 +555,12 @@
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !suggestWidgetMultipleSuggestions && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
       },
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !suggestWidgetMultipleSuggestions && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
