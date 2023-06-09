@@ -38,6 +38,19 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 - Supports the InsertMode operations à la Propeller Tool (*INSERT / OVERTYPE / ALIGN modes*) see [Insert Mode for Spin/Spin2](https://github.com/ironsheep/P2-vscode-extensions/blob/main/InsertMode.md) for more detailed info on this InsertMode feature.
 - **Tab Sets** You can choose between `Propeller Tool`(*Default*), `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 
+## Feature: Generate "public object interface" documentation
+
+Upon pressing Ctrl+Alt+d (control alt document) the editor will now generate a `{filename}.txt` document file (for your `{filename}.spin2` or `{filename}.spin` file) and open it up to the right side of your editor window.  The generator extracts all PUB methods and their doc-comments along with file-top and file-bottom doc-comments.
+
+This document is nearly the same as that produced by **Propeller Tool** except the compiler is not being run so the document does not contain information about the size of compiled object. 
+
+```
+Program:        4,672 bytes
+Variable:         348 bytes
+```
+
+*The above information in not present in the VSCode generated documentation file.*
+
 ## Possible Conflicts with other VSCode Extensions
 
 **NOTE1:** *This extension now replaces the [Spin by Entomy](https://marketplace.visualstudio.com/items?itemName=Entomy.spin) vscode extension. While either can be used, this version provides more comprehensive Syntax highlighting (as the former has not been maintained) and this extension adds full Semantice Highlighting, Outlining and Tab support with InsertModes.* The `Spin` extension can be **uninistalled** with no loss of functionality.
