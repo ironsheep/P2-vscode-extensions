@@ -33,6 +33,7 @@ enum eParseState {
 //
 export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   private parseUtils = new ParseUtils();
+
   public constructor() {
     if (this.spin2OutlineLogEnabled) {
       if (this.spin2OutlineLog === undefined) {
@@ -44,7 +45,9 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
       }
     }
   }
+
   private containerDocSymbol: vscode.DocumentSymbol | undefined = undefined;
+
   public provideDocumentSymbols(document: vscode.TextDocument, _token: vscode.CancellationToken): Promise<vscode.DocumentSymbol[]> {
     return new Promise((resolve, _reject) => {
       let symbols: vscode.DocumentSymbol[] = [];
@@ -532,6 +535,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     } // silence our compiler for now... TODO: we should adjust loop so it can break on cancelToken.isCancellationRequested
     this._resetForNewDocument();
     this._logMessage("* Config: spinExtensionBehavior.highlightFlexspinDirectives: [" + this.configuration.highlightFlexspin + "]");
+    this._logMessage("* Config: spinExtensionBehavior.colorSectionBackgrounds: [" + this.configuration.colorSectionBackgrounds + "]");
 
     const allTokens = this._parseText(document.getText());
     const builder = new vscode.SemanticTokensBuilder();

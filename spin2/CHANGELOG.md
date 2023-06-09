@@ -21,6 +21,10 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.8.9] 2023-05-16
+
+- Attempt to deconflict TAB key with editor pop-ups
+
 ## [1.8.8] 2023-03-27
 
 Minor Semantic updates for P2

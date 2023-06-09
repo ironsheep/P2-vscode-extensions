@@ -7,28 +7,41 @@
 
 import * as vscode from "vscode";
 
-import { Formatter } from "./spin.tabFormatter";
+import { TabFormatter } from "./spin.tabFormatter";
 import { overtypeBeforePaste, overtypeBeforeType } from "./spin.editMode.behavior";
 import { configuration, reloadConfiguration } from "./spin.editMode.configuration";
 import { getMode, resetModes, toggleMode, toggleMode2State, eEditMode, modeName } from "./spin.editMode.mode";
 import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.editMode.statusBarItem";
 import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semanticAndOutline";
 import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
+import { BackgroundHighlighter } from "./spin.bkgndHighlight.behavior";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
 //    and our semantic highlighting provider
 //
 
-var formatter: Formatter;
+var tabFormatter: TabFormatter;
+var bgHighlighter: BackgroundHighlighter;
 
-var outputChannel: vscode.OutputChannel | undefined = undefined;
+var fmtOutputChannel: vscode.OutputChannel | undefined = undefined;
+var bgcoOutputChannel: vscode.OutputChannel | undefined = undefined;
+var backgroundColorEnabled: boolean = false;
+
 const formatDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+const bgColorDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 
 export const logFormatMessage = (message: string): void => {
-  if (formatDebugLogEnabled && outputChannel != undefined) {
+  if (formatDebugLogEnabled && fmtOutputChannel != undefined) {
     //Write to output window.
-    outputChannel.appendLine(message);
+    fmtOutputChannel.appendLine(message);
+  }
+};
+
+export const logBgColorMessage = (message: string): void => {
+  if (bgColorDebugLogEnabled && bgcoOutputChannel != undefined) {
+    //Write to output window.
+    bgcoOutputChannel.appendLine(message);
   }
 };
 
@@ -47,22 +60,22 @@ export const activate = (context: vscode.ExtensionContext) => {
   context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "spin" }, new Spin1DocumentSemanticTokensProvider(), Spin1Legend));
 
   // ----------------------------------------------------------------------------
-  //   TAB Formatter Provider
+  //   TAB TabFormatter Provider
   //
   if (formatDebugLogEnabled) {
-    if (outputChannel === undefined) {
+    if (fmtOutputChannel === undefined) {
       //Create output channel
-      outputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
+      fmtOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
       logFormatMessage("Spin/Spin2 Format log started.");
     } else {
       logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
     }
   }
 
-  formatter = new Formatter(outputChannel, formatDebugLogEnabled);
-  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", formatter.isEnbled());
+  tabFormatter = new TabFormatter(fmtOutputChannel, formatDebugLogEnabled);
+  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", tabFormatter.isEnabled());
 
-  if (formatter.isEnbled()) {
+  if (tabFormatter.isEnabled()) {
     const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
 
     context.subscriptions.push(
@@ -71,10 +84,10 @@ export const activate = (context: vscode.ExtensionContext) => {
         try {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
-          var textEdits = await formatter.insertTabStopsComment(document, editor.selections);
+          var textEdits = await tabFormatter.insertTabStopsComment(document, editor.selections);
           applyTextEdits(document, textEdits!);
         } catch (error) {
-          await vscode.window.showErrorMessage("Formatter Add Comment Problem");
+          await vscode.window.showErrorMessage("TabFormatter Add Comment Problem");
           console.error(error);
         }
       })
@@ -88,15 +101,15 @@ export const activate = (context: vscode.ExtensionContext) => {
         try {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
-          var textEdits = await formatter.indentTabStop(document, editor);
-          let [cursorSelect, bShouldSelect] = formatter.indentEndingSelection();
+          var textEdits = await tabFormatter.indentTabStop(document, editor);
+          let [cursorSelect, bShouldSelect] = tabFormatter.indentEndingSelection();
           applyTextEdits(document, textEdits!);
           if (bShouldSelect) {
-            formatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
+            tabFormatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
             editor.selection = cursorSelect;
           }
         } catch (error) {
-          await vscode.window.showErrorMessage("Formatter TAB Problem");
+          await vscode.window.showErrorMessage("TabFormatter TAB Problem");
           console.error(error);
         }
       })
@@ -109,16 +122,16 @@ export const activate = (context: vscode.ExtensionContext) => {
         try {
           const editor = vscode.window.activeTextEditor!;
           const document = editor.document!;
-          var textEdits = await formatter.outdentTabStop(document, editor);
-          let [cursorSelect, bShouldSelect] = formatter.outdentEndingSelection();
+          var textEdits = await tabFormatter.outdentTabStop(document, editor);
+          let [cursorSelect, bShouldSelect] = tabFormatter.outdentEndingSelection();
           applyTextEdits(document, textEdits!);
           if (bShouldSelect) {
-            formatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
+            tabFormatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
             editor.selection = cursorSelect;
           }
           console.log();
         } catch (error) {
-          await vscode.window.showErrorMessage("Formatter Shift+TAB Problem");
+          await vscode.window.showErrorMessage("TabFormatter Shift+TAB Problem");
           console.error(error);
         }
       })
@@ -153,10 +166,34 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     vscode.window.onDidChangeActiveTextEditor(activeTextEditorChanged),
 
-    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration),
+    vscode.workspace.onDidChangeConfiguration(configurationChanged),
+
+    vscode.workspace.onDidChangeTextDocument(textDocumentChanged),
 
     statusBarItem
   );
+
+  // ----------------------------------------------------------------------------
+  //   Background Color fill
+  //
+  if (bgColorDebugLogEnabled) {
+    if (bgcoOutputChannel === undefined) {
+      //Create output channel
+      bgcoOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 bgColor DEBUG");
+      logBgColorMessage("Spin/Spin2 bgColor log started.");
+    } else {
+      logBgColorMessage("\n\n------------------   NEW FILE ----------------\n\n");
+    }
+  }
+
+  bgHighlighter = new BackgroundHighlighter(bgcoOutputChannel, bgColorDebugLogEnabled);
+  backgroundColorEnabled = bgHighlighter.isEnabled();
+
+  // lastly, if we already have editor... trigger an update
+  let textEditor = vscode.window.activeTextEditor;
+  if (textEditor && backgroundColorEnabled) {
+    triggerUpdateDecorations();
+  }
 };
 
 export const deactivate = () => {
@@ -166,6 +203,7 @@ export const deactivate = () => {
 // ----------------------------------------------------------------------------
 //   InsertMode command handlers   ////////////////////////////////////////////
 
+// EVENT Handler: onDidChangeActiveTextEditor
 function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
   if (textEditor === undefined) {
     textEditor = vscode.window.activeTextEditor;
@@ -193,6 +231,9 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
         break;
     }
     textEditor.options.cursorStyle = cursorStyle;
+
+    // now also update our background colors
+    triggerUpdateDecorations();
   }
 }
 
@@ -225,12 +266,36 @@ function getShowInStatusBar(): boolean {
   return false;
 }
 
-const onDidChangeConfiguration = () => {
+let bkUpdateTimer: NodeJS.Timer | undefined = undefined;
+
+function triggerUpdateDecorations(throttle = false) {
+  if (bkUpdateTimer) {
+    clearTimeout(bkUpdateTimer);
+    bkUpdateTimer = undefined;
+  }
+  if (backgroundColorEnabled) {
+    if (throttle) {
+      bkUpdateTimer = setTimeout(bgHighlighter.updateDecorations, 500);
+    } else {
+      bgHighlighter.updateDecorations();
+    }
+  }
+}
+
+// EVENT Handler: onDidChangeConfiguration
+const configurationChanged = () => {
   const previousPerEditor = configuration.perEditor;
   const previousShowInStatusBar = getShowInStatusBar();
 
-  // tell formatter that is might have changed, too
-  formatter.updateTabConfiguration();
+  // tell tabFormatter that is might have changed, too
+  tabFormatter.updateTabConfiguration();
+  bgHighlighter.updateConfiguration();
+
+  // see if we still want background Coloring
+  backgroundColorEnabled = bgHighlighter.isEnabled();
+  if (backgroundColorEnabled == false) {
+    bgHighlighter.removeDecorations();
+  }
 
   const updated = reloadConfiguration();
   if (!updated) {
@@ -258,6 +323,14 @@ const onDidChangeConfiguration = () => {
   activeTextEditorChanged();
 };
 
+// EVENT Handler: onDidChangeTextDocument
+const textDocumentChanged = (event: vscode.TextDocumentChangeEvent) => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (activeEditor && event.document === activeEditor.document) {
+    triggerUpdateDecorations(true);
+  }
+};
+
 function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;
   var editMode: eEditMode = eEditMode.INSERT;
@@ -277,11 +350,11 @@ function typeCommand(args: { text: string }) {
   if (editor != undefined) {
     editMode = getMode(editor);
   }
-  if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.OVERTYPE) {
+  if (editor != undefined && tabFormatter.isEnabled() && editMode == eEditMode.OVERTYPE) {
     logFormatMessage("* OVERTYPE type");
     overtypeBeforeType(editor, args.text, false);
-  } else if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.ALIGN) {
-    formatter.alignBeforeType(editor, args.text, false);
+  } else if (editor != undefined && tabFormatter.isEnabled() && editMode == eEditMode.ALIGN) {
+    tabFormatter.alignBeforeType(editor, args.text, false);
   } else {
     //logFormatMessage("* VSCode type");
     vscode.commands.executeCommand("default:type", args);
@@ -291,7 +364,7 @@ function typeCommand(args: { text: string }) {
 function deleteLeftCommand() {
   const editor = vscode.window.activeTextEditor;
   logFormatMessage("* deleteLeft");
-  var bAlignEdit: boolean = editor != undefined && formatter.isEnbled();
+  var bAlignEdit: boolean = editor != undefined && tabFormatter.isEnabled();
   if (editor != undefined) {
     const editMode = getMode(editor);
     if (editMode != eEditMode.ALIGN) {
@@ -299,7 +372,7 @@ function deleteLeftCommand() {
     }
   }
   if (bAlignEdit && editor != undefined) {
-    formatter.alignDelete(editor, false);
+    tabFormatter.alignDelete(editor, false);
     return null;
   } else {
     //logFormatMessage("* VSCode deleteLeft");
@@ -310,8 +383,8 @@ function deleteLeftCommand() {
 function deleteRightCommand() {
   const editor = vscode.window.activeTextEditor;
   logFormatMessage("* deleteRight");
-  if (formatter.isEnbled() && editor && getMode(editor) == eEditMode.ALIGN) {
-    formatter.alignDelete(editor, true);
+  if (tabFormatter.isEnabled() && editor && getMode(editor) == eEditMode.ALIGN) {
+    tabFormatter.alignDelete(editor, true);
     return null;
   } else {
     //logFormatMessage("* VSCode deleteRight");
@@ -328,8 +401,8 @@ function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
       logFormatMessage("* OVERTYPE paste");
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
-    } else if (formatter.isEnbled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
-      formatter.alignBeforeType(editor, args.text, true);
+    } else if (tabFormatter.isEnabled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
+      tabFormatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {
       //logFormatMessage("* VSCode paste");

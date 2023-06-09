@@ -8,6 +8,7 @@ const loadSemanticConfiguration = () => {
 
   return {
     highlightFlexspin: semanticConfiguration.get<boolean>("highlightFlexspinDirectives"),
+    colorSectionBackgrounds: semanticConfiguration.get<boolean>("colorSectionBackgrounds"),
   };
 };
 
@@ -17,11 +18,12 @@ export const reloadSemanticConfiguration = () => {
   const newSemanticConfiguration = loadSemanticConfiguration();
 
   // bail out if nothing changed
-  if (semanticConfiguration.highlightFlexspin === newSemanticConfiguration.highlightFlexspin) {
+  if (semanticConfiguration.highlightFlexspin === newSemanticConfiguration.highlightFlexspin && semanticConfiguration.colorSectionBackgrounds === newSemanticConfiguration.colorSectionBackgrounds) {
     return false;
   }
 
   semanticConfiguration.highlightFlexspin = newSemanticConfiguration.highlightFlexspin;
+  semanticConfiguration.colorSectionBackgrounds = newSemanticConfiguration.colorSectionBackgrounds;
 
   return true;
 };

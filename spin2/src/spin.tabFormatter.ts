@@ -35,7 +35,7 @@ export interface Blocks {
 /**
  *
  */
-export class Formatter {
+export class TabFormatter {
   private config = tabConfiguration;
 
   private tabset: string = tabConfiguration.tabSet;
@@ -67,8 +67,6 @@ export class Formatter {
   private bFinalTabSelectionValid: boolean = false;
   private finalUntabSelection: vscode.Selection;
   private bFinalUntabSelectionValid: boolean = false;
-
-  //export const configuration = loadConfiguration();
 
   constructor(outputChannel: vscode.OutputChannel | undefined, formatDebugLogEnabled: boolean) {
     this.tabbingDebugLogEnabled = formatDebugLogEnabled;
@@ -107,7 +105,7 @@ export class Formatter {
    * Return T/F where T means the formatter should be enabled
    * @returns T/F
    */
-  isEnbled(): boolean {
+  isEnabled(): boolean {
     const bEnableStatus: boolean = this.enable ? true : false;
     return bEnableStatus;
   }

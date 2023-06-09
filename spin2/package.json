@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.8.8",
+  "version": "1.9.0",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -42,6 +42,44 @@
     "Programming Languages"
   ],
   "contributes": {
+    "colors": [
+      {
+        "id": "spin2.conLight",
+        "description": "Background decoration color for CON section light of Light and Dark",
+        "defaults": {
+          "dark": "#FFFFF9BE",
+          "light": "#FFFFF9BE",
+          "highContrast": "#FFFFF9BE"
+        }
+      },
+      {
+        "id": "spin2.conDark",
+        "description": "Background decoration color for CON section dark of Light and Dark",
+        "defaults": {
+          "dark": "#FFFDF5A5",
+          "light": "#FFFDF5A5",
+          "highContrast": "#FFFDF5A5"
+        }
+      },
+      {
+        "id": "spin2.varLight",
+        "description": "Background decoration color for VAR section light of Light and Dark",
+        "defaults": {
+          "dark": "#FFFFE0BE",
+          "light": "#FFFFE0BE",
+          "highContrast": "#FFFFE0BE"
+        }
+      },
+      {
+        "id": "spin2.varDark",
+        "description": "Background decoration color for VAR section dark of Light and Dark",
+        "defaults": {
+          "dark": "#FFFDD3A5",
+          "light": "#FFFDD3A5",
+          "highContrast": "#FFFDD3A5"
+        }
+      }
+    ],
     "themes": [
       {
         "label": "Spin2 Ironsheep Dark",
@@ -167,6 +205,11 @@
             "type": "boolean",
             "default": false,
             "description": "Enable recognition/validation of flexspin preprocessor directives."
+          },
+          "spinExtensionBehavior.colorSectionBackgrounds": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable background coloring of CON, DAT, VAR, OBJ, PUB, and PRI sections."
           }
         }
       },
@@ -555,12 +598,12 @@
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !suggestWidgetMultipleSuggestions && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !notInSnippetMode && !suggestWidgetVisible && !listFocus && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
       },
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !suggestWidgetMultipleSuggestions && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !notInSnippetMode && !suggestWidgetVisible && !listFocus && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
