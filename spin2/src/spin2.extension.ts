@@ -14,6 +14,7 @@ import { getMode, resetModes, toggleMode, toggleMode2State, eEditMode, modeName 
 import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.editMode.statusBarItem";
 import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semanticAndOutline";
 import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
+import { DocGenerator } from "./spin.document.generate";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -21,14 +22,17 @@ import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider,
 //
 
 var formatter: Formatter;
+var docGenerator: DocGenerator;
 
-var outputChannel: vscode.OutputChannel | undefined = undefined;
+var fmtOutputChannel: vscode.OutputChannel | undefined = undefined;
+var docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
 const formatDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+const formatDocGenLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 
 export const logFormatMessage = (message: string): void => {
-  if (formatDebugLogEnabled && outputChannel != undefined) {
+  if (formatDebugLogEnabled && fmtOutputChannel != undefined) {
     //Write to output window.
-    outputChannel.appendLine(message);
+    fmtOutputChannel.appendLine(message);
   }
 };
 
@@ -50,16 +54,43 @@ export const activate = (context: vscode.ExtensionContext) => {
   //   TAB Formatter Provider
   //
   if (formatDebugLogEnabled) {
-    if (outputChannel === undefined) {
+    if (fmtOutputChannel === undefined) {
       //Create output channel
-      outputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
+      fmtOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
       logFormatMessage("Spin/Spin2 Format log started.");
     } else {
       logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
     }
   }
 
-  formatter = new Formatter(outputChannel, formatDebugLogEnabled);
+  if (formatDocGenLogEnabled) {
+    if (docGenOutputChannel === undefined) {
+      //Create output channel
+      docGenOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 DocGen DEBUG");
+      logFormatMessage("Spin/Spin2 DocGen log started.");
+    } else {
+      logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
+    }
+  }
+
+  formatter = new Formatter(fmtOutputChannel, formatDebugLogEnabled);
+  docGenerator = new DocGenerator(docGenOutputChannel, formatDocGenLogEnabled);
+  const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(generateDocumentFileCommand, async () => {
+      logFormatMessage("* generateDocumentFileCommand");
+      try {
+        // and test it!
+        docGenerator.generateDocument();
+        docGenerator.showDocument();
+      } catch (error) {
+        await vscode.window.showErrorMessage("Document Generation Problem");
+        console.error(error);
+      }
+    })
+  );
+
   vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", formatter.isEnbled());
 
   if (formatter.isEnbled()) {

@@ -11,6 +11,7 @@ hall_angles	long	0			'forward-direction table
     long    0 frac 6	'%001
 
 PUB go()
+'' Start our display
     vga.start(8)
 
     SEND := @vga.print
@@ -40,7 +41,21 @@ PRI dec(value) | flag, place, digit         'private method prints decimals, thr
                 SEND(",")                                           'yes
     WHILE place /= 10
 
+PUB go_again()
+{{
+    Start our display a 2nd time
+}}
+
 DAT
 
 text FILE "VGA_640x480_text_80x40.txt"
 textend
+
+CON ' license
+{{
+ -------------------------------------------------------------------------------
+
+   my license text...
+
+ ===============================================================================
+}}

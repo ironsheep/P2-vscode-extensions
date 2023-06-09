@@ -21,6 +21,18 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.0] 2023-06-9
+
+Minor Semantic updates for P1 and P2 along with new Documentation feature!
+
+- Add documentation generation via keystroke [Ctrl+Alt+d], doc opens on right side
+- Fix highlight of object constant references in case statement selector P1 and P2 (#17)
+- Flag "else if" on spin as illegal / won't compile - P1 and P2 (#18)
+
+## [1.8.9] 2023-05-15
+
+Documentation change and attempt to avoid intercept of TAB when using github copilot
+
 ## [1.8.8] 2023-03-27
 
 Minor Semantic updates for P2

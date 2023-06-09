@@ -2111,6 +2111,18 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const remainingLength: number = nonCommentSpinLine.length;
     this._logCON("- reportSPIN nonCommentSpinLine=[" + nonCommentSpinLine + "] remainingLength=" + remainingLength);
     if (remainingLength > 0) {
+      // special early error case
+      if (nonCommentSpinLine.toLowerCase().includes("else if")) {
+        const nameOffset = line.toLowerCase().indexOf("else if", currentOffset);
+        this._logSPIN("  --  Illegal ELSE-IF [" + nonCommentSpinLine + "]");
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: "else if".length,
+          ptTokenType: "keyword",
+          ptTokenModifiers: ["illegalUse"],
+        });
+      }
       // locate key indicators of line style
       let assignmentOffset: number = line.indexOf(":=", currentOffset);
       if (assignmentOffset != -1) {
@@ -2220,7 +2232,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           } else {
             // have simple target name, no []
             let cleanedVariableName: string = variableName.replace(/[ \t\(\)]/, "");
-            const nameOffset = line.indexOf(cleanedVariableName, currentOffset);
+            let nameOffset = line.indexOf(cleanedVariableName, currentOffset);
             if (cleanedVariableName.substr(0, 1).match(/[a-zA-Z_]/) && !this.parseUtils.isStorageType(cleanedVariableName)) {
               this._logSPIN("  --  SPIN cleanedVariableName=[" + cleanedVariableName + "](" + (nameOffset + 1) + ")");
               if (cleanedVariableName.includes(".")) {
@@ -2239,6 +2251,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                                         ptTokenModifiers: []
                                     });
                                     */
+                } else {
+                  // XYZZY new . handling code
+                  const didReport: boolean = this._reportObjectReference(varNameParts.join("."), lineNumber, nameOffset, line, tokenSet);
                 }
               }
               let referenceDetails: RememberedToken | undefined = undefined;

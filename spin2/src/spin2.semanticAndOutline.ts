@@ -2473,6 +2473,18 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const remainingLength: number = nonCommentSpinLine.length;
     this._logCON("- reportSPIN nonCommentSpinLine=[" + nonCommentSpinLine + "] remainingLength=" + remainingLength);
     if (remainingLength > 0) {
+      // special early error case
+      if (nonCommentSpinLine.toLowerCase().includes("else if")) {
+        const nameOffset = line.toLowerCase().indexOf("else if", currentOffset);
+        this._logSPIN("  --  Illegal ELSE-IF [" + nonCommentSpinLine + "]");
+        tokenSet.push({
+          line: lineNumber,
+          startCharacter: nameOffset,
+          length: "else if".length,
+          ptTokenType: "keyword",
+          ptTokenModifiers: ["illegalUse"],
+        });
+      }
       // locate key indicators of line style
       let assignmentOffset: number = line.indexOf(":=", currentOffset);
       if (assignmentOffset != -1) {
@@ -2587,11 +2599,13 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           } else {
             // have simple target name, no []
             let cleanedVariableName: string = variableName.replace(/[ \t\(\)]/, "");
-            const nameOffset = line.indexOf(cleanedVariableName, currentOffset);
+            let nameOffset = line.indexOf(cleanedVariableName, currentOffset);
             if (cleanedVariableName.substr(0, 1).match(/[a-zA-Z_]/) && !this.parseUtils.isStorageType(cleanedVariableName)) {
               this._logSPIN("  --  SPIN cleanedVariableName=[" + cleanedVariableName + "](" + (nameOffset + 1) + ")");
+              // does name contain a namespace reference?
               if (cleanedVariableName.includes(".")) {
                 const varNameParts: string[] = cleanedVariableName.split(".");
+                this._logSPIN("  --  varNameParts=[" + varNameParts + "]");
                 if (this.parseUtils.isDatStorageType(varNameParts[1])) {
                   cleanedVariableName = varNameParts[0]; // just use first part of name
                   /*
@@ -2606,6 +2620,117 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                                         ptTokenModifiers: []
                                     });
                                     */
+                } else {
+                  const namePart = varNameParts[0];
+                  const searchString: string = varNameParts.length == 1 ? varNameParts[0] : varNameParts[0] + "." + varNameParts[1];
+                  nameOffset = line.indexOf(searchString, 0);
+                  this._logSPIN("  --  SPIN LHS   searchString=[" + searchString + "]");
+                  this._logSPIN("  --  SPIN LHS    nameOffset=(" + nameOffset + "), currentOffset=(" + currentOffset + ")");
+                  let referenceDetails: RememberedToken | undefined = undefined;
+                  if (this._isLocalToken(namePart)) {
+                    referenceDetails = this._getLocalToken(namePart);
+                    this._logSPIN("  --  FOUND local name=[" + namePart + "]");
+                  } else if (this._isGlobalToken(namePart)) {
+                    referenceDetails = this._getGlobalToken(namePart);
+                    this._logSPIN("  --  FOUND global name=[" + namePart + "]");
+                    if (referenceDetails != undefined && referenceDetails?.type == "method") {
+                      const methodCall = namePart + "(";
+                      const addressOf = "@" + namePart;
+                      if (!searchString.includes(methodCall) && !searchString.includes(addressOf)) {
+                        this._logSPIN("  --  MISSING parens on method=[" + namePart + "]");
+                        referenceDetails = undefined;
+                      }
+                    }
+                  }
+                  if (referenceDetails != undefined) {
+                    this._logSPIN("  --  SPIN RHS name=[" + namePart + "](" + (nameOffset + 1) + ")");
+                    tokenSet.push({
+                      line: lineNumber,
+                      startCharacter: nameOffset,
+                      length: namePart.length,
+                      ptTokenType: referenceDetails.type,
+                      ptTokenModifiers: referenceDetails.modifiers,
+                    });
+                  } else {
+                    // have unknown name!? is storage type spec?
+                    if (this.parseUtils.isStorageType(namePart)) {
+                      this._logSPIN("  --  SPIN RHS storageType=[" + namePart + "]");
+                      tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: nameOffset,
+                        length: namePart.length,
+                        ptTokenType: "storageType",
+                        ptTokenModifiers: [],
+                      });
+                    } else if (this.parseUtils.isSpinBuiltinMethod(namePart) && !searchString.includes(namePart + "(")) {
+                      this._logSPIN("  --  SPIN MISSING PARENS name=[" + namePart + "]");
+                      tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: nameOffset,
+                        length: namePart.length,
+                        ptTokenType: "method",
+                        ptTokenModifiers: ["builtin", "missingDeclaration"],
+                      });
+                    }
+                    // we use bIsDebugLine in next line so we don't flag debug() arguments!
+                    else if (
+                      !this.parseUtils.isSpinReservedWord(namePart) &&
+                      !this.parseUtils.isSpinBuiltinMethod(namePart) &&
+                      !this.parseUtils.isBuiltinReservedWord(namePart) &&
+                      !this.parseUtils.isCoginitReservedSymbol(namePart) &&
+                      !this.parseUtils.isDebugMethod(namePart) &&
+                      !this.parseUtils.isDebugSymbol(namePart) &&
+                      !this.parseUtils.isDebugInvocation(namePart)
+                    ) {
+                      // NO DEBUG FOR ELSE, most of spin control elements come through here!
+                      //else {
+                      //    this._logSPIN('  -- UNKNOWN?? name=[' + namePart + '] - name-get-breakage??');
+                      //}
+
+                      this._logSPIN("  --  SPIN MISSING rhs name=[" + namePart + "]");
+                      tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: nameOffset,
+                        length: namePart.length,
+                        ptTokenType: "variable",
+                        ptTokenModifiers: ["missingDeclaration"],
+                      });
+                    }
+                  }
+                  if (varNameParts.length > 1) {
+                    // we have .constant namespace suffix
+                    // determine if this is method has '(' or constant name
+                    const referenceOffset = line.indexOf(searchString, nameOffset); // + currentOffset;
+                    let isMethod: boolean = false;
+                    if (line.substr(referenceOffset + searchString.length, 1) == "(") {
+                      isMethod = true;
+                    }
+                    const constantPart: string = varNameParts[1];
+                    if (this.parseUtils.isStorageType(constantPart)) {
+                      // FIXME: UNDONE remove when syntax see this correctly
+                      const nameOffset: number = line.indexOf(constantPart, currentOffset);
+                      this._logSPIN("  --  SPIN rhs storageType=[" + constantPart + "](" + (nameOffset + 1) + ")");
+                      tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: nameOffset,
+                        length: constantPart.length,
+                        ptTokenType: "storageType",
+                        ptTokenModifiers: [],
+                      });
+                    } else {
+                      nameOffset = line.indexOf(constantPart, nameOffset);
+                      const tokenTypeID: string = isMethod ? "method" : "variable";
+                      const tokenModifiers: string[] = isMethod ? [] : ["readonly"];
+                      this._logSPIN("  --  SPIN rhs constant=[" + constantPart + "](" + (nameOffset + 1) + ") (" + tokenTypeID + ")");
+                      tokenSet.push({
+                        line: lineNumber,
+                        startCharacter: nameOffset,
+                        length: constantPart.length,
+                        ptTokenType: tokenTypeID,
+                        ptTokenModifiers: tokenModifiers,
+                      });
+                    }
+                  }
                 }
               }
               let referenceDetails: RememberedToken | undefined = undefined;

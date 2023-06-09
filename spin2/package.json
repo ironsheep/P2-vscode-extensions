@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.8.8",
+  "version": "1.9.0",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -523,44 +523,58 @@
     ],
     "commands": [
       {
+        "command": "spin2.generate.documentation.file",
+        "title": "Spin2: Generate documentation file from spin source"
+      },
+      {
         "command": "spin2.indentTabStop",
-        "title": "Indent tab stop"
+        "title": "Spin2: Indent tab stop"
       },
       {
         "command": "spin2.outdentTabStop",
-        "title": "Outdent tab stop"
+        "title": "Spin2: Outdent tab stop"
       },
       {
         "command": "spin2.insertTabStopsComment",
-        "title": "Insert tab stop comment"
+        "title": "Spin2: Insert tab stop comment"
       },
       {
         "command": "spin2.insertMode.rotate",
-        "title": "Rotate through modes: Insert - Overtype - Align"
+        "title": "Spin2: Rotate through modes: Insert - Overtype - Align"
       },
       {
         "command": "spin2.insertMode.toggle",
-        "title": "Toggle between modes: Insert - Align"
+        "title": "Spin2: Toggle between modes: Insert - Align"
       },
       {
         "command": "spin2.insertMode.deleteLeft",
-        "title": "Align mode Delete Left"
+        "title": "Spin2: Align mode Delete Left"
       },
       {
         "command": "spin2.insertMode.deleteRight",
-        "title": "Align mode Delete Right"
+        "title": "Spin2: Align mode Delete Right"
       }
     ],
     "keybindings": [
       {
-        "key": "tab",
-        "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !suggestWidgetMultipleSuggestions && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "key": "Ctrl+Alt+d",
+        "command": "spin2.generate.documentation.file",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2"
+      },
+      {
+        "key": "Ctrl+Alt+d",
+        "command": "spin2.generate.documentation.file",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
       },
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !suggestWidgetMultipleSuggestions && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "key": "tab",
+        "command": "spin2.indentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
