@@ -16,6 +16,7 @@ Here's the list I find really helpful:
 | Settings Sync | code work | when you run vscode from multiple machines, keep extensions and settings all in sync!<br>**shan.code-settings-sync**|
 | Explorer Exclude| code work | Enable hiding of file types within File Explorer panel<br>**redvanworkshop.explorer-exclude-vscode-extension**|
 | Version Lens | typescript, javascript, npm projects, etc.| annotates your project dependancies with latest versions and up-to-date status for each<br>**pflannery.vscode-versionlens** |
+| Serial Monitor | interact with your P2 similar to using PST (**Propeller Serial Terminal**) | connects your keyboard and display to your P2 serial port<br>**ms-vscode.vscode-serial-monitor** |
 
 Then, here are some more specialized Extensions I, and others of us, like to use:
 
