@@ -154,6 +154,9 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
       this.logMessage(`+ (DBG) ObjDep: getChildren() topLevel has (${spinDeps.length}) deps`);
       let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(spinDeps.length);
       if (spinDeps.length > 0) {
+        topState = vscode.TreeItemCollapsibleState.Expanded; // always leave top-level expanded?
+      }
+      if (spinDeps.length > 0) {
         let topDep = new Dependency(this.topLevelFName, "(top-file)", topState);
         subDeps.push(topDep);
       } else {
