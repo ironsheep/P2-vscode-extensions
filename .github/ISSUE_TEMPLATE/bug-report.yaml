@@ -42,6 +42,25 @@ body:
         - No or unsure. This never worked, or I haven't tried before.
 
   - type: textarea
+    id: environment
+    validations:
+      required: true
+    attributes:
+      label: Hardware, Operating System, Operating System version, VSCode version
+      description: |
+        Provide details about the machine/software you are running on,
+        which operating system this is on, and what VSCode version you are using.
+        If possible try to replicate the issue in other installations and include your findings here.
+      placeholder: |
+        Hardware: Mac Pro
+        OS Ver: macOS Monterey v12.6.6
+        VSCode Ver: 1.79.1 (Fm Code->About)
+      value: |
+        Hardware:
+        OS Ver:
+        VSCode Ver:
+
+  - type: textarea
     id: problem
     validations:
       required: true
