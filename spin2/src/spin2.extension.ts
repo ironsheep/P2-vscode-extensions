@@ -39,7 +39,7 @@ var docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 var objTreeProvider: ObjectTreeProvider;
 var objDepTreeView: vscode.TreeView<Dependency>;
-const objTreeDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+const objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 // register services provided by this file
