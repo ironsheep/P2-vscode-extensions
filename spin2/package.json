@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -553,8 +553,27 @@
       {
         "command": "spin2.insertMode.deleteRight",
         "title": "Spin2: Align mode Delete Right"
+      },
+      {
+        "command": "objectDependencies.refreshEntry",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "objectDependencies.activateFile",
+        "title": "Open File for this element",
+        "icon": "$(open-preview)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "objectDependencies.refreshEntry",
+          "when": "view == objectDependencies",
+          "group": "navigation"
+        }
+      ]
+    },
     "keybindings": [
       {
         "key": "Ctrl+Alt+d",
@@ -648,7 +667,26 @@
         "mac": "Cmd+Shift+i",
         "when": "editorFocus && editorLangId == spin"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "objectDependencies",
+          "name": "Object Dependencies",
+          "icon": "$(type-hierarchy)",
+          "contextualTitle": "Propeller Spin2 Development",
+          "when": "spin2.objectDeps.enabled"
+        }
+      ]
+    },
+    "contributes": {
+      "viewsWelcome": [
+        {
+          "view": "objectDependencies",
+          "contents": "The active editor connot provide Spin2 object dependencies."
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile && npm run compile:grammar",
@@ -675,7 +713,8 @@
     "source-map-support": "^0.5.19",
     "typescript": "^4.3.2",
     "vscode-test": "^1.5.2",
-    "vsce": "^1.85.0"
+    "vsce": "^1.85.0",
+    "@vscode/codicons": "0.0.20"
   },
   "dependencies": {}
 }

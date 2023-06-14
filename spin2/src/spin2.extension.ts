@@ -15,6 +15,7 @@ import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "
 import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semanticAndOutline";
 import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
 import { DocGenerator } from "./spin.document.generate";
+import { ObjectTreeProvider, Dependency } from "./spin.object.dependencies";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -22,19 +23,24 @@ import { DocGenerator } from "./spin.document.generate";
 //
 
 var formatter: Formatter;
-var docGenerator: DocGenerator;
-
-var fmtOutputChannel: vscode.OutputChannel | undefined = undefined;
-var docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
 const formatDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
-const formatDocGenLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+var formatOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 export const logFormatMessage = (message: string): void => {
-  if (formatDebugLogEnabled && fmtOutputChannel != undefined) {
+  if (formatDebugLogEnabled && formatOutputChannel != undefined) {
     //Write to output window.
-    fmtOutputChannel.appendLine(message);
+    formatOutputChannel.appendLine(message);
   }
 };
+
+var docGenerator: DocGenerator;
+const formatDocGenLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+var docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
+
+var objTreeProvider: ObjectTreeProvider;
+var objDepTreeView: vscode.TreeView<Dependency>;
+const objTreeDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+var objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 // register services provided by this file
 export const activate = (context: vscode.ExtensionContext) => {
@@ -54,9 +60,9 @@ export const activate = (context: vscode.ExtensionContext) => {
   //   TAB Formatter Provider
   //
   if (formatDebugLogEnabled) {
-    if (fmtOutputChannel === undefined) {
+    if (formatOutputChannel === undefined) {
       //Create output channel
-      fmtOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
+      formatOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
       logFormatMessage("Spin/Spin2 Format log started.");
     } else {
       logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
@@ -73,7 +79,20 @@ export const activate = (context: vscode.ExtensionContext) => {
     }
   }
 
-  formatter = new Formatter(fmtOutputChannel, formatDebugLogEnabled);
+  if (objTreeDebugLogEnabled) {
+    if (objTreeOutputChannel === undefined) {
+      //Create output channel
+      objTreeOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 ObjTree DEBUG");
+      logFormatMessage("Spin/Spin2 ObjTree log started.");
+    } else {
+      logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
+    }
+  }
+
+  formatter = new Formatter(formatOutputChannel, formatDebugLogEnabled);
+
+  objTreeProvider = new ObjectTreeProvider(objTreeOutputChannel, objTreeDebugLogEnabled);
+
   docGenerator = new DocGenerator(docGenOutputChannel, formatDocGenLogEnabled);
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
 
@@ -188,6 +207,20 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     statusBarItem
   );
+
+  // ----------------------------------------------------------------------------
+  //   Object Tree View Provider
+  //
+  //vscode.window.registerTreeDataProvider("objectDependencies", objTreeProvider);
+  objDepTreeView = vscode.window.createTreeView("objectDependencies", {
+    canSelectMany: false,
+    showCollapseAll: true,
+    treeDataProvider: objTreeProvider,
+  });
+  //objDepTreeView.onDidChangeSelection(objTreeProvider.onElementClick);
+
+  vscode.commands.registerCommand("objectDependencies.refreshEntry", () => objTreeProvider.refresh());
+  vscode.commands.registerCommand("objectDependencies.activateFile", async (arg1) => objTreeProvider.onElementClick(arg1));
 };
 
 export const deactivate = () => {

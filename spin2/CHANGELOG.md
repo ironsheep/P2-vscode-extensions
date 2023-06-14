@@ -21,6 +21,12 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.1] 2023-06-13
+
+New Object Hierarchy view for P1 and P2!
+
+- Adds new Object Hierarchy browser when editing spin code
+
 ## [1.9.0] 2023-06-9
 
 Minor Semantic updates for P1 and P2 along with new Documentation feature!
