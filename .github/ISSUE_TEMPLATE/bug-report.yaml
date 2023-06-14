@@ -73,17 +73,6 @@ body:
         (If possible provide a screenshot, or a link to a video, showing the issue)
 
   - type: textarea
-    id: PythonErrors
-    validations:
-      required: false
-    attributes:
-      label: Errors in Browser Console
-      description: |
-        Python errors shown in the logs (if applicable)
-      placeholder: |
-        If you are seeing errors in the logs, please paste them here.
-
-  - type: textarea
     id: additionalInfo
     validations:
       required: false
