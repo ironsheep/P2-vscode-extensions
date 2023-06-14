@@ -42,7 +42,9 @@ var objDepTreeView: vscode.TreeView<Dependency>;
 const objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 
+// ----------------------------------------------------------------------------
 // register services provided by this file
+//
 export const activate = (context: vscode.ExtensionContext) => {
   // register our Spin2 outline provider
   context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: "file", language: "spin2" }, new Spin2ConfigDocumentSymbolProvider()));
@@ -110,9 +112,9 @@ export const activate = (context: vscode.ExtensionContext) => {
     })
   );
 
-  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", formatter.isEnbled());
+  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", formatter.isEnabled());
 
-  if (formatter.isEnbled()) {
+  if (formatter.isEnabled()) {
     const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
 
     context.subscriptions.push(
@@ -187,7 +189,6 @@ export const activate = (context: vscode.ExtensionContext) => {
   // ----------------------------------------------------------------------------
   //   InserMode  Provider
   //
-
   const statusBarItem = createStatusBarItem();
   activeTextEditorChanged();
 
@@ -214,17 +215,23 @@ export const activate = (context: vscode.ExtensionContext) => {
   //vscode.window.registerTreeDataProvider("objectDependencies", objTreeProvider);
   objDepTreeView = vscode.window.createTreeView("objectDependencies", {
     canSelectMany: false,
-    showCollapseAll: true,
+    showCollapseAll: false, // no we'll put up our own
     treeDataProvider: objTreeProvider,
   });
   //objDepTreeView.onDidChangeSelection(objTreeProvider.onElementClick);
 
+  vscode.commands.registerCommand("objectDependencies.expandAll", () => objTreeProvider.expandAll());
+  vscode.commands.registerCommand("objectDependencies.collapseAll", () => objTreeProvider.collapseAll());
   vscode.commands.registerCommand("objectDependencies.refreshEntry", () => objTreeProvider.refresh());
   vscode.commands.registerCommand("objectDependencies.activateFile", async (arg1) => objTreeProvider.onElementClick(arg1));
 };
 
 export const deactivate = () => {
   destroyStatusBarItem();
+  // remove context items
+  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", undefined);
+  vscode.commands.executeCommand("setContext", "spin2.insert.mode", undefined);
+  objTreeProvider.destroyContextState();
 };
 
 // ----------------------------------------------------------------------------
@@ -341,10 +348,10 @@ function typeCommand(args: { text: string }) {
   if (editor != undefined) {
     editMode = getMode(editor);
   }
-  if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.OVERTYPE) {
+  if (editor != undefined && formatter.isEnabled() && editMode == eEditMode.OVERTYPE) {
     logFormatMessage("* OVERTYPE type");
     overtypeBeforeType(editor, args.text, false);
-  } else if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.ALIGN) {
+  } else if (editor != undefined && formatter.isEnabled() && editMode == eEditMode.ALIGN) {
     formatter.alignBeforeType(editor, args.text, false);
   } else {
     //logFormatMessage("* VSCode type");
@@ -355,7 +362,7 @@ function typeCommand(args: { text: string }) {
 function deleteLeftCommand() {
   const editor = vscode.window.activeTextEditor;
   logFormatMessage("* deleteLeft");
-  var bAlignEdit: boolean = editor != undefined && formatter.isEnbled();
+  var bAlignEdit: boolean = editor != undefined && formatter.isEnabled();
   if (editor != undefined) {
     const editMode = getMode(editor);
     if (editMode != eEditMode.ALIGN) {
@@ -374,7 +381,7 @@ function deleteLeftCommand() {
 function deleteRightCommand() {
   const editor = vscode.window.activeTextEditor;
   logFormatMessage("* deleteRight");
-  if (formatter.isEnbled() && editor && getMode(editor) == eEditMode.ALIGN) {
+  if (formatter.isEnabled() && editor && getMode(editor) == eEditMode.ALIGN) {
     formatter.alignDelete(editor, true);
     return null;
   } else {
@@ -392,7 +399,7 @@ function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
       logFormatMessage("* OVERTYPE paste");
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
-    } else if (formatter.isEnbled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
+    } else if (formatter.isEnabled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
       formatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {

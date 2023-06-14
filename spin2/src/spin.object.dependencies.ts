@@ -35,6 +35,13 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   private objTreeLog: any = undefined;
 
   private isDocument: boolean = false;
+  private canExpand: boolean = true;
+  private forceCollapse: boolean = false;
+  private forceExpand: boolean = false;
+
+  private countAll: number = 0;
+  private countExpanded: number = 0;
+  private countCollapsed: number = 0;
 
   // https://code.visualstudio.com/api/extension-guides/tree-view#view-container
   private _onDidChangeTreeData: vscode.EventEmitter<Dependency | undefined | null | void> = new vscode.EventEmitter<Dependency | undefined | null | void>();
@@ -44,9 +51,11 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
     this.objTreeDebugLogEnabled = formatDebugLogEnabled;
     // save output channel
     this.objTreeLog = outputChannel;
+
     // add subscriptions
     vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
-    //vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
+    // vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
+
     if (!this.rootPath) {
       this.logMessage("+ (DBG) ObjDep: no root path!");
     } else {
@@ -78,8 +87,9 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
     this.rootPath = path.dirname(this.topLevelFSpec);
     this.topLevelFName = path.basename(this.topLevelFSpec);
 
-    // cause our initial status to be exposed
-    this.onActiveEditorChanged();
+    // cause our initial statuses to be exposed
+    this.onActiveEditorChanged(); // sideeffect: showing tree-view
+    this.collapseAll(); // sideeffect: showing expandAll button
   }
 
   /**
@@ -97,29 +107,39 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
 
   getTreeItem(element: Dependency): vscode.TreeItem {
     this.logMessage(`+ (DBG) ObjDep: getTreeItem(${element.label})`);
+    this._dumpElement("GET-ITEM", element);
+    // mark what we've been seeing
+    this.countAll++;
+    if (element.collapsibleState == vscode.TreeItemCollapsibleState.Collapsed) {
+      this.countCollapsed++;
+    } else if (element.collapsibleState == vscode.TreeItemCollapsibleState.Expanded) {
+      this.countExpanded++;
+    }
+    // show ending count values
+    this.logMessage(`+ (DBG) ObjDep: ---- all=(${this.countAll}), expanded=(${this.countExpanded}), collapsed=(${this.countCollapsed})`);
     return element;
   }
 
   getChildren(element?: Dependency): Thenable<Dependency[]> {
     if (!this.rootPath) {
       vscode.window.showInformationMessage("No dependency in empty workspace");
-      let noDep = new Dependency("No object references in empty workspace", "", vscode.TreeItemCollapsibleState.None);
-      noDep.removeIcon(); // this is message, don't show icon
-      return Promise.resolve([noDep]);
+      let noDepMsg = new Dependency("No object references in empty workspace", "", vscode.TreeItemCollapsibleState.None);
+      noDepMsg.removeIcon(); // this is message, don't show icon
+      return Promise.resolve([noDepMsg]);
     }
 
     let subDeps: Dependency[] = [];
     if (element) {
-      this.logMessage(`+ (DBG) ObjDep: getChildren() element=[${element?.label}]`);
+      this.logMessage(`+ (DBG) ObjDep: getChildren() element=[${element?.label}] ---- ENTRY`);
       // get for underlying file
       const fileBasename = this._filenameWithSpinFileType(element.label);
       const fileSpec = path.join(this.rootPath, fileBasename);
       if (!this._pathExists(fileSpec)) {
         this.logMessage(`+ (DBG) ObjDep: getChildren() element=[${fileBasename}] has (???) deps - MISSING FILE`);
-        let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(0);
-        const subDep = new Dependency(element.label, element.descriptionString, topState);
-        subDep.setFileMissing();
-        subDeps.push(subDep);
+        let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(0); // message
+        const noFileDepMsg = new Dependency(element.label, element.descriptionString, topState);
+        noFileDepMsg.setFileMissing();
+        subDeps.push(noFileDepMsg);
       } else {
         const spinDeps = this._getDepsFromSpinFile(fileSpec);
         this.logMessage(`+ (DBG) ObjDep: getChildren() element=[${fileBasename}] has (${spinDeps.length}) deps`);
@@ -128,20 +148,26 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
           // huh, is this if really needed?
           if (this._pathExists(depFileSpec)) {
             const subSpinDeps = this._getDepsFromSpinFile(depFileSpec);
-            let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(subSpinDeps.length);
-            const subDep = new Dependency(depency.baseName, depency.knownAs, topState);
+            let expansionState: vscode.TreeItemCollapsibleState = this._stateForDependCount(subSpinDeps.length);
+            const subDep = new Dependency(depency.baseName, depency.knownAs, expansionState);
+            this._dumpElement("MAKE-CHILD", subDep);
             subDeps.push(subDep);
           } else {
-            let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(0);
-            const subDep = new Dependency(depency.baseName, depency.knownAs, topState);
-            subDep.setFileMissing();
-            subDeps.push(subDep);
+            let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(0); // message
+            const noFileDepMsg = new Dependency(depency.baseName, depency.knownAs, topState);
+            noFileDepMsg.setFileMissing();
+            subDeps.push(noFileDepMsg);
           }
         });
       }
+      this.logMessage(`+ (DBG) ObjDep: getChildren() element=[${element?.label}] ---- EXIT`);
     } else {
-      this.logMessage(`+ (DBG) ObjDep: getChildren() topLevel`);
+      this.logMessage(`+ (DBG) ObjDep: getChildren() topLevel ---- ENTRY`);
       // get for project top level file
+      this.countAll = 0;
+      this.countExpanded = 0;
+      this.countCollapsed = 0;
+
       let spinDeps = [];
       if (this.isDocument) {
         let textEditor = vscode.window.activeTextEditor;
@@ -152,20 +178,22 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
         spinDeps = this._getDepsFromSpinFile(this.topLevelFSpec);
       }
       this.logMessage(`+ (DBG) ObjDep: getChildren() topLevel has (${spinDeps.length}) deps`);
-      let topState: vscode.TreeItemCollapsibleState = this._stateForDependCount(spinDeps.length);
+      let expansionState: vscode.TreeItemCollapsibleState = this._stateForDependCount(spinDeps.length);
       if (spinDeps.length > 0) {
-        topState = vscode.TreeItemCollapsibleState.Expanded; // always leave top-level expanded?
+        expansionState = vscode.TreeItemCollapsibleState.Expanded; // always leave top-level expanded?
       }
       if (spinDeps.length > 0) {
-        let topDep = new Dependency(this.topLevelFName, "(top-file)", topState);
+        const topDep = new Dependency(this.topLevelFName, "(top-file)", expansionState);
+        this._dumpElement("MAKE-TOP", topDep);
         subDeps.push(topDep);
       } else {
         //vscode.window.showInformationMessage("Workspace has no package.json");
         let emptyMessage: string = "No object references found in `" + `${this.topLevelFName}` + "`";
-        let emptyDep = new Dependency(emptyMessage, "", vscode.TreeItemCollapsibleState.None);
-        emptyDep.removeIcon(); // this is message, don't show icon
-        subDeps.push(emptyDep);
+        let emptyDepMsg = new Dependency(emptyMessage, "", vscode.TreeItemCollapsibleState.None);
+        emptyDepMsg.removeIcon(); // this is message, don't show icon
+        subDeps.push(emptyDepMsg);
       }
+      this.logMessage(`+ (DBG) ObjDep: getChildren() topLevel ---- EXIT`);
     }
     return Promise.resolve(subDeps);
   }
@@ -181,10 +209,57 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   // getParent(element: Dependency): Thenable<Dependency | undefined | null> {
   //
   //}
+  expandAll(): void {
+    this.logMessage(`+ (DBG) ObjDep: expandAll()`);
+    this.forceCollapse = false;
+    this.forceExpand = true;
+    this.logMessage("+ (DBG) ObjDep: ---- fire DidChangeTreeData ----");
+    this._onDidChangeTreeData.fire();
+    vscode.commands.executeCommand("setContext", "spin2.objectDeps.expanded", true);
+    this.canExpand = false;
+  }
+
+  collapseAll(): void {
+    this.logMessage(`+ (DBG) ObjDep: collapseAll()`);
+    this.forceCollapse = true;
+    this.forceExpand = false;
+    this.logMessage("+ (DBG) ObjDep: ---- fire DidChangeTreeData ----");
+    this._onDidChangeTreeData.fire();
+    vscode.commands.executeCommand("setContext", "spin2.objectDeps.expanded", false);
+    this.canExpand = true;
+  }
 
   refresh(): void {
     this.logMessage("+ (DBG) ObjDep: refresh()");
+    this.logMessage("+ (DBG) ObjDep: ---- fire DidChangeTreeData ----");
     this._onDidChangeTreeData.fire();
+  }
+
+  destroyContextState(): void {
+    this.logMessage("+ (DBG) ObjDep: destroyContextState()");
+    vscode.commands.executeCommand("setContext", "spin2.objectDeps.expanded", undefined);
+    vscode.commands.executeCommand("setContext", "spin2.objectDeps.enabled", undefined);
+  }
+
+  private _elementStateString(collapsibleState: vscode.TreeItemCollapsibleState): string {
+    let diagString: string = "???";
+    if (collapsibleState == vscode.TreeItemCollapsibleState.None) {
+      diagString = "None";
+    } else if (collapsibleState == vscode.TreeItemCollapsibleState.Expanded) {
+      diagString = "Expanded";
+    } else if (collapsibleState == vscode.TreeItemCollapsibleState.Collapsed) {
+      diagString = "Collapsed";
+    }
+    return diagString;
+  }
+
+  private _dumpElement(srcId: string, element: Dependency | undefined): void {
+    if (element) {
+      const diagString: string = this._elementStateString(element.collapsibleState);
+      this.logMessage(`+ (DBG) ObjDep: --- ${srcId}: [${element?.label}], [${element?.descriptionString}], [${diagString}]`);
+    } else {
+      this.logMessage(`+ (DBG) ObjDep: --- ${srcId}: element=[undefined]`);
+    }
   }
 
   private async _showDocument(fileFSpec: string) {
@@ -261,8 +336,7 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
             this._onDidChangeTreeData.fire(node ? node.offset : void 0);
         }
     }
-}
-*/
+}*/
 
   private _getDepsFromDocument(activeEditDocument: vscode.TextDocument): SpinObject[] {
     this.logMessage(`+ (DBG) ObjDep: _getDepsFromDocument()`);
@@ -330,7 +404,7 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
       if (currState == eParseState.inObj && trimmedLine.includes(":")) {
         const spinObj = this._spinDepFromObjectLine(trimmedLine);
         if (spinObj) {
-          this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() basename=[${spinObj.baseName}] known as (${spinObj.knownAs})`);
+          this.logMessage(`+ (DBG) ObjDep: _getDepsFromDocument() basename=[${spinObj.baseName}] known as (${spinObj.knownAs})`);
           deps.push(spinObj);
         } else {
           this.logMessage(`+ (DBG) ObjDep: _getDepsFromDocument() BAD parse of OBJ line [${trimmedLine}]`);
@@ -345,7 +419,18 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
     // determine initial state of tree entry
     let interpState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None;
     if (nbrDeps > 0) {
-      interpState = vscode.TreeItemCollapsibleState.Collapsed;
+      if (this.forceCollapse) {
+        // user is closing the tree except for top level
+        interpState = vscode.TreeItemCollapsibleState.Collapsed;
+      } else if (this.forceExpand) {
+        // user is opening the entire tree !
+        interpState = vscode.TreeItemCollapsibleState.Expanded;
+      } else {
+        interpState = vscode.TreeItemCollapsibleState.Collapsed;
+      }
+      if (interpState == vscode.TreeItemCollapsibleState.Collapsed) {
+        this.canExpand = true;
+      }
     }
     return interpState;
   }
@@ -427,7 +512,7 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
             this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() basename=[${spinObj.baseName}] known as (${spinObj.knownAs})`);
             deps.push(spinObj);
           } else {
-            this.logMessage(`+ (DBG) ObjDep: _getDepsFromDocument() BAD parse of OBJ line [${trimmedLine}]`);
+            this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() BAD parse of OBJ line [${trimmedLine}]`);
           }
         }
       }
@@ -441,7 +526,7 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
   private _spinDepFromObjectLine(objLine: string): SpinObject | undefined {
     let desiredSpinObj = undefined;
     const lineParts = objLine.split(/[ \t\":]/).filter(Boolean);
-    this.logMessage(`+ (DBG) ObjDep: _spinDepFromObjectLine() lineParts=[${lineParts}]`);
+    //this.logMessage(`+ (DBG) ObjDep: _spinDepFromObjectLine() lineParts=[${lineParts}]`);
     if (lineParts.length >= 3) {
       const partIndex: number = lineParts[0].toLowerCase().includes("obj") ? 1 : 0;
       const objName = lineParts[partIndex + 0];
@@ -520,6 +605,7 @@ export class Dependency extends vscode.TreeItem {
   private basename: string = "";
   public readonly descriptionString: string = "";
   private fileMissing: boolean = false;
+  private topFile: boolean = false;
   // map our fields to underlying TreeItem
   constructor(public readonly label: string, private objName: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     // element label is  filebasename
@@ -531,9 +617,11 @@ export class Dependency extends vscode.TreeItem {
     this.basename = label.replace(".spin2", "");
     this.basename = this.basename.replace(".spin", "");
     if (objName.includes("top-file")) {
+      this.topFile = true;
       this.tooltip = `This is the project top-most file`;
     } else {
       this.tooltip = `An instance of ${this.basename} known as ${this.objName}`;
+      this.topFile = false;
     }
     //this.iconPath = { light: new vscode.ThemeIcon("file-code").id, dark: new vscode.ThemeIcon("file-code").id };
     //this.resourceUri = new vscode.ThemeIcon('file-code').
@@ -543,8 +631,24 @@ export class Dependency extends vscode.TreeItem {
     this.command = { command: "objectDependencies.activateFile", title: "open file", tooltip: "click to open file", arguments: [this] };
   }
 
+  isTopFile(): boolean {
+    return this.topFile;
+  }
+
   isFileMissing(): boolean {
     return this.fileMissing;
+  }
+
+  forceCollapse() {
+    if (this.collapsibleState == vscode.TreeItemCollapsibleState.Expanded) {
+      super.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    }
+  }
+
+  forceExpand() {
+    if (this.collapsibleState == vscode.TreeItemCollapsibleState.Collapsed) {
+      super.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    }
   }
 
   setFileMissing() {

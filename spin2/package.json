@@ -563,6 +563,16 @@
         "command": "objectDependencies.activateFile",
         "title": "Open File for this element",
         "icon": "$(open-preview)"
+      },
+      {
+        "command": "objectDependencies.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "objectDependencies.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(expand-all)"
       }
     ],
     "menus": {
@@ -570,7 +580,17 @@
         {
           "command": "objectDependencies.refreshEntry",
           "when": "view == objectDependencies",
-          "group": "navigation"
+          "group": "navigation@2"
+        },
+        {
+          "command": "objectDependencies.expandAll",
+          "when": "view == objectDependencies && spin2.objectDeps.expanded == false",
+          "group": "navigation@1"
+        },
+        {
+          "command": "objectDependencies.collapseAll",
+          "when": "view == objectDependencies && spin2.objectDeps.expanded == true",
+          "group": "navigation@1"
         }
       ]
     },
