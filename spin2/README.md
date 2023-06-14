@@ -41,9 +41,10 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 
 - Supports the settings `topLevel` value - when present, tree view is locked to top-level and included files
 - When no settings `topLevel` then tree view follows current active editor tab
-- Tree view supports expand all/collapse all
+- Tree view supports collapse all
 - When click on object the file is opened in an editor tab (or is activated, if already open)
 - The internal `name` or `name[quantity]` is shown for each object
+- If the reference file doesn't exist `FILE MISSING` will be shown as well
 
 ## Feature: Generate "public object interface" documentation
 
