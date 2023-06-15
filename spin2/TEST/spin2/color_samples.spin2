@@ -48,7 +48,7 @@ pasm_program    debug                               ' do a DEBUG at the start of
 
 :loop           add     pa,#1                       ' select "MAIN" in the debugger to single-step
                 sub     pb,#2                   wc
-    if_c        jmp     #:loop
+    if_c        jmp     #:loop                      ' GOOD! Spin1 local names should be RED!!!
                 jmp     #pasm_program
 
 testVariable   long  0[12]                          ' fill with some NOP's to make it easy to see the code above
