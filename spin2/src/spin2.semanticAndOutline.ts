@@ -551,6 +551,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings = new DocumentFindings(this.spin2DebugLogEnabled, this.spin2log);
   }
 
+  public docFindings(): DocumentFindings {
+    return this.semanticFindings;
+  }
+
   async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
     // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
     if (cancelToken) {

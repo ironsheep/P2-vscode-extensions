@@ -7,6 +7,21 @@ import * as vscode from "vscode";
 //  this file contains objects we use in tracking symbol use and declaration
 //
 
+export interface ITokenDescription {
+  found: boolean;
+  tokenRawInterp: string;
+  scope: string;
+  interpretation: string;
+  adjustedName: string;
+  token: RememberedToken | undefined;
+}
+
+export interface ITokenInterpretation {
+  scope: string;
+  interpretation: string;
+  name: string;
+}
+
 // ----------------------------------------------------------------------------
 //  This is the bask token type we report to VSCode
 //   CLASS RememberedToken
@@ -20,10 +35,10 @@ export class RememberedToken {
       this._modifiers = modifiers;
     }
   }
-  get type() {
+  get type(): string {
     return this._type;
   }
-  get modifiers() {
+  get modifiers(): string[] {
     return this._modifiers;
   }
 
@@ -81,9 +96,89 @@ export class DocumentFindings {
     this.localTokens.clear();
     this.localPasmTokensByMethodName.clear();
   }
+
   public isKnownToken(tokenName: string): boolean {
     const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) ? true : false;
     return foundStatus;
+  }
+
+  public getTokenWithDescription(tokenName: string): ITokenDescription {
+    let findings: ITokenDescription = {
+      found: false,
+      tokenRawInterp: "",
+      token: undefined,
+      scope: "",
+      interpretation: "",
+      adjustedName: tokenName,
+    };
+    if (this.isKnownToken(tokenName)) {
+      findings.found = true;
+      findings.token = this.getGlobalToken(tokenName);
+      if (findings.token) {
+        findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
+        findings.scope = "Global";
+      } else {
+        findings.token = this.getLocalToken(tokenName);
+        if (findings.token) {
+          findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
+          findings.scope = "Local";
+        } else {
+          // FIXME: what do we do for Method-Local tokens?
+          /*
+                if (!token) {
+                  findings.tokenRawInterp = "Local";
+                  let token = this.getLocalToken(tokenName);
+                }
+                */
+          findings.found = false;
+        }
+      }
+    }
+    if (findings.token) {
+      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName);
+      findings.interpretation = details.interpretation;
+      findings.scope = details.scope;
+      findings.adjustedName = details.name;
+    }
+    return findings;
+  }
+  private _interpretToken(token: RememberedToken, scope: string, name: string): ITokenInterpretation {
+    let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name };
+    desiredInterp.interpretation = "--type??";
+    if (token?.type == "variable" && token?.modifiers[0] == "readonly") {
+      desiredInterp.interpretation = "constant";
+    } else if (token?.type == "namespace") {
+      desiredInterp.scope = ""; // ignore for this (or move `object` here?)
+      desiredInterp.interpretation = "object-name";
+    } else if (token?.type == "variable") {
+      desiredInterp.interpretation = "variable";
+      if (token?.modifiers[0] == "local") {
+        //desiredInterp.interpretation = "method-local " + desiredInterp.interpretation;
+      } else if (token?.modifiers[0] == "instance") {
+        desiredInterp.interpretation = "instance " + desiredInterp.interpretation;
+      } else {
+        desiredInterp.interpretation = "class " + desiredInterp.interpretation;
+      }
+    } else if (token?.type == "label") {
+      desiredInterp.interpretation = "pasm label";
+    } else if (token?.type == "returnValue" && token?.modifiers.includes("local")) {
+      desiredInterp.scope = ""; // ignore for this (or method?)
+      desiredInterp.interpretation = "return value";
+    } else if (token?.type == "parameter" && token?.modifiers.includes("local")) {
+      desiredInterp.scope = ""; // ignore for this (or method?)
+      desiredInterp.interpretation = "parameter";
+    } else if (token?.type == "enumMember" && token?.modifiers.includes("readonly")) {
+      desiredInterp.interpretation = "enum value";
+    } else if (token?.type == "method") {
+      desiredInterp.name = name + "()";
+      desiredInterp.scope = ""; // ignore for this
+      if (token?.modifiers[0] == "static") {
+        desiredInterp.interpretation = "private method";
+      } else {
+        desiredInterp.interpretation = "public method";
+      }
+    }
+    return desiredInterp;
   }
 
   public isGlobalToken(tokenName: string): boolean {

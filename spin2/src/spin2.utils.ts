@@ -14,6 +14,21 @@ export enum eDebugDisplayType {
   ddtMidi,
 }
 
+export enum eBuiltInType {
+  Unknown = 0,
+  BIT_VARIABLE,
+  BIT_METHOD,
+  BIT_SYMBOL,
+}
+
+export interface IBuiltinDescription {
+  found: boolean;
+  type: eBuiltInType; // [variable|method]
+  category: string;
+  description: string;
+  signature: string;
+}
+
 export const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
   ["logic", eDebugDisplayType.ddtLogic],
   ["scope", eDebugDisplayType.ddtScope],
@@ -380,38 +395,96 @@ export class ParseUtils {
     return lineParts;
   }
 
+  // ----------------------------------------------------------------------------
+  // Built-in SPIN variables P2
+  //
+  private spinHubLocations: { [Identifier: string]: string } = {
+    clkmode: "Clock mode value",
+    clkfreq: "Clock frequency value",
+  };
+
+  private spinHubVariables: { [Identifier: string]: string } = {
+    varbase: "Object base pointer, @VARBASE is VAR base, used by method-pointer calls",
+  };
+
+  private spinCogRegisters: { [Identifier: string]: string } = {
+    pr0: "Spin2 <-> PASM communication",
+    pr1: "Spin2 <-> PASM communication",
+    pr2: "Spin2 <-> PASM communication",
+    pr3: "Spin2 <-> PASM communication",
+    pr4: "Spin2 <-> PASM communication",
+    pr5: "Spin2 <-> PASM communication",
+    pr6: "Spin2 <-> PASM communication",
+    pr7: "Spin2 <-> PASM communication",
+    ijmp1: "Interrupt JMP 1 (of 3)",
+    ijmp2: "Interrupt JMP 2 (of 3)",
+    ijmp3: "Interrupt JMP 3 (of 3)",
+    iret1: "Interrupt RET 1 (of 3)",
+    iret2: "Interrupt RET 2 (of 3)",
+    iret3: "Interrupt RET 3 (of 3)",
+    pa: "General pointer register A",
+    pb: "General pointer register B",
+    ptra: "Data pointer passed from COGINIT",
+    ptrb: "Code pointer passed from COGINIT",
+    dira: "Output enables for P31..P0",
+    dirb: "Output enables for P63..P32",
+    outa: "Output states for P31..P0",
+    outb: "Output states for P63..P32",
+    ina: "Input states from P31..P0",
+    inb: "Input states from P63..P32",
+  };
+
+  private _docTextForSpinBuiltInVariable(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    if (this.isSpinBuiltInVariable(name)) {
+      desiredDocText.found = true;
+      if (nameKey in this.spinHubLocations) {
+        desiredDocText.category = "Hub Location";
+        desiredDocText.description = this.spinHubLocations[nameKey];
+      } else if (nameKey in this.spinHubVariables) {
+        desiredDocText.category = "Hub Variable";
+        desiredDocText.description = this.spinHubVariables[nameKey];
+      } else if (nameKey in this.spinCogRegisters) {
+        desiredDocText.category = "Cog Register";
+        desiredDocText.description = this.spinCogRegisters[nameKey];
+      }
+    }
+    return desiredDocText;
+  }
+
   public isSpinBuiltInVariable(name: string): boolean {
-    const spinVariablesOfNote: string[] = [
-      "clkmode",
-      "clkfreq",
-      "varbase",
-      "pr0",
-      "pr1",
-      "pr2",
-      "pr3",
-      "pr4",
-      "pr5",
-      "pr6",
-      "pr7",
-      "ijmp1",
-      "ijmp2",
-      "ijmp3",
-      "iret1",
-      "iret2",
-      "iret3",
-      "pa",
-      "pb",
-      "ptra",
-      "ptrb",
-      "dira",
-      "dirb",
-      "outa",
-      "outb",
-      "ina",
-      "inb",
-    ];
-    let reservedStatus: boolean = spinVariablesOfNote.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this.spinHubLocations;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this.spinHubVariables;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this.spinCogRegisters;
+    }
     return reservedStatus;
+  }
+
+  public docTextForBuiltIn(name: string): IBuiltinDescription {
+    let desiredDocText: IBuiltinDescription = this._docTextForSpinBuiltInVariable(name);
+    if (desiredDocText.found) {
+      desiredDocText.type = eBuiltInType.BIT_VARIABLE;
+    } else {
+      desiredDocText = this._docTextForSpinBuiltInMethod(name);
+      // TOD: add more calls here
+      if (desiredDocText.found) {
+        desiredDocText.type = eBuiltInType.BIT_METHOD;
+      } else {
+        desiredDocText = this._docTextForCogAndNumericSymbols(name);
+        // TOD: add more calls here
+        if (desiredDocText.found) {
+          desiredDocText.type = eBuiltInType.BIT_SYMBOL;
+        } else {
+          // FIXME: do next assignment
+        }
+      }
+    }
+    return desiredDocText;
   }
 
   public isBuiltinReservedWord(name: string): boolean {
@@ -753,7 +826,20 @@ export class ParseUtils {
     return reservedStatus;
   }
 
+  public isBinaryOperator(name: string): boolean {
+    const binaryOperationsOfNote: string[] = ["sar", "ror", "rol", "rev", "zerox", "signx", "sca", "scas", "frac", "addbits", "addpins", "and", "or", "xor"];
+    const reservedStatus: boolean = binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
+  public isUnaryOperator(name: string): boolean {
+    const unaryOperationsOfNote: string[] = ["not", "abs", "fabs", "encod", "decod", "bmask", "ones", "sqrt", "fsqrt", "qlog", "qexp"];
+    const reservedStatus: boolean = unaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
   public isSpinReservedWord(name: string): boolean {
+    const nameKey: string = name.toLowerCase();
     const spinInstructionsOfNote: string[] = [
       "reg",
       "field",
@@ -784,45 +870,67 @@ export class ParseUtils {
       "other",
       "abort",
       "return",
-      "true",
-      "false",
-      "posx",
-      "negx",
-      "pi",
     ];
-    let reservedStatus: boolean = spinInstructionsOfNote.indexOf(name.toLowerCase()) != -1;
+    let reservedStatus: boolean = spinInstructionsOfNote.indexOf(nameKey) != -1;
     if (reservedStatus == false) {
       reservedStatus = this.isBinaryOperator(name);
     }
     if (reservedStatus == false) {
       reservedStatus = this.isUnaryOperator(name);
     }
+    if (reservedStatus == false) {
+      reservedStatus = nameKey in this.spinNumericSymbols;
+    }
     return reservedStatus;
   }
+
+  private spinNumericSymbols: { [Identifier: string]: string } = {
+    false: "%0000_0000, Same as 0",
+    true: "%FFFF_FFFF, Same as -1",
+    negx: "%8000_0000, Negative-extreme integer, -2_147_483_648",
+    posx: "%7FFF_FFFF, ositive-extreme integer, +2_147_483_647 ($7FFF_FFFF)",
+    pi: "%4049_0FDB, Single-precision floating-point value of Pi, 3.14159265",
+  };
+
+  private spinCoginitSymbols: { [Identifier: string]: string } = {
+    cogexec: '%00_0000, (default) Use "COGEXEC + CogNumber" to start a cog in cogexec mode',
+    hubexec: '%10_0000, Use "HUBEXEC + CogNumber" to start a cog in hubexec mode',
+    cogexec_new: "%01_0000, Starts an available cog in cogexec mode",
+    hubexec_new: "%11_0000, Starts an available cog in hubexec mode",
+    cogexec_new_pair: "%01_0001, Starts an available eve/odd pair of cogs in cogexec mode, useful for LUT sharing",
+    hubexec_new_pair: "%11_0001, Starts an available eve/odd pair of cogs in hubexec mode, useful for LUT sharing",
+  };
+
+  private spinCogexecSymbols: { [Identifier: string]: string } = {
+    newcog: "%01_0000, Starts an available cog",
+  };
+
+  private _docTextForCogAndNumericSymbols(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    if (this.isCoginitReservedSymbol(name)) {
+      desiredDocText.found = true;
+      if (nameKey in this.spinCoginitSymbols) {
+        desiredDocText.category = "Coginit";
+        desiredDocText.description = this.spinCoginitSymbols[nameKey];
+      } else if (nameKey in this.spinCogexecSymbols) {
+        desiredDocText.category = "Cogexec";
+        desiredDocText.description = this.spinCogexecSymbols[nameKey];
+      }
+    } else if (nameKey in this.spinNumericSymbols) {
+      desiredDocText.found = true;
+      desiredDocText.category = "Numeric";
+      desiredDocText.description = this.spinNumericSymbols[nameKey];
+    }
+    return desiredDocText;
+  }
+
   public isCoginitReservedSymbol(name: string): boolean {
-    const coginitSymbolOfNote: string[] = [
-      //
-      "newcog",
-      "cogexec",
-      "hubexec",
-      "cogexec_new",
-      "hubexec_new",
-      "cogexec_new_pair",
-      "hubexec_new_pair",
-    ];
-    const reservedStatus: boolean = coginitSymbolOfNote.indexOf(name.toLowerCase()) != -1;
-    return reservedStatus;
-  }
-
-  public isBinaryOperator(name: string): boolean {
-    const binaryOperationsOfNote: string[] = ["sar", "ror", "rol", "rev", "zerox", "signx", "sca", "scas", "frac", "addbits", "addpins", "and", "or", "xor"];
-    const reservedStatus: boolean = binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;
-    return reservedStatus;
-  }
-
-  public isUnaryOperator(name: string): boolean {
-    const unaryOperationsOfNote: string[] = ["not", "abs", "fabs", "encod", "decod", "bmask", "ones", "sqrt", "fsqrt", "qlog", "qexp"];
-    const reservedStatus: boolean = unaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this.spinCoginitSymbols;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this.spinCogexecSymbols;
+    }
     return reservedStatus;
   }
 
@@ -871,82 +979,180 @@ export class ParseUtils {
     return reservedStatus;
   }
 
+  // ----------------------------------------------------------------------------
+  // Built-in SPIN methods P2
+  //
+  private spinHubMethods: { [Identifier: string]: string[] } = {
+    hubset: ["HUBSET(Value)", "Execute HUBSET instruction using Value."],
+    clkset: ["CLKSET(NewCLKMODE, NewCLKFREQ)", "Safely establish new clock settings, updates CLKMODE and CLKFREQ."],
+    cogspin: ["COGSPIN(CogNum, Method({Pars}), StkAddr)", "Start Spin2 method in a cog, returns cog's ID if used as an expression element, -1 = no cog free."],
+    coginit: ["COGINIT(CogNum, PASMaddr, PTRAvalue)", "Start PASM code in a cog, returns cog's ID if used as an expression element, -1 = no cog free."],
+    cogstop: ["COGSTOP(CogNum)", "Stop cog CogNum."],
+    cogid: ["COGID() : CogNum", "Get this cog's ID."],
+    cogchk: ["COGCHK(CogNum) : Running", "Check if cog CogNum is running, returns -1 if running or 0 if not."],
+    locknew: ["LOCKNEW() : LockNum", "Check out a new LOCK from inventory, LockNum = 0..15 if successful or < 0 if no LOCK available."],
+    lockret: ["LOCKRET(LockNum)", "Return a certain LOCK to inventory."],
+    locktry: ["LOCKTRY(LockNum) : LockState", "Try to capture a certain LOCK, LockState = -1 if successful or 0 if another cog has captured the LOCK."],
+    lockrel: ["LOCKREL(LockNum)", "Release a certain LOCK."],
+    lockchk: ["LOCKCHK(LockNum) : LockState", "Check a certain LOCK's state, LockState[31] = captured, LockState[3:0] = current or last owner cog."],
+    cogatn: ["COGATN(CogMask)", "Strobe ATN input(s) of cog(s) according to 16-bit CogMask."],
+    pollatn: ["POLLATN() : AtnFlag", "Check if this cog has received an ATN strobe, AtnFlag = -1 if ATN strobed or 0 if not strobed."],
+    waitatn: ["WAITATN()", "Wait for this cog to receive an ATN strobe."],
+  };
+
+  private spinPinMethods: { [Identifier: string]: string[] } = {
+    // key: [ signature, description ]
+    pinw: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
+    pinwrite: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
+    pinl: ["PINL(PinField) | PINLOW(PinField)", "Drive PinField pin(s) low."],
+    pinlow: ["PINL(PinField) | PINLOW(PinField)", "Drive PinField pin(s) low."],
+    pinh: ["PINH(PinField) | PINHIGH(PinField)", "Drive PinField pin(s) high."],
+    pinhigh: ["PINH(PinField) | PINHIGH(PinField)", "Drive PinField pin(s) high."],
+    pint: ["PINT(PinField) | PINTOGGLE(PinField)", "Drive and toggle PinField pin(s)."],
+    pintoggle: ["PINT(PinField) | PINTOGGLE(PinField)", "Drive and toggle PinField pin(s)."],
+    pinf: ["PINF(PinField) | PINFLOAT(PinField)", "Float PinField pin(s)."],
+    pinfloat: ["PINF(PinField) | PINFLOAT(PinField)", "Float PinField pin(s)."],
+    pinstart: ["PINSTART(PinField, Mode, Xval, Yval)", "Start PinField smart pin(s): DIR=0, then WRPIN=Mode, WXPIN=Xval, WYPIN=Yval, then DIR=1."],
+    pinclear: ["PINCLEAR(PinField)", "Clear PinField smart pin(s): DIR=0, then WRPIN=0."],
+    wrpin: ["WRPIN(PinField, Data)", "Write 'mode' register(s) of PinField smart pin(s) with Data."],
+    wxpin: ["WXPIN(PinField, Data)", "Write 'X' register(s) of PinField smart pin(s) with Data."],
+    wypin: ["WYPIN(PinField, Data)", "Write 'Y' register(s) of PinField smart pin(s) with Data."],
+    akpin: ["AKPIN(PinField)", "Acknowledge PinField smart pin(s)."],
+    rdpin: ["RDPIN(Pin) : Zval", "Read Pin smart pin and acknowledge, Zval[31] = C flag from RDPIN, other bits are RDPIN data."],
+    rqpin: ["RQPIN(Pin) : Zval", "Read Pin smart pin without acknowledge, Zval[31] = C flag from RQPIN, other bits are RQPIN data."],
+  };
+
+  private spinTimingMethods: { [Identifier: string]: string[] } = {
+    getct: ["GETCT() : Count", "Get 32-bit system counter."],
+    pollct: ["POLLCT(Tick) : Past", "Check if system counter has gone past 'Tick', returns -1 if past or 0 if not past."],
+    waitct: ["WAITCT(Tick)", "Wait for system counter to get past 'Tick'."],
+    waitus: ["WAITUS(Microseconds)", "Wait Microseconds, uses CLKFREQ, duration must not exceed $8000_0000 clocks."],
+    waitms: ["WAITMS(Milliseconds)", "Wait Milliseconds, uses CLKFREQ, duration must not exceed $8000_0000 clocks."],
+    getsec: ["GETSEC() : Seconds", "Get seconds since booting, uses 64-bit system counter and CLKFREQ, rolls over every 136 years."],
+    getms: ["GETMS() : Milliseconds", "Get milliseconds since booting, uses 64-bit system counter and CLKFREQ, rolls over every 49.7 days."],
+  };
+
+  private pasmInterfaceMethods: { [Identifier: string]: string[] } = {
+    call: ["CALL(RegisterOrHubAddr)", "CALL PASM code at Addr, PASM code should avoid registers $130..$1D7 and LUT."],
+    regexec: ["REGEXEC(HubAddr)", "Load a self-defined chunk of PASM code at HubAddr into registers and CALL it. See REGEXEC description."],
+    regload: ["REGLOAD(HubAddr)", "Load a self-defined chunk of PASM code or data at HubAddr into registers. See REGLOAD description."],
+  };
+
+  private spinMathMethods: { [Identifier: string]: string[] } = {
+    rotxy: ["ROTXY(x, y, angle32bit) : rotx, roty", "Rotate (x,y) by angle32bit and return rotated (x,y)."],
+    polxy: ["POLXY(length, angle32bit) : x, y", "Convert (length,angle32bit) to (x,y)."],
+    xypol: ["XYPOL(x, y) : length, angle32bit", "Convert (x,y) to (length,angle32bit)."],
+    qsin: ["QSIN(length, angle, twopi) : y", "Rotate (length,0) by (angle / twopi) * 2Pi and return y. Use 0 for twopi = $1_0000_0000. Twopi is unsigned."],
+    qcos: ["QCOS(length, angle, twopi) : x", "Rotate (length,0) by (angle / twopi) * 2Pi and return x. Use 0 for twopi = $1_0000_0000. Twopi is unsigned."],
+    muldiv64: ["MULDIV64(mult1,mult2,divisor) : quotient", "Divide the 64-bit product of 'mult1' and 'mult2' by 'divisor', return quotient (unsigned operation)."],
+    getrnd: ["GETRND() : rnd", "Get random long (from xoroshiro128** PRNG, seeded on boot with thermal noise from ADC)."],
+    nan: ["NAN(float) : NotANumber", "Determine if a floating-point value is not a number, returns true (-1) or false (0)."],
+  };
+
+  private spinMemoryMethods: { [Identifier: string]: string[] } = {
+    getregs: ["GETREGS(HubAddr, CogAddr, Count)", "Move Count registers at CogAddr to longs at HubAddr."],
+    setregs: ["SETREGS(HubAddr, CogAddr, Count)", "Move Count longs at HubAddr to registers at CogAddr."],
+    bytemove: ["BYTEMOVE(Destination, Source, Count)", "Move Count bytes from Source to Destination."],
+    wordmove: ["WORDMOVE(Destination, Source, Count)", "Move Count words from Source to Destination."],
+    longmove: ["LONGMOVE(Destination, Source, Count)", "Move Count longs from Source to Destination."],
+    bytefill: ["BYTEFILL(Destination, Value, Count)", "Fill Count bytes starting at Destination with Value."],
+    wordfill: ["WORDFILL(Destination, Value, Count)", "Fill Count words starting at Destination with Value."],
+    longfill: ["LONGFILL(Destination, Value, Count)", "Fill Count longs starting at Destination with Value."],
+  };
+
+  private spinStringMethods: { [Identifier: string]: string[] } = {
+    strsize: ["STRSIZE(Addr) : Size", "Count bytes in zero-terminated string at Addr and return string size, not including the zero."],
+    strcomp: ["STRCOMP(AddrA,AddrB) : Match", "Compare zero-terminated strings at AddrA and AddrB, return -1 if match or 0 if mismatch."],
+    strcopy: [
+      "STRCOPY(Destination, Source, Max)",
+      "Copy a zero-terminated string of up to Max characters from Source to Destination. The copied string will occupy up to Max+1 bytes, including the zero terminator.",
+    ],
+    string: ['STRING("Text",13) : StringAddress', "Compose a zero-terminated string (quoted characters and values 1..255 allowed), return address of string."],
+    getcrc: ["GETCRC(BytePtr, Poly, Count) : CRC", "Compute a CRC of Count bytes starting at BytePtr using a custom polynomial of up to 32 bits."],
+  };
+
+  private spinIndexValueMethods: { [Identifier: string]: string[] } = {
+    lookup: ["LOOKUP(Index: v1, v2..v3, etc) : Value", "Lookup value (values and ranges allowed) using 1-based index, return value (0 if index out of range)."],
+    lookupz: ["LOOKUPZ(Index: v1, v2..v3, etc) : Value", "Lookup value (values and ranges allowed) using 0-based index, return value (0 if index out of range)."],
+    lookdown: ["LOOKDOWN(Value: v1, v2..v3, etc) : Index", "Determine 1-based index of matching value (values and ranges allowed), return index (0 if no match)."],
+    lookdownz: ["LOOKDOWNZ(Value: v1, v2..v3, etc) : Index", "Determine 0-based index of matching value (values and ranges allowed), return index (0 if no match)."],
+  };
+
   public isSpinBuiltinMethod(name: string): boolean {
-    const spinMethodNames: string[] = [
-      "akpin",
-      "bytefill",
-      "bytemove",
-      "call",
-      "clkset",
-      "cogatn",
-      "cogchk",
-      "cogid",
-      "coginit",
-      "cogspin",
-      "cogstop",
-      "getct",
-      "getcrc",
-      "getregs",
-      "getrnd",
-      "getsec",
-      "getms",
-      "hubset",
-      "lockchk",
-      "locknew",
-      "lockrel",
-      "lockret",
-      "locktry",
-      "longfill",
-      "longmove",
-      "lookdown",
-      "lookdownz",
-      "lookup",
-      "lookupz",
-      "muldiv64",
-      "pinclear",
-      "pinf",
-      "pinfloat",
-      "pinh",
-      "pinhigh",
-      "pinl",
-      "pinlow",
-      "pinr",
-      "pinread",
-      "pinstart",
-      "pint",
-      "pintoggle",
-      "pinw",
-      "pinwrite",
-      "pollatn",
-      "pollct",
-      "polxy",
-      "rdpin",
-      "recv",
-      "regexec",
-      "regload",
-      "rotxy",
-      "rqpin",
-      "send",
-      "setregs",
-      "strcomp",
-      "strcopy",
-      "string",
-      "strsize",
-      "waitatn",
-      "waitct",
-      "waitms",
-      "waitus",
-      "wordfill",
-      "wordmove",
-      "wrpin",
-      "wxpin",
-      "wypin",
-      "xypol",
-      "qsin",
-      "qcos",
-    ];
-    const reservedStatus: boolean = spinMethodNames.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this.spinHubMethods;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this.spinPinMethods;
+      if (!reservedStatus) {
+        reservedStatus = nameKey in this.spinTimingMethods;
+        if (!reservedStatus) {
+          reservedStatus = nameKey in this.pasmInterfaceMethods;
+          if (!reservedStatus) {
+            reservedStatus = nameKey in this.spinMathMethods;
+            if (!reservedStatus) {
+              reservedStatus = nameKey in this.spinMemoryMethods;
+              if (!reservedStatus) {
+                reservedStatus = nameKey in this.spinStringMethods;
+                if (!reservedStatus) {
+                  reservedStatus = nameKey in this.spinIndexValueMethods;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     return reservedStatus;
+  }
+
+  private _docTextForSpinBuiltInMethod(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    if (this.isSpinBuiltinMethod(name)) {
+      desiredDocText.found = true;
+      if (nameKey in this.spinHubMethods) {
+        desiredDocText.category = "Hub Method";
+        const protoWDescr: string[] = this.spinHubMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.spinPinMethods) {
+        desiredDocText.category = "Pin Method";
+        const protoWDescr: string[] = this.spinPinMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.spinTimingMethods) {
+        desiredDocText.category = "Timing Method";
+        const protoWDescr: string[] = this.spinTimingMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.pasmInterfaceMethods) {
+        desiredDocText.category = "Pasm Interface Method";
+        const protoWDescr: string[] = this.pasmInterfaceMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.spinMathMethods) {
+        desiredDocText.category = "Math Method";
+        const protoWDescr: string[] = this.spinMathMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.spinMemoryMethods) {
+        desiredDocText.category = "Memory Method";
+        const protoWDescr: string[] = this.spinMemoryMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.spinStringMethods) {
+        desiredDocText.category = "String Method";
+        const protoWDescr: string[] = this.spinStringMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      } else if (nameKey in this.spinIndexValueMethods) {
+        desiredDocText.category = "Hub Method";
+        const protoWDescr: string[] = this.spinIndexValueMethods[nameKey];
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1];
+      }
+    }
+    return desiredDocText;
   }
 
   public isFlexspinPreprocessorDirective(name: string): boolean {

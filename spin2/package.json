@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -588,12 +588,12 @@
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
       },
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
