@@ -30,32 +30,40 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 
 (Initial Tabbing Feature contributed by **Jay B. Harlow**)
 
-- Unique tab stops per section: CON, OBJ, VAR, DAT, PUB, PRI
 - Global default has tabstops as defined by Propeller Tool v2.7.0 except +3 more tabstops for PUB, PRI (at 12, 14, and 16)
 - Uses DAT tabbing for in-line pasm (pasm within PUB, PRI blocks)
 - Place cursor on line and press `TAB` or `Shift-TAB` to indent or outdent the text
 - Place cursor on line and press `Ctrl+Alt+Tab` to generate tab location comment
-- Supports the InsertMode operations à la Propeller Tool (*INSERT / OVERTYPE / ALIGN modes*) see [Insert Mode for Spin/Spin2](https://github.com/ironsheep/P2-vscode-extensions/blob/main/InsertMode.md) for more detailed info on this InsertMode feature.
-- **Tab Sets** You can choose between `Propeller Tool`(*Default*), `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
+- Supports the InsertMode operations à la Propeller Tool (_INSERT / OVERTYPE / ALIGN modes_) see [Insert Mode for Spin/Spin2](https://github.com/ironsheep/P2-vscode-extensions/blob/main/InsertMode.md) for more detailed info on this InsertMode feature.
+- **Tab Sets** You can choose between `Propeller Tool`(_Default_), `IronSheep`, and `User1` (_adjust in settings to make your favorite set_)
+
+## Feature: Object Hierarchy view à la Propeller Tool
+
+- Supports the settings `topLevel` value - when present, tree view is locked to top-level and included files
+- When no settings `topLevel` then tree view follows current active editor tab
+- Tree view supports collapse all
+- When click on object the file is opened in an editor tab (or is activated, if already open)
+- The internal `name` or `name[quantity]` is shown for each object
+- If the reference file doesn't exist `FILE MISSING` will be shown as well
 
 ## Feature: Generate "public object interface" documentation
 
-Upon pressing Ctrl+Alt+d (control alt document) the editor will now generate a `{filename}.txt` document file (for your `{filename}.spin2` or `{filename}.spin` file) and open it up to the right side of your editor window.  The generator extracts all PUB methods and their doc-comments along with file-top and file-bottom doc-comments.
+Upon pressing Ctrl+Alt+d (control alt document) the editor will now generate a `{filename}.txt` document file (for your `{filename}.spin2` or `{filename}.spin` file) and open it up to the right side of your editor window. The generator extracts all PUB methods and their doc-comments along with file-top and file-bottom doc-comments.
 
-This document is nearly the same as that produced by **Propeller Tool** except the compiler is not being run so the document does not contain information about the size of compiled object. 
+This document is nearly the same as that produced by **Propeller Tool** except the compiler is not being run so the document does not contain information about the size of compiled object.
 
 ```
 Program:        4,672 bytes
 Variable:         348 bytes
 ```
 
-*The above information in not present in the VSCode generated documentation file.*
+_The above information in not present in the VSCode generated documentation file._
 
 ## Possible Conflicts with other VSCode Extensions
 
-**NOTE1:** *This extension now replaces the [Spin by Entomy](https://marketplace.visualstudio.com/items?itemName=Entomy.spin) vscode extension. While either can be used, this version provides more comprehensive Syntax highlighting (as the former has not been maintained) and this extension adds full Semantice Highlighting, Outlining and Tab support with InsertModes.* The `Spin` extension can be **uninistalled** with no loss of functionality.
+**NOTE1:** _This extension now replaces the [Spin by Entomy](https://marketplace.visualstudio.com/items?itemName=Entomy.spin) vscode extension. While either can be used, this version provides more comprehensive Syntax highlighting (as the former has not been maintained) and this extension adds full Semantice Highlighting, Outlining and Tab support with InsertModes._ The `Spin` extension can be **uninistalled** with no loss of functionality.
 
-**NOTE2:** *I'll be submitting pull requests to the Overtype extension maintainer to add code for avoiding interferrance with our .spin/.spin2 InsertMode feature but in the meantime please ensure that the [Overtype by Adma Maras](https://marketplace.visualstudio.com/items?itemName=adammaras.overtype) and/or [Overtype by DrMerfy](https://marketplace.visualstudio.com/items?itemName=DrMerfy.overtype) extensions are disabled or uninstalled as they can interfere with this extensions' behavior.*
+**NOTE2:** _I'll be submitting pull requests to the Overtype extension maintainer to add code for avoiding interferrance with our .spin/.spin2 InsertMode feature but in the meantime please ensure that the [Overtype by Adma Maras](https://marketplace.visualstudio.com/items?itemName=adammaras.overtype) and/or [Overtype by DrMerfy](https://marketplace.visualstudio.com/items?itemName=DrMerfy.overtype) extensions are disabled or uninstalled as they can interfere with this extensions' behavior._
 
 ## Known Issues
 
@@ -64,10 +72,10 @@ We are working on fixes to the following issues we've seen during our testing. H
 - We are still working through validating the P1 support against the full P1 obex - this is a work in progress
 - Some line comments are not properly colored
 - Occasionally [byte|word|long] storage types are not properly colored
-- Occasionally some pasm code escapes coloring.  We're trying to understand this.
+- Occasionally some pasm code escapes coloring. We're trying to understand this.
 - Ocassionally the syntax highlighting will just stop working for the final lines in a file. This appears to be a VSCode issue. But we are monitoring it.
 
-*These appear to be mostly syntax recognizer issues*
+_These appear to be mostly syntax recognizer issues_
 
 ## Reporting Issues
 

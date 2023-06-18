@@ -23,6 +23,7 @@ out/
 
 
 *-REF*
+*.REF*
 *-NEW*
 regex-workspace.txt
 alias.sh

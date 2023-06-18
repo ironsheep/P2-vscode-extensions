@@ -4,6 +4,7 @@
 import * as vscode from "vscode";
 //import { Z_UNKNOWN } from "zlib";
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
+import { DocumentFindings, RememberedToken } from "./spin.semantic.findings";
 import { ParseUtils } from "./spin1.utils";
 
 enum eParseState {
@@ -271,7 +272,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
             newGlobalLabel = newName;
             this._logMessage("  -- Oln GLBL gddcl newName=[" + newGlobalLabel + "]");
           }
-          //this._setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
+          //this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
         }
       }
     }
@@ -301,7 +302,7 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
         // org in first column is not label name, nor is if_ conditional
         newGlobalLabel = labelName;
         this._logMessage("  -- DAT Oln PASM GLBL newGlobalLabel=[" + newGlobalLabel + "]");
-        //this._setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
+        //this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
       }
     }
     return newGlobalLabel;
@@ -388,23 +389,6 @@ interface IParsedToken {
   ptTokenModifiers: string[];
 }
 
-class RememberedToken {
-  _type: string;
-  _modifiers: string[] = [];
-  constructor(type: string, modifiers: string[] | undefined) {
-    this._type = type;
-    if (modifiers != undefined) {
-      this._modifiers = modifiers;
-    }
-  }
-  get type() {
-    return this._type;
-  }
-  get modifiers() {
-    return this._modifiers;
-  }
-}
-
 interface IFilteredStrings {
   lineNoQuotes: string;
   lineParts: string[];
@@ -412,6 +396,36 @@ interface IFilteredStrings {
 
 export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
   private parseUtils = new ParseUtils();
+
+  private spin1log: any = undefined;
+  // adjust following true/false to show specific parsing debug
+  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private showSpinCode: boolean = true;
+  private showPreProc: boolean = true;
+  private showCON: boolean = true;
+  private showOBJ: boolean = true;
+  private showDAT: boolean = true;
+  private showVAR: boolean = true;
+  private showDEBUG: boolean = true;
+  private showPasmCode: boolean = true;
+  private showState: boolean = true;
+  private logTokenDiscover: boolean = true;
+
+  private semanticFindings: DocumentFindings;
+
+  public constructor() {
+    if (this.spin1DebugLogEnabled) {
+      if (this.spin1log === undefined) {
+        //Create output channel
+        this.spin1log = vscode.window.createOutputChannel("Spin1 Highlight DEBUG");
+        this._logMessage("Spin1 log started.");
+      } else {
+        this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+      }
+    }
+
+    this.semanticFindings = new DocumentFindings(this.spin1DebugLogEnabled, this.spin1log);
+  }
 
   async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
     // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
@@ -428,9 +442,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return builder.build();
   }
 
-  private globalTokens = new Map<string, RememberedToken>();
-  private localTokens = new Map<string, RememberedToken>();
-  private localPasmTokensByMethodName = new Map<string, Map<string, RememberedToken>>();
   private conEnumInProgress: boolean = false;
 
   private configuration = semanticConfiguration;
@@ -451,9 +462,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   }
 
   private _resetForNewDocument(): void {
-    this.globalTokens.clear();
-    this.localTokens.clear();
-    this.localPasmTokensByMethodName.clear();
+    this.semanticFindings.clear();
     this.conEnumInProgress = false;
     this.currentMethodName = "";
     if (reloadSemanticConfiguration()) {
@@ -482,16 +491,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let prePasmState: eParseState = currState;
 
     const tokenSet: IParsedToken[] = [];
-
-    if (this.spin1DebugLogEnabled) {
-      if (this.spin1log === undefined) {
-        //Create output channel
-        this.spin1log = vscode.window.createOutputChannel("Spin1 Highlight DEBUG");
-        this._logMessage("Spin1 log started.");
-      } else {
-        this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
-      }
-    }
 
     //
     // prepass to find PRI/PUB method, OBJ names, and VAR/DAT names
@@ -970,7 +969,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         // check a valid preprocessor line for a declaration
         if (symbolName != undefined && directive.toLowerCase() == "#define") {
           this._logPreProc("  -- new PreProc Symbol=[" + symbolName + "]");
-          this._setGlobalToken(symbolName, new RememberedToken("variable", ["readonly"]));
+          this.semanticFindings.setGlobalToken(symbolName, new RememberedToken("variable", ["readonly"]));
         }
       }
     }
@@ -1006,7 +1005,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
             this._logCON("  -- GLBL GetCONDecl newName=[" + newName + "]");
             // remember this object name so we can annotate a call to it
-            this._setGlobalToken(newName, new RememberedToken("variable", ["readonly"]));
+            this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["readonly"]));
           }
         } else {
           // recognize enum values getting initialized
@@ -1022,7 +1021,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
             if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/)) {
               this._logCON("  -- GLBL enumConstant=[" + enumConstant + "]");
-              this._setGlobalToken(enumConstant, new RememberedToken("enumMember", ["readonly"]));
+              this.semanticFindings.setGlobalToken(enumConstant, new RememberedToken("enumMember", ["readonly"]));
             }
           }
         }
@@ -1068,7 +1067,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
           }
           this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-          this._setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
+          this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
         }
       }
     }
@@ -1095,7 +1094,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           labelModifiers = labelName.startsWith(":") ? ["static"] : [];
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
-        this._setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
+        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
       }
     }
   }
@@ -1116,7 +1115,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const newName = lineParts[0];
       this._logOBJ("  -- GLBL GetOBJDecl newName=[" + newName + "]");
       // remember this object name so we can annotate a call to it
-      this._setGlobalToken(newName, new RememberedToken("namespace", []));
+      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []));
     }
   }
 
@@ -1154,7 +1153,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.currentMethodName = methodName; // notify of latest method name so we can track inLine PASM symbols
     // remember this method name so we can annotate a call to it
     const refModifiers: string[] = isPrivate ? ["static"] : [];
-    this._setGlobalToken(methodName, new RememberedToken("method", refModifiers));
+    this.semanticFindings.setGlobalToken(methodName, new RememberedToken("method", refModifiers));
+    // reset our list of local variables
+    this.semanticFindings.clearLocalPasmTokensForMethod(methodName);
   }
 
   private _getSPIN_PasmDeclaration(startingOffset: number, line: string): void {
@@ -1176,7 +1177,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         labelModifiers = labelName.startsWith(":") ? ["static"] : [];
       }
       this._logPASM("  -- Inline PASM labelName=[" + labelName + "(" + labelType + ")]");
-      this._setLocalPasmTokenForMethod(this.currentMethodName, labelName, new RememberedToken(labelType, labelModifiers));
+      this.semanticFindings.setLocalPasmTokenForMethod(this.currentMethodName, labelName, new RememberedToken(labelType, labelModifiers));
     }
   }
 
@@ -1208,7 +1209,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         const newName = nameSet[index]; // .replace(/[\[,]/, '');
         if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
           this._logVAR("  -- GLBL GetVarDecl newName=[" + newName + "]");
-          this._setGlobalToken(newName, new RememberedToken("variable", ["instance"]));
+          this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["instance"]));
         }
       }
     } else if (!hasGoodType && lineParts.length > 0) {
@@ -1216,7 +1217,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         const longVarName = lineParts[index];
         if (longVarName.substr(0, 1).match(/[a-zA-Z_]/)) {
           this._logVAR("  -- GLBL GetVarDecl newName=[" + longVarName + "]");
-          this._setGlobalToken(longVarName, new RememberedToken("variable", ["instance"]));
+          this.semanticFindings.setGlobalToken(longVarName, new RememberedToken("variable", ["instance"]));
         }
       }
     }
@@ -1252,13 +1253,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           const nameOffset = line.indexOf(symbolName, currentOffset);
           this._logPreProc("  -- GLBL symbolName=[" + symbolName + "]");
           let referenceDetails: RememberedToken | undefined = undefined;
-          if (this._isGlobalToken(symbolName)) {
-            referenceDetails = this._getGlobalToken(symbolName);
+          if (this.semanticFindings.isGlobalToken(symbolName)) {
+            referenceDetails = this.semanticFindings.getGlobalToken(symbolName);
             this._logPreProc("  --  FOUND preProc global " + this._rememberdTokenString(symbolName, referenceDetails));
           }
           if (referenceDetails != undefined) {
             // record a constant declaration!
-            const updatedModificationSet: string[] = directive.toLowerCase() == "#define" ? this._modifiersWith(referenceDetails.modifiers, "declaration") : referenceDetails.modifiers;
+            const updatedModificationSet: string[] = directive.toLowerCase() == "#define" ? referenceDetails.modifiersWith("declaration") : referenceDetails.modifiers;
             tokenSet.push({
               line: lineNumber,
               startCharacter: nameOffset,
@@ -1333,13 +1334,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           const nameOffset = line.indexOf(lhsConstantName, currentOffset);
           this._logCON("  -- GLBL lhsConstantName=[" + lhsConstantName + "]");
           let referenceDetails: RememberedToken | undefined = undefined;
-          if (this._isGlobalToken(lhsConstantName)) {
-            referenceDetails = this._getGlobalToken(lhsConstantName);
+          if (this.semanticFindings.isGlobalToken(lhsConstantName)) {
+            referenceDetails = this.semanticFindings.getGlobalToken(lhsConstantName);
             this._logCON("  --  FOUND rcdl lhs global " + this._rememberdTokenString(lhsConstantName, referenceDetails));
           }
           if (referenceDetails != undefined) {
             // this is a constant declaration!
-            const updatedModificationSet: string[] = this._modifiersWith(referenceDetails.modifiers, "declaration");
+            const updatedModificationSet: string[] = referenceDetails.modifiersWith("declaration");
             tokenSet.push({
               line: lineNumber,
               startCharacter: nameOffset,
@@ -1389,8 +1390,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               let referenceDetails: RememberedToken | undefined = undefined;
               const nameOffset = line.indexOf(searchString, currentOffset);
               this._logCON("  -- namePart=[" + namePart + "](" + nameOffset + ")");
-              if (this._isGlobalToken(namePart)) {
-                referenceDetails = this._getGlobalToken(namePart);
+              if (this.semanticFindings.isGlobalToken(namePart)) {
+                referenceDetails = this.semanticFindings.getGlobalToken(namePart);
                 this._logCON("  --  FOUND rcds rhs global " + this._rememberdTokenString(namePart, referenceDetails));
               }
               if (referenceDetails != undefined) {
@@ -1517,8 +1518,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         let newName = lineParts[0];
         const nameOffset: number = line.indexOf(newName, currentOffset);
         let referenceDetails: RememberedToken | undefined = undefined;
-        if (this._isGlobalToken(newName)) {
-          referenceDetails = this._getGlobalToken(newName);
+        if (this.semanticFindings.isGlobalToken(newName)) {
+          referenceDetails = this.semanticFindings.getGlobalToken(newName);
           this._logMessage("  --  FOUND rddl global name=[" + newName + "]");
         }
         if (referenceDetails != undefined) {
@@ -1616,13 +1617,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
             currentOffset = line.indexOf(searchString, currentOffset);
             let referenceDetails: RememberedToken | undefined = undefined;
-            if (allowLocal && this._isLocalToken(namePart)) {
-              referenceDetails = this._getLocalToken(namePart);
+            if (allowLocal && this.semanticFindings.isLocalToken(namePart)) {
+              referenceDetails = this.semanticFindings.getLocalToken(namePart);
               if (showDebug) {
                 this._logMessage("  --  FOUND local name=[" + namePart + "]");
               }
-            } else if (this._isGlobalToken(namePart)) {
-              referenceDetails = this._getGlobalToken(namePart);
+            } else if (this.semanticFindings.isGlobalToken(namePart)) {
+              referenceDetails = this.semanticFindings.getGlobalToken(namePart);
               if (showDebug) {
                 this._logMessage("  --  FOUND global name=[" + namePart + "]");
               }
@@ -1701,13 +1702,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const labelName: string = lineParts[0];
       this._logPASM("  -- labelName=[" + labelName + "]");
       let referenceDetails: RememberedToken | undefined = undefined;
-      if (this._isGlobalToken(labelName)) {
-        referenceDetails = this._getGlobalToken(labelName);
+      if (this.semanticFindings.isGlobalToken(labelName)) {
+        referenceDetails = this.semanticFindings.getGlobalToken(labelName);
         this._logPASM("  --  FOUND global name=[" + labelName + "]");
       }
       if (referenceDetails != undefined) {
         const nameOffset = line.indexOf(labelName, currentOffset);
-        const updatedModificationSet: string[] = this._modifiersWith(referenceDetails.modifiers, "declaration");
+        const updatedModificationSet: string[] = referenceDetails.modifiersWith("declaration");
         this._logPASM("  --  DAT Pasm " + referenceDetails.type + "=[" + labelName + "](" + (nameOffset + 1) + ")");
         tokenSet.push({
           line: lineNumber,
@@ -1794,8 +1795,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               nameOffset = line.indexOf(searchString, currentOffset);
               this._logPASM("  --  DAT Pasm searchString=[" + searchString + "](" + (nameOffset + 1) + ")");
               let referenceDetails: RememberedToken | undefined = undefined;
-              if (this._isGlobalToken(namePart)) {
-                referenceDetails = this._getGlobalToken(namePart);
+              if (this.semanticFindings.isGlobalToken(namePart)) {
+                referenceDetails = this.semanticFindings.getGlobalToken(namePart);
                 this._logPASM("  --  FOUND global name=[" + namePart + "]");
               }
               if (referenceDetails != undefined) {
@@ -1878,8 +1879,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private _reportPUB_PRI_Signature(lineNumber: number, startingOffset: number, line: string): IParsedToken[] {
     const tokenSet: IParsedToken[] = [];
     const methodType: string = line.substr(0, 3).toUpperCase();
-    // reset our list of local variables
-    this.localTokens.clear();
     const isPrivate = methodType.indexOf("PRI") != -1;
     //skip Past Whitespace
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
@@ -1950,7 +1949,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             ptTokenModifiers: ["declaration", "readonly", "local"],
           });
           // remember so we can ID references
-          this._setLocalToken(paramName, new RememberedToken("parameter", ["readonly", "local"])); // TOKEN SET in _report()
+          this.semanticFindings.setLocalToken(paramName, new RememberedToken("parameter", ["readonly", "local"])); // TOKEN SET in _report()
           currentOffset += paramName.length + 1;
         }
       }
@@ -1992,7 +1991,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           ptTokenModifiers: ["declaration", "local"],
         });
         // remember so we can ID references
-        this._setLocalToken(returnValueName, new RememberedToken("returnValue", ["local"])); // TOKEN SET in _report()
+        this.semanticFindings.setLocalToken(returnValueName, new RememberedToken("returnValue", ["local"])); // TOKEN SET in _report()
         currentOffset += returnValueName.length + 1; // +1 for trailing comma
       }
     }
@@ -2039,11 +2038,11 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               const nameOffset = line.indexOf(namedIndexPart, currentOffset);
               if (namedIndexPart.substr(0, 1).match(/[a-zA-Z_]/)) {
                 let referenceDetails: RememberedToken | undefined = undefined;
-                if (this._isLocalToken(namedIndexPart)) {
-                  referenceDetails = this._getLocalToken(namedIndexPart);
+                if (this.semanticFindings.isLocalToken(namedIndexPart)) {
+                  referenceDetails = this.semanticFindings.getLocalToken(namedIndexPart);
                   this._logSPIN("  --  FOUND local name=[" + namedIndexPart + "]");
-                } else if (this._isGlobalToken(namedIndexPart)) {
-                  referenceDetails = this._getGlobalToken(namedIndexPart);
+                } else if (this.semanticFindings.isGlobalToken(namedIndexPart)) {
+                  referenceDetails = this.semanticFindings.getGlobalToken(namedIndexPart);
                   this._logSPIN("  --  FOUND global name=[" + namedIndexPart + "]");
                 }
                 if (referenceDetails != undefined) {
@@ -2083,7 +2082,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               ptTokenModifiers: ["declaration", "local"],
             });
             // remember so we can ID references
-            this._setLocalToken(localName, new RememberedToken("variable", ["local"])); // TOKEN SET in _report()
+            this.semanticFindings.setLocalToken(localName, new RememberedToken("variable", ["local"])); // TOKEN SET in _report()
           } else {
             // have modifier!
             if (this.parseUtils.isStorageType(localName)) {
@@ -2196,15 +2195,15 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   });
                 } else {
                   let referenceDetails: RememberedToken | undefined = undefined;
-                  if (this._isLocalToken(variableNamePart)) {
-                    referenceDetails = this._getLocalToken(variableNamePart);
+                  if (this.semanticFindings.isLocalToken(variableNamePart)) {
+                    referenceDetails = this.semanticFindings.getLocalToken(variableNamePart);
                     this._logSPIN("  --  FOUND local name=[" + variableNamePart + "]");
-                  } else if (this._isGlobalToken(variableNamePart)) {
-                    referenceDetails = this._getGlobalToken(variableNamePart);
+                  } else if (this.semanticFindings.isGlobalToken(variableNamePart)) {
+                    referenceDetails = this.semanticFindings.getGlobalToken(variableNamePart);
                     this._logSPIN("  --  FOUND global name=[" + variableNamePart + "]");
                   }
                   if (referenceDetails != undefined) {
-                    const modificationArray: string[] = this._modifiersWith(referenceDetails.modifiers, "modification");
+                    const modificationArray: string[] = referenceDetails.modifiersWith("modification");
                     this._logSPIN("  --  SPIN variableName=[" + variableNamePart + "](" + (nameOffset + 1) + ")");
                     tokenSet.push({
                       line: lineNumber,
@@ -2257,15 +2256,15 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 }
               }
               let referenceDetails: RememberedToken | undefined = undefined;
-              if (this._isLocalToken(cleanedVariableName)) {
-                referenceDetails = this._getLocalToken(cleanedVariableName);
+              if (this.semanticFindings.isLocalToken(cleanedVariableName)) {
+                referenceDetails = this.semanticFindings.getLocalToken(cleanedVariableName);
                 this._logSPIN("  --  FOUND local name=[" + cleanedVariableName + "]");
-              } else if (this._isGlobalToken(cleanedVariableName)) {
-                referenceDetails = this._getGlobalToken(cleanedVariableName);
+              } else if (this.semanticFindings.isGlobalToken(cleanedVariableName)) {
+                referenceDetails = this.semanticFindings.getGlobalToken(cleanedVariableName);
                 this._logSPIN("  --  FOUND globel name=[" + cleanedVariableName + "]");
               }
               if (referenceDetails != undefined) {
-                const modificationArray: string[] = this._modifiersWith(referenceDetails.modifiers, "modification");
+                const modificationArray: string[] = referenceDetails.modifiersWith("modification");
                 this._logSPIN("  -- spin: simple variableName=[" + cleanedVariableName + "](" + (nameOffset + 1) + ")");
                 tokenSet.push({
                   line: lineNumber,
@@ -2366,11 +2365,11 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           this._logSPIN("  --  SPIN RHS   searchString=[" + searchString + "], namePart=[" + namePart + "]");
           this._logSPIN("  --  SPIN RHS    nameOffset=(" + nameOffset + "), currNonStringOffset=(" + currNonStringOffset + "), currentOffset=(" + currentOffset + ")");
           let referenceDetails: RememberedToken | undefined = undefined;
-          if (this._isLocalToken(namePart)) {
-            referenceDetails = this._getLocalToken(namePart);
+          if (this.semanticFindings.isLocalToken(namePart)) {
+            referenceDetails = this.semanticFindings.getLocalToken(namePart);
             this._logSPIN("  --  FOUND local name=[" + namePart + "]");
-          } else if (this._isGlobalToken(namePart)) {
-            referenceDetails = this._getGlobalToken(namePart);
+          } else if (this.semanticFindings.isGlobalToken(namePart)) {
+            referenceDetails = this.semanticFindings.getGlobalToken(namePart);
             this._logSPIN("  --  FOUND global name=[" + namePart + "]");
           }
           if (referenceDetails != undefined) {
@@ -2584,14 +2583,14 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + refChar + possibleNameSet[1];
                 const nameOffset = line.indexOf(searchString, currentOffset);
                 let referenceDetails: RememberedToken | undefined = undefined;
-                if (this._isLocalPasmTokenForMethod(this.currentMethodName, namePart)) {
-                  referenceDetails = this._getLocalPasmTokenForMethod(this.currentMethodName, namePart);
+                if (this.semanticFindings.hasLocalPasmTokenForMethod(this.currentMethodName, namePart)) {
+                  referenceDetails = this.semanticFindings.getLocalPasmTokenForMethod(this.currentMethodName, namePart);
                   this._logPASM("  --  FOUND local PASM name=[" + namePart + "]");
-                } else if (this._isLocalToken(namePart)) {
-                  referenceDetails = this._getLocalToken(namePart);
+                } else if (this.semanticFindings.isLocalToken(namePart)) {
+                  referenceDetails = this.semanticFindings.getLocalToken(namePart);
                   this._logPASM("  --  FOUND local name=[" + namePart + "]");
-                } else if (this._isGlobalToken(namePart)) {
-                  referenceDetails = this._getGlobalToken(namePart);
+                } else if (this.semanticFindings.isGlobalToken(namePart)) {
+                  referenceDetails = this.semanticFindings.getGlobalToken(namePart);
                   this._logPASM("  --  FOUND global name=[" + namePart + "]");
                 }
                 if (referenceDetails != undefined) {
@@ -2653,7 +2652,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         // flag non-opcode or illegal directive
         const nameOrDirective: string = lineParts[0];
         // if this symbol is NOT a global token then it could be bad!
-        if (!this._isKnownToken(nameOrDirective)) {
+        if (!this.semanticFindings.isKnownToken(nameOrDirective)) {
           if (this.parseUtils.isIllegalInlinePasmDirective(nameOrDirective) || !this.parseUtils.isPasmInstruction(nameOrDirective)) {
             this._logPASM("  --  SPIN inline-Pasm MISSING name=[" + nameOrDirective + "]");
             const nameOffset = line.indexOf(nameOrDirective, currentOffset);
@@ -2723,8 +2722,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
             for (let index = 0; index < possibleNameSet.length; index++) {
               const nameReference = possibleNameSet[index];
-              if (this._isGlobalToken(nameReference)) {
-                const referenceDetails: RememberedToken | undefined = this._getGlobalToken(nameReference);
+              if (this.semanticFindings.isGlobalToken(nameReference)) {
+                const referenceDetails: RememberedToken | undefined = this.semanticFindings.getGlobalToken(nameReference);
                 // Token offsets must be line relative so search entire line...
                 const nameOffset = line.indexOf(nameReference, currentOffset);
                 if (referenceDetails != undefined) {
@@ -2827,8 +2826,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 }
                 this._logVAR("  --  possibleNameSet=[" + possibleNameSet + "](" + possibleNameSet.length + ")");
                 const namePart = possibleNameSet[0];
-                if (this._isGlobalToken(namePart)) {
-                  const referenceDetails: RememberedToken | undefined = this._getGlobalToken(namePart);
+                if (this.semanticFindings.isGlobalToken(namePart)) {
+                  const referenceDetails: RememberedToken | undefined = this.semanticFindings.getGlobalToken(namePart);
                   const searchString: string = possibleNameSet.length == 1 ? possibleNameSet[0] : possibleNameSet[0] + "#" + possibleNameSet[1];
                   const nameOffset = line.indexOf(searchString, currentOffset);
                   if (referenceDetails != undefined) {
@@ -2899,8 +2898,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       possibleNameSet = dotReference.split(".");
       const namePart = possibleNameSet[0];
       let referenceDetails: RememberedToken | undefined = undefined;
-      if (this._isGlobalToken(namePart)) {
-        referenceDetails = this._getGlobalToken(namePart);
+      if (this.semanticFindings.isGlobalToken(namePart)) {
+        referenceDetails = this.semanticFindings.getGlobalToken(namePart);
         this._logPASM("  --  FOUND global name=[" + namePart + "]");
       }
       if (referenceDetails != undefined) {
@@ -2984,20 +2983,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
     return nextString;
   }
-
-  private spin1log: any = undefined;
-  // adjust following true/false to show specific parsing debug
-  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
-  private showSpinCode: boolean = true;
-  private showPreProc: boolean = true;
-  private showCON: boolean = true;
-  private showOBJ: boolean = true;
-  private showDAT: boolean = true;
-  private showVAR: boolean = true;
-  private showDEBUG: boolean = true;
-  private showPasmCode: boolean = true;
-  private showState: boolean = true;
-  private logTokenDiscover: boolean = true;
 
   private _logTokenSet(message: string): void {
     if (this.logTokenDiscover) {
@@ -3136,141 +3121,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       tokenSet.push(newToken);
     }
     return nonCommentLHSStr;
-  }
-
-  // -------------------------------------------------------------------------
-  // global/local/localPasm name token handling...
-
-  private _isKnownToken(tokenName: string): boolean {
-    const foundStatus: boolean = this._isGlobalToken(tokenName) || this._isLocalToken(tokenName) || this._isLocalPasmToken(tokenName) ? true : false;
-    return foundStatus;
-  }
-
-  private _isGlobalToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.globalTokens.has(tokenName.toLowerCase());
-    return foundStatus;
-  }
-
-  private _setGlobalToken(tokenName: string, token: RememberedToken): void {
-    if (!this._isGlobalToken(tokenName)) {
-      this._logTokenSet("  -- NEW-gTOK " + this._rememberdTokenString(tokenName, token));
-      this.globalTokens.set(tokenName.toLowerCase(), token);
-    }
-  }
-
-  private _getGlobalToken(tokenName: string): RememberedToken | undefined {
-    var desiredToken: RememberedToken | undefined = this.globalTokens.get(tokenName.toLowerCase());
-    if (desiredToken != undefined) {
-      // let's never return a declaration modifier! (somehow declaration creeps in to our list!??)
-      let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
-      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
-    }
-    return desiredToken;
-  }
-
-  private _isLocalToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.localTokens.has(tokenName.toLowerCase());
-    return foundStatus;
-  }
-
-  private _setLocalToken(tokenName: string, token: RememberedToken): void {
-    if (!this._isLocalToken(tokenName)) {
-      this._logTokenSet("  -- NEW-lTOK " + this._rememberdTokenString(tokenName, token));
-      this.localTokens.set(tokenName.toLowerCase(), token);
-    }
-  }
-
-  private _getLocalToken(tokenName: string): RememberedToken | undefined {
-    const desiredToken: RememberedToken | undefined = this.localTokens.get(tokenName.toLowerCase());
-    return desiredToken;
-  }
-
-  private _getLocalPasmTokensMap(methodName: string): Map<string, RememberedToken> {
-    // get our exiting list, or make a new empty list and return it
-    const desiredMethodNameKey = methodName.toLowerCase();
-    let desiredMap: Map<string, RememberedToken> | undefined = this.localPasmTokensByMethodName.get(desiredMethodNameKey);
-    if (desiredMap == undefined) {
-      desiredMap = new Map<string, RememberedToken>();
-      this.localPasmTokensByMethodName.set(desiredMethodNameKey, desiredMap);
-    }
-    return desiredMap;
-  }
-
-  // -------------------------------------------------------------------------
-  // method-scoped name token handling...
-
-  private _isLocalPasmTokenListForMethod(methodName: string): boolean {
-    let mapExistsStatus: boolean = true;
-    const desiredMethodNameKey = methodName.toLowerCase();
-    let desiredMap: Map<string, RememberedToken> | undefined = this.localPasmTokensByMethodName.get(desiredMethodNameKey);
-    if (desiredMap == undefined) {
-      mapExistsStatus = false;
-    }
-    return mapExistsStatus;
-  }
-
-  private _isLocalPasmToken(tokenName: string): boolean {
-    let tokenExistsStatus: boolean = false;
-    for (let methodName of this.localPasmTokensByMethodName.keys()) {
-      if (this._isLocalPasmTokenForMethod(methodName, tokenName)) {
-        tokenExistsStatus = true;
-        break;
-      }
-    }
-    return tokenExistsStatus;
-  }
-
-  private _isLocalPasmTokenForMethod(methodName: string, tokenName: string): boolean {
-    let foundStatus: boolean = false;
-    if (this._isLocalPasmTokenListForMethod(methodName)) {
-      const methodLocalTokens = this._getLocalPasmTokensMap(methodName);
-      const desiredNameKey = tokenName.toLowerCase();
-      foundStatus = methodLocalTokens.has(desiredNameKey);
-    }
-    return foundStatus;
-  }
-
-  private _setLocalPasmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken): void {
-    const methodLocalTokens = this._getLocalPasmTokensMap(methodName);
-    const desiredNameKey = tokenName.toLowerCase();
-    if (!methodLocalTokens.has(desiredNameKey)) {
-      this._logTokenSet("  -- NEW-lpTOK " + tokenName + "=[" + token.type + "[" + token.modifiers + "]]");
-      methodLocalTokens.set(desiredNameKey, token);
-    }
-  }
-
-  private _getLocalPasmTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
-    let desiredToken: RememberedToken | undefined = undefined;
-    if (this._isLocalPasmTokenListForMethod(methodName)) {
-      const methodLocalTokens = this._getLocalPasmTokensMap(methodName);
-      const desiredNameKey = tokenName.toLowerCase();
-      desiredToken = methodLocalTokens.get(desiredNameKey);
-    }
-    return desiredToken;
-  }
-
-  // -------------------------------------------------------------------------
-  // variable modifier fix ups
-
-  private _modifiersWith(initialModifiers: string[], newModifier: string): string[] {
-    // add modification attribute
-    var updatedModifiers: string[] = initialModifiers;
-    if (!updatedModifiers.includes(newModifier)) {
-      updatedModifiers.push(newModifier);
-    }
-    return updatedModifiers;
-  }
-
-  private _modifiersWithout(initialModifiers: string[], unwantedModifier: string): string[] {
-    //  remove modification attribute
-    var updatedModifiers: string[] = [];
-    for (var idx = 0; idx < initialModifiers.length; idx++) {
-      var possModifier: string = initialModifiers[idx];
-      if (possModifier !== unwantedModifier) {
-        updatedModifiers.push(possModifier);
-      }
-    }
-    return updatedModifiers;
   }
 
   private _tokenString(aToken: IParsedToken, line: string): string {
