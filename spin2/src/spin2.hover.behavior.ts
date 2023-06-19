@@ -5,6 +5,7 @@ import * as path from "path";
 import { CancellationToken, Hover, HoverProvider, Position, TextDocument, WorkspaceConfiguration } from "vscode";
 import { DocumentFindings } from "./spin.semantic.findings";
 import { ParseUtils, eBuiltInType } from "./spin2.utils";
+import { IncomingMessage } from "http";
 
 /** getGoConfig is declared as an exported const rather than a function, so it can be stubbbed in testing. */
 export const getSpin2Config = (uri?: vscode.Uri) => {
@@ -191,9 +192,14 @@ export class Spin2HoverProvider implements HoverProvider {
           docRootCommentMD = `(${typeString}) **${nameString}**`;
           signature = `(${typeString}) ${nameString}`;
         }
-        defInfo.declarationlines = isSignature ? [sourceLine, signature, tokenFindings.tokenRawInterp] : [signature, tokenFindings.tokenRawInterp];
+        defInfo.declarationlines = isSignature ? [sourceLine] : [signature, tokenFindings.tokenRawInterp];
         //defInfo.doc = "".concat(`${docRootCommentMD}<br>`, `- bullet 1<br>`, "- @param `bullet` 2<br>", "<br>", `My warning paragraph.<br>`, `#### (L4) Heading<br>`, `My next paragraph.<br>`);
-        defInfo.doc = "".concat(`${docRootCommentMD}`); // TODO: add doc comments here when we finally get them...
+        const relatedCommentMD = this.symbolsFound.blockCommentMDFromLine(defInfo.line + 1);
+        if (isSignature && relatedCommentMD) {
+          defInfo.doc = "".concat(relatedCommentMD);
+        } else {
+          defInfo.doc = "".concat(`${docRootCommentMD}`); // TODO: add doc comments here when we finally get them...
+        }
       } else {
         this._logMessage(`+ Hvr: token=[${input.word}], NOT found!`);
         // no token, let's check for built-in language parts
@@ -231,14 +237,7 @@ export class Spin2HoverProvider implements HoverProvider {
     const lineText = document.lineAt(position.line).text;
     const word = wordRange ? document.getText(wordRange) : "";
     // TODO: fix this for spin comments vs. // comments
-    if (
-      !wordRange ||
-      lineText.startsWith("//") ||
-      this.isPositionInString(document, position) ||
-      this.isPositionInComment(document, position) ||
-      word.match(/^\d+.?\d+$/) ||
-      spinKeywords.indexOf(word) > 0
-    ) {
+    if (!wordRange || this.isPositionInString(document, position) || this.isPositionInComment(document, position) || word.match(/^\d+.?\d+$/) || spinKeywords.indexOf(word) > 0) {
       return [false, null!, null!];
     }
     if (position.isEqual(wordRange.end) && position.isAfter(wordRange.start)) {
@@ -263,10 +262,27 @@ export class Spin2HoverProvider implements HoverProvider {
 
   private isPositionInComment(document: vscode.TextDocument, position: vscode.Position): boolean {
     let inCommentStatus: boolean = false;
-    const lineText = document.lineAt(position.line).text.trim();
-    const lineTillCurrentPosition = lineText.substr(0, position.character);
+    const lineTextUntrim = document.lineAt(position.line).text;
+    const lineText = lineTextUntrim.trim();
+    // if entire line is comment
     if (lineText.startsWith("'") || lineText.startsWith("{")) {
       inCommentStatus = true;
+    } else {
+      // if text is within trailing comment
+      let firstTickMatchLocn: number = lineTextUntrim.indexOf("'");
+      let firstBraceMatchLocn: number = lineTextUntrim.indexOf("{");
+      let firstMatchLocn = firstTickMatchLocn < firstBraceMatchLocn && firstTickMatchLocn != -1 ? firstTickMatchLocn : firstBraceMatchLocn;
+      if (firstBraceMatchLocn == -1) {
+        firstMatchLocn = firstTickMatchLocn;
+      }
+      this._logMessage(`+ Hvr: isPositionInComment() pos=[${position.character}], tik=[${firstTickMatchLocn}], brc=[${firstBraceMatchLocn}], mtch=[${firstMatchLocn}]`);
+      if (firstMatchLocn != -1 && position.character > firstMatchLocn && !this.isPositionInString(document, position)) {
+        inCommentStatus = true;
+      }
+    }
+    if (!inCommentStatus) {
+      // not in comment see if is in a block comment
+      inCommentStatus = this.symbolsFound.isLineInBlockComment(position.line);
     }
     return inCommentStatus;
   }

@@ -1,4 +1,5 @@
 "use strict";
+import { IncomingMessage } from "http";
 // src/spin2.semantic.findings.ts
 
 import * as vscode from "vscode";
@@ -23,7 +24,181 @@ export interface ITokenInterpretation {
 }
 
 // ----------------------------------------------------------------------------
-//  This is the bask token type we report to VSCode
+//  This is the structure we use for tracking multiline ocmments
+//   CLASS RememberedToken
+export enum eCommentType {
+  Unknown = 0,
+  multiLineComment,
+  multiLineDocComment,
+}
+
+export class RememberedComment {
+  _type: eCommentType = eCommentType.Unknown;
+  _lines: string[] = [];
+  _1stLine: number = 0;
+  _lastLine: number = 0;
+  constructor(type: eCommentType, lineNumber: number, firstLine: string) {
+    this._1stLine = lineNumber;
+    this._type = type;
+    // remove comment from first line
+    let trimmedLine: string = firstLine;
+    if (this._type == eCommentType.multiLineDocComment) {
+      if (trimmedLine.startsWith("{{")) {
+        trimmedLine = trimmedLine.substring(2);
+      }
+    } else if (this._type == eCommentType.multiLineComment) {
+      if (trimmedLine.startsWith("{")) {
+        trimmedLine = trimmedLine.substring(1);
+      }
+    }
+    if (trimmedLine.length > 0) {
+      this._lines = [trimmedLine];
+    }
+  }
+
+  get lines(): string[] {
+    // return the array of comment lines for this block
+    return this._lines;
+  }
+
+  public commentAsMarkDown(): string {
+    // return the markdown for this block comment
+    let tempLines: string[] = this._lines;
+    // if keywords are found in comment then specially wrap the word following each keyword
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let workline = tempLines[idx];
+      let lineParts = workline.split(" ");
+      let findIndex = lineParts.indexOf("@param");
+      let nameItem: string | undefined = undefined;
+      if (findIndex != -1 && findIndex < lineParts.length - 1) {
+        nameItem = lineParts[findIndex + 1];
+      } else {
+        findIndex = lineParts.indexOf("@returns");
+        if (findIndex != -1 && findIndex < lineParts.length - 1) {
+          nameItem = lineParts[findIndex + 1];
+        } else {
+          findIndex = lineParts.indexOf("@local");
+          if (findIndex != -1 && findIndex < lineParts.length - 1) {
+            nameItem = lineParts[findIndex + 1];
+          }
+        }
+      }
+      if (nameItem) {
+        // now wrap the name in single back ticks
+        workline = workline.replace(nameItem, "`" + nameItem + "`");
+        tempLines[idx] = workline;
+      }
+    }
+    return tempLines.join("<br>");
+  }
+
+  public span(): vscode.Range {
+    // return the recorded line indexes (start,end) - span of the comment block
+    return new vscode.Range(new vscode.Position(this._1stLine, 0), new vscode.Position(this._lastLine, 0));
+  }
+
+  public isBlankLine(): boolean {
+    // return T/F where T means there is no remaining text after begin/end markers are removed
+    return this._lines.length == 0 || (this.lines.length == 1 && this._lines[0].length == 0);
+  }
+
+  public appendLine(line: string) {
+    // just save this line
+    this._lines.push(line);
+  }
+
+  public appendLastLine(lineNumber: number, line: string) {
+    // remove comment from last line then save remainder and line number
+    this._lastLine = lineNumber;
+    let trimmedLine: string = line;
+    let matchLocn: number = 0;
+    if (this._type == eCommentType.multiLineDocComment) {
+      matchLocn = trimmedLine.indexOf("}}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    } else if (this._type == eCommentType.multiLineComment) {
+      matchLocn = trimmedLine.indexOf("}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    }
+    if (trimmedLine.length > 0) {
+      this._lines.push(trimmedLine);
+    }
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let trimmedLine = this._lines[idx].trim();
+      if (trimmedLine.startsWith("''")) {
+        trimmedLine = trimmedLine.substring(2);
+      } else if (trimmedLine.startsWith("'")) {
+        trimmedLine = trimmedLine.substring(1);
+      }
+      this._lines[idx] = trimmedLine;
+    }
+  }
+
+  public closeAsSingleLine() {
+    // only single line, remove comment-end from the line then save remainder if any
+    this._lastLine = this._1stLine;
+    let trimmedLine: string = this._lines[0];
+    let matchLocn: number = 0;
+    if (this._type == eCommentType.multiLineDocComment) {
+      matchLocn = trimmedLine.indexOf("}}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    } else if (this._type == eCommentType.multiLineComment) {
+      matchLocn = trimmedLine.indexOf("}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    }
+    if (trimmedLine.length > 0) {
+      this._lines = [trimmedLine];
+    } else {
+      this._lines = [];
+    }
+  }
+
+  public includesLine(lineNumber: number): boolean {
+    // return T/F where T means the lineNumber is within the comment
+    const commentSpan: vscode.Range = this.span();
+    const inCommentStatus: boolean = lineNumber >= commentSpan.start.line && lineNumber <= commentSpan.end.line;
+    return inCommentStatus;
+  }
+
+  public spanString(): string {
+    const commentSpan: vscode.Range = this.span();
+    const startLine = commentSpan.start.line + 1;
+    const endLine = commentSpan.end.line + 1;
+    const typeString: string = this._type == eCommentType.multiLineDocComment ? "blockDocComment" : "blockComment";
+    const interpString: string = `lines ${startLine}-${endLine}`;
+    return interpString;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  This is the basic token type we report to VSCode
 //   CLASS RememberedToken
 
 export class RememberedToken {
@@ -73,6 +248,7 @@ export class DocumentFindings {
   private globalTokens;
   private localTokens;
   private localPasmTokensByMethodName;
+  private blockComments: RememberedComment[] = [];
 
   private outputChannel: vscode.OutputChannel | undefined = undefined;
   private bLogEnabled: boolean = false;
@@ -95,6 +271,37 @@ export class DocumentFindings {
     this.globalTokens.clear();
     this.localTokens.clear();
     this.localPasmTokensByMethodName.clear();
+    this.blockComments = [];
+  }
+
+  public recordComment(comment: RememberedComment) {
+    this.blockComments.push(comment);
+  }
+
+  public isLineInBlockComment(lineNumber: number): boolean {
+    let inCommentStatus: boolean = false;
+    if (this.blockComments.length > 0) {
+      for (let docComment of this.blockComments) {
+        if (docComment.includesLine(lineNumber)) {
+          inCommentStatus = true;
+          break;
+        }
+      }
+    }
+    return inCommentStatus;
+  }
+
+  public blockCommentMDFromLine(lineNumber: number): string | undefined {
+    let desiredComment: string | undefined = undefined;
+    if (this.blockComments.length > 0) {
+      for (let docComment of this.blockComments) {
+        if (docComment.includesLine(lineNumber)) {
+          desiredComment = docComment.commentAsMarkDown();
+          break;
+        }
+      }
+    }
+    return desiredComment;
   }
 
   public isKnownToken(tokenName: string): boolean {

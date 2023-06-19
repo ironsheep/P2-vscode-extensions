@@ -1603,6 +1603,7 @@ export class ParseUtils {
   }
 
   public isPasm1Instruction(name: string): boolean {
+    // mark these RED if seen in P2 code
     const pasm1Instructions: string[] = [
       "absneg",
       "addabs",
@@ -1629,6 +1630,7 @@ export class ParseUtils {
   }
 
   public isPasm1Variable(name: string): boolean {
+    // mark these RED if seen in P2 code
     const pasm1Variables: string[] = [
       "_clkmode",
       "_free",
@@ -1785,6 +1787,7 @@ export class ParseUtils {
   }
 
   public isDatNFileStorageType(name: string): boolean {
+    // storage type + RES + FILE
     let returnStatus: boolean = false;
     if (name.length > 2) {
       const checkType: string = name.toUpperCase();
@@ -1799,6 +1802,7 @@ export class ParseUtils {
   }
 
   public isDatStorageType(name: string): boolean {
+    // storage type + RES
     let returnStatus: boolean = false;
     if (name.length > 2) {
       const checkType: string = name.toUpperCase();
@@ -1812,6 +1816,7 @@ export class ParseUtils {
   }
 
   public isStorageType(name: string): boolean {
+    // storage type : (BYTE|WORD)FIT, BYTE, WORD, LONG
     let returnStatus: boolean = false;
     if (name.length > 3) {
       const checkType: string = name.toUpperCase();
@@ -1823,6 +1828,7 @@ export class ParseUtils {
   }
 
   public isAlignType(name: string): boolean {
+    // align type : ALIGNL, ALIGNW
     let returnStatus: boolean = false;
     if (name.length > 5) {
       const checkType: string = name.toUpperCase();

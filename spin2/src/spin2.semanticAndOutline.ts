@@ -4,7 +4,7 @@
 //import { deepStrictEqual } from "assert";
 
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
-import { DocumentFindings, RememberedToken } from "./spin.semantic.findings";
+import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
 import { ParseUtils, eDebugDisplayType, debugTypeForDisplay } from "./spin2.utils";
 
 import * as vscode from "vscode";
@@ -512,7 +512,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -610,10 +610,12 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let priorState: eParseState = currState;
     let prePasmState: eParseState = currState;
 
+    let currComment: RememberedComment | undefined = undefined;
+
     const tokenSet: IParsedToken[] = [];
 
-    //
-    // prepass to find PRI/PUB method, OBJ names, and VAR/DAT names
+    // ==============================================================================
+    // prepass to find declarations: PRI/PUB method, OBJ names, and VAR/DAT names
     //
 
     // -------------------- PRE-PARSE just locating symbol names --------------------
@@ -649,7 +651,18 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         closingOffset = trimmedLine.indexOf("}", currOffset);
         if (closingOffset != -1) {
           // have close, comment ended
+          // end the comment recording
+          currComment?.appendLastLine(i, line);
+          // record new comment
+          if (currComment) {
+            this.semanticFindings.recordComment(currComment);
+            this._logMessage("---> Pre SCAN: found comment " + currComment.spanString());
+            currComment = undefined;
+          }
           currState = priorState;
+        } else {
+          // add line to the comment recording
+          currComment?.appendLine(line);
         }
         //  DO NOTHING Let Syntax highlighting do this
         continue;
@@ -658,13 +671,68 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         let closingOffset = line.indexOf("}}");
         if (closingOffset != -1) {
           // have close, comment ended
+          // end the comment recording
+          currComment?.appendLastLine(i, line);
+          // record new comment
+          if (currComment) {
+            this.semanticFindings.recordComment(currComment);
+            this._logMessage("---> Pre SCAN: found comment " + currComment.spanString());
+            currComment = undefined;
+          }
           currState = priorState;
+        } else {
+          // add line to the comment recording
+          currComment?.appendLine(line);
         }
         //  DO NOTHING Let Syntax highlighting do this
         continue;
       } else if (this.parseUtils.isFlexspinPreprocessorDirective(lineParts[0])) {
         this._getPreProcessor_Declaration(0, i + 1, line);
         continue;
+      } else if (trimmedLine.startsWith("{{")) {
+        // process multi-line doc comment
+        let openingOffset = line.indexOf("{{");
+        const closingOffset = line.indexOf("}}", openingOffset + 2);
+        if (closingOffset != -1) {
+          // is single line comment, just ignore it Let Syntax highlighting do this
+          // record new single-line comment
+          let oneLineComment = new RememberedComment(eCommentType.multiLineDocComment, i, line);
+          oneLineComment.closeAsSingleLine();
+          if (!oneLineComment.isBlankLine()) {
+            this.semanticFindings.recordComment(oneLineComment);
+            this._logMessage("---> Pre SCAN: found comment " + oneLineComment.spanString());
+          }
+          currComment = undefined; // just making sure...
+        } else {
+          // is open of multiline comment
+          priorState = currState;
+          currState = eParseState.inMultiLineDocComment;
+          // start  NEW comment
+          currComment = new RememberedComment(eCommentType.multiLineDocComment, i, line);
+          //  DO NOTHING Let Syntax highlighting do this
+        }
+      } else if (trimmedLine.startsWith("{")) {
+        // process possible multi-line non-doc comment
+        // do we have a close on this same line?
+        let openingOffset = line.indexOf("{");
+        const closingOffset = line.indexOf("}", openingOffset + 1);
+        if (closingOffset != -1) {
+          // is single line comment, we can have Spin2 Directive in here
+          this._getSpin2_Directive(i, 0, line);
+        } else {
+          // is open of multiline comment
+          priorState = currState;
+          currState = eParseState.inMultiLineComment;
+          // start  NEW comment
+          currComment = new RememberedComment(eCommentType.multiLineComment, i, line);
+          //  DO NOTHING Let Syntax highlighting do this
+        }
+      } else if (trimmedLine.startsWith("''")) {
+        // process single line doc comment
+        //  DO NOTHING Let Syntax highlighting do this
+      } else if (trimmedLine.startsWith("'")) {
+        // process single line non-doc comment
+        //  DO NOTHING Let Syntax highlighting do this
       } else if (sectionStatus.isSectionStart) {
         currState = sectionStatus.inProgressStatus;
         this._logState("- scan ln:" + (i + 1) + " currState=[" + currState + "]");
@@ -705,38 +773,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
         continue;
-      } else if (trimmedLine.startsWith("''")) {
-        // process single line doc comment
-        //  DO NOTHING Let Syntax highlighting do this
-      } else if (trimmedLine.startsWith("'")) {
-        // process single line non-doc comment
-        //  DO NOTHING Let Syntax highlighting do this
-      } else if (trimmedLine.startsWith("{{")) {
-        // process multi-line doc comment
-        let openingOffset = line.indexOf("{{");
-        const closingOffset = line.indexOf("}}", openingOffset + 2);
-        if (closingOffset != -1) {
-          // is single line comment, just ignore it Let Syntax highlighting do this
-        } else {
-          // is open of multiline comment
-          priorState = currState;
-          currState = eParseState.inMultiLineDocComment;
-          //  DO NOTHING Let Syntax highlighting do this
-        }
-      } else if (trimmedLine.startsWith("{")) {
-        // process possible multi-line non-doc comment
-        // do we have a close on this same line?
-        let openingOffset = line.indexOf("{");
-        const closingOffset = line.indexOf("}", openingOffset + 1);
-        if (closingOffset != -1) {
-          // is single line comment, we can have Spin2 Directive in here
-          this._getSpin2_Directive(i, 0, line);
-        } else {
-          // is open of multiline comment
-          priorState = currState;
-          currState = eParseState.inMultiLineComment;
-          //  DO NOTHING Let Syntax highlighting do this
-        }
       } else if (currState == eParseState.inCon) {
         // process a constant line
         if (trimmedLine.length > 0) {
