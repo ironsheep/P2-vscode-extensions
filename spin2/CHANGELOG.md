@@ -21,6 +21,14 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.2] 2023-06-??
+
+Add new hover support for P2!
+
+- Now can hover over variables, constants, methods, pasm labels and objects to display pop-up information about the object including comments within the code for the item
+- Now supports hover for built-in spin2 methods, variables, and constants to display pop-up documentation about the item
+- Adds new doc-comment generation for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. Comment is inserted immediately below the PUB or PRI line. 
+
 ## [1.9.1] 2023-06-13
 
 New Object Hierarchy view for P1 and P2!

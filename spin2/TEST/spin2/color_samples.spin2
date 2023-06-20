@@ -21,6 +21,10 @@ PUB main(bDoNothing) : ok | idx
     if bDoNothing
         bDoNothing := TRUE ' yep we're doing nothing
 
+    testMethod()
+
+    myMethod1()
+
     DEBUG("clock frequency: ", udec(CLKFREQ), 13, 10)
 
     debug(`term logTerm pos 100 460 size 40 10 textsize 16 color green)
@@ -32,15 +36,17 @@ PUB main(bDoNothing) : ok | idx
         idx++
         debug        'break everytime through the loop if "DEBUG" is selected (default)
 
-PRI testMethod(param1) : bStatus | index
-{
+PRI myMethod1() : bStatus | index, text ' trailing comment
+
+PRI myMethod(param1, param2) : bStatus, neededValue | index
+
+PUB testMethod(param1) : bStatus | index
 ' A simple method to test stuff
 '
-' @param param1 a parameter
-' @returns bStatus T/F where T means the operation worked
+' @param param1 - a parameter
+' @returns bStatus - T/F where T means the operation worked
 '
-' @local index into our array
-}
+' @local index - into our array
     index := 0
     bStatus := param1 + index + 1
 
@@ -48,7 +54,7 @@ VAR
     LONG  simpleVar[2]  ' array of two longs
 
 DAT
-' title string
+' Title string for display
     myString    byte    "test string",0
     effs        byte    $ff[8]
 

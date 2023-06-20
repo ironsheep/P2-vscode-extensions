@@ -523,6 +523,10 @@
     ],
     "commands": [
       {
+        "command": "spin2.generate.doc.comment",
+        "title": "Spin2: Generate and insert documentation comment"
+      },
+      {
         "command": "spin2.generate.documentation.file",
         "title": "Spin2: Generate documentation file from spin source"
       },
@@ -583,6 +587,16 @@
       {
         "key": "Ctrl+Alt+d",
         "command": "spin2.generate.documentation.file",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
+      },
+      {
+        "key": "Ctrl+Alt+c",
+        "command": "spin2.generate.doc.comment",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2"
+      },
+      {
+        "key": "Ctrl+Alt+c",
+        "command": "spin2.generate.doc.comment",
         "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
       },
       {

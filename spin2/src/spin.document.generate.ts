@@ -50,10 +50,7 @@ export class DocGenerator {
   generateDocument(): void {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor) {
-      let endOfLineStr: string = "\n";
-      if (textEditor.document.eol == EndOfLine.CRLF) {
-        endOfLineStr = "\r\n";
-      }
+      let endOfLineStr: string = textEditor.document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
 
       var currentlyOpenTabfilePath = textEditor.document.uri.fsPath;
       var currentlyOpenTabfolderName = path.dirname(currentlyOpenTabfilePath);

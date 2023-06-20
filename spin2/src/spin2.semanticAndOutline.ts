@@ -2,12 +2,14 @@
 // src/spin2.semanticAndOutline.ts
 
 //import { deepStrictEqual } from "assert";
+import { EndOfLine } from "vscode";
 
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
 import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
 import { ParseUtils, eDebugDisplayType, debugTypeForDisplay } from "./spin2.utils";
 
 import * as vscode from "vscode";
+import { isDeepStrictEqual } from "util";
 
 enum eParseState {
   Unknown = 0,
@@ -28,7 +30,6 @@ enum eParseState {
 //  this file contains both an outline provider
 //    and our semantic highlighting provider
 //
-
 // ----------------------------------------------------------------------------
 //   OUTLINE Provider
 //
@@ -354,7 +355,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
             newGlobalLabel = newName;
           }
           this._logMessage("  -- OLn GLBL gddcl newName=[" + newGlobalLabel + "]");
-          //this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
+          //this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), i);
         }
       }
     }
@@ -384,7 +385,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
         // org in first column is not label name, nor is if_ conditional
         newGlobalLabel = labelName;
         this._logMessage("  -- Oln GetDatPasmDecl GLBL newGlobalLabel=[" + newGlobalLabel + "]");
-        //this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
+        //this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), i);
       }
     }
     return newGlobalLabel;
@@ -555,6 +556,80 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return this.semanticFindings;
   }
 
+  public insertDocComment(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
+    return selections
+      .map((selection) => {
+        let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
+        let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
+        this._logMessage(
+          `* iDc selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
+        );
+        const { firstLine, lastLine, lineCount } = this._lineNumbersFromSelection(document, selection);
+        const cursorPos: vscode.Position = new vscode.Position(firstLine + 1, 0);
+        let linesToInsert: string[] = [];
+        let currLine: string = document.lineAt(firstLine).text.trim();
+        const isSignature: boolean = currLine.toLowerCase().startsWith("pub") || currLine.toLowerCase().startsWith("pri");
+        if (isSignature) {
+          linesToInsert.push("' ..." + endOfLineStr); // for description
+          linesToInsert.push("' " + endOfLineStr); // blank line
+          const posOpenParen = currLine.indexOf("(");
+          const posCloseParen = currLine.indexOf(")");
+          if (posOpenParen != -1 && posCloseParen != -1) {
+            const bHasParameters: boolean = posCloseParen - posOpenParen > 1 ? true : false;
+            if (bHasParameters) {
+              const paramString: string = currLine.substring(posOpenParen + 1, posCloseParen);
+              const numberParameters: number = (paramString.match(/,/g) || []).length + 1;
+              const paramNames = paramString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc paramString=[${paramString}], paramNames=[${paramNames}]`);
+              for (let paramIdx = 0; paramIdx < numberParameters; paramIdx++) {
+                linesToInsert.push("'" + ` @param ${paramNames[paramIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+            const bHasReturnValues: boolean = currLine.includes(":") ? true : false;
+            const bHasLocalVariables: boolean = currLine.includes("|") ? true : false;
+            if (bHasReturnValues) {
+              const posStartReturn = currLine.indexOf(":") + 1;
+              const posEndReturn = bHasLocalVariables ? currLine.indexOf("|") - 1 : currLine.length;
+              const returnsString: string = currLine.substring(posStartReturn, posEndReturn);
+              const numberReturns: number = (returnsString.match(/,/g) || []).length + 1;
+              const returnNames = returnsString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc returnsString=[${returnsString}], returnNames=[${returnNames}]`);
+              for (let retValIdx = 0; retValIdx < numberReturns; retValIdx++) {
+                linesToInsert.push("'" + ` @returns ${returnNames[retValIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+            let posTrailingComment = currLine.indexOf("'");
+            if (posTrailingComment == -1) {
+              posTrailingComment = currLine.indexOf("{");
+            }
+            if (bHasLocalVariables) {
+              const posStartLocal = currLine.indexOf("|") + 1;
+              const posEndLocal = posTrailingComment != -1 ? posTrailingComment : currLine.length;
+              const localsString: string = currLine.substring(posStartLocal, posEndLocal);
+              const numberLocals: number = (localsString.match(/,/g) || []).length + 1;
+              const localsNames = localsString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc localsString=[${localsString}], localsNames=[${localsNames}]`);
+              linesToInsert.push("' " + endOfLineStr); // blank line
+              for (let localIdx = 0; localIdx < numberLocals; localIdx++) {
+                linesToInsert.push("'" + ` @local ${localsNames[localIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+          }
+        } else {
+          this._logMessage(`* iDc SKIP - NOT on signature line`);
+        }
+
+        // insert the lines, if any
+        if (linesToInsert.length > 0) {
+          for (let line of linesToInsert) {
+            results.push(vscode.TextEdit.insert(cursorPos, `${line}`));
+          }
+        }
+        return results;
+      })
+      .reduce((selections, selection) => selections.concat(selection), []);
+  }
+
   async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
     // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
     if (cancelToken) {
@@ -568,6 +643,44 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.ptTokenType), this._encodeTokenModifiers(token.ptTokenModifiers));
     });
     return builder.build();
+  }
+
+  private _lineNumbersFromSelection(document: vscode.TextDocument, selection: vscode.Selection): { firstLine: number; lastLine: number; lineCount: number } {
+    let lineCount: number = 0;
+    let firstLine: number = 0;
+    let lastLine: number = 0;
+    // what kind of section do we have?
+    if (selection.isEmpty) {
+      // empty, just a cursor location
+      firstLine = selection.start.line;
+      lastLine = selection.end.line;
+      lineCount = lastLine - firstLine + 1;
+    } else {
+      // non-empty then let's figure out which lines could change
+      const allSelectedText: string = document.getText(selection);
+      const lines: string[] = allSelectedText.split(/\r?\n/);
+      lineCount = lines.length;
+      firstLine = selection.start.line;
+      lastLine = selection.end.line;
+      //this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], allSelectedText=[${allSelectedText}](${allSelectedText.length}), lines=[${lines}](${lines.length})`);
+      for (var currLineIdx: number = 0; currLineIdx < lines.length; currLineIdx++) {
+        if (lines[currLineIdx].length == 0) {
+          if (currLineIdx == lines.length - 1) {
+            lastLine--;
+            lineCount--;
+          }
+        }
+      }
+      if (firstLine > lastLine && lineCount == 0) {
+        // have odd selection case, let's override it!
+        // (selection contained just a newline!)
+        firstLine--;
+        lastLine = firstLine;
+        lineCount = 1;
+      }
+    }
+
+    return { firstLine, lastLine, lineCount };
   }
 
   private _encodeTokenType(tokenType: string): number {
@@ -611,6 +724,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let prePasmState: eParseState = currState;
 
     let currComment: RememberedComment | undefined = undefined;
+    let currSingleLineBlockComment: RememberedComment | undefined = undefined;
 
     const tokenSet: IParsedToken[] = [];
 
@@ -620,12 +734,40 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
     // -------------------- PRE-PARSE just locating symbol names --------------------
     this._logMessage("---> Pre SCAN");
+    let bPriorIsSingleLineComment: boolean = false;
+    let bPriorIsSingleLineDocComment: boolean = false;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
       const trimmedNonCommentLine: string = this.parseUtils.getNonCommentLineRemainder(0, line);
       const sectionStatus = this._isSectionStartLine(line);
       const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
+      // special blocks of doc-comment and non-doc comment lines handling
+      if (bPriorIsSingleLineDocComment && !trimmedLine.startsWith("''")) {
+        // process single line doc comment
+        bPriorIsSingleLineDocComment = false;
+        // FIXME: add record single line comment block if > 1 line and clear
+        if (currSingleLineBlockComment) {
+          currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
+          if (currSingleLineBlockComment.lineCount > 1) {
+            this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
+            this.semanticFindings.recordComment(currSingleLineBlockComment);
+          }
+          currSingleLineBlockComment = undefined;
+        }
+      } else if (bPriorIsSingleLineComment && !trimmedLine.startsWith("'")) {
+        // process single line non-doc comment
+        bPriorIsSingleLineComment = false;
+        // FIXME: add record single line comment block if > 1 line and clear
+        if (currSingleLineBlockComment) {
+          currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
+          if (currSingleLineBlockComment.lineCount > 1) {
+            this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
+            this.semanticFindings.recordComment(currSingleLineBlockComment);
+          }
+          currSingleLineBlockComment = undefined;
+        }
+      }
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
         // ALLOW {...} on same line without closing!
@@ -698,7 +840,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           // record new single-line comment
           let oneLineComment = new RememberedComment(eCommentType.multiLineDocComment, i, line);
           oneLineComment.closeAsSingleLine();
-          if (!oneLineComment.isBlankLine()) {
+          if (!oneLineComment.isBlankLine) {
             this.semanticFindings.recordComment(oneLineComment);
             this._logMessage("---> Pre SCAN: found comment " + oneLineComment.spanString());
           }
@@ -727,12 +869,24 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currComment = new RememberedComment(eCommentType.multiLineComment, i, line);
           //  DO NOTHING Let Syntax highlighting do this
         }
+      } else if (bPriorIsSingleLineDocComment && trimmedLine.startsWith("''")) {
+        // process single line doc comment
+        // FIXME: add to existing single line doc-comment block
+        currSingleLineBlockComment?.appendLine(line);
+      } else if (bPriorIsSingleLineComment && trimmedLine.startsWith("'")) {
+        // process single line non-doc comment
+        // FIXME: add to existing single line non-doc-comment block
+        currSingleLineBlockComment?.appendLine(line);
       } else if (trimmedLine.startsWith("''")) {
         // process single line doc comment
-        //  DO NOTHING Let Syntax highlighting do this
+        bPriorIsSingleLineDocComment = true;
+        // FIXME: create new single line doc-comment block
+        currSingleLineBlockComment = new RememberedComment(eCommentType.singleLineDocComment, i, line);
       } else if (trimmedLine.startsWith("'")) {
         // process single line non-doc comment
-        //  DO NOTHING Let Syntax highlighting do this
+        bPriorIsSingleLineComment = true;
+        // FIXME: create new single line non-doc-comment block
+        currSingleLineBlockComment = new RememberedComment(eCommentType.singleLineComment, i, line);
       } else if (sectionStatus.isSectionStart) {
         currState = sectionStatus.inProgressStatus;
         this._logState("- scan ln:" + (i + 1) + " currState=[" + currState + "]");
@@ -740,7 +894,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         if (currState == eParseState.inPub || currState == eParseState.inPri) {
           // process PUB/PRI method signature
           if (trimmedNonCommentLine.length > 3) {
-            this._getPUB_PRI_Name(3, line);
+            this._getPUB_PRI_Name(3, i + 1, line);
           }
         } else if (currState == eParseState.inCon) {
           // process a constant line
@@ -756,20 +910,20 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               this._logPASM("- (" + (i + 1) + "): pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
               prePasmState = currState;
               currState = eParseState.inDatPasm;
-              this._getDAT_Declaration(0, line); // let's get possible label on this ORG statement
+              this._getDAT_Declaration(0, i + 1, line); // let's get possible label on this ORG statement
               continue;
             }
           }
-          this._getDAT_Declaration(0, line);
+          this._getDAT_Declaration(0, i + 1, line);
         } else if (currState == eParseState.inObj) {
           // process an object line
           if (trimmedNonCommentLine.length > 3) {
-            this._getOBJ_Declaration(3, line);
+            this._getOBJ_Declaration(3, i + 1, line);
           }
         } else if (currState == eParseState.inVar) {
           // process a instance-variable line
           if (trimmedNonCommentLine.length > 3) {
-            this._getVAR_Declaration(3, line);
+            this._getVAR_Declaration(3, i + 1, line);
           }
         }
         continue;
@@ -789,22 +943,22 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 this._logPASM("- (" + (i + 1) + "): pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
                 prePasmState = currState;
                 currState = eParseState.inDatPasm;
-                this._getDAT_Declaration(0, line); // let's get possible label on this ORG statement
+                this._getDAT_Declaration(0, i + 1, line); // let's get possible label on this ORG statement
                 continue;
               }
             }
           }
-          this._getDAT_Declaration(0, line);
+          this._getDAT_Declaration(0, i + 1, line);
         }
       } else if (currState == eParseState.inVar) {
         // process a variable declaration line
         if (trimmedLine.length > 0) {
-          this._getVAR_Declaration(0, line);
+          this._getVAR_Declaration(0, i + 1, line);
         }
       } else if (currState == eParseState.inObj) {
         // process an object declaration line
         if (trimmedLine.length > 0) {
-          this._getOBJ_Declaration(0, line);
+          this._getOBJ_Declaration(0, i + 1, line);
         }
       } else if (currState == eParseState.inPasmInline) {
         // process pasm (assembly) lines
@@ -831,7 +985,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             this._logState("- scan ln:" + (i + 1) + " POP currState=[" + currState + "]");
             // and ignore rest of this line
           } else {
-            this._getDAT_PasmDeclaration(0, line);
+            this._getDAT_PasmDeclaration(0, i + 1, line);
             // scan DAT-Pasm line for debug() display declaration
             this._getDebugDisplay_Declaration(0, line);
           }
@@ -1215,7 +1369,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         // check a valid preprocessor line for a declaration
         if (symbolName != undefined && directive.toLowerCase() == "#define") {
           this._logPreProc("  -- new PreProc Symbol=[" + symbolName + "]");
-          this.semanticFindings.setGlobalToken(symbolName, new RememberedToken("variable", ["readonly"]));
+          this.semanticFindings.setGlobalToken(symbolName, new RememberedToken("variable", ["readonly"]), lineNbr);
         }
       }
     }
@@ -1251,7 +1405,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           if (newName.substr(0, 1).match(/[a-zA-Z_]/) && !this.parseUtils.isPasm1Variable(newName)) {
             this._logCON("  -- GLBL GetCONDecl newName=[" + newName + "]");
             // remember this object name so we can annotate a call to it
-            this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["readonly"]));
+            this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["readonly"]), lineNbr);
           }
         } else {
           // recognize enum values getting initialized
@@ -1275,7 +1429,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               }
               if (enumConstant.substr(0, 1).match(/[a-zA-Z_]/)) {
                 this._logCON("  -- C GLBL enumConstant=[" + enumConstant + "]");
-                this.semanticFindings.setGlobalToken(enumConstant, new RememberedToken("enumMember", ["readonly"]));
+                this.semanticFindings.setGlobalToken(enumConstant, new RememberedToken("enumMember", ["readonly"]), lineNbr);
               }
             }
           }
@@ -1284,7 +1438,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
   }
 
-  private _getDAT_Declaration(startingOffset: number, line: string): void {
+  private _getDAT_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    bGammaEnable        BYTE   TRUE               ' comment
     //         didShow             byte   FALSE[256]
     //                             byte   FALSE[256]
@@ -1331,12 +1485,12 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
         this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-        this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers));
+        this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr);
       }
     }
   }
 
-  private _getDAT_PasmDeclaration(startingOffset: number, line: string): void {
+  private _getDAT_PasmDeclaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    bGammaEnable        BYTE   TRUE               ' comment
     //         didShow             byte   FALSE[256]
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
@@ -1357,12 +1511,12 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           labelModifiers = labelName.startsWith(".") ? ["static"] : [];
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
-        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers));
+        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr);
       }
     }
   }
 
-  private _getOBJ_Declaration(startingOffset: number, line: string): void {
+  private _getOBJ_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    color           : "isp_hub75_color"
     //  -or-   segments[7]     : "isp_hub75_segment"
     //
@@ -1381,7 +1535,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const newName = lineParts[0];
       this._logOBJ("  -- GLBL GetOBJDecl newName=[" + newName + "]");
       // remember this object name so we can annotate a call to it
-      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []));
+      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []), lineNbr);
 
       // if we have override parts handle 'em
       if (bHasOverrides && overrideParts.length > 1) {
@@ -1392,13 +1546,13 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           const statementParts: string[] = overideSatements[index].split("=");
           const overideName: string = statementParts[0].trim();
           this._logOBJ("  -- GLBL GetOBJDecl overideName=[" + overideName + "]");
-          this.semanticFindings.setGlobalToken(overideName, new RememberedToken("variable", ["readonly"]));
+          this.semanticFindings.setGlobalToken(overideName, new RememberedToken("variable", ["readonly"]), lineNbr);
         }
       }
     }
   }
 
-  private _getPUB_PRI_Name(startingOffset: number, line: string): void {
+  private _getPUB_PRI_Name(startingOffset: number, lineNbr: number, line: string): void {
     const methodType = line.substr(0, 3).toUpperCase();
     // reset our list of local variables
     const isPrivate: boolean = methodType.indexOf("PRI") != -1;
@@ -1436,7 +1590,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.currentMethodName = methodName; // notify of latest method name so we can track inLine PASM symbols
     // remember this method name so we can annotate a call to it
     const refModifiers: string[] = isPrivate ? ["static"] : [];
-    this.semanticFindings.setGlobalToken(methodName, new RememberedToken("method", refModifiers));
+    this.semanticFindings.setGlobalToken(methodName, new RememberedToken("method", refModifiers), lineNbr);
     // reset our list of local variables
     this.semanticFindings.clearLocalPasmTokensForMethod(methodName);
   }
@@ -1464,7 +1618,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
   }
 
-  private _getVAR_Declaration(startingOffset: number, line: string): void {
+  private _getVAR_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    long    demoPausePeriod   ' comment
     //
     //skip Past Whitespace
@@ -1492,7 +1646,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         const newName = nameSet[index]; // .replace(/[\[,]/, '');
         if (newName.substr(0, 1).match(/[a-zA-Z_]/)) {
           this._logVAR("  -- GLBL GetVarDecl newName=[" + newName + "]");
-          this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["instance"]));
+          this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["instance"]), lineNbr);
         }
       }
     } else if (!hasGoodType && lineParts.length > 0) {
@@ -1500,7 +1654,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         const longVarName = lineParts[index];
         if (longVarName.substr(0, 1).match(/[a-zA-Z_]/)) {
           this._logVAR("  -- GLBL GetVarDecl newName=[" + longVarName + "]");
-          this.semanticFindings.setGlobalToken(longVarName, new RememberedToken("variable", ["instance"]));
+          this.semanticFindings.setGlobalToken(longVarName, new RememberedToken("variable", ["instance"]), lineNbr);
         }
       }
     }
@@ -2336,7 +2490,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           ptTokenModifiers: ["declaration", "readonly", "local"],
         });
         // remember so we can ID references
-        this.semanticFindings.setLocalToken(paramName, new RememberedToken("parameter", ["readonly", "local"])); // TOKEN SET in _report()
+        this.semanticFindings.setLocalToken(paramName, new RememberedToken("parameter", ["readonly", "local"]), lineNumber); // TOKEN SET in _report()
         currentOffset += paramName.length + 1;
       }
     }
@@ -2377,7 +2531,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           ptTokenModifiers: ["declaration", "local"],
         });
         // remember so we can ID references
-        this.semanticFindings.setLocalToken(returnValueName, new RememberedToken("returnValue", ["local"])); // TOKEN SET in _report()
+        this.semanticFindings.setLocalToken(returnValueName, new RememberedToken("returnValue", ["local"]), lineNumber); // TOKEN SET in _report()
         currentOffset += returnValueName.length + 1; // +1 for trailing comma
       }
     }
@@ -2474,7 +2628,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               ptTokenModifiers: ["declaration", "local"],
             });
             // remember so we can ID references
-            this.semanticFindings.setLocalToken(localName, new RememberedToken("variable", ["local"])); // TOKEN SET in _report()
+            this.semanticFindings.setLocalToken(localName, new RememberedToken("variable", ["local"]), lineNumber); // TOKEN SET in _report()
           } else {
             // have modifier!
             if (this.parseUtils.isStorageType(localName)) {

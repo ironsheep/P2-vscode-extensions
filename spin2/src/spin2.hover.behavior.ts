@@ -163,7 +163,7 @@ export class Spin2HoverProvider implements HoverProvider {
         name: input.document.fileName,
       };
       const sourceLine = input.document.lineAt(input.position.line).text.trim();
-      const isSignature: boolean = sourceLine.toLowerCase().startsWith("pub") || sourceLine.toLowerCase().startsWith("pri");
+      const isSignatureLine: boolean = sourceLine.toLowerCase().startsWith("pub") || sourceLine.toLowerCase().startsWith("pri");
 
       let bFoundSomething: boolean = true; // for now we don't have failure case
       let bFoundParseToken: boolean = this.symbolsFound.isKnownToken(input.word);
@@ -175,33 +175,66 @@ export class Spin2HoverProvider implements HoverProvider {
             `+ Hvr: token=[${input.word}], scope=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
           );
         }
-        /*
-    found: boolean;
-    tokenRawInterp: string;
-    scope: string;
-    interpretation: string;
-    adjustedName: string;
-    token: RememberedToken | undefined;
-          */
-        let nameString = tokenFindings.adjustedName;
-        let scopeString = tokenFindings.scope;
-        let typeString = tokenFindings.interpretation;
-        let docRootCommentMD = `(*${scopeString}* ${typeString}) **${nameString}**`;
-        let signature = `(${scopeString} ${typeString}) ${nameString}`;
+        const nameString = tokenFindings.adjustedName;
+        const scopeString = tokenFindings.scope;
+        const typeString = tokenFindings.interpretation;
+
+        let docRootCommentMD = `(*${scopeString}* ${typeString}) **${nameString}**`; // parsedFindings
+        let typeInterpWName = `(${scopeString} ${typeString}) ${nameString}`; // better formatting of interp
+        let typeInterp = `(${scopeString} ${typeString})`; // better formatting of interp
         if (scopeString.length == 0) {
           docRootCommentMD = `(${typeString}) **${nameString}**`;
-          signature = `(${typeString}) ${nameString}`;
+          typeInterpWName = `(${typeString}) ${nameString}`; // better formatting of interp
+          typeInterp = `(${typeString})`;
         }
-        defInfo.declarationlines = isSignature ? [sourceLine] : [signature, tokenFindings.tokenRawInterp];
-        //defInfo.doc = "".concat(`${docRootCommentMD}<br>`, `- bullet 1<br>`, "- @param `bullet` 2<br>", "<br>", `My warning paragraph.<br>`, `#### (L4) Heading<br>`, `My next paragraph.<br>`);
-        const relatedCommentMD = this.symbolsFound.blockCommentMDFromLine(defInfo.line + 1);
-        if (isSignature && relatedCommentMD) {
-          defInfo.doc = "".concat(relatedCommentMD);
+        const declLine = input.document.lineAt(tokenFindings.declarationLine).text; // declaration line
+
+        // -------------------------------
+        // load CODE section of hover
+        //
+        if (typeString.includes("method")) {
+          if (isSignatureLine) {
+            // for method declaration use declaration line
+            defInfo.declarationlines = [sourceLine];
+          } else {
+            // for method use, replace PUB/PRI with our interp
+            const interpDecl = typeInterp + declLine.substring(3);
+            defInfo.declarationlines = [interpDecl];
+          }
         } else {
+          // else spew details until we figure out more...
+          defInfo.declarationlines = [typeInterpWName, tokenFindings.tokenRawInterp];
+        }
+
+        // -------------------------------
+        // load MarkDown section
+        //
+        if (tokenFindings.declarationComment) {
+          // have declaration comment...
+          if (typeString.includes("method")) {
+            if (!isSignatureLine) {
+              defInfo.doc = "".concat(`Custom Method: User defined<br>`, tokenFindings.declarationComment);
+            } else {
+              defInfo.doc = "".concat(tokenFindings.declarationComment);
+            }
+          } else {
+            defInfo.doc = "".concat(tokenFindings.declarationComment);
+          }
+        } else if (typeString.includes("method")) {
+          // no comment but is user defined method
+          const noCommentProvided = `*(no doc-comment provided)*`;
+          if (!isSignatureLine) {
+            defInfo.doc = "".concat(`Custom Method: User defined<br>`, noCommentProvided);
+          } else {
+            defInfo.doc = "".concat(noCommentProvided); // TODO: add doc comments here when we finally get them...
+          }
+        } else {
+          // no doc-comment, not method
           defInfo.doc = "".concat(`${docRootCommentMD}`); // TODO: add doc comments here when we finally get them...
         }
       } else {
         this._logMessage(`+ Hvr: token=[${input.word}], NOT found!`);
+        // -------------------------------
         // no token, let's check for built-in language parts
         let builtInFindings = this.parseUtils.docTextForBuiltIn(input.word);
         if (builtInFindings.found) {

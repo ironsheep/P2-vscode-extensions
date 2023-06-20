@@ -106,6 +106,7 @@ export const activate = (context: vscode.ExtensionContext) => {
   objTreeProvider = new ObjectTreeProvider(objTreeOutputChannel, objTreeDebugLogEnabled);
 
   docGenerator = new DocGenerator(docGenOutputChannel, formatDocGenLogEnabled);
+
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
 
   context.subscriptions.push(
@@ -117,6 +118,24 @@ export const activate = (context: vscode.ExtensionContext) => {
         docGenerator.showDocument();
       } catch (error) {
         await vscode.window.showErrorMessage("Document Generation Problem");
+        console.error(error);
+      }
+    })
+  );
+
+  const generateDocCommentCommand: string = "spin2.generate.doc.comment";
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(generateDocCommentCommand, async () => {
+      logFormatMessage("* generateDocumentCommentCommand");
+      try {
+        // and test it!
+        const editor = vscode?.window.activeTextEditor!;
+        const document = editor.document!;
+        var textEdits = await spin2SemanticTokensProvider.insertDocComment(document, editor.selections);
+        applyTextEdits(document, textEdits!);
+      } catch (error) {
+        await vscode.window.showErrorMessage("Document Comment Generation Problem");
         console.error(error);
       }
     })
@@ -185,15 +204,15 @@ export const activate = (context: vscode.ExtensionContext) => {
         }
       })
     );
+  }
 
-    function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
-      if (!textEdits) {
-        return;
-      }
-      const workEdits = new vscode.WorkspaceEdit();
-      workEdits.set(document.uri, textEdits); // give the edits
-      vscode.workspace.applyEdit(workEdits); // apply the edits
+  function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
+    if (!textEdits) {
+      return;
     }
+    const workEdits = new vscode.WorkspaceEdit();
+    workEdits.set(document.uri, textEdits); // give the edits
+    vscode.workspace.applyEdit(workEdits); // apply the edits
   }
 
   // ----------------------------------------------------------------------------

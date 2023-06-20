@@ -15,6 +15,8 @@ export interface ITokenDescription {
   interpretation: string;
   adjustedName: string;
   token: RememberedToken | undefined;
+  declarationLine: number;
+  declarationComment: string | undefined;
 }
 
 export interface ITokenInterpretation {
@@ -28,6 +30,8 @@ export interface ITokenInterpretation {
 //   CLASS RememberedToken
 export enum eCommentType {
   Unknown = 0,
+  singleLineComment,
+  singleLineDocComment,
   multiLineComment,
   multiLineDocComment,
 }
@@ -57,12 +61,22 @@ export class RememberedComment {
   }
 
   get lines(): string[] {
-    // return the array of comment lines for this block
+    // Return the array of comment lines for this block
     return this._lines;
   }
 
+  get lineCount(): number {
+    // Return the count of comment lines for this block
+    return this._lines.length;
+  }
+
+  get isBlankLine(): boolean {
+    // Return T/F where T means there is no remaining text after begin/end markers are removed
+    return this._lines.length == 0 || (this.lines.length == 1 && this._lines[0].length == 0);
+  }
+
   public commentAsMarkDown(): string {
-    // return the markdown for this block comment
+    // Return the markdown for this block comment
     let tempLines: string[] = this._lines;
     // if keywords are found in comment then specially wrap the word following each keyword
     for (let idx = 0; idx < this._lines.length; idx++) {
@@ -95,11 +109,6 @@ export class RememberedComment {
   public span(): vscode.Range {
     // return the recorded line indexes (start,end) - span of the comment block
     return new vscode.Range(new vscode.Position(this._1stLine, 0), new vscode.Position(this._lastLine, 0));
-  }
-
-  public isBlankLine(): boolean {
-    // return T/F where T means there is no remaining text after begin/end markers are removed
-    return this._lines.length == 0 || (this.lines.length == 1 && this._lines[0].length == 0);
   }
 
   public appendLine(line: string) {
@@ -136,6 +145,20 @@ export class RememberedComment {
     if (trimmedLine.length > 0) {
       this._lines.push(trimmedLine);
     }
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let trimmedLine = this._lines[idx].trim();
+      if (trimmedLine.startsWith("''")) {
+        trimmedLine = trimmedLine.substring(2);
+      } else if (trimmedLine.startsWith("'")) {
+        trimmedLine = trimmedLine.substring(1);
+      }
+      this._lines[idx] = trimmedLine;
+    }
+  }
+
+  public closeAsSingleLineBlock(lineNumber: number) {
+    // block of single line comments, remove comment-end from the line then save remainder if any
+    this._lastLine = lineNumber;
     for (let idx = 0; idx < this._lines.length; idx++) {
       let trimmedLine = this._lines[idx].trim();
       if (trimmedLine.startsWith("''")) {
@@ -191,8 +214,17 @@ export class RememberedComment {
     const commentSpan: vscode.Range = this.span();
     const startLine = commentSpan.start.line + 1;
     const endLine = commentSpan.end.line + 1;
-    const typeString: string = this._type == eCommentType.multiLineDocComment ? "blockDocComment" : "blockComment";
-    const interpString: string = `lines ${startLine}-${endLine}`;
+    let typeString: string = "??BlockComment??";
+    if (this._type == eCommentType.singleLineComment) {
+      typeString = "singleLineCommentBlock";
+    } else if (this._type == eCommentType.singleLineDocComment) {
+      typeString = "singleLineDocCommentBlock";
+    } else if (this._type == eCommentType.multiLineComment) {
+      typeString = "multiLineCommentBlock";
+    } else if (this._type == eCommentType.multiLineDocComment) {
+      typeString = "multiLineDocCommentBlock";
+    }
+    const interpString: string = `[${typeString}] lines ${startLine}-${endLine}`;
     return interpString;
   }
 }
@@ -240,6 +272,16 @@ export class RememberedToken {
     return updatedModifiers;
   }
 }
+export class RememberedTokenDeclarationInfo {
+  private _declLineIndex: number;
+  constructor(declarationLinIndex: number) {
+    this._declLineIndex = declarationLinIndex;
+  }
+
+  get lineIndex(): number {
+    return this._declLineIndex;
+  }
+}
 
 // ----------------------------------------------------------------------------
 //  Shared Data Storage for what our current document contains
@@ -247,6 +289,8 @@ export class RememberedToken {
 export class DocumentFindings {
   private globalTokens;
   private localTokens;
+  private globalTokensDeclarationInfo;
+  private localTokensDeclarationInfo;
   private localPasmTokensByMethodName;
   private blockComments: RememberedComment[] = [];
 
@@ -259,6 +303,8 @@ export class DocumentFindings {
     this._logTokenMessage("* Global, Local, MethodScoped Token repo's ready");
     this.globalTokens = new TokenSet("gloTOK", isLogging, logHandle);
     this.localTokens = new TokenSet("locTOK", isLogging, logHandle);
+    this.globalTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
+    this.localTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
     // and for P2
     this.localPasmTokensByMethodName = new NameScopedTokenSet("methodTOK", isLogging, logHandle);
   }
@@ -317,6 +363,8 @@ export class DocumentFindings {
       scope: "",
       interpretation: "",
       adjustedName: tokenName,
+      declarationLine: 0,
+      declarationComment: undefined,
     };
     if (this.isKnownToken(tokenName)) {
       findings.found = true;
@@ -324,11 +372,23 @@ export class DocumentFindings {
       if (findings.token) {
         findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
         findings.scope = "Global";
+        // and decorate with declaration line number
+        let declInfo = this.globalTokensDeclarationInfo.get(tokenName);
+        if (declInfo) {
+          findings.declarationLine = declInfo.lineIndex;
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
+        }
       } else {
         findings.token = this.getLocalToken(tokenName);
         if (findings.token) {
           findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
           findings.scope = "Local";
+          // and decorate with declaration line number
+          let declInfo = this.localTokensDeclarationInfo.get(tokenName);
+          if (declInfo) {
+            findings.declarationLine = declInfo.lineIndex;
+            findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
+          }
         } else {
           // FIXME: what do we do for Method-Local tokens?
           /*
@@ -346,6 +406,7 @@ export class DocumentFindings {
       findings.interpretation = details.interpretation;
       findings.scope = details.scope;
       findings.adjustedName = details.name;
+      this._logTokenMessage(`  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}]` + this._rememberdTokenString(tokenName, findings.token));
     }
     return findings;
   }
@@ -393,10 +454,12 @@ export class DocumentFindings {
     return foundStatus;
   }
 
-  public setGlobalToken(tokenName: string, token: RememberedToken): void {
+  public setGlobalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number): void {
     if (!this.isGlobalToken(tokenName)) {
       this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token));
       this.globalTokens.setToken(tokenName, token);
+      // and remember declataion line# for this token
+      this.globalTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1));
     }
   }
 
@@ -417,10 +480,12 @@ export class DocumentFindings {
     return foundStatus;
   }
 
-  public setLocalToken(tokenName: string, token: RememberedToken): void {
+  public setLocalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number): void {
     if (!this.isLocalToken(tokenName)) {
       this._logTokenMessage("  -- NEW-locTOK " + this._rememberdTokenString(tokenName, token));
       this.localTokens.setToken(tokenName, token);
+      // and remember declataion line# for this token
+      this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1));
     }
   }
 
