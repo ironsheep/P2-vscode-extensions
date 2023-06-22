@@ -31,7 +31,7 @@ interface Filter extends vscode.DocumentFilter {
   language: string;
   scheme: string;
 }
-export const SPIN1_FILE: Filter = { language: "spin1", scheme: "file" };
+export const SPIN1_FILE: Filter = { language: "spin", scheme: "file" };
 export const SPIN2_FILE: Filter = { language: "spin2", scheme: "file" };
 
 export const logFormatMessage = (message: string): void => {
@@ -49,6 +49,7 @@ var objTreeProvider: ObjectTreeProvider;
 var objDepTreeView: vscode.TreeView<Dependency>;
 const objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
+const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider();
 const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider();
 
 // register services provided by this file
@@ -63,10 +64,13 @@ export const activate = (context: vscode.ExtensionContext) => {
   context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(SPIN1_FILE, new Spin1ConfigDocumentSymbolProvider()));
 
   // register our  Spin1 semantic tokens provider
-  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(SPIN1_FILE, new Spin1DocumentSemanticTokensProvider(), Spin1Legend));
+  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(SPIN1_FILE, spin1SemanticTokensProvider, Spin1Legend));
 
   // register our  Spin2 hover provider
   context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN2_FILE, new Spin2HoverProvider(spin2SemanticTokensProvider.docFindings())));
+
+  // register our  Spin1 hover provider
+  //context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN1_FILE, new Spin1HoverProvider(spin1SemanticTokensProvider.docFindings())));
 
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider

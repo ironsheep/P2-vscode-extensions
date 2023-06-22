@@ -6,6 +6,7 @@ import { CancellationToken, Hover, HoverProvider, Position, TextDocument, Worksp
 import { DocumentFindings } from "./spin.semantic.findings";
 import { ParseUtils, eBuiltInType } from "./spin2.utils";
 import { IncomingMessage } from "http";
+import { isDeepStrictEqual } from "util";
 
 /** getGoConfig is declared as an exported const rather than a function, so it can be stubbbed in testing. */
 export const getSpin2Config = (uri?: vscode.Uri) => {
@@ -159,13 +160,23 @@ export class Spin2HoverProvider implements HoverProvider {
         column: input.position.character,
         toolUsed: "????",
         declarationlines: [],
-        doc: " item documentation",
+        doc: "{huh, I have no clue!}",
         name: input.document.fileName,
       };
-      const sourceLine = input.document.lineAt(input.position.line).text.trim();
+      const sourceLineRaw = input.document.lineAt(input.position.line).text;
+      const sourceLine = sourceLineRaw.trim();
+      let cursorCharPosn = input.position.character;
+      do {
+        const char: string = sourceLineRaw.substring(cursorCharPosn, cursorCharPosn);
+        if (char == " " || char == "\t") {
+          break;
+        }
+        cursorCharPosn--;
+      } while (cursorCharPosn > 0);
+      const sourceTextToRight: string = sourceLineRaw.substring(cursorCharPosn).trim();
       const isSignatureLine: boolean = sourceLine.toLowerCase().startsWith("pub") || sourceLine.toLowerCase().startsWith("pri");
 
-      let bFoundSomething: boolean = true; // for now we don't have failure case
+      let bFoundSomething: boolean = false; // we've no answer
       let bFoundParseToken: boolean = this.symbolsFound.isKnownToken(input.word);
       if (bFoundParseToken) {
         bFoundSomething = true;
@@ -201,6 +212,9 @@ export class Spin2HoverProvider implements HoverProvider {
             const interpDecl = typeInterp + declLine.substring(3);
             defInfo.declarationlines = [interpDecl];
           }
+        } else if (tokenFindings.isGoodInterp) {
+          // else spew good interp details
+          defInfo.declarationlines = [typeInterpWName];
         } else {
           // else spew details until we figure out more...
           defInfo.declarationlines = [typeInterpWName, tokenFindings.tokenRawInterp];
@@ -212,16 +226,18 @@ export class Spin2HoverProvider implements HoverProvider {
         if (tokenFindings.declarationComment) {
           // have declaration comment...
           if (typeString.includes("method")) {
+            // is method with doc
             if (!isSignatureLine) {
               defInfo.doc = "".concat(`Custom Method: User defined<br>`, tokenFindings.declarationComment);
             } else {
               defInfo.doc = "".concat(tokenFindings.declarationComment);
             }
           } else {
+            // is non-method with doc
             defInfo.doc = "".concat(tokenFindings.declarationComment);
           }
         } else if (typeString.includes("method")) {
-          // no comment but is user defined method
+          // no declaration comment but is user-defined method
           const noCommentProvided = `*(no doc-comment provided)*`;
           if (!isSignatureLine) {
             defInfo.doc = "".concat(`Custom Method: User defined<br>`, noCommentProvided);
@@ -230,7 +246,7 @@ export class Spin2HoverProvider implements HoverProvider {
           }
         } else {
           // no doc-comment, not method
-          defInfo.doc = "".concat(`${docRootCommentMD}`); // TODO: add doc comments here when we finally get them...
+          defInfo.doc = undefined; //"".concat(`${docRootCommentMD}`); // TODO: add doc comments here when we finally get them...
         }
       } else {
         this._logMessage(`+ Hvr: token=[${input.word}], NOT found!`);
@@ -238,6 +254,11 @@ export class Spin2HoverProvider implements HoverProvider {
         // no token, let's check for built-in language parts
         let builtInFindings = this.parseUtils.docTextForBuiltIn(input.word);
         if (builtInFindings.found) {
+          let bISdebugStatement: boolean = false;
+          if (input.word.toLowerCase() == "debug" && sourceTextToRight.toLowerCase().startsWith("debug(")) {
+            bISdebugStatement = true;
+          }
+          this._logMessage(`+ Hvr: bISdebugStatement=[${bISdebugStatement}], sourceTextToRight=[${sourceTextToRight}]`);
           bFoundSomething = true;
           defInfo.declarationlines = [];
           this._logMessage(`+ Hvr: word=[${input.word}], descr=(${builtInFindings.description}), type=[spin2 built-in], cat=[${builtInFindings.category}]`);
@@ -250,6 +271,20 @@ export class Spin2HoverProvider implements HoverProvider {
           } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
             defInfo.declarationlines = ["(method) " + builtInFindings.signature];
             defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 built-in*<br>`, "- " + builtInFindings.description);
+          } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_SYMBOL) {
+            if (bISdebugStatement) {
+              defInfo.declarationlines = ["(DEBUG method) " + input.word + "()"];
+              let description: string =
+                "Run output commands that serially transmit the state of variables and equations as your application runs.  Each time a DEBUG statement is encountered during execution, the debugging program is invoked and it outputs the message for that statement.";
+              description = description + "<br>*(Affected by DEBUG_PIN_TX symbol)*";
+              defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 debug built-in*<br>`, "- " + description);
+            } else {
+              defInfo.declarationlines = ["(DEBUG symbol) " + input.word];
+              defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 debug built-in*<br>`, "- " + builtInFindings.description);
+            }
+          } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_METHOD) {
+            defInfo.declarationlines = ["(DEBUG method) " + builtInFindings.signature];
+            defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 debug built-in*<br>`, "- " + builtInFindings.description);
           } else {
             defInfo.doc = "".concat(builtInFindings.description);
           }
@@ -260,7 +295,7 @@ export class Spin2HoverProvider implements HoverProvider {
       if (bFoundSomething) {
         return resolve(defInfo);
       } else {
-        reject(null);
+        return reject(null); // we have no answer!
       }
     });
   }

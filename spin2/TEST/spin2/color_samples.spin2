@@ -36,18 +36,21 @@ PUB main(bDoNothing) : ok | idx
         idx++
         debug        'break everytime through the loop if "DEBUG" is selected (default)
 
-PRI myMethod1() : bStatus | index, text ' trailing comment
+PUB myMethod1() : bStatus | index, text ' trailing comment
 
 PRI myMethod(param1, param2) : bStatus, neededValue | index
 
 PUB testMethod(param1) : bStatus | index
-' A simple method to test stuff
+'' A simple method to test stuff
+''
+'' @param param1 - a parameter
+'' @returns bStatus - T/F where T means the operation worked
 '
-' @param param1 - a parameter
-' @returns bStatus - T/F where T means the operation worked
-'
+' Local Variables:
 ' @local index - into our array
+'
     index := 0
+    simpleVar[0] := 12
     bStatus := param1 + index + 1
 
 VAR
@@ -56,7 +59,7 @@ VAR
 DAT
 ' Title string for display
     myString    byte    "test string",0
-    effs        byte    $ff[8]
+    effs        byte    $ff[8]                  ' another comment
 
 DAT
                 org

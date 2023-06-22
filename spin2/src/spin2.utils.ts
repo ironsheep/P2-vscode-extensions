@@ -19,6 +19,10 @@ export enum eBuiltInType {
   BIT_VARIABLE,
   BIT_METHOD,
   BIT_SYMBOL,
+  BIT_LANG_PART,
+  BIT_DEBUG_INVOKE,
+  BIT_DEBUG_SYMBOL,
+  BIT_DEBUG_METHOD,
 }
 
 export interface IBuiltinDescription {
@@ -465,22 +469,63 @@ export class ParseUtils {
     return reservedStatus;
   }
 
+  // ----------------------------------------------------------------------------
+  // Built-in SPIN variables P2
+  //
+  private _tableSpinBlockNames: { [Identifier: string]: string } = {
+    con: "Constant declarations (CON is the initial/default block type)",
+    obj: "Child-object instantiations",
+    var: "Instance Variable declarations",
+    pub: "Public method for use by the parent object and within this object",
+    pri: "Private method for use within this object",
+    dat: "Object (class) Data declarations and/or PASM code",
+  };
+
+  private _docTextForSpinBuiltInLanguagePart(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    if (nameKey in this._tableSpinBlockNames) {
+      desiredDocText.category = "Block Name";
+      desiredDocText.description = this._tableSpinBlockNames[nameKey];
+    }
+    return desiredDocText;
+  }
+
   public docTextForBuiltIn(name: string): IBuiltinDescription {
     let desiredDocText: IBuiltinDescription = this._docTextForSpinBuiltInVariable(name);
     if (desiredDocText.found) {
       desiredDocText.type = eBuiltInType.BIT_VARIABLE;
     } else {
       desiredDocText = this._docTextForSpinBuiltInMethod(name);
-      // TOD: add more calls here
       if (desiredDocText.found) {
         desiredDocText.type = eBuiltInType.BIT_METHOD;
       } else {
         desiredDocText = this._docTextForCogAndNumericSymbols(name);
-        // TOD: add more calls here
         if (desiredDocText.found) {
           desiredDocText.type = eBuiltInType.BIT_SYMBOL;
         } else {
-          // FIXME: do next assignment
+          desiredDocText = this._docTextForSpinBuiltInLanguagePart(name);
+          if (desiredDocText.found) {
+            desiredDocText.type = eBuiltInType.BIT_LANG_PART;
+          } else {
+            desiredDocText = this._docTextForSpinDebugBuiltInMethod(name);
+            if (desiredDocText.found) {
+              desiredDocText.type = eBuiltInType.BIT_DEBUG_METHOD;
+            } else {
+              desiredDocText = this._docTextForSpinDebugBuiltInSymbols(name);
+              if (desiredDocText.found) {
+                desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
+              } else {
+                desiredDocText = this._docTextForSpinBuiltInDebugDisplayType(name);
+                if (desiredDocText.found) {
+                  desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
+                } else {
+                  // TOD: add more calls here
+                  // FIXME: do next assignment
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -724,107 +769,249 @@ export class ParseUtils {
 
   // -------------------------------------------------------------------------
   // keyword checks
+  private _tableDebugMethodsString: { [Identifier: string]: string[] } = {
+    zstr: ["ZSTR(hub_pointer)", "Output zero-terminated string at hub_pointer"],
+    lstr: ["LSTR(hub_pointer,size)", "Output 'size' characters of string at hub_pointer"],
+  };
+
+  private _tableDebugMethodsUnsignedDec: { [Identifier: string]: string[] } = {
+    udec: ["UDEC(value)", "Output unsigned decimal value (0 - 4_294_967_295)"],
+    udec_byte: ["UDEC_BYTE(value)", "Output BYTE-size(8-bit) unsigned decimal value (0 - 255)"],
+    udec_word: ["UDEC_WORD(value)", "Output WORD-size(16-bit) unsigned decimal value (0 - 65_535)"],
+    udec_long: ["UDEC_LONG(value)", "Output LONG-size(32-bit) unsigned decimal value (0 - 4_294_967_295)"],
+    udec_reg_array: ["UDEC_REG_ARRAY(reg_pointer,size)", "Output register array as unsigned decimal values (0 - 4_294_967_295)"],
+    udec_byte_array: ["UDEC_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as unsigned decimal values (0 - 255)"],
+    udec_word_array: ["UDEC_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as unsigned decimal value (0 - 65_535)"],
+    udec_long_array: ["UDEC_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as unsigned decimal value (0 - 4_294_967_295)"],
+  };
+
+  private _tableDebugMethodsSignedDec: { [Identifier: string]: string[] } = {
+    sdec: ["SDEC(value)", "Output signed decimal value (-2_147_483_648 - 2_147_483_647)"],
+    sdec_byte: ["SDEC_BYTE(value)", "Output BYTE-size(8-bit) signed decimal value (-128 - 127)"],
+    sdec_word: ["SDEC_WORD(value)", "Output WORD-size(16-bit) signed decimal value (-32_768 - 65_535)"],
+    sdec_long: ["SDEC_LONG(value)", "Output LONG-size(32-bit) signed decimal value (-2_147_483_648 - 2_147_483_647)"],
+    sdec_reg_array: ["SDEC_REG_ARRAY(reg_pointer,size)", "Output register array as signed decimal values (-2_147_483_648 - 2_147_483_647)"],
+    sdec_byte_array: ["SDEC_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as signed decimal values (-128 - 127)"],
+    sdec_word_array: ["SDEC_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as signed decimal value (-32_768 - 32_767)"],
+    sdec_long_array: ["SDEC_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as signed decimal value (-2_147_483_648 - 2_147_483_647)"],
+  };
+
+  private _tableDebugMethodsUnsignedHex: { [Identifier: string]: string[] } = {
+    uhex: ["UHEX(value)", "Output auto-size unsigned hex value ($0 - $FFFF_FFFF)"],
+    uhex_byte: ["UHEX_BYTE(value)", "Output BYTE-size(8-bit) unsigned hex value ($00 - $FF)"],
+    uhex_word: ["UHEX_WORD(value)", "Output WORD-size(16-bit) unsigned hex value ($0000 - $FFFF)"],
+    uhex_long: ["UHEX_LONG(value)", "Output LONG-size(32-bit) unsigned hex value ($0000_0000 - $FFFF_FFFF)"],
+    uhex_reg_array: ["UHEX_REG_ARRAY(reg_pointer,size)", "Output register array as unsigned hex values ($0000_0000 - $FFFF_FFFF)"],
+    uhex_byte_array: ["UHEX_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as unsigned hex values ($00 - $FF)"],
+    uhex_word_array: ["UHEX_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as unsigned hex values ($0000 - $FFFF)"],
+    uhex_long_array: ["UHEX_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as unsigned hex values ($0000_0000 - $FFFF_FFFF)"],
+  };
+
+  private _tableDebugMethodsSignedHex: { [Identifier: string]: string[] } = {
+    shex: ["SHEX(value)", "Output auto-size signed hex value (-$8000_0000 - $7FFF_FFFF)"],
+    shex_byte: ["SHEX_BYTE(value)", "Output BYTE-size(8-bit) signed hex value (-$80 - $7F)"],
+    shex_word: ["SHEX_WORD(value)", "Output WORD-size(16-bit) signed hex value (-$8000 - $7FFF)"],
+    shex_long: ["SHEX_LONG(value)", "Output LONG-size(32-bit) signed hex value (-$8000_0000 - $7FFF_FFFF)"],
+    shex_reg_array: ["SHEX_REG_ARRAY(reg_pointer,size)", "Output register array as signed hex values (-$8000_0000 - $7FFF_FFFF)"],
+    shex_byte_array: ["SHEX_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as signed hex values (-$80 - $7F)"],
+    shex_word_array: ["SHEX_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as signed hex values (-$8000 - $7FFF)"],
+    shex_long_array: ["SHEX_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as signed hex values (-$8000_0000 - $7FFF_FFFF)"],
+  };
+
+  private _tableDebugMethodsUnsignedBin: { [Identifier: string]: string[] } = {
+    ubin: ["UBIN(value)", "Output auto-size unsigned binary value"],
+    ubin_byte: ["UBIN_BYTE(value)", "Output BYTE-size(8-bit) unsigned binary value"],
+    ubin_word: ["UBIN_WORD(value)", "Output WORD-size(16-bit) unsigned binary value"],
+    ubin_long: ["UBIN_LONG(value)", "Output LONG-size(32-bit) unsigned binary value"],
+    ubin_reg_array: ["UBIN_REG_ARRAY(reg_pointer,size)", "Output register array as unsigned binary values"],
+    ubin_byte_array: ["UBIN_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as unsigned binary values"],
+    ubin_word_array: ["UBIN_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as unsigned binary values"],
+    ubin_long_array: ["UBIN_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as unsigned binary values"],
+  };
+
+  private _tableDebugMethodsSignedBin: { [Identifier: string]: string[] } = {
+    sbin: ["SBIN(value)", "Output auto-size signed binary value"],
+    sbin_byte: ["SBIN_BYTE(value)", "Output BYTE-size(8-bit) signed binary value"],
+    sbin_word: ["SBIN_WORD(value)", "Output WORD-size(16-bit) signed binary value"],
+    sbin_long: ["SBIN_LONG(value)", "Output LONG-size(32-bit) signed binary value"],
+    sbin_reg_array: ["SBIN_REG_ARRAY(reg_pointer,size)", "Output register array as signed binary values"],
+    sbin_byte_array: ["SBIN_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as signed binary values"],
+    sbin_word_array: ["SBIN_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as signed binary values"],
+    sbin_long_array: ["SBIN_LONGARRAY(hub_pointer,size)", "Output hub LONG array as signed binary values"],
+  };
+
+  private _tableDebugMethodsFloat: { [Identifier: string]: string[] } = {
+    fdec: ["FDEC(value)", "Output floating-point value (-3.4e+38 - 3.4e+38)"],
+    fdec_array: ["FDEC_ARRAY(hub_pointer,size)", "Output hub long array as floating-point values (-3.4e+38 - 3.4e+38)"],
+    fdec_reg_array: ["FDEC_REG_ARRAY(reg_pointer,size)", "Output register array as floating-point values (-3.4e+38 - 3.4e+38)"],
+  };
+
+  private _tableDebugMethodsMisc: { [Identifier: string]: string[] } = {
+    dly: ["DLY(milliseconds)", "Delay for some milliseconds to slow down continuous message outputs for this cog."],
+    pc_key: [
+      "PC_KEY(pointer_to_long)",
+      "FOR USE IN GRAPHICAL DEBUG() DISPLAYS - Must be the last command in a DEBUG() statement.<br>Returns any new host-PC keypress that occurred within the last 100ms into a long inside the chip. The DEBUG() Display must have focus for keypresses to be noticed.",
+    ],
+    pc_mouse: [
+      "PC_MOUSE(pointer_to_7_longs)",
+      "FOR USE IN GRAPHICAL DEBUG DISPLAYS - Must be the last command in a DEBUG() statement.<br>Returns the current host-PC mouse status into a 7-long structure inside the chip",
+    ],
+  };
+
+  private _tableDebugMethodsConditionals: { [Identifier: string]: string[] } = {
+    if: ["IF(condition)", "If condition <> 0 then continue at the next command within the DEBUG() statement, else skip all remaining commands and output CR+LF."],
+    ifnot: ["IFNOT(condition)", "If condition = 0 then continue at the next command within the DEBUG() statement, else skip all remaining commands and output CR+LF."],
+  };
 
   public isDebugMethod(name: string): boolean {
-    const debugMethodOfNote: string[] = [
-      "zstr",
-      "lstr",
-      "udec",
-      "udec_byte",
-      "udec_word",
-      "udec_long",
-      "udec_reg_array",
-      "udec_byte_array",
-      "udec_word_array",
-      "udec_long_array",
-      "sdec",
-      "sdec_byte",
-      "sdec_word",
-      "sdec_long",
-      "sdec_reg_array",
-      "sdec_byte_array",
-      "sdec_word_array",
-      "sdec_long_array",
-      "uhex",
-      "uhex_byte",
-      "uhex_word",
-      "uhex_long",
-      "uhex_reg_array",
-      "uhex_byte_array",
-      "uhex_word_array",
-      "uhex_long_array",
-      "shex",
-      "shex_byte",
-      "shex_word",
-      "shex_long",
-      "shex_reg_array",
-      "shex_byte_array",
-      "shex_word_array",
-      "shex_long_array",
-      "ubin",
-      "ubin_byte",
-      "ubin_word",
-      "ubin_long",
-      "ubin_reg_array",
-      "ubin_byte_array",
-      "ubin_word_array",
-      "ubin_long_array",
-      "sbin",
-      "sbin_byte",
-      "sbin_word",
-      "sbin_long",
-      "sbin_reg_array",
-      "sbin_byte_array",
-      "sbin_word_array",
-      "sbin_long_array",
-      "fdec",
-      "fdec_array",
-      "fdec_reg_array",
-      "dly",
-      "pc_key",
-      "pc_mouse",
-      "if",
-      "ifnot",
-    ];
-    const searchName: string = name.endsWith("_") ? name.substr(0, name.length - 1) : name;
-    const reservedStatus: boolean = debugMethodOfNote.indexOf(searchName.toLowerCase()) != -1;
+    const bIsUnderscoreSuffix: boolean = name.endsWith("_") ? true : false;
+    const nameKey: string = bIsUnderscoreSuffix ? name.substring(0, name.length - 1).toLowerCase() : name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableDebugMethodsString;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsUnsignedDec;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsSignedDec;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsUnsignedHex;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsSignedHex;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsUnsignedBin;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsSignedBin;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsFloat;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsMisc;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableDebugMethodsConditionals;
+    }
     return reservedStatus;
   }
+
+  private _docTextForSpinDebugBuiltInMethod(name: string): IBuiltinDescription {
+    const bIsUnderscoreSuffix: boolean = name.endsWith("_") ? true : false;
+    const nameKey: string = bIsUnderscoreSuffix ? name.substring(0, name.length - 1).toLowerCase() : name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    let bSupportsSuffix: boolean = true;
+    if (this.isDebugMethod(name)) {
+      desiredDocText.found = true;
+      let protoWDescr: string[] = [];
+      if (nameKey in this._tableDebugMethodsString) {
+        desiredDocText.category = "String Output";
+        protoWDescr = this._tableDebugMethodsString[nameKey];
+      } else if (nameKey in this._tableDebugMethodsUnsignedDec) {
+        desiredDocText.category = "Unsigned Decimal Output";
+        protoWDescr = this._tableDebugMethodsUnsignedDec[nameKey];
+      } else if (nameKey in this._tableDebugMethodsSignedDec) {
+        desiredDocText.category = "Signed Decimal Output";
+        protoWDescr = this._tableDebugMethodsSignedDec[nameKey];
+      } else if (nameKey in this._tableDebugMethodsUnsignedHex) {
+        desiredDocText.category = "Unsigned Hexedecimal Output";
+        protoWDescr = this._tableDebugMethodsUnsignedHex[nameKey];
+      } else if (nameKey in this._tableDebugMethodsSignedHex) {
+        desiredDocText.category = "Signed Hexedecimal Output";
+        protoWDescr = this._tableDebugMethodsSignedHex[nameKey];
+      } else if (nameKey in this._tableDebugMethodsUnsignedBin) {
+        desiredDocText.category = "Unsigned Binary Output";
+        protoWDescr = this._tableDebugMethodsUnsignedBin[nameKey];
+      } else if (nameKey in this._tableDebugMethodsSignedBin) {
+        desiredDocText.category = "Signed Binary Output";
+        protoWDescr = this._tableDebugMethodsSignedBin[nameKey];
+      } else if (nameKey in this._tableDebugMethodsFloat) {
+        desiredDocText.category = "Floating Point Output";
+        protoWDescr = this._tableDebugMethodsFloat[nameKey];
+      } else if (nameKey in this._tableDebugMethodsMisc) {
+        bSupportsSuffix = false;
+        desiredDocText.category = "Miscellaneous";
+        protoWDescr = this._tableDebugMethodsMisc[nameKey];
+      } else if (nameKey in this._tableDebugMethodsConditionals) {
+        bSupportsSuffix = false;
+        desiredDocText.category = "Conditionals";
+        protoWDescr = this._tableDebugMethodsConditionals[nameKey];
+      }
+      if (!bIsUnderscoreSuffix || (bIsUnderscoreSuffix && bSupportsSuffix)) {
+        if (protoWDescr.length != 0) {
+          desiredDocText.signature = protoWDescr[0];
+          if (bIsUnderscoreSuffix) {
+            desiredDocText.description = protoWDescr[1] + "<br>*(Trailing underscore: suppress the output of name of variable)*"; // italics
+          } else {
+            desiredDocText.description = protoWDescr[1];
+          }
+        }
+      } else if (bIsUnderscoreSuffix && !bSupportsSuffix) {
+        desiredDocText.signature = protoWDescr[0];
+        desiredDocText.description = protoWDescr[1] + "<br>**(WARNING Underscore Suffix is NOT allowed)**"; // bold
+      }
+    }
+    return desiredDocText;
+  }
+
+  private _tableDebugInvocations: { [Identifier: string]: string } = {
+    debug: "invoke this cog's PASM-level debugger.",
+    debug_main:
+      'each cog\'s PASM-level debugger will initially be invoked when a COGINIT occurs, and it will be ready to single-step through main (non-interrupt) code. In this case, DEBUG commands will be ignored, until you select "DEBUG" sensitivity in the debugger.',
+    debug_coginit: "each cog's PASM-level debugger will initially be invoked when a COGINIT occurs",
+  };
 
   public isDebugInvocation(name: string): boolean {
-    const debugExec: string[] = [
-      // debug overridable CONSTANTS
-      "debug_main",
-      "debug_coginit",
-      "debug",
-    ];
-    const reservedStatus: boolean = debugExec.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableDebugInvocations;
     return reservedStatus;
   }
 
+  private _tableDebugSymbols: { [Identifier: string]: string } = {
+    download_baud: "(default 2_000_000)<br>Sets the download baud rate.",
+    debug_cogs: "(default %1111_1111)<br>Selects which cogs have debug interrupts enabled. Bits 7..0 enable debugging interrupts in cogs 7..0.",
+    debug_delay: "(default 0)<br>Sets a delay in milliseconds before your application runs and begins transmitting DEBUG messages.",
+    debug_pin_tx: "(default 62)<br>Sets the DEBUG serial output pin. For DEBUG windows to open, DEBUG_PIN must be 62.",
+    debug_pin_rx: "(default 63)<br>Sets the DEBUG serial input pin for interactivity with the host PC.",
+    debug_baud: "(default download_baud)<br>Sets the DEBUG baud rate. May be necessary to add DEBUG_DELAY if DEBUG_BAUD is less than DOWNLOAD_BAUD.",
+    debug_timestamp: "By declaring this symbol, each DEBUG message will be time-stamped with the 64-bit CT value.",
+    debug_log_size: "(default 0)<br>Sets the maximum size in bytes of the 'DEBUG.log' file which will collect DEBUG messages. A value of 0 will inhibit log file generation.",
+    debug_left: "Sets the left screen coordinate where the DEBUG message window will appear.",
+    debug_top: "Sets the top screen coordinate where the DEBUG message window will appear.",
+    debug_width: "Sets the width of the DEBUG message window.",
+    debug_height: "Sets the height of the DEBUG message window.",
+    debug_display_left: "(default 0)<br>Sets the overall left screen offset where any DEBUG displays will appear (adds to 'POS' x coordinate in each DEBUG display).",
+    debug_display_top: "(default 0)<br>Sets the overall top screen offset where any DEBUG displays will appear (adds to 'POS' y coordinate in each DEBUG display).",
+    debug_windows_off: "(default 0)<br>Disables any DEBUG windows from opening after downloading, if set to a non-zero value.",
+  };
+
   public isDebugSymbol(name: string): boolean {
-    const debugSymbolOfNote: string[] = [
-      // debug overridable CONSTANTS
-      "download_baud",
-      "debug_cogs",
-      "debug_delay",
-      "debug_pin_tx",
-      "debug_pin_rx",
-      "debug_baud",
-      "debug_timestamp",
-      "debug_log_size",
-      "debug_left",
-      "debug_top",
-      "debug_width",
-      "debug_height",
-      "debug_display_left",
-      "debug_display_top",
-      "debug_windows_off",
-    ];
-    const searchName: string = name.endsWith("_") ? name.substr(0, name.length - 1) : name;
-    const reservedStatus: boolean = debugSymbolOfNote.indexOf(searchName.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableDebugSymbols;
     return reservedStatus;
   }
+
+  private _docTextForSpinDebugBuiltInSymbols(name: string): IBuiltinDescription {
+    const bIsUnderscoreSuffix: boolean = name.endsWith("_") ? true : false;
+    const nameKey: string = bIsUnderscoreSuffix ? name.substring(0, name.length - 1).toLowerCase() : name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    let bSupportsSuffix: boolean = true;
+    if (this.isDebugMethod(nameKey) || this.isDebugInvocation(nameKey)) {
+      desiredDocText.found = true;
+      let protoWDescr: string[] = [];
+      if (nameKey in this._tableDebugInvocations) {
+        desiredDocText.category = "Debug Invocation";
+        desiredDocText.description = this._tableDebugInvocations[nameKey];
+      } else if (nameKey in this._tableDebugSymbols) {
+        desiredDocText.category = "Debug Symbol";
+        desiredDocText.description = this._tableDebugSymbols[nameKey];
+      }
+    }
+    return desiredDocText;
+  }
+
+  // operators
 
   public isBinaryOperator(name: string): boolean {
     const binaryOperationsOfNote: string[] = ["sar", "ror", "rol", "rev", "zerox", "signx", "sca", "scas", "frac", "addbits", "addpins", "and", "or", "xor"];
@@ -1110,44 +1297,33 @@ export class ParseUtils {
     let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
     if (this.isSpinBuiltinMethod(name)) {
       desiredDocText.found = true;
+      let protoWDescr: string[] = [];
       if (nameKey in this.spinHubMethods) {
         desiredDocText.category = "Hub Method";
-        const protoWDescr: string[] = this.spinHubMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.spinHubMethods[nameKey];
       } else if (nameKey in this.spinPinMethods) {
         desiredDocText.category = "Pin Method";
-        const protoWDescr: string[] = this.spinPinMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.spinPinMethods[nameKey];
       } else if (nameKey in this.spinTimingMethods) {
         desiredDocText.category = "Timing Method";
-        const protoWDescr: string[] = this.spinTimingMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.spinTimingMethods[nameKey];
       } else if (nameKey in this.pasmInterfaceMethods) {
         desiredDocText.category = "Pasm Interface Method";
-        const protoWDescr: string[] = this.pasmInterfaceMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.pasmInterfaceMethods[nameKey];
       } else if (nameKey in this.spinMathMethods) {
         desiredDocText.category = "Math Method";
-        const protoWDescr: string[] = this.spinMathMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.spinMathMethods[nameKey];
       } else if (nameKey in this.spinMemoryMethods) {
         desiredDocText.category = "Memory Method";
-        const protoWDescr: string[] = this.spinMemoryMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.spinMemoryMethods[nameKey];
       } else if (nameKey in this.spinStringMethods) {
         desiredDocText.category = "String Method";
-        const protoWDescr: string[] = this.spinStringMethods[nameKey];
-        desiredDocText.signature = protoWDescr[0];
-        desiredDocText.description = protoWDescr[1];
+        protoWDescr = this.spinStringMethods[nameKey];
       } else if (nameKey in this.spinIndexValueMethods) {
         desiredDocText.category = "Hub Method";
-        const protoWDescr: string[] = this.spinIndexValueMethods[nameKey];
+        protoWDescr = this.spinIndexValueMethods[nameKey];
+      }
+      if (protoWDescr.length != 0) {
         desiredDocText.signature = protoWDescr[0];
         desiredDocText.description = protoWDescr[1];
       }
@@ -1839,7 +2015,7 @@ export class ParseUtils {
     return returnStatus;
   }
 
-  // ---------------- new deug() support ----------------
+  // ---------------- new debug() support ----------------
   //  updated: 26 Mar 2022  - (as of Spin2 v35s)
   //  debug() statements for special displays support the following
   //    plot      - General-purpose plotter with cartesian and polar modes
@@ -1852,11 +2028,33 @@ export class ParseUtils {
   //    spectro   - PDM, Spectrograph with 4..2048-point FFT, windowed results, phase-coloring, and log scale mode
   //    bitmap    - PDM, Bitmap, 1..2048 x 1..2048 pixels, 1/2/4/8/16/32-bit pixels with 19 color systems, 15 direction/autoscroll modes, independent X and Y pixel size of 1..256
   // ----------------------------------------------------
+  private _tableDebugDisplayTypes: { [Identifier: string]: string } = {
+    plot: "General-purpose plotter with cartesian and polar modes",
+    term: "Text terminal with up to 300 x 200 characters, 6..200 point font size, 4 simultaneous color schemes",
+    midi: "Piano keyboard with 1..128 keys, velocity depiction, variable screen scale",
+    logic: "PDM, Logic analyzer with single and multi-bit labels, 1..32 channels, can trigger on pattern",
+    scope: "PDM, Oscilloscope with 1..8 channels, can trigger on level with hysteresis",
+    scope_xy: "PDM, XY oscilloscope with 1..8 channels, persistence of 0..512 samples, polar mode, log scale mode",
+    fft: "PDM, Fast Fourier Transform with 1..8 channels, 4..2048 points, windowed results, log scale mode",
+    spectro: "PDM, Spectrograph with 4..2048-point FFT, windowed results, phase-coloring, and log scale mode",
+    bitmap: "PDM, Bitmap, 1..2048 x 1..2048 pixels, 1/2/4/8/16/32-bit pixels with 19 color systems, 15 direction/autoscroll modes, independent X and Y pixel size of 1..256",
+  };
+
   public isDebugDisplayType(name: string): boolean {
-    const debugDisplayTypes: string[] = ["logic", "scope", "scope_xy", "fft", "spectro", "plot", "term", "bitmap", "midi"];
-    //const bDisplayTypeStatus: boolean = (debugDisplayTypes.indexOf(name.toLowerCase()) != -1);
-    const bDisplayTypeStatus: boolean = debugDisplayTypes.includes(name.toLowerCase());
+    const nameKey: string = name.toLowerCase();
+    const bDisplayTypeStatus: boolean = nameKey in this._tableDebugDisplayTypes;
     return bDisplayTypeStatus;
+  }
+
+  private _docTextForSpinBuiltInDebugDisplayType(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    if (nameKey in this._tableDebugDisplayTypes) {
+      desiredDocText.found = true;
+      desiredDocText.category = "Debug Display-type";
+      desiredDocText.description = this._tableDebugDisplayTypes[nameKey];
+    }
+    return desiredDocText;
   }
 
   public isNameWithTypeInstantiation(newParameter: string, displayType: eDebugDisplayType): boolean {

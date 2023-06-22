@@ -11,6 +11,7 @@ import * as vscode from "vscode";
 export interface ITokenDescription {
   found: boolean;
   tokenRawInterp: string;
+  isGoodInterp: boolean;
   scope: string;
   interpretation: string;
   adjustedName: string;
@@ -23,6 +24,599 @@ export interface ITokenInterpretation {
   scope: string;
   interpretation: string;
   name: string;
+  isGoodInterp: boolean;
+}
+
+// ----------------------------------------------------------------------------
+//  Shared Data Storage for what our current document contains
+//   CLASS DocumentFindings
+export class DocumentFindings {
+  private globalTokens;
+  private localTokens;
+  private globalTokensDeclarationInfo;
+  private localTokensDeclarationInfo;
+  private localPasmTokensByMethodName;
+  private blockComments: RememberedComment[] = [];
+
+  private outputChannel: vscode.OutputChannel | undefined = undefined;
+  private bLogEnabled: boolean = false;
+
+  public constructor(isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
+    this.bLogEnabled = isLogging;
+    this.outputChannel = logHandle;
+    this._logTokenMessage("* Global, Local, MethodScoped Token repo's ready");
+    this.globalTokens = new TokenSet("gloTOK", isLogging, logHandle);
+    this.localTokens = new TokenSet("locTOK", isLogging, logHandle);
+    this.globalTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
+    this.localTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
+    // and for P2
+    this.localPasmTokensByMethodName = new NameScopedTokenSet("methodTOK", isLogging, logHandle);
+  }
+
+  //
+  // PUBLIC Methods
+  //
+  public clear() {
+    // we're studying a new document forget everything!
+    this.globalTokens.clear();
+    this.localTokens.clear();
+    this.localPasmTokensByMethodName.clear();
+    this.blockComments = [];
+  }
+
+  public recordComment(comment: RememberedComment) {
+    this.blockComments.push(comment);
+  }
+
+  public isLineInBlockComment(lineNumber: number): boolean {
+    let inCommentStatus: boolean = false;
+    if (this.blockComments.length > 0) {
+      for (let docComment of this.blockComments) {
+        if (docComment.includesLine(lineNumber)) {
+          inCommentStatus = true;
+          break;
+        }
+      }
+    }
+    return inCommentStatus;
+  }
+
+  public blockCommentMDFromLine(lineNumber: number): string | undefined {
+    let desiredComment: string | undefined = undefined;
+    if (this.blockComments.length > 0) {
+      for (let docComment of this.blockComments) {
+        if (docComment.includesLine(lineNumber)) {
+          desiredComment = docComment.commentAsMarkDown();
+          break;
+        }
+      }
+    }
+    return desiredComment;
+  }
+
+  public isKnownToken(tokenName: string): boolean {
+    const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) ? true : false;
+    return foundStatus;
+  }
+
+  public getTokenWithDescription(tokenName: string): ITokenDescription {
+    let findings: ITokenDescription = {
+      found: false,
+      tokenRawInterp: "",
+      isGoodInterp: false,
+      token: undefined,
+      scope: "",
+      interpretation: "",
+      adjustedName: tokenName,
+      declarationLine: 0,
+      declarationComment: undefined,
+    };
+    // do we have a token??
+    if (this.isKnownToken(tokenName)) {
+      findings.found = true;
+      findings.token = this.getGlobalToken(tokenName);
+      if (findings.token) {
+        // we have a GLOBAL token!
+        findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
+        findings.scope = "Global";
+        // and decorate with declaration line number
+        let declInfo = this.globalTokensDeclarationInfo.get(tokenName);
+        if (declInfo) {
+          findings.declarationLine = declInfo.lineIndex;
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
+          // if no multi-line comment then ...(but don't use trailing comment when method!)
+          if (!(findings.token.type == "method") && !findings.declarationComment && declInfo.comment) {
+            // if we have single line comment then use it!
+            findings.declarationComment = declInfo.comment;
+          }
+        }
+      } else {
+        findings.token = this.getLocalToken(tokenName);
+        if (findings.token) {
+          // we have a LOCAL token!
+          findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
+          findings.scope = "Local";
+          // and decorate with declaration line number
+          let declInfo = this.localTokensDeclarationInfo.get(tokenName);
+          if (declInfo) {
+            findings.declarationLine = declInfo.lineIndex;
+            findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
+            // if no multi-line comment then ... (but don't use trailing comment when method!)
+            if (!(findings.token.type == "method") && !findings.declarationComment && declInfo.comment) {
+              // if we have single line comment then use it!
+              findings.declarationComment = declInfo.comment;
+            }
+          }
+        } else {
+          // FIXME: what do we do for Method-Local tokens?
+          /*
+                if (!token) {
+                  findings.tokenRawInterp = "Local";
+                  let token = this.getLocalToken(tokenName);
+                }
+                */
+          findings.found = false;
+        }
+      }
+    }
+    if (findings.token) {
+      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName);
+      findings.isGoodInterp = details.isGoodInterp;
+      findings.interpretation = details.interpretation;
+      findings.scope = details.scope;
+      findings.adjustedName = details.name;
+      this._logTokenMessage(`  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}]` + this._rememberdTokenString(tokenName, findings.token));
+    }
+    return findings;
+  }
+  private _interpretToken(token: RememberedToken, scope: string, name: string): ITokenInterpretation {
+    let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name, isGoodInterp: true };
+    desiredInterp.interpretation = "--type??";
+    if (token?.type == "variable" && token?.modifiers[0] == "readonly") {
+      desiredInterp.interpretation = "constant (32-bit)";
+    } else if (token?.type == "namespace") {
+      desiredInterp.scope = ""; // ignore for this (or move `object` here?)
+      desiredInterp.interpretation = "object-name";
+    } else if (token?.type == "variable") {
+      desiredInterp.interpretation = "variable";
+      if (token?.modifiers[0] == "local") {
+        //desiredInterp.interpretation = "method-local " + desiredInterp.interpretation;
+      } else if (token?.modifiers[0] == "instance") {
+        desiredInterp.interpretation = "object instance " + desiredInterp.interpretation;
+      } else {
+        desiredInterp.interpretation = "object " + desiredInterp.interpretation;
+      }
+    } else if (token?.type == "label") {
+      desiredInterp.interpretation = "pasm label";
+    } else if (token?.type == "returnValue" && token?.modifiers.includes("local")) {
+      desiredInterp.scope = ""; // ignore for this (or method?)
+      desiredInterp.interpretation = "return value";
+    } else if (token?.type == "parameter" && token?.modifiers.includes("local")) {
+      desiredInterp.scope = ""; // ignore for this (or method?)
+      desiredInterp.interpretation = "parameter";
+    } else if (token?.type == "enumMember" && token?.modifiers.includes("readonly")) {
+      desiredInterp.interpretation = "enum value";
+    } else if (token?.type == "method") {
+      desiredInterp.name = name + "()";
+      desiredInterp.scope = ""; // ignore for this
+      if (token?.modifiers[0] == "static") {
+        desiredInterp.interpretation = "private method";
+      } else {
+        desiredInterp.interpretation = "public method";
+      }
+    } else {
+      desiredInterp.isGoodInterp = false;
+    }
+    return desiredInterp;
+  }
+
+  public isGlobalToken(tokenName: string): boolean {
+    const foundStatus: boolean = this.globalTokens.hasToken(tokenName);
+    return foundStatus;
+  }
+
+  public setGlobalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
+    if (!this.isGlobalToken(tokenName)) {
+      this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
+      this.globalTokens.setToken(tokenName, token);
+      // and remember declataion line# for this token
+      this.globalTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
+    }
+  }
+
+  public getGlobalToken(tokenName: string): RememberedToken | undefined {
+    var desiredToken: RememberedToken | undefined = this.globalTokens.getToken(tokenName);
+    if (desiredToken != undefined) {
+      // let's never return a declaration modifier! (somehow declaration creeps in to our list!??)
+      //let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
+      let modifiersNoDecl: string[] = desiredToken.modifiersWithout("declaration");
+      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
+      this._logTokenMessage("  -- FND-gloTOK " + this._rememberdTokenString(tokenName, desiredToken));
+    }
+    return desiredToken;
+  }
+
+  public isLocalToken(tokenName: string): boolean {
+    const foundStatus: boolean = this.localTokens.hasToken(tokenName);
+    return foundStatus;
+  }
+
+  public setLocalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
+    if (!this.isLocalToken(tokenName)) {
+      this._logTokenMessage("  -- NEW-locTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
+      this.localTokens.setToken(tokenName, token);
+      // and remember declataion line# for this token
+      this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
+    }
+  }
+
+  public getLocalToken(tokenName: string): RememberedToken | undefined {
+    const desiredToken: RememberedToken | undefined = this.localTokens.getToken(tokenName);
+    if (desiredToken != undefined) {
+      this._logTokenMessage("  -- FND-locTOK " + this._rememberdTokenString(tokenName, desiredToken));
+    } else {
+      this._logTokenMessage("  -- FAILED to FND-locTOK " + tokenName);
+    }
+    return desiredToken;
+  }
+
+  // -------------------------------------------------------------------------
+  // method-scoped name token handling...
+  public clearLocalPasmTokensForMethod(methodName: string) {
+    // we're studying a new method forget everything local!
+    this.localPasmTokensByMethodName.clearForMethod(methodName);
+  }
+
+  public hasLocalPasmTokenListForMethod(methodName: string): boolean {
+    const mapExistsStatus: boolean = this.localPasmTokensByMethodName.hasMethod(methodName);
+    return mapExistsStatus;
+  }
+
+  public hasLocalPasmToken(tokenName: string): boolean {
+    let tokenExistsStatus: boolean = this.localPasmTokensByMethodName.hasToken(tokenName);
+    return tokenExistsStatus;
+  }
+
+  public hasLocalPasmTokenForMethod(methodName: string, tokenName: string): boolean {
+    let foundStatus: boolean = this.localPasmTokensByMethodName.hasTokenForMethod(methodName, tokenName);
+    return foundStatus;
+  }
+
+  public setLocalPasmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken): void {
+    if (this.hasLocalPasmTokenForMethod(methodName, tokenName)) {
+      // WARNING attempt to set again
+    } else {
+      // set new one!
+      this.localPasmTokensByMethodName.setTokenForMethod(methodName, tokenName, token);
+      const newToken = this.localPasmTokensByMethodName.getTokenForMethod(methodName, tokenName);
+      if (newToken) {
+        this._logTokenMessage("  -- NEW-lpTOK method=" + methodName + ": " + this._rememberdTokenString(tokenName, newToken));
+      }
+    }
+  }
+
+  public getLocalPasmTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
+    let desiredToken: RememberedToken | undefined = this.localPasmTokensByMethodName.getTokenForMethod(methodName, tokenName);
+    if (desiredToken) {
+      this._logTokenMessage("  -- FND-lpTOK method=" + methodName + ": " + this._rememberdTokenString(tokenName, desiredToken));
+    }
+    return desiredToken;
+  }
+
+  //
+  // PRIVATE (Utility) Methods
+  //
+  private _logTokenMessage(message: string): void {
+    if (this.bLogEnabled && this.outputChannel != undefined) {
+      // Write to output window.
+      this.outputChannel.appendLine(message);
+    }
+  }
+
+  private _rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
+    let desiredInterp: string = " -- token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
+    if (aToken != undefined) {
+      desiredInterp = " -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
+    }
+    return desiredInterp;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  Global or Local tokens
+//   CLASS TokenSet
+//
+export class TokenSet {
+  public constructor(idString: string, isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
+    this.bLogEnabled = isLogging;
+    this.outputChannel = logHandle;
+    this.id = idString;
+    this._logTokenMessage(`* ${this.id} ready`);
+  }
+
+  private id: string = "";
+  private tokenSet = new Map<string, RememberedToken>();
+  private outputChannel: vscode.OutputChannel | undefined = undefined;
+  private bLogEnabled: boolean = false;
+
+  private _logTokenMessage(message: string): void {
+    if (this.bLogEnabled && this.outputChannel != undefined) {
+      // Write to output window.
+      this.outputChannel.appendLine(message);
+    }
+  }
+
+  *[Symbol.iterator]() {
+    yield* this.tokenSet;
+  }
+
+  public entries() {
+    return Array.from(this.tokenSet.entries());
+  }
+
+  public clear(): void {
+    this.tokenSet.clear();
+    this._logTokenMessage(`* ${this.id} clear() now ` + this.length() + " tokens");
+  }
+
+  public length(): number {
+    // return count of token names in list
+    return this.tokenSet.size;
+  }
+
+  public rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
+    let desiredInterp: string = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
+    if (aToken != undefined) {
+      desiredInterp = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
+    }
+    return desiredInterp;
+  }
+
+  public hasToken(tokenName: string): boolean {
+    let foundStatus: boolean = false;
+    if (tokenName.length > 0) {
+      foundStatus = this.tokenSet.has(tokenName.toLowerCase());
+      if (foundStatus) {
+        this._logTokenMessage(`* ${this.id} [` + tokenName + "] found: " + foundStatus);
+      }
+    }
+    return foundStatus;
+  }
+
+  public setToken(tokenName: string, token: RememberedToken): void {
+    const desiredTokenKey: string = tokenName.toLowerCase();
+    if (tokenName.length > 0 && !this.hasToken(tokenName)) {
+      this.tokenSet.set(desiredTokenKey, token);
+      const currCt: number = this.length();
+      this._logTokenMessage(`* ${this.id} #${currCt}: ` + this.rememberdTokenString(tokenName, token));
+    }
+  }
+
+  public getToken(tokenName: string): RememberedToken | undefined {
+    const desiredTokenKey: string = tokenName.toLowerCase();
+    var desiredToken: RememberedToken | undefined = this.tokenSet.get(desiredTokenKey);
+    if (desiredToken != undefined) {
+      // let's never return a declaration modifier! (somehow "declaration" creeps in to our list!??)
+      //let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
+      let modifiersNoDecl: string[] = desiredToken.modifiersWithout("declaration");
+      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
+    }
+    return desiredToken;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  local tokens within method
+//   CLASS NameScopedTokenSet
+//
+export class NameScopedTokenSet {
+  public constructor(idString: string, isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
+    this.bLogEnabled = isLogging;
+    this.outputChannel = logHandle;
+    this.id = idString;
+    this._logTokenMessage(`* ${this.id} ready`);
+  }
+
+  private id: string = "";
+  private scopedTokenSet = new Map<string, TokenSet>();
+  private outputChannel: vscode.OutputChannel | undefined = undefined;
+  private bLogEnabled: boolean = false;
+
+  private _logTokenMessage(message: string): void {
+    if (this.bLogEnabled && this.outputChannel != undefined) {
+      // Write to output window.
+      this.outputChannel.appendLine(message);
+    }
+  }
+
+  *[Symbol.iterator]() {
+    yield* this.scopedTokenSet;
+  }
+
+  public entries() {
+    return Array.from(this.scopedTokenSet.entries());
+  }
+
+  public keys() {
+    return this.scopedTokenSet.keys();
+  }
+
+  public clear(): void {
+    this.scopedTokenSet.clear();
+    this._logTokenMessage(`* ${this.id} clear() now ` + this.length() + " tokens");
+  }
+
+  public clearForMethod(methodName: string) {
+    const desiredMethodKey = methodName.toLowerCase();
+    let tokenSet = this._getMapForMethod(desiredMethodKey);
+    if (tokenSet) {
+      tokenSet.clear();
+      this._logTokenMessage(`* ${this.id} clearForMethod(${desiredMethodKey}) now ` + tokenSet.length() + " tokens");
+    }
+  }
+
+  public length(): number {
+    // return count of method names in list
+    return this.scopedTokenSet.size;
+  }
+
+  public hasMethod(methodName: string): boolean {
+    let foundStatus: boolean = false;
+    if (methodName.length > 0) {
+      const desiredMethodKey = methodName.toLowerCase();
+      foundStatus = this.scopedTokenSet.has(desiredMethodKey);
+      //if (foundStatus) {
+      //  this._logTokenMessage(`* ${this.id} [` + desiredMethodKey + "] found: " + foundStatus);
+      //}
+    }
+    return foundStatus;
+  }
+
+  public hasToken(tokenName: string): boolean {
+    const desiredTokenKey = tokenName.toLowerCase();
+    let tokenExistsStatus: boolean = false;
+    for (let methodKey of this.scopedTokenSet.keys()) {
+      if (this.hasTokenForMethod(methodKey, desiredTokenKey)) {
+        tokenExistsStatus = true;
+        break;
+      }
+    }
+    return tokenExistsStatus;
+  }
+
+  public hasTokenForMethod(methodName: string, tokenName: string): boolean {
+    let foundStatus: boolean = false;
+    const desiredMethodKey = methodName.toLowerCase();
+    const desiredTokenKey = tokenName.toLowerCase();
+    const methodLocalsTokenSet = this._getMapForMethod(desiredMethodKey);
+    if (methodLocalsTokenSet) {
+      foundStatus = methodLocalsTokenSet.hasToken(desiredTokenKey);
+    }
+    return foundStatus;
+  }
+
+  public setTokenForMethod(methodName: string, tokenName: string, token: RememberedToken): void {
+    let tokenSet: TokenSet | undefined = undefined;
+    const desiredMethodKey = methodName.toLowerCase();
+    const desiredTokenKey = tokenName.toLowerCase();
+    if (!this.hasMethod(desiredMethodKey)) {
+      tokenSet = new TokenSet(`lpTOK-${desiredMethodKey}`, this.bLogEnabled, this.outputChannel);
+      this.scopedTokenSet.set(desiredMethodKey, tokenSet);
+    } else {
+      tokenSet = this._getMapForMethod(desiredMethodKey);
+    }
+    if (tokenSet && tokenSet.hasToken(desiredTokenKey)) {
+      this._logTokenMessage(`ERROR attempt to redefine ${desiredTokenKey} in method ${desiredMethodKey} as: ` + this._rememberdTokenString(tokenName, token));
+    } else {
+      if (tokenSet) {
+        this._logTokenMessage("  -- NEW-lpTOK " + desiredTokenKey + "=[" + token.type + "[" + token.modifiers + "]]");
+        tokenSet.setToken(desiredTokenKey, token);
+      }
+    }
+  }
+
+  public getTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
+    let desiredToken: RememberedToken | undefined = undefined;
+    const desiredMethodKey: string = methodName.toLowerCase();
+    const desiredTokenKey: string = tokenName.toLowerCase();
+    if (this.hasMethod(desiredMethodKey)) {
+      const methodLocalsTokenSet = this._getMapForMethod(desiredMethodKey);
+      if (methodLocalsTokenSet) {
+        desiredToken = methodLocalsTokenSet.getToken(desiredTokenKey);
+        if (desiredToken) {
+          this._logTokenMessage("  -- FND-lpTOK " + this._rememberdTokenString(tokenName, desiredToken));
+        }
+      }
+    }
+    return desiredToken;
+  }
+
+  private _rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
+    let desiredInterp: string = "  -- LP token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
+    if (aToken != undefined) {
+      desiredInterp = "  -- LP token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
+    }
+    return desiredInterp;
+  }
+
+  private _getMapForMethod(methodName: string): TokenSet | undefined {
+    let desiredTokenSet: TokenSet | undefined = undefined;
+    const desiredMethodKey: string = methodName.toLowerCase();
+    if (this.hasMethod(desiredMethodKey)) {
+      desiredTokenSet = this.scopedTokenSet.get(desiredMethodKey);
+    }
+    return desiredTokenSet;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  This is the basic token type we report to VSCode
+//   CLASS RememberedToken
+
+export class RememberedToken {
+  _type: string;
+  _modifiers: string[] = [];
+  constructor(type: string, modifiers: string[] | undefined) {
+    this._type = type;
+    if (modifiers != undefined) {
+      this._modifiers = modifiers;
+    }
+  }
+  get type(): string {
+    return this._type;
+  }
+  get modifiers(): string[] {
+    return this._modifiers;
+  }
+
+  // variable modifier fix ups
+
+  public modifiersWith(newModifier: string): string[] {
+    // add modification attribute
+    var updatedModifiers: string[] = this._modifiers;
+    if (!updatedModifiers.includes(newModifier)) {
+      updatedModifiers.push(newModifier);
+    }
+    return updatedModifiers;
+  }
+
+  public modifiersWithout(unwantedModifier: string): string[] {
+    //  remove modification attribute
+    var updatedModifiers: string[] = [];
+    for (var idx = 0; idx < this._modifiers.length; idx++) {
+      var possModifier: string = this._modifiers[idx];
+      if (possModifier !== unwantedModifier) {
+        updatedModifiers.push(possModifier);
+      }
+    }
+    return updatedModifiers;
+  }
+}
+// ----------------------------------------------------------------------------
+//  This is the structure we use for tracking Declaration Info for a token
+//   CLASS RememberedTokenDeclarationInfo
+export class RememberedTokenDeclarationInfo {
+  private _declLineIndex: number;
+  private _declcomment: string | undefined = undefined;
+  constructor(declarationLinIndex: number, declarationComment: string | undefined) {
+    this._declLineIndex = declarationLinIndex;
+    if (declarationComment) {
+      if (declarationComment.startsWith("''")) {
+        this._declcomment = declarationComment.substring(2).trim();
+      } else if (declarationComment.startsWith("'")) {
+        this._declcomment = declarationComment.substring(1).trim();
+      } else {
+        this._declcomment = declarationComment.trim();
+      }
+    }
+  }
+
+  get lineIndex(): number {
+    return this._declLineIndex;
+  }
+  get comment(): string | undefined {
+    return this._declcomment;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -226,564 +820,5 @@ export class RememberedComment {
     }
     const interpString: string = `[${typeString}] lines ${startLine}-${endLine}`;
     return interpString;
-  }
-}
-
-// ----------------------------------------------------------------------------
-//  This is the basic token type we report to VSCode
-//   CLASS RememberedToken
-
-export class RememberedToken {
-  _type: string;
-  _modifiers: string[] = [];
-  constructor(type: string, modifiers: string[] | undefined) {
-    this._type = type;
-    if (modifiers != undefined) {
-      this._modifiers = modifiers;
-    }
-  }
-  get type(): string {
-    return this._type;
-  }
-  get modifiers(): string[] {
-    return this._modifiers;
-  }
-
-  // variable modifier fix ups
-
-  public modifiersWith(newModifier: string): string[] {
-    // add modification attribute
-    var updatedModifiers: string[] = this._modifiers;
-    if (!updatedModifiers.includes(newModifier)) {
-      updatedModifiers.push(newModifier);
-    }
-    return updatedModifiers;
-  }
-
-  public modifiersWithout(unwantedModifier: string): string[] {
-    //  remove modification attribute
-    var updatedModifiers: string[] = [];
-    for (var idx = 0; idx < this._modifiers.length; idx++) {
-      var possModifier: string = this._modifiers[idx];
-      if (possModifier !== unwantedModifier) {
-        updatedModifiers.push(possModifier);
-      }
-    }
-    return updatedModifiers;
-  }
-}
-export class RememberedTokenDeclarationInfo {
-  private _declLineIndex: number;
-  constructor(declarationLinIndex: number) {
-    this._declLineIndex = declarationLinIndex;
-  }
-
-  get lineIndex(): number {
-    return this._declLineIndex;
-  }
-}
-
-// ----------------------------------------------------------------------------
-//  Shared Data Storage for what our current document contains
-//   CLASS DocumentFindings
-export class DocumentFindings {
-  private globalTokens;
-  private localTokens;
-  private globalTokensDeclarationInfo;
-  private localTokensDeclarationInfo;
-  private localPasmTokensByMethodName;
-  private blockComments: RememberedComment[] = [];
-
-  private outputChannel: vscode.OutputChannel | undefined = undefined;
-  private bLogEnabled: boolean = false;
-
-  public constructor(isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
-    this.bLogEnabled = isLogging;
-    this.outputChannel = logHandle;
-    this._logTokenMessage("* Global, Local, MethodScoped Token repo's ready");
-    this.globalTokens = new TokenSet("gloTOK", isLogging, logHandle);
-    this.localTokens = new TokenSet("locTOK", isLogging, logHandle);
-    this.globalTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
-    this.localTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
-    // and for P2
-    this.localPasmTokensByMethodName = new NameScopedTokenSet("methodTOK", isLogging, logHandle);
-  }
-
-  //
-  // PUBLIC Methods
-  //
-  public clear() {
-    // we're studying a new document forget everything!
-    this.globalTokens.clear();
-    this.localTokens.clear();
-    this.localPasmTokensByMethodName.clear();
-    this.blockComments = [];
-  }
-
-  public recordComment(comment: RememberedComment) {
-    this.blockComments.push(comment);
-  }
-
-  public isLineInBlockComment(lineNumber: number): boolean {
-    let inCommentStatus: boolean = false;
-    if (this.blockComments.length > 0) {
-      for (let docComment of this.blockComments) {
-        if (docComment.includesLine(lineNumber)) {
-          inCommentStatus = true;
-          break;
-        }
-      }
-    }
-    return inCommentStatus;
-  }
-
-  public blockCommentMDFromLine(lineNumber: number): string | undefined {
-    let desiredComment: string | undefined = undefined;
-    if (this.blockComments.length > 0) {
-      for (let docComment of this.blockComments) {
-        if (docComment.includesLine(lineNumber)) {
-          desiredComment = docComment.commentAsMarkDown();
-          break;
-        }
-      }
-    }
-    return desiredComment;
-  }
-
-  public isKnownToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) ? true : false;
-    return foundStatus;
-  }
-
-  public getTokenWithDescription(tokenName: string): ITokenDescription {
-    let findings: ITokenDescription = {
-      found: false,
-      tokenRawInterp: "",
-      token: undefined,
-      scope: "",
-      interpretation: "",
-      adjustedName: tokenName,
-      declarationLine: 0,
-      declarationComment: undefined,
-    };
-    if (this.isKnownToken(tokenName)) {
-      findings.found = true;
-      findings.token = this.getGlobalToken(tokenName);
-      if (findings.token) {
-        findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
-        findings.scope = "Global";
-        // and decorate with declaration line number
-        let declInfo = this.globalTokensDeclarationInfo.get(tokenName);
-        if (declInfo) {
-          findings.declarationLine = declInfo.lineIndex;
-          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
-        }
-      } else {
-        findings.token = this.getLocalToken(tokenName);
-        if (findings.token) {
-          findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
-          findings.scope = "Local";
-          // and decorate with declaration line number
-          let declInfo = this.localTokensDeclarationInfo.get(tokenName);
-          if (declInfo) {
-            findings.declarationLine = declInfo.lineIndex;
-            findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
-          }
-        } else {
-          // FIXME: what do we do for Method-Local tokens?
-          /*
-                if (!token) {
-                  findings.tokenRawInterp = "Local";
-                  let token = this.getLocalToken(tokenName);
-                }
-                */
-          findings.found = false;
-        }
-      }
-    }
-    if (findings.token) {
-      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName);
-      findings.interpretation = details.interpretation;
-      findings.scope = details.scope;
-      findings.adjustedName = details.name;
-      this._logTokenMessage(`  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}]` + this._rememberdTokenString(tokenName, findings.token));
-    }
-    return findings;
-  }
-  private _interpretToken(token: RememberedToken, scope: string, name: string): ITokenInterpretation {
-    let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name };
-    desiredInterp.interpretation = "--type??";
-    if (token?.type == "variable" && token?.modifiers[0] == "readonly") {
-      desiredInterp.interpretation = "constant";
-    } else if (token?.type == "namespace") {
-      desiredInterp.scope = ""; // ignore for this (or move `object` here?)
-      desiredInterp.interpretation = "object-name";
-    } else if (token?.type == "variable") {
-      desiredInterp.interpretation = "variable";
-      if (token?.modifiers[0] == "local") {
-        //desiredInterp.interpretation = "method-local " + desiredInterp.interpretation;
-      } else if (token?.modifiers[0] == "instance") {
-        desiredInterp.interpretation = "instance " + desiredInterp.interpretation;
-      } else {
-        desiredInterp.interpretation = "class " + desiredInterp.interpretation;
-      }
-    } else if (token?.type == "label") {
-      desiredInterp.interpretation = "pasm label";
-    } else if (token?.type == "returnValue" && token?.modifiers.includes("local")) {
-      desiredInterp.scope = ""; // ignore for this (or method?)
-      desiredInterp.interpretation = "return value";
-    } else if (token?.type == "parameter" && token?.modifiers.includes("local")) {
-      desiredInterp.scope = ""; // ignore for this (or method?)
-      desiredInterp.interpretation = "parameter";
-    } else if (token?.type == "enumMember" && token?.modifiers.includes("readonly")) {
-      desiredInterp.interpretation = "enum value";
-    } else if (token?.type == "method") {
-      desiredInterp.name = name + "()";
-      desiredInterp.scope = ""; // ignore for this
-      if (token?.modifiers[0] == "static") {
-        desiredInterp.interpretation = "private method";
-      } else {
-        desiredInterp.interpretation = "public method";
-      }
-    }
-    return desiredInterp;
-  }
-
-  public isGlobalToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.globalTokens.hasToken(tokenName);
-    return foundStatus;
-  }
-
-  public setGlobalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number): void {
-    if (!this.isGlobalToken(tokenName)) {
-      this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token));
-      this.globalTokens.setToken(tokenName, token);
-      // and remember declataion line# for this token
-      this.globalTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1));
-    }
-  }
-
-  public getGlobalToken(tokenName: string): RememberedToken | undefined {
-    var desiredToken: RememberedToken | undefined = this.globalTokens.getToken(tokenName);
-    if (desiredToken != undefined) {
-      // let's never return a declaration modifier! (somehow declaration creeps in to our list!??)
-      //let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
-      let modifiersNoDecl: string[] = desiredToken.modifiersWithout("declaration");
-      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
-      this._logTokenMessage("  -- FND-gloTOK " + this._rememberdTokenString(tokenName, desiredToken));
-    }
-    return desiredToken;
-  }
-
-  public isLocalToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.localTokens.hasToken(tokenName);
-    return foundStatus;
-  }
-
-  public setLocalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number): void {
-    if (!this.isLocalToken(tokenName)) {
-      this._logTokenMessage("  -- NEW-locTOK " + this._rememberdTokenString(tokenName, token));
-      this.localTokens.setToken(tokenName, token);
-      // and remember declataion line# for this token
-      this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1));
-    }
-  }
-
-  public getLocalToken(tokenName: string): RememberedToken | undefined {
-    const desiredToken: RememberedToken | undefined = this.localTokens.getToken(tokenName);
-    if (desiredToken != undefined) {
-      this._logTokenMessage("  -- FND-locTOK " + this._rememberdTokenString(tokenName, desiredToken));
-    } else {
-      this._logTokenMessage("  -- FAILED to FND-locTOK " + tokenName);
-    }
-    return desiredToken;
-  }
-
-  // -------------------------------------------------------------------------
-  // method-scoped name token handling...
-  public clearLocalPasmTokensForMethod(methodName: string) {
-    // we're studying a new method forget everything local!
-    this.localPasmTokensByMethodName.clearForMethod(methodName);
-  }
-
-  public hasLocalPasmTokenListForMethod(methodName: string): boolean {
-    const mapExistsStatus: boolean = this.localPasmTokensByMethodName.hasMethod(methodName);
-    return mapExistsStatus;
-  }
-
-  public hasLocalPasmToken(tokenName: string): boolean {
-    let tokenExistsStatus: boolean = this.localPasmTokensByMethodName.hasToken(tokenName);
-    return tokenExistsStatus;
-  }
-
-  public hasLocalPasmTokenForMethod(methodName: string, tokenName: string): boolean {
-    let foundStatus: boolean = this.localPasmTokensByMethodName.hasTokenForMethod(methodName, tokenName);
-    return foundStatus;
-  }
-
-  public setLocalPasmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken): void {
-    if (this.hasLocalPasmTokenForMethod(methodName, tokenName)) {
-      // WARNING attempt to set again
-    } else {
-      // set new one!
-      this.localPasmTokensByMethodName.setTokenForMethod(methodName, tokenName, token);
-      const newToken = this.localPasmTokensByMethodName.getTokenForMethod(methodName, tokenName);
-      if (newToken) {
-        this._logTokenMessage("  -- NEW-lpTOK method=" + methodName + ": " + this._rememberdTokenString(tokenName, newToken));
-      }
-    }
-  }
-
-  public getLocalPasmTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
-    let desiredToken: RememberedToken | undefined = this.localPasmTokensByMethodName.getTokenForMethod(methodName, tokenName);
-    if (desiredToken) {
-      this._logTokenMessage("  -- FND-lpTOK method=" + methodName + ": " + this._rememberdTokenString(tokenName, desiredToken));
-    }
-    return desiredToken;
-  }
-
-  //
-  // PRIVATE (Utility) Methods
-  //
-  private _logTokenMessage(message: string): void {
-    if (this.bLogEnabled && this.outputChannel != undefined) {
-      // Write to output window.
-      this.outputChannel.appendLine(message);
-    }
-  }
-
-  private _rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
-    let desiredInterp: string = " -- token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
-    if (aToken != undefined) {
-      desiredInterp = " -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
-    }
-    return desiredInterp;
-  }
-}
-
-// ----------------------------------------------------------------------------
-//  local tokens within method
-//   CLASS NameScopedTokenSet
-//
-export class NameScopedTokenSet {
-  public constructor(idString: string, isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
-    this.bLogEnabled = isLogging;
-    this.outputChannel = logHandle;
-    this.id = idString;
-    this._logTokenMessage(`* ${this.id} ready`);
-  }
-
-  private id: string = "";
-  private scopedTokenSet = new Map<string, TokenSet>();
-  private outputChannel: vscode.OutputChannel | undefined = undefined;
-  private bLogEnabled: boolean = false;
-
-  private _logTokenMessage(message: string): void {
-    if (this.bLogEnabled && this.outputChannel != undefined) {
-      // Write to output window.
-      this.outputChannel.appendLine(message);
-    }
-  }
-
-  *[Symbol.iterator]() {
-    yield* this.scopedTokenSet;
-  }
-
-  public entries() {
-    return Array.from(this.scopedTokenSet.entries());
-  }
-
-  public keys() {
-    return this.scopedTokenSet.keys();
-  }
-
-  public clear(): void {
-    this.scopedTokenSet.clear();
-    this._logTokenMessage(`* ${this.id} clear() now ` + this.length() + " tokens");
-  }
-
-  public clearForMethod(methodName: string) {
-    const desiredMethodKey = methodName.toLowerCase();
-    let tokenSet = this._getMapForMethod(desiredMethodKey);
-    if (tokenSet) {
-      tokenSet.clear();
-      this._logTokenMessage(`* ${this.id} clearForMethod(${desiredMethodKey}) now ` + tokenSet.length() + " tokens");
-    }
-  }
-
-  public length(): number {
-    // return count of method names in list
-    return this.scopedTokenSet.size;
-  }
-
-  public hasMethod(methodName: string): boolean {
-    let foundStatus: boolean = false;
-    if (methodName.length > 0) {
-      const desiredMethodKey = methodName.toLowerCase();
-      foundStatus = this.scopedTokenSet.has(desiredMethodKey);
-      //if (foundStatus) {
-      //  this._logTokenMessage(`* ${this.id} [` + desiredMethodKey + "] found: " + foundStatus);
-      //}
-    }
-    return foundStatus;
-  }
-
-  public hasToken(tokenName: string): boolean {
-    const desiredTokenKey = tokenName.toLowerCase();
-    let tokenExistsStatus: boolean = false;
-    for (let methodKey of this.scopedTokenSet.keys()) {
-      if (this.hasTokenForMethod(methodKey, desiredTokenKey)) {
-        tokenExistsStatus = true;
-        break;
-      }
-    }
-    return tokenExistsStatus;
-  }
-
-  public hasTokenForMethod(methodName: string, tokenName: string): boolean {
-    let foundStatus: boolean = false;
-    const desiredMethodKey = methodName.toLowerCase();
-    const desiredTokenKey = tokenName.toLowerCase();
-    const methodLocalsTokenSet = this._getMapForMethod(desiredMethodKey);
-    if (methodLocalsTokenSet) {
-      foundStatus = methodLocalsTokenSet.hasToken(desiredTokenKey);
-    }
-    return foundStatus;
-  }
-
-  public setTokenForMethod(methodName: string, tokenName: string, token: RememberedToken): void {
-    let tokenSet: TokenSet | undefined = undefined;
-    const desiredMethodKey = methodName.toLowerCase();
-    const desiredTokenKey = tokenName.toLowerCase();
-    if (!this.hasMethod(desiredMethodKey)) {
-      tokenSet = new TokenSet(`lpTOK-${desiredMethodKey}`, this.bLogEnabled, this.outputChannel);
-      this.scopedTokenSet.set(desiredMethodKey, tokenSet);
-    } else {
-      tokenSet = this._getMapForMethod(desiredMethodKey);
-    }
-    if (tokenSet && tokenSet.hasToken(desiredTokenKey)) {
-      this._logTokenMessage(`ERROR attempt to redefine ${desiredTokenKey} in method ${desiredMethodKey} as: ` + this._rememberdTokenString(tokenName, token));
-    } else {
-      if (tokenSet) {
-        this._logTokenMessage("  -- NEW-lpTOK " + desiredTokenKey + "=[" + token.type + "[" + token.modifiers + "]]");
-        tokenSet.setToken(desiredTokenKey, token);
-      }
-    }
-  }
-
-  public getTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
-    let desiredToken: RememberedToken | undefined = undefined;
-    const desiredMethodKey: string = methodName.toLowerCase();
-    const desiredTokenKey: string = tokenName.toLowerCase();
-    if (this.hasMethod(desiredMethodKey)) {
-      const methodLocalsTokenSet = this._getMapForMethod(desiredMethodKey);
-      if (methodLocalsTokenSet) {
-        desiredToken = methodLocalsTokenSet.getToken(desiredTokenKey);
-        if (desiredToken) {
-          this._logTokenMessage("  -- FND-lpTOK " + this._rememberdTokenString(tokenName, desiredToken));
-        }
-      }
-    }
-    return desiredToken;
-  }
-
-  private _rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
-    let desiredInterp: string = "  -- LP token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
-    if (aToken != undefined) {
-      desiredInterp = "  -- LP token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
-    }
-    return desiredInterp;
-  }
-
-  private _getMapForMethod(methodName: string): TokenSet | undefined {
-    let desiredTokenSet: TokenSet | undefined = undefined;
-    const desiredMethodKey: string = methodName.toLowerCase();
-    if (this.hasMethod(desiredMethodKey)) {
-      desiredTokenSet = this.scopedTokenSet.get(desiredMethodKey);
-    }
-    return desiredTokenSet;
-  }
-}
-
-// ----------------------------------------------------------------------------
-//  Global or Local tokens
-//   CLASS TokenSet
-//
-export class TokenSet {
-  public constructor(idString: string, isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
-    this.bLogEnabled = isLogging;
-    this.outputChannel = logHandle;
-    this.id = idString;
-    this._logTokenMessage(`* ${this.id} ready`);
-  }
-
-  private id: string = "";
-  private tokenSet = new Map<string, RememberedToken>();
-  private outputChannel: vscode.OutputChannel | undefined = undefined;
-  private bLogEnabled: boolean = false;
-
-  private _logTokenMessage(message: string): void {
-    if (this.bLogEnabled && this.outputChannel != undefined) {
-      // Write to output window.
-      this.outputChannel.appendLine(message);
-    }
-  }
-
-  *[Symbol.iterator]() {
-    yield* this.tokenSet;
-  }
-
-  public entries() {
-    return Array.from(this.tokenSet.entries());
-  }
-
-  public clear(): void {
-    this.tokenSet.clear();
-    this._logTokenMessage(`* ${this.id} clear() now ` + this.length() + " tokens");
-  }
-
-  public length(): number {
-    // return count of token names in list
-    return this.tokenSet.size;
-  }
-
-  public rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
-    let desiredInterp: string = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
-    if (aToken != undefined) {
-      desiredInterp = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
-    }
-    return desiredInterp;
-  }
-
-  public hasToken(tokenName: string): boolean {
-    let foundStatus: boolean = false;
-    if (tokenName.length > 0) {
-      foundStatus = this.tokenSet.has(tokenName.toLowerCase());
-      if (foundStatus) {
-        this._logTokenMessage(`* ${this.id} [` + tokenName + "] found: " + foundStatus);
-      }
-    }
-    return foundStatus;
-  }
-
-  public setToken(tokenName: string, token: RememberedToken): void {
-    const desiredTokenKey: string = tokenName.toLowerCase();
-    if (tokenName.length > 0 && !this.hasToken(tokenName)) {
-      this.tokenSet.set(desiredTokenKey, token);
-      const currCt: number = this.length();
-      this._logTokenMessage(`* ${this.id} #${currCt}: ` + this.rememberdTokenString(tokenName, token));
-    }
-  }
-
-  public getToken(tokenName: string): RememberedToken | undefined {
-    const desiredTokenKey: string = tokenName.toLowerCase();
-    var desiredToken: RememberedToken | undefined = this.tokenSet.get(desiredTokenKey);
-    if (desiredToken != undefined) {
-      // let's never return a declaration modifier! (somehow "declaration" creeps in to our list!??)
-      //let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
-      let modifiersNoDecl: string[] = desiredToken.modifiersWithout("declaration");
-      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
-    }
-    return desiredToken;
   }
 }

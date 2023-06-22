@@ -9,6 +9,9 @@ CON
 OBJ
 
     serIO : "jm_serial"         ' jm  serial object
+    serIO[3] : "jm_serial"         ' jm  serial object
+
+pub main : ok
 
 PRI pullUpValueForEnum(pullupRqst) : pullup
   case pullupRqst

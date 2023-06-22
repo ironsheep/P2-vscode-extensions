@@ -35,6 +35,9 @@ export interface Blocks {
 /**
  *
  */
+// ----------------------------------------------------------------------------
+//  This is the object that does our tab formatting
+//   CLASS Formatter
 export class Formatter {
   private config = tabConfiguration;
 
