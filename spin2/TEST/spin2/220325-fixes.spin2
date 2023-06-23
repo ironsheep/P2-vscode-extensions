@@ -161,7 +161,7 @@ audio       org     0
 DAT         ' <-- dont understand why this DAT not syntax colored...!!!
 val15bit            long $8000
 clipLevelHigh       long $8000000
-clipLevelLow        long-$8000000   ' no whitespace after long!!! (BAD)
+clipLevelLow        long-$8000000   ' no whitespace after long!!! (BAD) BUG clipLevelLow is NOT a label!!!
 
 '  --------------------
 

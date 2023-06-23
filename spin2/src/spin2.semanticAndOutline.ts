@@ -753,43 +753,45 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // also track and record block comments (both braces and tic's!)
     // let's also track prior single line and trailing comment on same line
     this._logMessage("---> Pre SCAN");
-    let bPriorIsSingleLineComment: boolean = false;
-    let bPriorIsSingleLineDocComment: boolean = false;
+    let bBuildingSingleLineCmtBlock: boolean = false;
+    let bBuildingSingleLineDocCmtBlock: boolean = false;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
-      const trimmedNonCommentLine: string = this.parseUtils.getNonCommentLineRemainder(0, line);
-      const offSet: number = line.indexOf(trimmedNonCommentLine) + 1;
+      const trimmedNonCommentLine: string = trimmedLine.length > 0 ? this.parseUtils.getNonCommentLineRemainder(0, line) : "";
+      const offSet: number = trimmedNonCommentLine.length > 0 ? line.indexOf(trimmedNonCommentLine) + 1 : line.indexOf(trimmedLine) + 1;
       const tempComment = line.substring(trimmedNonCommentLine.length + offSet).trim();
       this.rightEdgeComment = tempComment.length > 0 ? tempComment : undefined;
       const sectionStatus = this._isSectionStartLine(line);
       const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
+
       // special blocks of doc-comment and non-doc comment lines handling
-      if (bPriorIsSingleLineDocComment && !trimmedLine.startsWith("''")) {
-        // process single line doc comment
-        bPriorIsSingleLineDocComment = false;
+      if (bBuildingSingleLineDocCmtBlock && !trimmedLine.startsWith("''")) {
+        // process single line doc-comment
+        bBuildingSingleLineDocCmtBlock = false;
         // add record single line comment block if > 1 line and clear
         if (currSingleLineBlockComment) {
           currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
-          if (currSingleLineBlockComment.lineCount > 1) {
-            this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
-            this.semanticFindings.recordComment(currSingleLineBlockComment);
-          }
+          // NOTE: single line doc comments can be 1 line long!!! (unlike single line non-doc comments)
+          this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
+          this.semanticFindings.recordComment(currSingleLineBlockComment);
           currSingleLineBlockComment = undefined;
         }
-      } else if (bPriorIsSingleLineComment && !trimmedLine.startsWith("'")) {
+      } else if (bBuildingSingleLineCmtBlock && !trimmedLine.startsWith("'")) {
         // process single line non-doc comment
-        bPriorIsSingleLineComment = false;
+        bBuildingSingleLineCmtBlock = false;
         // add record single line comment block if > 1 line and clear
         if (currSingleLineBlockComment) {
-          currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
+          // NOTE: single line non-doc comments must be 2 or more lines long!!! (unlike single line doc comments)
           if (currSingleLineBlockComment.lineCount > 1) {
+            currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
             this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
             this.semanticFindings.recordComment(currSingleLineBlockComment);
           }
           currSingleLineBlockComment = undefined;
         }
       }
+
       // now start our processing
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
@@ -851,8 +853,14 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         }
         //  DO NOTHING Let Syntax highlighting do this
         continue;
+      } else if (trimmedLine.length == 0) {
+        // a blank line clears pending single line comments
+        this.priorSingleLineComment = undefined;
+        continue;
       } else if (this.parseUtils.isFlexspinPreprocessorDirective(lineParts[0])) {
         this._getPreProcessor_Declaration(0, i + 1, line);
+        // a FlexspinPreprocessorDirective line clears pending single line comments
+        this.priorSingleLineComment = undefined;
         continue;
       } else if (trimmedLine.startsWith("{{")) {
         // process multi-line doc comment
@@ -876,6 +884,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currBlockComment = new RememberedComment(eCommentType.multiLineDocComment, i, line);
           //  DO NOTHING Let Syntax highlighting do this
         }
+        continue;
       } else if (trimmedLine.startsWith("{")) {
         // process possible multi-line non-doc comment
         // do we have a close on this same line?
@@ -892,30 +901,35 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currBlockComment = new RememberedComment(eCommentType.multiLineComment, i, line);
           //  DO NOTHING Let Syntax highlighting do this
         }
-      } else if (bPriorIsSingleLineDocComment && trimmedLine.startsWith("''")) {
+        continue;
+      } else if (bBuildingSingleLineDocCmtBlock && trimmedLine.startsWith("''")) {
         // process single line doc comment which follows one of same
         // we no longer have a prior single line comment
         this.priorSingleLineComment = undefined;
         // add to existing single line doc-comment block
         currSingleLineBlockComment?.appendLine(line);
-      } else if (bPriorIsSingleLineComment && trimmedLine.startsWith("'")) {
+        continue;
+      } else if (bBuildingSingleLineCmtBlock && trimmedLine.startsWith("'")) {
         // process single line non-doc comment which follows one of same
         // we no longer have a prior single line comment
         this.priorSingleLineComment = undefined;
         // add to existing single line non-doc-comment block
         currSingleLineBlockComment?.appendLine(line);
+        continue;
       } else if (trimmedLine.startsWith("''")) {
         // process single line doc comment
         this.priorSingleLineComment = trimmedLine; // record this line
         // create new single line doc-comment block
-        bPriorIsSingleLineDocComment = true;
+        bBuildingSingleLineDocCmtBlock = true;
         currSingleLineBlockComment = new RememberedComment(eCommentType.singleLineDocComment, i, line);
+        continue;
       } else if (trimmedLine.startsWith("'")) {
         // process single line non-doc comment
         this.priorSingleLineComment = trimmedLine; // record this line
         // create new single line non-doc-comment block
-        bPriorIsSingleLineComment = true;
+        bBuildingSingleLineCmtBlock = true;
         currSingleLineBlockComment = new RememberedComment(eCommentType.singleLineComment, i, line);
+        continue;
       } else if (sectionStatus.isSectionStart) {
         currState = sectionStatus.inProgressStatus;
         this._logState("- scan ln:" + (i + 1) + " currState=[" + currState + "]");
@@ -955,6 +969,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             this._getVAR_Declaration(3, i + 1, line);
           }
         }
+        // we processed the block declaration line, now wipe out prior comment
+        this.priorSingleLineComment = undefined; // clear it out...
         continue;
       } else if (currState == eParseState.inCon) {
         // process a constant line
@@ -1036,6 +1052,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
       }
+      // we processed statements in this line, now clear prior comment associated with this line
+      this.priorSingleLineComment = undefined; // clear it out...
     }
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("--->             <---");
@@ -1492,6 +1510,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
       let newName = lineParts[nameIndex];
+      const bIsFileLine: boolean = lineParts.includes("file") || lineParts.includes("FILE");
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + "), newName=[" + newName + "], label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (
         haveLabel &&
@@ -1514,7 +1533,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
         this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-        this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment());
+        let reference: string | undefined = bIsFileLine ? lineParts[2] : undefined;
+
+        this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment(), reference);
       }
     }
   }
@@ -1532,14 +1553,20 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
     if (haveLabel) {
       const labelName: string = lineParts[0];
-      if (!this.parseUtils.isReservedPasmSymbols(labelName) && !labelName.toUpperCase().startsWith("IF_") && !labelName.toUpperCase().startsWith("_RET_") && !labelName.startsWith(":")) {
+      if (
+        !this.parseUtils.isReservedPasmSymbols(labelName) &&
+        !this.parseUtils.isPasmInstruction(labelName) &&
+        !labelName.toUpperCase().startsWith("IF_") &&
+        !labelName.toUpperCase().startsWith("_RET_") &&
+        !labelName.startsWith(":")
+      ) {
         // org in first column is not label name, nor is if_ conditional
         const labelType: string = isDataDeclarationLine ? "variable" : "label";
         var labelModifiers: string[] = [];
         if (!isDataDeclarationLine) {
           labelModifiers = labelName.startsWith(".") ? ["static"] : [];
         }
-        this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
+        this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]"); // XYZZY AA
         this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment());
       }
     }
@@ -1559,12 +1586,12 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const remainingLength: number = remainingNonCommentLineStr.length;
     if (remainingLength > 0) {
       // get line parts - we only care about first one
-      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\|\[\]\:]/);
+      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\|\[\]\:]/).filter(Boolean);
       this._logOBJ("  -- GLBL GetOBJDecl lineParts=[" + lineParts + "]");
       const newName = lineParts[0];
       this._logOBJ("  -- GLBL GetOBJDecl newName=[" + newName + "]");
       // remember this object name so we can annotate a call to it
-      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []), lineNbr, this._declarationComment());
+      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []), lineNbr, this._declarationComment(), lineParts[1]); // pass filename, too
 
       // if we have override parts handle 'em
       if (bHasOverrides && overrideParts.length > 1) {

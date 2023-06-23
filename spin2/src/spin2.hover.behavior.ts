@@ -180,11 +180,12 @@ export class Spin2HoverProvider implements HoverProvider {
       let bFoundParseToken: boolean = this.symbolsFound.isKnownToken(input.word);
       if (bFoundParseToken) {
         bFoundSomething = true;
-        let tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
+        const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
         if (tokenFindings.found) {
           this._logMessage(
             `+ Hvr: token=[${input.word}], scope=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
           );
+          this._logMessage(`+ Hvr:    file=[${tokenFindings.relatedFilename}], declCmt=(${tokenFindings.declarationComment})]`);
         }
         const nameString = tokenFindings.adjustedName;
         const scopeString = tokenFindings.scope;
@@ -198,7 +199,8 @@ export class Spin2HoverProvider implements HoverProvider {
           typeInterpWName = `(${typeString}) ${nameString}`; // better formatting of interp
           typeInterp = `(${typeString})`;
         }
-        const declLine = input.document.lineAt(tokenFindings.declarationLine).text; // declaration line
+        const declLine = input.document.lineAt(tokenFindings.declarationLine).text.trim(); // declaration line
+        const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();
 
         // -------------------------------
         // load CODE section of hover
@@ -209,7 +211,7 @@ export class Spin2HoverProvider implements HoverProvider {
             defInfo.declarationlines = [sourceLine];
           } else {
             // for method use, replace PUB/PRI with our interp
-            const interpDecl = typeInterp + declLine.substring(3);
+            const interpDecl = typeInterp + nonCommentDecl.substring(3);
             defInfo.declarationlines = [interpDecl];
           }
         } else if (tokenFindings.isGoodInterp) {
@@ -223,6 +225,40 @@ export class Spin2HoverProvider implements HoverProvider {
         // -------------------------------
         // load MarkDown section
         //
+        let mdLines: string[] = [];
+        if (typeString.includes("method")) {
+          //if (!isSignatureLine) {
+          mdLines.push(`Custom Method: User defined<br>`);
+          //}
+        }
+        if (tokenFindings.interpretation.includes("constant (32-bit)") || tokenFindings.interpretation.includes("object variable") || tokenFindings.interpretation.includes("instance variable")) {
+          // if global constant push declaration line, first...
+          mdLines.push("Decl: " + nonCommentDecl + "<br>");
+        }
+        if (tokenFindings.interpretation.includes("pasm label") && tokenFindings.relatedFilename) {
+          mdLines.push("Refers to file: " + tokenFindings.relatedFilename + "<br>");
+        }
+        if (tokenFindings.interpretation.includes("object-name") && tokenFindings.relatedFilename) {
+          mdLines.push("An instance of: " + tokenFindings.relatedFilename + "<br>");
+        }
+        if (tokenFindings.declarationComment) {
+          // have object comment
+          mdLines.push(tokenFindings.declarationComment);
+        } else {
+          // no object comment
+          if (typeString.includes("method")) {
+            // if methods how we should have one...
+            mdLines.push(`*(no doc-comment provided)*`);
+          } else {
+            // no doc-comment, not method, do nothing
+          }
+        }
+        if (mdLines.length > 0) {
+          defInfo.doc = mdLines.join(" ");
+        } else {
+          defInfo.doc = undefined;
+        }
+        /*
         if (tokenFindings.declarationComment) {
           // have declaration comment...
           if (typeString.includes("method")) {
@@ -236,18 +272,21 @@ export class Spin2HoverProvider implements HoverProvider {
             // is non-method with doc
             defInfo.doc = "".concat(tokenFindings.declarationComment);
           }
-        } else if (typeString.includes("method")) {
-          // no declaration comment but is user-defined method
-          const noCommentProvided = `*(no doc-comment provided)*`;
-          if (!isSignatureLine) {
-            defInfo.doc = "".concat(`Custom Method: User defined<br>`, noCommentProvided);
-          } else {
-            defInfo.doc = "".concat(noCommentProvided); // TODO: add doc comments here when we finally get them...
-          }
         } else {
-          // no doc-comment, not method
-          defInfo.doc = undefined; //"".concat(`${docRootCommentMD}`); // TODO: add doc comments here when we finally get them...
+          if (typeString.includes("method")) {
+            // no declaration comment but is user-defined method
+            const noCommentProvided = `*(no doc-comment provided)*`;
+            if (!isSignatureLine) {
+              defInfo.doc = "".concat(`Custom Method: User defined<br>`, noCommentProvided);
+            } else {
+              defInfo.doc = "".concat(noCommentProvided); // TODO: add doc comments here when we finally get them...
+            }
+          } else {
+            // no doc-comment, not method
+            defInfo.doc = `${docRootCommentMD}`;
+          }
         }
+        */
       } else {
         this._logMessage(`+ Hvr: token=[${input.word}], NOT found!`);
         // -------------------------------
@@ -271,6 +310,9 @@ export class Spin2HoverProvider implements HoverProvider {
           } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
             defInfo.declarationlines = ["(method) " + builtInFindings.signature];
             defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 built-in*<br>`, "- " + builtInFindings.description);
+          } else if (builtInFindings.type == eBuiltInType.BIT_LANG_PART) {
+            defInfo.declarationlines = ["(spin2 language) " + input.word];
+            defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 built-in*<br>`, "- " + builtInFindings.description);
           } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_SYMBOL) {
             if (bISdebugStatement) {
               defInfo.declarationlines = ["(DEBUG method) " + input.word + "()"];
@@ -285,6 +327,9 @@ export class Spin2HoverProvider implements HoverProvider {
           } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_METHOD) {
             defInfo.declarationlines = ["(DEBUG method) " + builtInFindings.signature];
             defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 debug built-in*<br>`, "- " + builtInFindings.description);
+          } else if (builtInFindings.type == eBuiltInType.BIT_TYPE) {
+            defInfo.declarationlines = ["(Spin2 Storage) " + input.word];
+            defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 built-in*<br>`, "- " + builtInFindings.description);
           } else {
             defInfo.doc = "".concat(builtInFindings.description);
           }

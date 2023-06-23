@@ -23,6 +23,7 @@ export enum eBuiltInType {
   BIT_DEBUG_INVOKE,
   BIT_DEBUG_SYMBOL,
   BIT_DEBUG_METHOD,
+  BIT_TYPE,
 }
 
 export interface IBuiltinDescription {
@@ -473,18 +474,19 @@ export class ParseUtils {
   // Built-in SPIN variables P2
   //
   private _tableSpinBlockNames: { [Identifier: string]: string } = {
-    con: "Constant declarations (CON is the initial/default block type)",
-    obj: "Child-object instantiations",
-    var: "Instance Variable declarations",
+    con: "32-bit Constant declarations<br>*(NOTE: CON is the initial/default block type)*",
+    obj: "Child object instantiations<br>*(objects manipulated by this object)*",
+    var: "Object Instance variable declarations",
     pub: "Public method for use by the parent object and within this object",
     pri: "Private method for use within this object",
-    dat: "Object (class) Data declarations and/or PASM code",
+    dat: "Object Shared variable declarations and/or PASM code",
   };
 
   private _docTextForSpinBuiltInLanguagePart(name: string): IBuiltinDescription {
     const nameKey: string = name.toLowerCase();
     let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
     if (nameKey in this._tableSpinBlockNames) {
+      desiredDocText.found = true;
       desiredDocText.category = "Block Name";
       desiredDocText.description = this._tableSpinBlockNames[nameKey];
     }
@@ -520,8 +522,13 @@ export class ParseUtils {
                 if (desiredDocText.found) {
                   desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
                 } else {
-                  // TOD: add more calls here
-                  // FIXME: do next assignment
+                  desiredDocText = this._docTextForSpinStorageTypesAlignment(name);
+                  if (desiredDocText.found) {
+                    desiredDocText.type = eBuiltInType.BIT_TYPE;
+                  } else {
+                    // TOD: add more calls here
+                    // FIXME: do next assignment
+                  }
                 }
               }
             }
@@ -942,7 +949,7 @@ export class ParseUtils {
         if (protoWDescr.length != 0) {
           desiredDocText.signature = protoWDescr[0];
           if (bIsUnderscoreSuffix) {
-            desiredDocText.description = protoWDescr[1] + "<br>*(Trailing underscore: suppress the output of name of variable)*"; // italics
+            desiredDocText.description = protoWDescr[1] + "<br>*(Trailing underscore: removes the variable name from the output)*"; // italics
           } else {
             desiredDocText.description = protoWDescr[1];
           }
@@ -1191,6 +1198,8 @@ export class ParseUtils {
     // key: [ signature, description ]
     pinw: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
     pinwrite: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
+    pinr: ["PINR(PinField) : PinStates | PINREAD(PinField) : PinStates", "Read PinField pin(s)."],
+    pinread: ["PINR(PinField) : PinStates | PINREAD(PinField) : PinStates", "Read PinField pin(s)."],
     pinl: ["PINL(PinField) | PINLOW(PinField)", "Drive PinField pin(s) low."],
     pinlow: ["PINL(PinField) | PINLOW(PinField)", "Drive PinField pin(s) low."],
     pinh: ["PINH(PinField) | PINHIGH(PinField)", "Drive PinField pin(s) high."],
@@ -1435,6 +1444,7 @@ export class ParseUtils {
       "altsw",
       "and",
       "andn",
+      "asmclk",
       "augd",
       "augs",
       "bitc",
@@ -2013,6 +2023,45 @@ export class ParseUtils {
       }
     }
     return returnStatus;
+  }
+
+  private _tableSpinStorageTypes: { [Identifier: string]: string } = {
+    byte: "8-bit storage",
+    word: "16-bit storage",
+    long: "32-bit storage",
+    bytefit: "like BYTE for use in DAT sections, but verifies BYTE data are -$80 to $FF.",
+    wordfit: "like WORD for use in DAT sections, but verifies word data are -$8000 to $FFFF.",
+  };
+
+  private _tableSpinStorageSpecials: { [Identifier: string]: string[] } = {
+    res: ["RES n", "reserve n register(s), advance cog address by n, don't advance hub address"],
+    file: ['FileDat  FILE "Filename"', 'include binary file, "FileDat" is a BYTE symbol that points to file'],
+  };
+
+  private _tableSpinAlignment: { [Identifier: string]: string } = {
+    alignw: "word-align to hub memory, advances variable pointer as necessary",
+    alignl: "long-align to hub memory, advances variable pointer as necessary",
+  };
+
+  private _docTextForSpinStorageTypesAlignment(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    if (nameKey in this._tableSpinStorageTypes) {
+      desiredDocText.found = true;
+      desiredDocText.category = "Storage Types";
+      desiredDocText.description = this._tableSpinStorageTypes[nameKey];
+    } else if (nameKey in this._tableSpinAlignment) {
+      desiredDocText.found = true;
+      desiredDocText.category = "DAT Alignment";
+      desiredDocText.description = this._tableSpinAlignment[nameKey];
+    } else if (nameKey in this._tableSpinStorageSpecials) {
+      desiredDocText.found = true;
+      desiredDocText.category = "DAT Special";
+      const protoWDescr: string[] = this._tableSpinStorageSpecials[nameKey];
+      desiredDocText.signature = protoWDescr[0];
+      desiredDocText.description = protoWDescr[1];
+    }
+    return desiredDocText;
   }
 
   // ---------------- new debug() support ----------------

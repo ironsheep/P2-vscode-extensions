@@ -1,10 +1,13 @@
 '' latest findings needing to be fixed
 
 ' --------------------------------------------------------------------------------------------------
-PUB main() | c, m, h
+PUB main() | c, m, h, fp
    c := get_config()
+   ' test of single line comment
    m := get_ctrl_meas()
    h := get_ctrl_hum()
+
+   fp := @index_html
 
    debug("BME280 : standby time        : " , ubin_(c.[7..5]))                   ' BAD fix this form of access!!! (SHOULD NOT BE RED)
    debug("BME280 : IIR filter          : " , ubin_(c.[4..2]))
@@ -17,7 +20,9 @@ pub get_ctrl_hum() : d
     'read_reg(BME280_CTRL_HUM,@d)
 
 pub get_ctrl_meas() : d
-    'read_reg(BME280_CTRL_MEAS,@d)
+    ''read_reg(BME280_CTRL_MEAS,@d)
+
+'' 2ndary doc comments
 
 pub get_config() : d
     'read_reg(BME280_CONFIG,@d)
@@ -47,7 +52,9 @@ pub char_add(d)
     'data_buf[data_ptr] := d
     'data_ptr += 1
 
-pub sim_volts() : s | k
+pri sim_volts() : s | k
+' non doc comment
+' 2nd line
     s := string("_._")
     k :=  getct()
     k := ??k +// 33

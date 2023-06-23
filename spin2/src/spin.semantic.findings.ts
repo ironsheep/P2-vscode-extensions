@@ -18,6 +18,7 @@ export interface ITokenDescription {
   token: RememberedToken | undefined;
   declarationLine: number;
   declarationComment: string | undefined;
+  relatedFilename: string | undefined;
 }
 
 export interface ITokenInterpretation {
@@ -81,12 +82,14 @@ export class DocumentFindings {
     return inCommentStatus;
   }
 
-  public blockCommentMDFromLine(lineNumber: number): string | undefined {
+  public blockCommentMDFromLine(lineNumber: number, mustBeDocComment: boolean): string | undefined {
     let desiredComment: string | undefined = undefined;
     if (this.blockComments.length > 0) {
       for (let docComment of this.blockComments) {
         if (docComment.includesLine(lineNumber)) {
-          desiredComment = docComment.commentAsMarkDown();
+          if (mustBeDocComment == false || (mustBeDocComment == true && docComment.isDocComment)) {
+            desiredComment = docComment.commentAsMarkDown();
+          }
           break;
         }
       }
@@ -110,8 +113,10 @@ export class DocumentFindings {
       adjustedName: tokenName,
       declarationLine: 0,
       declarationComment: undefined,
+      relatedFilename: undefined,
     };
     // do we have a token??
+    let declInfo: RememberedTokenDeclarationInfo | undefined = undefined;
     if (this.isKnownToken(tokenName)) {
       findings.found = true;
       findings.token = this.getGlobalToken(tokenName);
@@ -119,42 +124,19 @@ export class DocumentFindings {
         // we have a GLOBAL token!
         findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
         findings.scope = "Global";
-        // and decorate with declaration line number
-        let declInfo = this.globalTokensDeclarationInfo.get(tokenName);
-        if (declInfo) {
-          findings.declarationLine = declInfo.lineIndex;
-          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
-          // if no multi-line comment then ...(but don't use trailing comment when method!)
-          if (!(findings.token.type == "method") && !findings.declarationComment && declInfo.comment) {
-            // if we have single line comment then use it!
-            findings.declarationComment = declInfo.comment;
-          }
-        }
+        // and get additional info for token
+        declInfo = this.globalTokensDeclarationInfo.get(tokenName);
       } else {
         findings.token = this.getLocalToken(tokenName);
         if (findings.token) {
           // we have a LOCAL token!
+          const bIsMethod: boolean = findings.token.type == "method";
           findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
           findings.scope = "Local";
-          // and decorate with declaration line number
+          // and get additional info for token
           let declInfo = this.localTokensDeclarationInfo.get(tokenName);
-          if (declInfo) {
-            findings.declarationLine = declInfo.lineIndex;
-            findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1);
-            // if no multi-line comment then ... (but don't use trailing comment when method!)
-            if (!(findings.token.type == "method") && !findings.declarationComment && declInfo.comment) {
-              // if we have single line comment then use it!
-              findings.declarationComment = declInfo.comment;
-            }
-          }
         } else {
           // FIXME: what do we do for Method-Local tokens?
-          /*
-                if (!token) {
-                  findings.tokenRawInterp = "Local";
-                  let token = this.getLocalToken(tokenName);
-                }
-                */
           findings.found = false;
         }
       }
@@ -165,7 +147,33 @@ export class DocumentFindings {
       findings.interpretation = details.interpretation;
       findings.scope = details.scope;
       findings.adjustedName = details.name;
-      this._logTokenMessage(`  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}]` + this._rememberdTokenString(tokenName, findings.token));
+      if (declInfo) {
+        // and decorate with declaration line number
+        findings.declarationLine = declInfo.lineIndex;
+        findings.relatedFilename = declInfo.reference;
+        const bIsMethod: boolean = findings.token.type == "method";
+        const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
+        if (bIsMethod) {
+          const needDocOnlyCommentStatus: boolean = bIsPublic ? true : false;
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, needDocOnlyCommentStatus);
+          // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
+          const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
+          if (!findings.declarationComment && canUseAlternateComment) {
+            // if we have single line doc comment and can use it, then do so!
+            findings.declarationComment = declInfo.comment;
+          }
+        } else {
+          //  (this is in else so methods don't get these comments!)
+          // if no multi-line comment then ...(but don't use trailing comment when method!)
+          if (!findings.declarationComment && declInfo.comment) {
+            // if we have single line comment then use it!
+            findings.declarationComment = declInfo.comment;
+          }
+        }
+      }
+      this._logTokenMessage(
+        `  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}], file=[${findings.relatedFilename}]` + this._rememberdTokenString(tokenName, findings.token)
+      );
     }
     return findings;
   }
@@ -215,12 +223,12 @@ export class DocumentFindings {
     return foundStatus;
   }
 
-  public setGlobalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
+  public setGlobalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined, reference?: string | undefined): void {
     if (!this.isGlobalToken(tokenName)) {
-      this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
+      this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}], ref=[${reference}]`);
       this.globalTokens.setToken(tokenName, token);
       // and remember declataion line# for this token
-      this.globalTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
+      this.globalTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment, reference));
     }
   }
 
@@ -596,19 +604,32 @@ export class RememberedToken {
 //  This is the structure we use for tracking Declaration Info for a token
 //   CLASS RememberedTokenDeclarationInfo
 export class RememberedTokenDeclarationInfo {
+  private _type: eCommentType = eCommentType.Unknown;
   private _declLineIndex: number;
   private _declcomment: string | undefined = undefined;
-  constructor(declarationLinIndex: number, declarationComment: string | undefined) {
+  private _reference: string | undefined = undefined;
+  constructor(declarationLinIndex: number, declarationComment: string | undefined, reference?: string | undefined) {
     this._declLineIndex = declarationLinIndex;
     if (declarationComment) {
       if (declarationComment.startsWith("''")) {
+        this._type = eCommentType.singleLineDocComment;
         this._declcomment = declarationComment.substring(2).trim();
       } else if (declarationComment.startsWith("'")) {
+        this._type = eCommentType.singleLineComment;
         this._declcomment = declarationComment.substring(1).trim();
       } else {
+        // leaving type as UNKNOWN
         this._declcomment = declarationComment.trim();
       }
     }
+    if (typeof reference !== "undefined" && reference != undefined) {
+      this._reference = reference;
+    }
+  }
+
+  get isDocComment(): boolean {
+    // Return the array of comment lines for this block
+    return this._type == eCommentType.multiLineDocComment || this._type == eCommentType.singleLineDocComment;
   }
 
   get lineIndex(): number {
@@ -616,6 +637,9 @@ export class RememberedTokenDeclarationInfo {
   }
   get comment(): string | undefined {
     return this._declcomment;
+  }
+  get reference(): string | undefined {
+    return this._reference;
   }
 }
 
@@ -657,6 +681,11 @@ export class RememberedComment {
   get lines(): string[] {
     // Return the array of comment lines for this block
     return this._lines;
+  }
+
+  get isDocComment(): boolean {
+    // Return the array of comment lines for this block
+    return this._type == eCommentType.multiLineDocComment || this._type == eCommentType.singleLineDocComment;
   }
 
   get lineCount(): number {
