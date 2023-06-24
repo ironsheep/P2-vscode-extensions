@@ -15,10 +15,15 @@
 '' this is our full PASM2 instruction set
 
 
-PUB null()
+PUB null() : aNumber
 
     '' This is NOT a top level object
     return 5
+
+PRI badFunct() | error5
+    error5 := 5
+    '' This is NOT a top level object
+    abort error5
 
 CON
 
@@ -44,6 +49,7 @@ PUB allSpinLanguageParts()
     GETREGS()
     GETRND()
     GETSEC()
+    GETCRC()
     HUBSET()
     LOCKCHK()
     LOCKNEW()
@@ -77,6 +83,7 @@ PUB allSpinLanguageParts()
     SEND()
     SETREGS()
     STRCOMP()
+    STRCOPY()
     STRING()
     STRSIZE()
     WAITATN()
@@ -89,7 +96,7 @@ PUB allSpinLanguageParts()
     WXPIN()
     WYPIN()
     XYPOL()
-    NAN
+    NAN()
 
 PUB allHubVariableNames()
     CLKFREQ
@@ -157,7 +164,7 @@ PUB specialSymbolValues()
 '    1x_10
 '    1x_11
 
-PUB allClockVariabless()
+PUB allClockVariables()
 ' value can be set with HUBSET
 ' - these are the compiled values
     ' CONSTANT SYMBOLS

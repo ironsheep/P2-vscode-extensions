@@ -50,7 +50,7 @@ CON { enumerations }
     s
     t
     u[2]
-    v
+    vc
     w
 
 CON     e0,e1,e2    ' e0=0, e1=1, e2=2
@@ -71,12 +71,12 @@ VAR CogNum  ' the default variable size is LONG.
 
     WORD    CurrentCycle        ' word variable
     WORD    Cycles[200]         ' word variable array (200 words)
-    WORD    e,f[5],g,h[10]      ' command separated declarations
-    WORD    i[1],j,k,l[92]      ' command separated declarations
+    WORD    ev,fv[5],gv,hv[10]      ' command separated declarations
+    WORD    iv[1],jv,kv,lv[92]      ' command separated declarations
 
     LONG    values              ' long variable
     LONG    values[15]          ' long variable array (15 longs)
-    LONG    i[100],j,k,l        ' command separated declarations
+    LONG    il[100],jl,kl,ll        ' command separated declarations
 
     alignw                      ' word-align to hub memory, advances variable pointer  as necessary
 

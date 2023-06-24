@@ -102,6 +102,8 @@ pub start(rxpin, p_defaults) : cog
   if cog == 0
     debug("!!ERROR!!  failed to start SBUS Cog")    ' middle of string (start) shouldn't be hightlighted!!!
 
+    driveAtPower(50)
+
 '  --------------------
 
 PUB driveAtPower(power) | limitPwr, motorIncre, correctedPower, motorIsReversed, maxSpeed, motorPower

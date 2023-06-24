@@ -19,6 +19,7 @@ export interface ITokenDescription {
   declarationLine: number;
   declarationComment: string | undefined;
   relatedFilename: string | undefined;
+  relatedObjectName: string | undefined;
 }
 
 export interface ITokenInterpretation {
@@ -114,6 +115,7 @@ export class DocumentFindings {
       declarationLine: 0,
       declarationComment: undefined,
       relatedFilename: undefined,
+      relatedObjectName: undefined,
     };
     // do we have a token??
     let declInfo: RememberedTokenDeclarationInfo | undefined = undefined;
@@ -142,7 +144,7 @@ export class DocumentFindings {
       }
     }
     if (findings.token) {
-      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName);
+      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName, declInfo);
       findings.isGoodInterp = details.isGoodInterp;
       findings.interpretation = details.interpretation;
       findings.scope = details.scope;
@@ -150,7 +152,13 @@ export class DocumentFindings {
       if (declInfo) {
         // and decorate with declaration line number
         findings.declarationLine = declInfo.lineIndex;
-        findings.relatedFilename = declInfo.reference;
+        if (declInfo.reference) {
+          if (declInfo.isFilenameReference) {
+            findings.relatedFilename = declInfo.reference;
+          } else {
+            findings.relatedObjectName = declInfo.reference;
+          }
+        }
         const bIsMethod: boolean = findings.token.type == "method";
         const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
         if (bIsMethod) {
@@ -172,15 +180,22 @@ export class DocumentFindings {
         }
       }
       this._logTokenMessage(
-        `  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}], file=[${findings.relatedFilename}]` + this._rememberdTokenString(tokenName, findings.token)
+        `  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}], file=[${findings.relatedFilename}], obj=[${findings.relatedObjectName}]` +
+          this._rememberdTokenString(tokenName, findings.token)
       );
     }
     return findings;
   }
-  private _interpretToken(token: RememberedToken, scope: string, name: string): ITokenInterpretation {
+
+  private _interpretToken(token: RememberedToken, scope: string, name: string, declInfo: RememberedTokenDeclarationInfo | undefined): ITokenInterpretation {
     let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name, isGoodInterp: true };
     desiredInterp.interpretation = "--type??";
-    if (token?.type == "variable" && token?.modifiers[0] == "readonly") {
+    if (token?.type == "variable" && token?.modifiers[0] == "readonly" && !declInfo?.isObjectReference) {
+      // have non object reference
+      desiredInterp.interpretation = "constant (32-bit)";
+    } else if (token?.type == "variable" && token?.modifiers[0] == "readonly" && declInfo?.isObjectReference) {
+      // have object interface constant
+      desiredInterp.scope = "object interface"; // not just global
       desiredInterp.interpretation = "constant (32-bit)";
     } else if (token?.type == "namespace") {
       desiredInterp.scope = ""; // ignore for this (or move `object` here?)
@@ -210,6 +225,9 @@ export class DocumentFindings {
       if (token?.modifiers[0] == "static") {
         desiredInterp.interpretation = "private method";
       } else {
+        if (declInfo?.isObjectReference) {
+          desiredInterp.scope = "object interface"; // not just global
+        }
         desiredInterp.interpretation = "public method";
       }
     } else {
@@ -635,11 +653,29 @@ export class RememberedTokenDeclarationInfo {
   get lineIndex(): number {
     return this._declLineIndex;
   }
+
   get comment(): string | undefined {
     return this._declcomment;
   }
+
   get reference(): string | undefined {
     return this._reference;
+  }
+
+  get isFilenameReference(): boolean {
+    let isFilenameStatus: boolean = false;
+    if (this.reference && this._reference?.includes('"')) {
+      isFilenameStatus = true;
+    }
+    return isFilenameStatus;
+  }
+
+  get isObjectReference(): boolean {
+    let isObjectStatus: boolean = false;
+    if (this.reference && !this._reference?.includes('"')) {
+      isObjectStatus = true;
+    }
+    return isObjectStatus;
   }
 }
 

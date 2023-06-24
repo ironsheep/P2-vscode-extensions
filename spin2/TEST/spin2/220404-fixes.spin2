@@ -15,6 +15,7 @@ PRI get24BitBMPColorForRC(nRow, nColumn) : red, green, blue | pixColorAddr
 	if(nColumn > screen.MAX_DISPLAY_COLUMNS - 1)
 		debug("- ERROR bad nColumn value [", udec_(nColumn), " > ", udec_(screen.MAX_DISPLAY_COLUMNS - 1), "]")
 
+    pixColorAddr := screen.getPixelColorAddr(nRow, nColumn)
 ' --------------------------------------------------------------------------------------------------
 
 DAT
