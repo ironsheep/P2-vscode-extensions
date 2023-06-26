@@ -59,6 +59,7 @@ PUB spinMethodNames() : nResult
     QCOS()
     MULDIV64()
     GETRND()
+    GETCRC()
 
     GETREGS()
     SETREGS()
@@ -71,6 +72,7 @@ PUB spinMethodNames() : nResult
 
     STRSIZE()
     STRCOMP()
+    STRCOPY()
     STRING()
 
     LOOKUP()
@@ -148,4 +150,4 @@ PUB spinMethodNames()
     LOOKUPZ()
     LOOKDOWN()
     LOOKDOWNZ()
-    NAN
+    NAN()

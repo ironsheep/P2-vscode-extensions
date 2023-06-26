@@ -547,6 +547,9 @@ export class ParseUtils {
           "Run output commands that serially transmit the state of variables and equations as your application runs.  Each time a DEBUG statement is encountered during execution, the debugging program is invoked and it outputs the message for that statement.";
         description = description + "<br>*(Affected by DEBUG_PIN_TX symbol)*";
         desiredDocText.description = description;
+      } else {
+        // not a debug specific symbol then check other built-in's
+        desiredDocText = this.docTextForBuiltIn(name);
       }
     }
 

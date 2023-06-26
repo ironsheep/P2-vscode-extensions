@@ -49,10 +49,12 @@ interface IPairs {
 //import { Spin2HoverProvider } from './src/spin2.hover.behavior.ts';
 export class Spin2HoverProvider implements HoverProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  hoverLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  hoverLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private hoverOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
+
+  private firstTime: boolean = true;
 
   constructor(symbolRepository: DocumentFindings, spinConfig?: WorkspaceConfiguration) {
     this.spinConfig = spinConfig;
@@ -412,11 +414,20 @@ export class Spin2HoverProvider implements HoverProvider {
     const word = wordRange ? document.getText(wordRange) : "";
     this._logMessage(`+ Hvr: adjustWordPosition() ENTRY`);
     // TODO: fix this for spin comments vs. // comments
-    //const stringsFound: IPairs[] = this.getStringPairOffsets(lineText);
-    const stringsFound: IPairs[] = [];
+
+    /*
+    if (this.firstTime) {
+      this._testStringMatching();
+      this.firstTime = false;
+    }
+    */
+
+    const stringsFound: IPairs[] = this._getStringPairOffsets(lineText);
+    const ticVarsFound: IPairs[] = this._getPairOffsetsOfTicVarWraps(lineText);
+    //const stringsFound: IPairs[] = [];
     if (
       !wordRange ||
-      this.isPositionInString(document, position, stringsFound) ||
+      this.isPositionInString(document, position, stringsFound, ticVarsFound) ||
       this.isPositionInComment(document, position, stringsFound) ||
       word.match(/^\d+.?\d+$/) ||
       spinControlFlowKeywords.indexOf(word) > 0
@@ -432,10 +443,21 @@ export class Spin2HoverProvider implements HoverProvider {
     return [true, word, position];
   }
 
-  private isPositionInString(document: vscode.TextDocument, position: vscode.Position, stringsInLine: IPairs[]): boolean {
+  private isPositionInString(document: vscode.TextDocument, position: vscode.Position, stringsInLine: IPairs[], ticVarsInLine: IPairs[]): boolean {
     let inStringStatus: boolean = false;
     const lineText = document.lineAt(position.line).text;
-    if (stringsInLine.length > 0) {
+    let inTicVar: boolean = false;
+    if (ticVarsInLine.length > 0) {
+      for (let ticVarIdx = 0; ticVarIdx < ticVarsInLine.length; ticVarIdx++) {
+        const ticVarSpan = ticVarsInLine[ticVarIdx];
+        if (position.character >= ticVarSpan.start && position.character <= ticVarSpan.end) {
+          // char is within ticVar so not in string
+          inTicVar = true;
+          break;
+        }
+      }
+    }
+    if (!inTicVar && stringsInLine.length > 0) {
       for (let pairIdx = 0; pairIdx < stringsInLine.length; pairIdx++) {
         const stringSpan = stringsInLine[pairIdx];
         if (position.character >= stringSpan.start && position.character <= stringSpan.end) {
@@ -446,7 +468,7 @@ export class Spin2HoverProvider implements HoverProvider {
       }
     }
 
-    //this._logMessage(`+ Hvr: isPositionInString() = EXIT w/${inStringStatus}`);
+    this._logMessage(`+ Hvr: isPositionInString() = EXIT w/${inStringStatus}`);
     return inStringStatus;
   }
 
@@ -465,9 +487,8 @@ export class Spin2HoverProvider implements HoverProvider {
         // searfch for comment only past all strings
         trailingCommentStartSearchPos = stringsInLine[stringsInLine.length - 1].end + 1;
       }
-      const lineWithPossibleComment = lineTextUntrim.substring(trailingCommentStartSearchPos);
-      let firstTickMatchLocn: number = lineWithPossibleComment.indexOf("'");
-      let firstBraceMatchLocn: number = lineWithPossibleComment.indexOf("{");
+      let firstTickMatchLocn: number = lineText.indexOf("'", trailingCommentStartSearchPos);
+      let firstBraceMatchLocn: number = lineText.indexOf("{", trailingCommentStartSearchPos);
       let firstMatchLocn = firstTickMatchLocn < firstBraceMatchLocn && firstTickMatchLocn != -1 ? firstTickMatchLocn : firstBraceMatchLocn;
       if (firstBraceMatchLocn == -1) {
         firstMatchLocn = firstTickMatchLocn;
@@ -480,60 +501,136 @@ export class Spin2HoverProvider implements HoverProvider {
     if (!inCommentStatus) {
       // not in comment see if is in a block comment
       inCommentStatus = this.symbolsFound.isLineInBlockComment(position.line);
+      this._logMessage(`+ Hvr: isPositionInComment() (post-block) = EXIT w/${inCommentStatus}`);
+    } else {
+      this._logMessage(`+ Hvr: isPositionInComment() = EXIT w/${inCommentStatus}`);
     }
-    //this._logMessage(`+ Hvr: isPositionInComment() = EXIT w/${inCommentStatus}`);
     return inCommentStatus;
   }
 
-  private getStringPairOffsets(line: string): IPairs[] {
-    let findings: IPairs[] = [];
-    const charSet: string = `"'`;
-    this._logMessage(`+ Hvr: getStringPairOffsets([${line}])`);
-    for (let chrIdx = 0; chrIdx < charSet.length; chrIdx++) {
-      const srchChar = charSet.substring(chrIdx, chrIdx);
-      const pairsFound: IPairs[] = this.getPairOffsetsOfChar(line, srchChar);
-      if (pairsFound.length > 0) {
-        for (let findingIdx = 0; findingIdx < pairsFound.length; findingIdx++) {
-          const currFinding = pairsFound[findingIdx];
-          findings.push(currFinding);
+  private _getStringPairOffsets(line: string): IPairs[] {
+    let findings: IPairs[] = this._getPairOffsetsOfChar(line, '"');
+    this._showPairsForChar(findings, '"');
+    let sglQuoStrPairs: IPairs[] = this._getPairOffsetsOfChar(line, "'");
+    if (sglQuoStrPairs.length > 0) {
+      // this._logMessage(`+ Hvr: _getStringPairOffsets([${line}](${line.length}))`);
+      let dblQuotedStrings: IPairs[] = findings;
+      if (sglQuoStrPairs.length > 0) {
+        for (let sglIdx = 0; sglIdx < sglQuoStrPairs.length; sglIdx++) {
+          const currFinding: IPairs = sglQuoStrPairs[sglIdx];
+          let bFoundIndblStr: boolean = false;
+          if (dblQuotedStrings.length > 0) {
+            for (let dblIdx = 0; dblIdx < dblQuotedStrings.length; dblIdx++) {
+              const dblQuoteStrPair: IPairs = dblQuotedStrings[dblIdx];
+              if (currFinding.start >= dblQuoteStrPair.start && currFinding.start <= dblQuoteStrPair.end) {
+                bFoundIndblStr = true;
+                break;
+              }
+              if (currFinding.end >= dblQuoteStrPair.start && currFinding.end <= dblQuoteStrPair.end) {
+                bFoundIndblStr = true;
+                break;
+              }
+            }
+          }
+          if (!bFoundIndblStr) {
+            findings.push(currFinding);
+            this._showPairsForChar([currFinding], "'");
+          }
         }
       }
     }
-    if (findings.length > 0) {
-      for (let findingIdx = 0; findingIdx < findings.length; findingIdx++) {
-        this._logMessage(`+ Hvr: string at(${findings[findingIdx].start}, ${findings[findingIdx].end})`);
-      }
-    }
-    //this._logMessage(`+ Hvr: getStringPairOffsets() - found ${findings.length} pair(s)`);
+
+    //this._logMessage(`+ Hvr: _getStringPairOffsets() - found ${findings.length} pair(s)`);
     return findings;
   }
 
-  private getPairOffsetsOfChar(line: string, searchChar: string): IPairs[] {
+  private _getPairOffsetsOfTicVarWraps(line: string): IPairs[] {
+    let findings: IPairs[] = [];
+    // hunting for "`(variable)" sets
+    // return location of each one found
+    let endIdx: number = line.length - 3;
+    let currTicWrapOffset: number = 0;
+    do {
+      currTicWrapOffset = line.indexOf("`(", currTicWrapOffset);
+      if (currTicWrapOffset == -1) {
+        break; // not wrap, stop hunting
+      }
+      let currTicWrapEndOffset: number = line.indexOf(")", currTicWrapOffset);
+      if (currTicWrapEndOffset == -1) {
+        break; // not wrap, stop hunting
+      }
+      const newPair = { start: currTicWrapOffset, end: currTicWrapEndOffset };
+      findings.push(newPair);
+      currTicWrapOffset = currTicWrapEndOffset + 1;
+    } while (currTicWrapOffset < endIdx);
+    this._showPairsForChar(findings, "`()");
+    return findings;
+  }
+
+  private _showPairsForChar(pairsFound: IPairs[], srchChar: string) {
+    if (pairsFound.length > 0) {
+      for (let pairIdx = 0; pairIdx < pairsFound.length; pairIdx++) {
+        const pair: IPairs = pairsFound[pairIdx];
+        this._logMessage(`+     --- pair #${pairIdx + 1} string of (${srchChar}) at([${pair.start}, ${pair.end}) `);
+      }
+    }
+  }
+
+  private _getPairOffsetsOfChar(line: string, searchChar: string): IPairs[] {
     let findings: IPairs[] = [];
     let startPos: number = -1;
     let endPos: number = -1;
-    let seachOffset = 0;
-    this._logMessage(`+ Hvr: getPairOffsetsOfChar([${line}], [${searchChar}])`);
+    let seachOffset: number = 0;
+    let endIdx: number = line.length - 2;
+    //this._logMessage(`+ --- _getPairOffsetsOfChar([${line}](${line.length}), [${searchChar}])`);
     if (line.length > 0) {
-      while (seachOffset < line.length) {
-        startPos = line.substring(seachOffset).indexOf(searchChar);
-        if (startPos == -1) {
+      while (seachOffset < endIdx) {
+        startPos = line.indexOf(searchChar, seachOffset);
+        if (startPos == -1 || startPos >= endIdx) {
           break;
         }
-        endPos = line.substring(startPos + 1).indexOf(searchChar);
+        endPos = line.indexOf(searchChar, startPos + 1);
         if (endPos == -1) {
           break;
         }
         const newPair = { start: startPos, end: endPos };
         findings.push(newPair);
+        if (endPos >= endIdx) {
+          break;
+        }
         seachOffset = endPos + 1;
         if (line.substring(seachOffset).length < 1) {
           break;
         }
       }
     }
-    //this._logMessage(`+ Hvr: getPairOffsetsOfChar(, ) - found ${findings.length} pair(s)`);
+    //this._logMessage(`+ Hvr: _getPairOffsetsOfChar(, ) - found ${findings.length} pair(s)`);
     return findings;
+  }
+
+  private _testAndReportFindings(text: string) {
+    let pairs: IPairs[] = this._getStringPairOffsets(text);
+    this._logMessage(`+     _testAndReportFindings([${text}](${text.length})) found ${pairs.length} pair(s)`);
+    if (pairs.length > 0) {
+      for (let pairIdx = 0; pairIdx < pairs.length; pairIdx++) {
+        const pair: IPairs = pairs[pairIdx];
+        this._logMessage(`+     --- pair #${pairIdx + 1} at([${pair.start}, ${pair.end}) `);
+      }
+    }
+  }
+
+  private _testStringMatching() {
+    this._logMessage(`+ _testStringMatching() ENTRY`);
+    const test1: string = 'quoted strings "one..." no 2nd';
+    const test2: string = 'quoted strings "one..." and 2nd is "two" not at end';
+    const test3: string = "quoted strings 'one...' and 2nd is \"two\" and 3rd is 'three'";
+    const test4: string = "'one...' and 2nd is 'two' and 3rd is \"two\"";
+
+    this._testAndReportFindings(test1);
+    this._testAndReportFindings(test2);
+    this._testAndReportFindings(test3);
+    this._testAndReportFindings(test4);
+    this._logMessage(`+ _testStringMatching() EXIT`);
   }
 }
 

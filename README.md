@@ -21,8 +21,9 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 
 ## Features
 - Full support for both P1 (spin/pasm) and P2 (spin2/pasm2) languages
-- **Syntax and Semantic Highlighting** for both Spin and Pasm
-- **Syntax and Semantic Highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols as well as all debug() statements with parameter validation for all display types
+- **P1: Syntax and Semantic Highlighting** for both Spin and Pasm
+- **P2: Syntax and Semantic Highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols as well as all debug() statements with parameter validation for all display types
+- **P2: Show Hovers Feature** Hovers show information about the symbol/object that's below the mouse cursor. In our case this is for both user written code and for Spin2 built-ins.
 - **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
 - **Tab Sets** You can choose between `Propeller Tool`, `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 - File navigation from **Outline View**
@@ -31,6 +32,12 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 - Offers companion Theme (Two themes: Syntax+Semantic, and Syntax only - mostly used during semantic highlighting development)
 
 ### Up next
+We are working to routinely add features to this extension for the next month or two.  The hover support for P2 just arrived, here the next updates in the works:
+
+- Improve Hover support for P2
+- Add similar Hover support for P1
+- Add "Help With Function and Method Signatures" Feature. When the user enters a function or method, display information about the function/method that is being called. Awaken this for P2 and P1
+
 These are not yet definate but I'm:
 
 - Looking into providing a full spin/spin2 language server. This would allow all files in the project to contribute symbols, not just the current file being edited

@@ -46,7 +46,14 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 - The internal `name` or `name[quantity]` is shown for each object
 - If the reference file doesn't exist `FILE MISSING` will be shown as well
 
-## Feature: Generate "public object interface" documentation
+## Feature: Show Hovers
+
+Hovers show information about the symbol/object that's below the mouse cursor. This is usually the type of the symbol and a description. 
+
+- Hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item.
+- Hover for **Built-in Spin2** method names, variables, constants and smart-pin constants to display pop-up documentation about the built-in item.
+
+## Feature: Generate "Object public interface" documentation
 
 Upon pressing Ctrl+Alt+d (control alt document) the editor will now generate a `{filename}.txt` document file (for your `{filename}.spin2` or `{filename}.spin` file) and open it up to the right side of your editor window. The generator extracts all PUB methods and their doc-comments along with file-top and file-bottom doc-comments.
 
@@ -58,6 +65,78 @@ Variable:         348 bytes
 ```
 
 _The above information in not present in the VSCode generated documentation file._
+
+## Feature: Generate PUB and PRI comment blocks
+
+Place your cursor over a PUB or PRI method signature and press Ctrl+Alt+c (control alt comment) and a comment block will be inserted immediately below the signature line. Then simply fill in the description. In the case of PUB methods the comment block will use single line doc-comments for public information so these comments will be included in "Object public interface" documentat when it is generated. 
+
+### Sample PUB doc-comment:
+
+Press Ctrl+Alt+c (control alt comment) on this line:
+
+```spin2
+PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
+```
+
+... and you are presented with:
+
+```spin2
+PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
+'' ...
+'' 
+'' @param ePullupRqst - 
+'' @returns pullup - 
+'
+' Local Variables:
+' @local localVar - 
+```
+
+Fill it in like this:
+
+```spin2
+PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
+'' Translate a serial I/O pullup constant into a pin constant
+''  NOTE: defaults to P_HIGH_15K for any unknown enum value
+'' 
+'' @param ePullupRqst - a serial IO enum value indicating desired pull up
+'' @returns pullup - the selected pin constant 
+'
+' Local Variables:
+' @local localVar - this is here for demonstration
+```
+
+**Note**: *for PUB methods this generates a mixed block of comments using single line doc-comments for the public information and single line non-doc comments for the private parts (local vaariables).  This is so that the doc comments of public methods will be included in generated documentaion for this object.*
+
+### Sample PRI doc-comment:
+
+Press Ctrl+Alt+c (control alt comment) on this line:
+
+```spin2
+PRI pullUpValueForEnum(ePullupRqst) : pullup | localVar
+```
+
+... and you are presented with:
+
+```spin2
+PRI pullUpValueForEnum(ePullupRqst) : pullup
+' ...
+' 
+' @param ePullupRqst - 
+' @returns pullup - 
+```
+
+Fill it in like this:
+
+```spin2
+PRI pullUpValueForEnum(ePullupRqst) : pullup
+' Translate a serial I/O pullup constant into a pin constant
+'  NOTE: defaults to P_HIGH_15K for any unknown enum value
+' 
+' @param pullupRqst - a serial IO enum value indicating desired pull up
+' @returns pullup - the selected pin constant 
+```
+
+**Note**: *for PRI methods this generates a block of single line non-doc comments.  This is so the comment for private methods are not included in generated documentaion for this object.*
 
 ## Possible Conflicts with other VSCode Extensions
 

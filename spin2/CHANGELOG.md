@@ -21,13 +21,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.9.2] 2023-06-??
+## [1.9.2] 2023-06-26
 
 Add new hover support for P2!
 
-- Now can hover over variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item
-- Now supports hover for built-in spin2 methods, variables, and constants to display pop-up documentation about the built-in item
-- Adds new doc-comment generation for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. Comment is inserted immediately below the PUB or PRI line. 
+- Now can hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item
+- Now supports hover for **Built-in Spin2** methods, variables, constants and smart-pin contstants to display pop-up documentation about the built-in item
+- Adds new Doc-Comment Generation for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line. 
 - BUGFIX P2 no longer treats `asmclk` as pasm label (Oops)
 - BUGFIX P2 in debug() statements: variables accessed as sub bitfields now highlighted correctly (e.g., c.[2..7])
 - P2 syntax: added getcrc, strcopy
