@@ -1,4 +1,5 @@
 "use strict";
+import { IncomingMessage } from "http";
 // src/spin2.semantic.findings.ts
 
 import * as vscode from "vscode";
@@ -7,48 +8,25 @@ import * as vscode from "vscode";
 //  this file contains objects we use in tracking symbol use and declaration
 //
 
-// ----------------------------------------------------------------------------
-//  This is the bask token type we report to VSCode
-//   CLASS RememberedToken
+export interface ITokenDescription {
+  found: boolean;
+  tokenRawInterp: string;
+  isGoodInterp: boolean;
+  scope: string;
+  interpretation: string;
+  adjustedName: string;
+  token: RememberedToken | undefined;
+  declarationLine: number;
+  declarationComment: string | undefined;
+  relatedFilename: string | undefined;
+  relatedObjectName: string | undefined;
+}
 
-export class RememberedToken {
-  _type: string;
-  _modifiers: string[] = [];
-  constructor(type: string, modifiers: string[] | undefined) {
-    this._type = type;
-    if (modifiers != undefined) {
-      this._modifiers = modifiers;
-    }
-  }
-  get type() {
-    return this._type;
-  }
-  get modifiers() {
-    return this._modifiers;
-  }
-
-  // variable modifier fix ups
-
-  public modifiersWith(newModifier: string): string[] {
-    // add modification attribute
-    var updatedModifiers: string[] = this._modifiers;
-    if (!updatedModifiers.includes(newModifier)) {
-      updatedModifiers.push(newModifier);
-    }
-    return updatedModifiers;
-  }
-
-  public modifiersWithout(unwantedModifier: string): string[] {
-    //  remove modification attribute
-    var updatedModifiers: string[] = [];
-    for (var idx = 0; idx < this._modifiers.length; idx++) {
-      var possModifier: string = this._modifiers[idx];
-      if (possModifier !== unwantedModifier) {
-        updatedModifiers.push(possModifier);
-      }
-    }
-    return updatedModifiers;
-  }
+export interface ITokenInterpretation {
+  scope: string;
+  interpretation: string;
+  name: string;
+  isGoodInterp: boolean;
 }
 
 // ----------------------------------------------------------------------------
@@ -57,7 +35,10 @@ export class RememberedToken {
 export class DocumentFindings {
   private globalTokens;
   private localTokens;
+  private globalTokensDeclarationInfo;
+  private localTokensDeclarationInfo;
   private localPasmTokensByMethodName;
+  private blockComments: RememberedComment[] = [];
 
   private outputChannel: vscode.OutputChannel | undefined = undefined;
   private bLogEnabled: boolean = false;
@@ -68,6 +49,8 @@ export class DocumentFindings {
     this._logTokenMessage("* Global, Local, MethodScoped Token repo's ready");
     this.globalTokens = new TokenSet("gloTOK", isLogging, logHandle);
     this.localTokens = new TokenSet("locTOK", isLogging, logHandle);
+    this.globalTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
+    this.localTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
     // and for P2
     this.localPasmTokensByMethodName = new NameScopedTokenSet("methodTOK", isLogging, logHandle);
   }
@@ -80,10 +63,177 @@ export class DocumentFindings {
     this.globalTokens.clear();
     this.localTokens.clear();
     this.localPasmTokensByMethodName.clear();
+    this.blockComments = [];
   }
+
+  public recordComment(comment: RememberedComment) {
+    this.blockComments.push(comment);
+  }
+
+  public isLineInBlockComment(lineNumber: number): boolean {
+    let inCommentStatus: boolean = false;
+    if (this.blockComments.length > 0) {
+      for (let docComment of this.blockComments) {
+        if (docComment.includesLine(lineNumber)) {
+          inCommentStatus = true;
+          break;
+        }
+      }
+    }
+    return inCommentStatus;
+  }
+
+  public blockCommentMDFromLine(lineNumber: number, mustBeDocComment: boolean): string | undefined {
+    let desiredComment: string | undefined = undefined;
+    if (this.blockComments.length > 0) {
+      for (let docComment of this.blockComments) {
+        if (docComment.includesLine(lineNumber)) {
+          if (mustBeDocComment == false || (mustBeDocComment == true && docComment.isDocComment)) {
+            desiredComment = docComment.commentAsMarkDown();
+          }
+          break;
+        }
+      }
+    }
+    return desiredComment;
+  }
+
   public isKnownToken(tokenName: string): boolean {
     const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) ? true : false;
     return foundStatus;
+  }
+
+  public getTokenWithDescription(tokenName: string): ITokenDescription {
+    let findings: ITokenDescription = {
+      found: false,
+      tokenRawInterp: "",
+      isGoodInterp: false,
+      token: undefined,
+      scope: "",
+      interpretation: "",
+      adjustedName: tokenName,
+      declarationLine: 0,
+      declarationComment: undefined,
+      relatedFilename: undefined,
+      relatedObjectName: undefined,
+    };
+    // do we have a token??
+    let declInfo: RememberedTokenDeclarationInfo | undefined = undefined;
+    if (this.isKnownToken(tokenName)) {
+      findings.found = true;
+      findings.token = this.getGlobalToken(tokenName);
+      if (findings.token) {
+        // we have a GLOBAL token!
+        findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
+        findings.scope = "Global";
+        // and get additional info for token
+        declInfo = this.globalTokensDeclarationInfo.get(tokenName);
+      } else {
+        findings.token = this.getLocalToken(tokenName);
+        if (findings.token) {
+          // we have a LOCAL token!
+          const bIsMethod: boolean = findings.token.type == "method";
+          findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
+          findings.scope = "Local";
+          // and get additional info for token
+          let declInfo = this.localTokensDeclarationInfo.get(tokenName);
+        } else {
+          // FIXME: what do we do for Method-Local tokens?
+          findings.found = false;
+        }
+      }
+    }
+    if (findings.token) {
+      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName, declInfo);
+      findings.isGoodInterp = details.isGoodInterp;
+      findings.interpretation = details.interpretation;
+      findings.scope = details.scope;
+      findings.adjustedName = details.name;
+      if (declInfo) {
+        // and decorate with declaration line number
+        findings.declarationLine = declInfo.lineIndex;
+        if (declInfo.reference) {
+          if (declInfo.isFilenameReference) {
+            findings.relatedFilename = declInfo.reference;
+          } else {
+            findings.relatedObjectName = declInfo.reference;
+          }
+        }
+        const bIsMethod: boolean = findings.token.type == "method";
+        const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
+        if (bIsMethod) {
+          const needDocOnlyCommentStatus: boolean = bIsPublic ? true : false;
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, needDocOnlyCommentStatus);
+          // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
+          const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
+          if (!findings.declarationComment && canUseAlternateComment) {
+            // if we have single line doc comment and can use it, then do so!
+            findings.declarationComment = declInfo.comment;
+          }
+        } else {
+          //  (this is in else so methods don't get these comments!)
+          // if no multi-line comment then ...(but don't use trailing comment when method!)
+          if (!findings.declarationComment && declInfo.comment) {
+            // if we have single line comment then use it!
+            findings.declarationComment = declInfo.comment;
+          }
+        }
+      }
+      this._logTokenMessage(
+        `  -- FND-xxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}], file=[${findings.relatedFilename}], obj=[${findings.relatedObjectName}]` +
+          this._rememberdTokenString(tokenName, findings.token)
+      );
+    }
+    return findings;
+  }
+
+  private _interpretToken(token: RememberedToken, scope: string, name: string, declInfo: RememberedTokenDeclarationInfo | undefined): ITokenInterpretation {
+    let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name, isGoodInterp: true };
+    desiredInterp.interpretation = "--type??";
+    if (token?.type == "variable" && token?.modifiers[0] == "readonly" && !declInfo?.isObjectReference) {
+      // have non object reference
+      desiredInterp.interpretation = "constant (32-bit)";
+    } else if (token?.type == "variable" && token?.modifiers[0] == "readonly" && declInfo?.isObjectReference) {
+      // have object interface constant
+      desiredInterp.scope = "object interface"; // not just global
+      desiredInterp.interpretation = "constant (32-bit)";
+    } else if (token?.type == "namespace") {
+      desiredInterp.scope = ""; // ignore for this (or move `object` here?)
+      desiredInterp.interpretation = "object-name";
+    } else if (token?.type == "variable") {
+      desiredInterp.interpretation = "variable";
+      if (token?.modifiers[0] == "local") {
+        //desiredInterp.interpretation = "method-local " + desiredInterp.interpretation;
+      } else if (token?.modifiers[0] == "instance") {
+        desiredInterp.interpretation = "object instance " + desiredInterp.interpretation;
+      } else {
+        desiredInterp.interpretation = "object " + desiredInterp.interpretation;
+      }
+    } else if (token?.type == "label") {
+      desiredInterp.interpretation = "pasm label";
+    } else if (token?.type == "returnValue" && token?.modifiers.includes("local")) {
+      desiredInterp.scope = ""; // ignore for this (or method?)
+      desiredInterp.interpretation = "return value";
+    } else if (token?.type == "parameter" && token?.modifiers.includes("local")) {
+      desiredInterp.scope = ""; // ignore for this (or method?)
+      desiredInterp.interpretation = "parameter";
+    } else if (token?.type == "enumMember" && token?.modifiers.includes("readonly")) {
+      desiredInterp.interpretation = "enum value";
+    } else if (token?.type == "method") {
+      desiredInterp.name = name + "()";
+      desiredInterp.scope = ""; // ignore for this
+      if (token?.modifiers[0] == "static") {
+        desiredInterp.interpretation = "private method";
+      } else {
+        if (declInfo?.isObjectReference) {
+          desiredInterp.scope = "object interface"; // not just global
+        }
+        desiredInterp.interpretation = "public method";
+      }
+    } else {
+      desiredInterp.isGoodInterp = false;
+    }
+    return desiredInterp;
   }
 
   public isGlobalToken(tokenName: string): boolean {
@@ -91,10 +241,12 @@ export class DocumentFindings {
     return foundStatus;
   }
 
-  public setGlobalToken(tokenName: string, token: RememberedToken): void {
+  public setGlobalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined, reference?: string | undefined): void {
     if (!this.isGlobalToken(tokenName)) {
-      this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token));
+      this._logTokenMessage("  -- NEW-gloTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}], ref=[${reference}]`);
       this.globalTokens.setToken(tokenName, token);
+      // and remember declataion line# for this token
+      this.globalTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment, reference));
     }
   }
 
@@ -115,10 +267,12 @@ export class DocumentFindings {
     return foundStatus;
   }
 
-  public setLocalToken(tokenName: string, token: RememberedToken): void {
+  public setLocalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
     if (!this.isLocalToken(tokenName)) {
-      this._logTokenMessage("  -- NEW-locTOK " + this._rememberdTokenString(tokenName, token));
+      this._logTokenMessage("  -- NEW-locTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
       this.localTokens.setToken(tokenName, token);
+      // and remember declataion line# for this token
+      this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
     }
   }
 
@@ -191,6 +345,89 @@ export class DocumentFindings {
       desiredInterp = " -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
     }
     return desiredInterp;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  Global or Local tokens
+//   CLASS TokenSet
+//
+export class TokenSet {
+  public constructor(idString: string, isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
+    this.bLogEnabled = isLogging;
+    this.outputChannel = logHandle;
+    this.id = idString;
+    this._logTokenMessage(`* ${this.id} ready`);
+  }
+
+  private id: string = "";
+  private tokenSet = new Map<string, RememberedToken>();
+  private outputChannel: vscode.OutputChannel | undefined = undefined;
+  private bLogEnabled: boolean = false;
+
+  private _logTokenMessage(message: string): void {
+    if (this.bLogEnabled && this.outputChannel != undefined) {
+      // Write to output window.
+      this.outputChannel.appendLine(message);
+    }
+  }
+
+  *[Symbol.iterator]() {
+    yield* this.tokenSet;
+  }
+
+  public entries() {
+    return Array.from(this.tokenSet.entries());
+  }
+
+  public clear(): void {
+    this.tokenSet.clear();
+    this._logTokenMessage(`* ${this.id} clear() now ` + this.length() + " tokens");
+  }
+
+  public length(): number {
+    // return count of token names in list
+    return this.tokenSet.size;
+  }
+
+  public rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
+    let desiredInterp: string = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
+    if (aToken != undefined) {
+      desiredInterp = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
+    }
+    return desiredInterp;
+  }
+
+  public hasToken(tokenName: string): boolean {
+    let foundStatus: boolean = false;
+    if (tokenName.length > 0) {
+      foundStatus = this.tokenSet.has(tokenName.toLowerCase());
+      if (foundStatus) {
+        this._logTokenMessage(`* ${this.id} [` + tokenName + "] found: " + foundStatus);
+      }
+    }
+    return foundStatus;
+  }
+
+  public setToken(tokenName: string, token: RememberedToken): void {
+    const desiredTokenKey: string = tokenName.toLowerCase();
+    if (tokenName.length > 0 && !this.hasToken(tokenName)) {
+      this.tokenSet.set(desiredTokenKey, token);
+      const currCt: number = this.length();
+      this._logTokenMessage(`* ${this.id} #${currCt}: ` + this.rememberdTokenString(tokenName, token));
+    }
+  }
+
+  public getToken(tokenName: string): RememberedToken | undefined {
+    const desiredTokenKey: string = tokenName.toLowerCase();
+    var desiredToken: RememberedToken | undefined = this.tokenSet.get(desiredTokenKey);
+    if (desiredToken != undefined) {
+      // let's never return a declaration modifier! (somehow "declaration" creeps in to our list!??)
+      //let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
+      let modifiersNoDecl: string[] = desiredToken.modifiersWithout("declaration");
+      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
+    }
+    return desiredToken;
   }
 }
 
@@ -339,84 +576,314 @@ export class NameScopedTokenSet {
 }
 
 // ----------------------------------------------------------------------------
-//  Global or Local tokens
-//   CLASS TokenSet
-//
-export class TokenSet {
-  public constructor(idString: string, isLogging: boolean, logHandle: vscode.OutputChannel | undefined) {
-    this.bLogEnabled = isLogging;
-    this.outputChannel = logHandle;
-    this.id = idString;
-    this._logTokenMessage(`* ${this.id} ready`);
-  }
+//  This is the basic token type we report to VSCode
+//   CLASS RememberedToken
 
-  private id: string = "";
-  private tokenSet = new Map<string, RememberedToken>();
-  private outputChannel: vscode.OutputChannel | undefined = undefined;
-  private bLogEnabled: boolean = false;
-
-  private _logTokenMessage(message: string): void {
-    if (this.bLogEnabled && this.outputChannel != undefined) {
-      // Write to output window.
-      this.outputChannel.appendLine(message);
+export class RememberedToken {
+  _type: string;
+  _modifiers: string[] = [];
+  constructor(type: string, modifiers: string[] | undefined) {
+    this._type = type;
+    if (modifiers != undefined) {
+      this._modifiers = modifiers;
     }
   }
-
-  *[Symbol.iterator]() {
-    yield* this.tokenSet;
+  get type(): string {
+    return this._type;
+  }
+  get modifiers(): string[] {
+    return this._modifiers;
   }
 
-  public entries() {
-    return Array.from(this.tokenSet.entries());
-  }
+  // variable modifier fix ups
 
-  public clear(): void {
-    this.tokenSet.clear();
-    this._logTokenMessage(`* ${this.id} clear() now ` + this.length() + " tokens");
-  }
-
-  public length(): number {
-    // return count of token names in list
-    return this.tokenSet.size;
-  }
-
-  public rememberdTokenString(tokenName: string, aToken: RememberedToken | undefined): string {
-    let desiredInterp: string = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](undefined)";
-    if (aToken != undefined) {
-      desiredInterp = "  -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
+  public modifiersWith(newModifier: string): string[] {
+    // add modification attribute
+    var updatedModifiers: string[] = this._modifiers;
+    if (!updatedModifiers.includes(newModifier)) {
+      updatedModifiers.push(newModifier);
     }
-    return desiredInterp;
+    return updatedModifiers;
   }
 
-  public hasToken(tokenName: string): boolean {
-    let foundStatus: boolean = false;
-    if (tokenName.length > 0) {
-      foundStatus = this.tokenSet.has(tokenName.toLowerCase());
-      if (foundStatus) {
-        this._logTokenMessage(`* ${this.id} [` + tokenName + "] found: " + foundStatus);
+  public modifiersWithout(unwantedModifier: string): string[] {
+    //  remove modification attribute
+    var updatedModifiers: string[] = [];
+    for (var idx = 0; idx < this._modifiers.length; idx++) {
+      var possModifier: string = this._modifiers[idx];
+      if (possModifier !== unwantedModifier) {
+        updatedModifiers.push(possModifier);
       }
     }
-    return foundStatus;
+    return updatedModifiers;
   }
-
-  public setToken(tokenName: string, token: RememberedToken): void {
-    const desiredTokenKey: string = tokenName.toLowerCase();
-    if (tokenName.length > 0 && !this.hasToken(tokenName)) {
-      this.tokenSet.set(desiredTokenKey, token);
-      const currCt: number = this.length();
-      this._logTokenMessage(`* ${this.id} #${currCt}: ` + this.rememberdTokenString(tokenName, token));
+}
+// ----------------------------------------------------------------------------
+//  This is the structure we use for tracking Declaration Info for a token
+//   CLASS RememberedTokenDeclarationInfo
+export class RememberedTokenDeclarationInfo {
+  private _type: eCommentType = eCommentType.Unknown;
+  private _declLineIndex: number;
+  private _declcomment: string | undefined = undefined;
+  private _reference: string | undefined = undefined;
+  constructor(declarationLinIndex: number, declarationComment: string | undefined, reference?: string | undefined) {
+    this._declLineIndex = declarationLinIndex;
+    if (declarationComment) {
+      if (declarationComment.startsWith("''")) {
+        this._type = eCommentType.singleLineDocComment;
+        this._declcomment = declarationComment.substring(2).trim();
+      } else if (declarationComment.startsWith("'")) {
+        this._type = eCommentType.singleLineComment;
+        this._declcomment = declarationComment.substring(1).trim();
+      } else {
+        // leaving type as UNKNOWN
+        this._declcomment = declarationComment.trim();
+      }
+    }
+    if (typeof reference !== "undefined" && reference != undefined) {
+      this._reference = reference;
     }
   }
 
-  public getToken(tokenName: string): RememberedToken | undefined {
-    const desiredTokenKey: string = tokenName.toLowerCase();
-    var desiredToken: RememberedToken | undefined = this.tokenSet.get(desiredTokenKey);
-    if (desiredToken != undefined) {
-      // let's never return a declaration modifier! (somehow "declaration" creeps in to our list!??)
-      //let modifiersNoDecl: string[] = this._modifiersWithout(desiredToken.modifiers, "declaration");
-      let modifiersNoDecl: string[] = desiredToken.modifiersWithout("declaration");
-      desiredToken = new RememberedToken(desiredToken.type, modifiersNoDecl);
+  get isDocComment(): boolean {
+    // Return the array of comment lines for this block
+    return this._type == eCommentType.multiLineDocComment || this._type == eCommentType.singleLineDocComment;
+  }
+
+  get lineIndex(): number {
+    return this._declLineIndex;
+  }
+
+  get comment(): string | undefined {
+    return this._declcomment;
+  }
+
+  get reference(): string | undefined {
+    return this._reference;
+  }
+
+  get isFilenameReference(): boolean {
+    let isFilenameStatus: boolean = false;
+    if (this.reference && this._reference?.includes('"')) {
+      isFilenameStatus = true;
     }
-    return desiredToken;
+    return isFilenameStatus;
+  }
+
+  get isObjectReference(): boolean {
+    let isObjectStatus: boolean = false;
+    if (this.reference && !this._reference?.includes('"')) {
+      isObjectStatus = true;
+    }
+    return isObjectStatus;
+  }
+}
+
+// ----------------------------------------------------------------------------
+//  This is the structure we use for tracking multiline ocmments
+//   CLASS RememberedToken
+export enum eCommentType {
+  Unknown = 0,
+  singleLineComment,
+  singleLineDocComment,
+  multiLineComment,
+  multiLineDocComment,
+}
+
+export class RememberedComment {
+  _type: eCommentType = eCommentType.Unknown;
+  _lines: string[] = [];
+  _1stLine: number = 0;
+  _lastLine: number = 0;
+  constructor(type: eCommentType, lineNumber: number, firstLine: string) {
+    this._1stLine = lineNumber;
+    this._type = type;
+    // remove comment from first line
+    let trimmedLine: string = firstLine;
+    if (this._type == eCommentType.multiLineDocComment) {
+      if (trimmedLine.startsWith("{{")) {
+        trimmedLine = trimmedLine.substring(2);
+      }
+    } else if (this._type == eCommentType.multiLineComment) {
+      if (trimmedLine.startsWith("{")) {
+        trimmedLine = trimmedLine.substring(1);
+      }
+    }
+    if (trimmedLine.length > 0) {
+      this._lines = [trimmedLine];
+    }
+  }
+
+  get lines(): string[] {
+    // Return the array of comment lines for this block
+    return this._lines;
+  }
+
+  get isDocComment(): boolean {
+    // Return the array of comment lines for this block
+    return this._type == eCommentType.multiLineDocComment || this._type == eCommentType.singleLineDocComment;
+  }
+
+  get lineCount(): number {
+    // Return the count of comment lines for this block
+    return this._lines.length;
+  }
+
+  get isBlankLine(): boolean {
+    // Return T/F where T means there is no remaining text after begin/end markers are removed
+    return this._lines.length == 0 || (this.lines.length == 1 && this._lines[0].length == 0);
+  }
+
+  public commentAsMarkDown(): string {
+    // Return the markdown for this block comment
+    let tempLines: string[] = this._lines;
+    // if keywords are found in comment then specially wrap the word following each keyword
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let workline = tempLines[idx];
+      let lineParts = workline.split(" ");
+      let findIndex = lineParts.indexOf("@param");
+      let nameItem: string | undefined = undefined;
+      if (findIndex != -1 && findIndex < lineParts.length - 1) {
+        nameItem = lineParts[findIndex + 1];
+      } else {
+        findIndex = lineParts.indexOf("@returns");
+        if (findIndex != -1 && findIndex < lineParts.length - 1) {
+          nameItem = lineParts[findIndex + 1];
+        } else {
+          findIndex = lineParts.indexOf("@local");
+          if (findIndex != -1 && findIndex < lineParts.length - 1) {
+            nameItem = lineParts[findIndex + 1];
+          }
+        }
+      }
+      if (nameItem) {
+        // now wrap the name in single back ticks
+        workline = workline.replace(nameItem, "`" + nameItem + "`");
+        tempLines[idx] = workline;
+      }
+    }
+    return tempLines.join("<br>");
+  }
+
+  public span(): vscode.Range {
+    // return the recorded line indexes (start,end) - span of the comment block
+    return new vscode.Range(new vscode.Position(this._1stLine, 0), new vscode.Position(this._lastLine, 0));
+  }
+
+  public appendLine(line: string) {
+    // just save this line
+    this._lines.push(line);
+  }
+
+  public appendLastLine(lineNumber: number, line: string) {
+    // remove comment from last line then save remainder and line number
+    this._lastLine = lineNumber;
+    let trimmedLine: string = line;
+    let matchLocn: number = 0;
+    if (this._type == eCommentType.multiLineDocComment) {
+      matchLocn = trimmedLine.indexOf("}}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    } else if (this._type == eCommentType.multiLineComment) {
+      matchLocn = trimmedLine.indexOf("}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    }
+    if (trimmedLine.length > 0) {
+      this._lines.push(trimmedLine);
+    }
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let trimmedLine = this._lines[idx].trim();
+      if (trimmedLine.startsWith("''")) {
+        trimmedLine = trimmedLine.substring(2);
+      } else if (trimmedLine.startsWith("'")) {
+        trimmedLine = trimmedLine.substring(1);
+      }
+      this._lines[idx] = trimmedLine;
+    }
+  }
+
+  public closeAsSingleLineBlock(lineNumber: number) {
+    // block of single line comments, remove comment-end from the line then save remainder if any
+    this._lastLine = lineNumber;
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let trimmedLine = this._lines[idx].trim();
+      if (trimmedLine.startsWith("''")) {
+        trimmedLine = trimmedLine.substring(2);
+      } else if (trimmedLine.startsWith("'")) {
+        trimmedLine = trimmedLine.substring(1);
+      }
+      this._lines[idx] = trimmedLine;
+    }
+  }
+
+  public closeAsSingleLine() {
+    // only single line, remove comment-end from the line then save remainder if any
+    this._lastLine = this._1stLine;
+    let trimmedLine: string = this._lines[0];
+    let matchLocn: number = 0;
+    if (this._type == eCommentType.multiLineDocComment) {
+      matchLocn = trimmedLine.indexOf("}}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    } else if (this._type == eCommentType.multiLineComment) {
+      matchLocn = trimmedLine.indexOf("}");
+      if (matchLocn != -1) {
+        if (matchLocn == 0) {
+          trimmedLine = trimmedLine.substring(2);
+        } else {
+          const leftEdge = trimmedLine.substring(0, matchLocn - 1);
+          trimmedLine = leftEdge + trimmedLine.substring(matchLocn + 2);
+        }
+      }
+    }
+    if (trimmedLine.length > 0) {
+      this._lines = [trimmedLine];
+    } else {
+      this._lines = [];
+    }
+  }
+
+  public includesLine(lineNumber: number): boolean {
+    // return T/F where T means the lineNumber is within the comment
+    const commentSpan: vscode.Range = this.span();
+    const inCommentStatus: boolean = lineNumber >= commentSpan.start.line && lineNumber <= commentSpan.end.line;
+    return inCommentStatus;
+  }
+
+  public spanString(): string {
+    const commentSpan: vscode.Range = this.span();
+    const startLine = commentSpan.start.line + 1;
+    const endLine = commentSpan.end.line + 1;
+    let typeString: string = "??BlockComment??";
+    if (this._type == eCommentType.singleLineComment) {
+      typeString = "singleLineCommentBlock";
+    } else if (this._type == eCommentType.singleLineDocComment) {
+      typeString = "singleLineDocCommentBlock";
+    } else if (this._type == eCommentType.multiLineComment) {
+      typeString = "multiLineCommentBlock";
+    } else if (this._type == eCommentType.multiLineDocComment) {
+      typeString = "multiLineDocCommentBlock";
+    }
+    const interpString: string = `[${typeString}] lines ${startLine}-${endLine}`;
+    return interpString;
   }
 }

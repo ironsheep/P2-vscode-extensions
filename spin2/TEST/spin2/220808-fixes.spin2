@@ -14,7 +14,7 @@ DAT
 DAT
 ma_mtmp3      res 1
 ma_mtmp1      res 1
-ma_adpcm_bufferbase long @adpcm_buffers
+ma_adpcm_bufferbase long @adpcm_buffers         ' pointer to buffers
 
 adpcm_buffers
               byte 0[2*7*16]

@@ -9,12 +9,13 @@ pub test()
 ' --------------------------------------------------------------------------------------------------
 
 PRI get24BitBMPColorForRC(nRow, nColumn) : red, green, blue | pixColorAddr
-	if(nRow > screen.MAX_DISPLAY_ROWS - 1)
-		debug("- ERROR bad nRow value [", udec_(nRow), " > ", udec_(screen.MAX_DISPLAY_ROWS - 1), "]")  ' <-- fix this...
+    if(nRow > screen.MAX_DISPLAY_ROWS - 1)
+        debug("- ERROR bad nRow value [", udec_(nRow), " > ", udec_(screen.MAX_DISPLAY_ROWS - 1), "]")  ' <-- fix this...
 
-	if(nColumn > screen.MAX_DISPLAY_COLUMNS - 1)
-		debug("- ERROR bad nColumn value [", udec_(nColumn), " > ", udec_(screen.MAX_DISPLAY_COLUMNS - 1), "]")
+    if(nColumn > screen.MAX_DISPLAY_COLUMNS - 1)
+        debug("- ERROR bad nColumn value [", udec_(nColumn), " > ", udec_(screen.MAX_DISPLAY_COLUMNS - 1), "]")
 
+    pixColorAddr := screen.getPixelColorAddr(nRow, nColumn)
 ' --------------------------------------------------------------------------------------------------
 
 DAT
@@ -64,7 +65,7 @@ PUB dbgMemDump(bfrId, buffer, len) | bytBffr, colIdx, rowIdx, maxCol, maxRow, di
     dispLen := 0
     repeat rowIdx from 1 to maxRow
         if rowIdx < 10
-            debug("`temp ' '")	' space
+            debug("`temp ' '")  ' space
         debug("`temp '  ", uhex_long_(bytBffr), ": '")       ' <-- what happened to uhex_long_()??
         repeat colIdx from 0 to maxCol
             debug("`temp '", uhex_byte_(byte[bytBffr+colIdx]), " '")        ' <-- what happened to uhex_byte_()??
@@ -72,9 +73,9 @@ PUB dbgMemDump(bfrId, buffer, len) | bytBffr, colIdx, rowIdx, maxCol, maxRow, di
             if dispLen >= len
                 quit
             if colIdx == 7
-                debug("`temp ' '")	' space
+                debug("`temp ' '")  ' space
 
         bytBffr += 16
-        debug("`temp 13")		' newline
+        debug("`temp 13")       ' newline
         waitus(85)  ' 50 too short, 70 less issue, 75 better,
     waitms(2)

@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -523,6 +523,10 @@
     ],
     "commands": [
       {
+        "command": "spin2.generate.doc.comment",
+        "title": "Spin2: Generate and insert documentation comment"
+      },
+      {
         "command": "spin2.generate.documentation.file",
         "title": "Spin2: Generate documentation file from spin source"
       },
@@ -586,14 +590,24 @@
         "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
       },
       {
-        "key": "tab",
-        "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "key": "Ctrl+Alt+c",
+        "command": "spin2.generate.doc.comment",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2"
+      },
+      {
+        "key": "Ctrl+Alt+c",
+        "command": "spin2.generate.doc.comment",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
       },
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
+      },
+      {
+        "key": "tab",
+        "command": "spin2.indentTabStop",
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",

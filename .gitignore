@@ -8,10 +8,12 @@ npm-debug.log
 config.gypi
 
 .DS_Store
+*.REF
 
 TEST_GEN/
 ZIPs/
 REF/
+src/HOLD/
 out/
 .history/
 

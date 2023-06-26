@@ -381,7 +381,7 @@ repository:
                 match: '(?i)\b(VARBASE|CLK(MODE|FREQ))\b'
             -
                 name: support.function.string.spin2
-                match: '(?i)\b(STR(ING|COMP|SIZE))\b'
+                match: '(?i)\b(STR(ING|COMP|SIZE|COPY))\b'
             -
                 name: support.function.special.spin2
                 match: '(?i)\b(SEND|RECV)\b'
@@ -390,7 +390,7 @@ repository:
                 match: '(?i)\b(LOOK(UP|DOWN)Z?)\b'
             -
                 name: support.function.math.spin2
-                match: '(?i)\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND|Q(SIN|COS)|NAN)\b'
+                match: '(?i)\b((ROT|POL)XY|XYPOL|MULDIV64|GETRND|Q(SIN|COS)|NAN)|GETCRC\b'
             -
                 name: support.function.pasminterface.spin2
                 match: '(?i)\b(CALL|REG(EXEC|LOAD))\b'

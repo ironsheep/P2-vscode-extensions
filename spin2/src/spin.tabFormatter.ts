@@ -35,6 +35,9 @@ export interface Blocks {
 /**
  *
  */
+// ----------------------------------------------------------------------------
+//  This is the object that does our tab formatting
+//   CLASS Formatter
 export class Formatter {
   private config = tabConfiguration;
 
@@ -551,10 +554,7 @@ export class Formatter {
           tabNumber++;
         } while (charactersToInsert.length < 80);
 
-        let endOfLineStr: string = "\n";
-        if (document.eol == EndOfLine.CRLF) {
-          endOfLineStr = "\r\n";
-        }
+        let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
         // insert a "template tab-column comment line" above the line upon which our cursor sits
         results.push(vscode.TextEdit.insert(cursorPos, `${charactersToInsert}${endOfLineStr}`));
 

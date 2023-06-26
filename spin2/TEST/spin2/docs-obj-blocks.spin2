@@ -1,4 +1,6 @@
 '' from page 3 of spin2 docs v35i
+CON
+   BUFFER_LEN = 10
 
 OBJ vga     : "VGA_Driver"      ' instantiate "VGA_Driver.spin2" as "vga"
     mouse   : "USB_Mouse"       ' instantiate "USB_Mouse.spin2" as "mouse"
@@ -6,5 +8,5 @@ OBJ vga     : "VGA_Driver"      ' instantiate "VGA_Driver.spin2" as "vga"
                                 ' ..v[0] through v[15]
 DAT
 
-chkBffr     long    0[vga.MAX_BUFFER_LEN]
-            long    0[vga.MAX_COG_BUFFER_SIZE_IN_LONGS]
+chkBffr     long    0[vga.MAX_BUFFER_LEN + 5 * BUFFER_LEN]
+            long    0[vga.MAX_COG_BUFFER_SIZE_IN_LONGS * vga.SIZE_OF_LONG_ROW]

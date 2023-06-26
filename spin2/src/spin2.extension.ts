@@ -16,6 +16,7 @@ import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider,
 import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
 import { DocGenerator } from "./spin.document.generate";
 import { ObjectTreeProvider, Dependency } from "./spin.object.dependencies";
+import { Spin2HoverProvider } from "./spin2.hover.behavior";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -25,6 +26,13 @@ import { ObjectTreeProvider, Dependency } from "./spin.object.dependencies";
 var formatter: Formatter;
 const formatDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var formatOutputChannel: vscode.OutputChannel | undefined = undefined;
+
+interface Filter extends vscode.DocumentFilter {
+  language: string;
+  scheme: string;
+}
+export const SPIN1_FILE: Filter = { language: "spin", scheme: "file" };
+export const SPIN2_FILE: Filter = { language: "spin2", scheme: "file" };
 
 export const logFormatMessage = (message: string): void => {
   if (formatDebugLogEnabled && formatOutputChannel != undefined) {
@@ -41,20 +49,28 @@ var objTreeProvider: ObjectTreeProvider;
 var objDepTreeView: vscode.TreeView<Dependency>;
 const objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
+const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider();
+const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider();
 
 // register services provided by this file
 export const activate = (context: vscode.ExtensionContext) => {
   // register our Spin2 outline provider
-  context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: "file", language: "spin2" }, new Spin2ConfigDocumentSymbolProvider()));
+  context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(SPIN2_FILE, new Spin2ConfigDocumentSymbolProvider()));
 
   // register our  Spin2 semantic tokens provider
-  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "spin2" }, new Spin2DocumentSemanticTokensProvider(), Spin2Legend));
+  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(SPIN2_FILE, spin2SemanticTokensProvider, Spin2Legend));
 
   // register our  Spin1 outline provider
-  context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: "file", language: "spin" }, new Spin1ConfigDocumentSymbolProvider()));
+  context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(SPIN1_FILE, new Spin1ConfigDocumentSymbolProvider()));
 
   // register our  Spin1 semantic tokens provider
-  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider({ language: "spin" }, new Spin1DocumentSemanticTokensProvider(), Spin1Legend));
+  context.subscriptions.push(vscode.languages.registerDocumentSemanticTokensProvider(SPIN1_FILE, spin1SemanticTokensProvider, Spin1Legend));
+
+  // register our  Spin2 hover provider
+  context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN2_FILE, new Spin2HoverProvider(spin2SemanticTokensProvider.docFindings())));
+
+  // register our  Spin1 hover provider
+  //context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN1_FILE, new Spin1HoverProvider(spin1SemanticTokensProvider.docFindings())));
 
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider
@@ -94,6 +110,7 @@ export const activate = (context: vscode.ExtensionContext) => {
   objTreeProvider = new ObjectTreeProvider(objTreeOutputChannel, objTreeDebugLogEnabled);
 
   docGenerator = new DocGenerator(docGenOutputChannel, formatDocGenLogEnabled);
+
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
 
   context.subscriptions.push(
@@ -105,6 +122,24 @@ export const activate = (context: vscode.ExtensionContext) => {
         docGenerator.showDocument();
       } catch (error) {
         await vscode.window.showErrorMessage("Document Generation Problem");
+        console.error(error);
+      }
+    })
+  );
+
+  const generateDocCommentCommand: string = "spin2.generate.doc.comment";
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(generateDocCommentCommand, async () => {
+      logFormatMessage("* generateDocumentCommentCommand");
+      try {
+        // and test it!
+        const editor = vscode?.window.activeTextEditor!;
+        const document = editor.document!;
+        var textEdits = await spin2SemanticTokensProvider.insertDocComment(document, editor.selections);
+        applyTextEdits(document, textEdits!);
+      } catch (error) {
+        await vscode.window.showErrorMessage("Document Comment Generation Problem");
         console.error(error);
       }
     })
@@ -173,15 +208,15 @@ export const activate = (context: vscode.ExtensionContext) => {
         }
       })
     );
+  }
 
-    function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
-      if (!textEdits) {
-        return;
-      }
-      const workEdits = new vscode.WorkspaceEdit();
-      workEdits.set(document.uri, textEdits); // give the edits
-      vscode.workspace.applyEdit(workEdits); // apply the edits
+  function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
+    if (!textEdits) {
+      return;
     }
+    const workEdits = new vscode.WorkspaceEdit();
+    workEdits.set(document.uri, textEdits); // give the edits
+    vscode.workspace.applyEdit(workEdits); // apply the edits
   }
 
   // ----------------------------------------------------------------------------
