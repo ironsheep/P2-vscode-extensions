@@ -1176,29 +1176,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this._logSPIN("  -- _getPUB_PRI_Name() exit");
   }
 
-  private _getSPIN_PasmDeclaration(startingOffset: number, line: string): void {
-    // HAVE    next8SLine ' or .nextLine in col 0
-    //         nPhysLineIdx        long    0
-    let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
-    // get line parts - we only care about first one
-    const inLinePasmRHSStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
-    const lineParts: string[] = this.parseUtils.getNonWhiteLineParts(inLinePasmRHSStr);
-    //this._logPASM('- GetInLinePasmDecl lineParts=[' + lineParts + ']');
-    // handle name in 1 column
-    let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
-    const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
-    if (haveLabel) {
-      const labelName: string = lineParts[0];
-      const labelType: string = isDataDeclarationLine ? "variable" : "label";
-      var labelModifiers: string[] = [];
-      if (!isDataDeclarationLine) {
-        labelModifiers = labelName.startsWith(":") ? ["static"] : [];
-      }
-      this._logPASM("  -- Inline PASM labelName=[" + labelName + "(" + labelType + ")]");
-      this.semanticFindings.setLocalPasmTokenForMethod(this.currentMethodName, labelName, new RememberedToken(labelType, labelModifiers));
-    }
-  }
-
   private _getVAR_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    long    demoPausePeriod   ' comment
     //

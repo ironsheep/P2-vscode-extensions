@@ -493,10 +493,10 @@ export class ParseUtils {
 
   private _tableSpinPasmLangParts: { [Identifier: string]: string[] } = {
     // DAT cogexec
-    org: ["ORG", "begin a cog-exec program (no symbol allowed before ORG), or start inline-pasm within SPIN"],
+    org: ["ORG", "begin a cog-exec program (no symbol allowed before ORG), <br>or Start block of inline-pasm code within SPIN (ends with END)"],
     orgf: ["ORGF [value]", "fill to cog address {value} with zeros (no symbol allowed before ORGF)"],
     orgh: ["ORGH [originValue[,limitValue]]", "begin a hub-exec program (no symbol allowed before ORGH) (Default origin=$00400, limit=$100000)"],
-    end: ["END", "Terminate inline-pasm code (started with ORG)"],
+    end: ["END", "Ends block of inline-pasm code (started with ORG)"],
     fit: ["FIT [value]", "test to make sure hub/cog address has not exceeded {value}"],
   };
 
@@ -508,7 +508,9 @@ export class ParseUtils {
       desiredDocText.description = this._tableSpinBlockNames[nameKey];
     } else if (nameKey in this._tableSpinFloatConversions) {
       desiredDocText.category = "Float Conversions";
-      desiredDocText.description = this._tableSpinFloatConversions[nameKey];
+      const protoWDescr: string[] = this._tableSpinFloatConversions[nameKey];
+      desiredDocText.signature = protoWDescr[0];
+      desiredDocText.description = protoWDescr[1]; // bold
     } else if (nameKey in this._tableSpinBinaryOperators) {
       desiredDocText.category = "Binary Operators";
       desiredDocText.description = this._tableSpinBinaryOperators[nameKey];
@@ -520,7 +522,7 @@ export class ParseUtils {
       desiredDocText.description = this._tableSmartPinNames[nameKey];
     } else if (nameKey in this._tableSpinPasmLangParts) {
       desiredDocText.category = "DAT HubExec/CogExec Directives";
-      let protoWDescr: string[] = this._tableSpinPasmLangParts[nameKey];
+      const protoWDescr: string[] = this._tableSpinPasmLangParts[nameKey];
       desiredDocText.signature = protoWDescr[0];
       desiredDocText.description = protoWDescr[1]; // bold
     }
@@ -1168,10 +1170,10 @@ export class ParseUtils {
     return reservedStatus;
   }
 
-  private _tableSpinFloatConversions: { [Identifier: string]: string } = {
-    float: "Convert integer x to float",
-    trunc: "Convert float x to rounded integer",
-    round: "Convert float x to truncated integer",
+  private _tableSpinFloatConversions: { [Identifier: string]: string[] } = {
+    float: ["FLOAT(x)", "Convert integer x to float"],
+    trunc: ["TRUNC(x)", "Convert float x to truncated integer"],
+    round: ["ROUND(x)", "Convert float x to rounded integer"],
   };
 
   public isSpinReservedWord(name: string): boolean {

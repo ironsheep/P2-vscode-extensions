@@ -20,6 +20,7 @@ export interface ITokenDescription {
   declarationComment: string | undefined;
   relatedFilename: string | undefined;
   relatedObjectName: string | undefined;
+  relatedMethodName: string | undefined;
 }
 
 export interface ITokenInterpretation {
@@ -27,6 +28,14 @@ export interface ITokenInterpretation {
   interpretation: string;
   name: string;
   isGoodInterp: boolean;
+}
+
+// search comment type: non-doc only, doc-only, or mixed
+enum eCommentFilter {
+  Unknown = 0,
+  docCommentOnly,
+  nondocCommentOnly,
+  allComments,
 }
 
 // ----------------------------------------------------------------------------
@@ -83,13 +92,19 @@ export class DocumentFindings {
     return inCommentStatus;
   }
 
-  public blockCommentMDFromLine(lineNumber: number, mustBeDocComment: boolean): string | undefined {
+  public blockCommentMDFromLine(lineNumber: number, filter: eCommentFilter): string | undefined {
     let desiredComment: string | undefined = undefined;
     if (this.blockComments.length > 0) {
-      for (let docComment of this.blockComments) {
-        if (docComment.includesLine(lineNumber)) {
-          if (mustBeDocComment == false || (mustBeDocComment == true && docComment.isDocComment)) {
-            desiredComment = docComment.commentAsMarkDown();
+      for (let blockComment of this.blockComments) {
+        if (blockComment.includesLine(lineNumber)) {
+          if (blockComment.isDocComment) {
+            if (filter == eCommentFilter.allComments || filter == eCommentFilter.docCommentOnly) {
+              desiredComment = blockComment.commentAsMarkDown();
+            }
+          } else {
+            if (filter == eCommentFilter.allComments || filter == eCommentFilter.nondocCommentOnly) {
+              desiredComment = blockComment.commentAsMarkDown();
+            }
           }
           break;
         }
@@ -116,6 +131,7 @@ export class DocumentFindings {
       declarationComment: undefined,
       relatedFilename: undefined,
       relatedObjectName: undefined,
+      relatedMethodName: undefined,
     };
     // do we have a token??
     let declInfo: RememberedTokenDeclarationInfo | undefined = undefined;
@@ -132,14 +148,24 @@ export class DocumentFindings {
         findings.token = this.getLocalToken(tokenName);
         if (findings.token) {
           // we have a LOCAL token!
-          const bIsMethod: boolean = findings.token.type == "method";
           findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
           findings.scope = "Local";
           // and get additional info for token
-          let declInfo = this.localTokensDeclarationInfo.get(tokenName);
+          declInfo = this.localTokensDeclarationInfo.get(tokenName);
         } else {
-          // FIXME: what do we do for Method-Local tokens?
-          findings.found = false;
+          // Handle Method-Local-tokens?
+          findings.token = this.localPasmTokensByMethodName.getToken(tokenName);
+          findings.relatedMethodName = this.localPasmTokensByMethodName.getMethodNameForToken(tokenName);
+          if (findings.relatedMethodName) {
+            findings.relatedMethodName = findings.relatedMethodName + "()";
+          }
+          if (findings.token) {
+            // we have a LOCAL token!
+            findings.tokenRawInterp = "Method-local: " + this._rememberdTokenString(tokenName, findings.token);
+            findings.scope = "Local";
+            // and get additional info for token
+            declInfo = this.localTokensDeclarationInfo.get(tokenName);
+          }
         }
       }
     }
@@ -162,8 +188,7 @@ export class DocumentFindings {
         const bIsMethod: boolean = findings.token.type == "method";
         const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
         if (bIsMethod) {
-          const needDocOnlyCommentStatus: boolean = bIsPublic ? true : false;
-          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, needDocOnlyCommentStatus);
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, eCommentFilter.docCommentOnly);
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
           if (!findings.declarationComment && canUseAlternateComment) {
@@ -171,7 +196,8 @@ export class DocumentFindings {
             findings.declarationComment = declInfo.comment;
           }
         } else {
-          //  (this is in else so methods don't get these comments!)
+          //  (this is in else so non-methods can get non-doc multiline preceeding blocks!)
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine - 1, eCommentFilter.nondocCommentOnly);
           // if no multi-line comment then ...(but don't use trailing comment when method!)
           if (!findings.declarationComment && declInfo.comment) {
             // if we have single line comment then use it!
@@ -190,39 +216,56 @@ export class DocumentFindings {
   private _interpretToken(token: RememberedToken, scope: string, name: string, declInfo: RememberedTokenDeclarationInfo | undefined): ITokenInterpretation {
     let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name, isGoodInterp: true };
     desiredInterp.interpretation = "--type??";
-    if (token?.type == "variable" && token?.modifiers[0] == "readonly" && !declInfo?.isObjectReference) {
+    if (token?.type == "variable" && token?.modifiers.includes("readonly") && !declInfo?.isObjectReference) {
       // have non object reference
+      desiredInterp.scope = "object public"; // not just global
       desiredInterp.interpretation = "constant (32-bit)";
-    } else if (token?.type == "variable" && token?.modifiers[0] == "readonly" && declInfo?.isObjectReference) {
+    } else if (token?.type == "variable" && token?.modifiers.includes("readonly") && declInfo?.isObjectReference) {
       // have object interface constant
       desiredInterp.scope = "object interface"; // not just global
       desiredInterp.interpretation = "constant (32-bit)";
     } else if (token?.type == "namespace") {
-      desiredInterp.scope = ""; // ignore for this (or move `object` here?)
-      desiredInterp.interpretation = "object-name";
+      desiredInterp.scope = "object"; // ignore for this (or move `object` here?)
+      desiredInterp.interpretation = "named instance";
     } else if (token?.type == "variable") {
       desiredInterp.interpretation = "variable";
-      if (token?.modifiers[0] == "local") {
-        //desiredInterp.interpretation = "method-local " + desiredInterp.interpretation;
-      } else if (token?.modifiers[0] == "instance") {
-        desiredInterp.interpretation = "object instance " + desiredInterp.interpretation;
+      if (token?.modifiers.includes("pasmInline")) {
+        desiredInterp.scope = "method-local"; // ignore for this (or move `object` here?)
+        desiredInterp.interpretation = "inline-pasm variable";
+      } else if (token?.modifiers.includes("local")) {
+        desiredInterp.scope = "method"; // ignore for this (or move `object` here?)
+        desiredInterp.interpretation = "local variable";
+      } else if (token?.modifiers.includes("instance")) {
+        desiredInterp.scope = "object private"; // ignore for this (or move `object` here?)
+        desiredInterp.interpretation = "instance " + desiredInterp.interpretation + " -VAR";
       } else {
-        desiredInterp.interpretation = "object " + desiredInterp.interpretation;
+        desiredInterp.scope = "object private"; // ignore for this (or move `object` here?)
+        desiredInterp.interpretation = "shared " + desiredInterp.interpretation + " -DAT";
       }
     } else if (token?.type == "label") {
-      desiredInterp.interpretation = "pasm label";
-    } else if (token?.type == "returnValue" && token?.modifiers.includes("local")) {
-      desiredInterp.scope = ""; // ignore for this (or method?)
+      if (token?.modifiers.includes("pasmInline")) {
+        desiredInterp.scope = "method-local"; // ignore for this (or move `object` here?)
+        desiredInterp.interpretation = "inline-pasm label";
+      } else {
+        desiredInterp.scope = "object private"; // not just global
+        if (token?.modifiers.includes("static")) {
+          desiredInterp.interpretation = "local pasm label";
+        } else {
+          desiredInterp.interpretation = "pasm label";
+        }
+      }
+    } else if (token?.type == "returnValue") {
+      desiredInterp.scope = "method"; // ignore for this (or method?)
       desiredInterp.interpretation = "return value";
-    } else if (token?.type == "parameter" && token?.modifiers.includes("local")) {
-      desiredInterp.scope = ""; // ignore for this (or method?)
+    } else if (token?.type == "parameter") {
+      desiredInterp.scope = "method"; // ignore for this (or method?)
       desiredInterp.interpretation = "parameter";
-    } else if (token?.type == "enumMember" && token?.modifiers.includes("readonly")) {
+    } else if (token?.type == "enumMember") {
       desiredInterp.interpretation = "enum value";
     } else if (token?.type == "method") {
       desiredInterp.name = name + "()";
-      desiredInterp.scope = ""; // ignore for this
-      if (token?.modifiers[0] == "static") {
+      desiredInterp.scope = "object";
+      if (token?.modifiers.includes("static")) {
         desiredInterp.interpretation = "private method";
       } else {
         if (declInfo?.isObjectReference) {
@@ -308,12 +351,14 @@ export class DocumentFindings {
     return foundStatus;
   }
 
-  public setLocalPasmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken): void {
+  public setLocalPasmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
     if (this.hasLocalPasmTokenForMethod(methodName, tokenName)) {
       // WARNING attempt to set again
     } else {
       // set new one!
       this.localPasmTokensByMethodName.setTokenForMethod(methodName, tokenName, token);
+      // and remember declataion line# for this token
+      this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
       const newToken = this.localPasmTokensByMethodName.getTokenForMethod(methodName, tokenName);
       if (newToken) {
         this._logTokenMessage("  -- NEW-lpTOK method=" + methodName + ": " + this._rememberdTokenString(tokenName, newToken));
@@ -539,6 +584,31 @@ export class NameScopedTokenSet {
         tokenSet.setToken(desiredTokenKey, token);
       }
     }
+  }
+
+  public getToken(tokenName: string): RememberedToken | undefined {
+    let desiredToken: RememberedToken | undefined = undefined;
+    const desiredTokenKey = tokenName.toLowerCase();
+    let tokenExistsStatus: boolean = false;
+    for (let methodKey of this.scopedTokenSet.keys()) {
+      if (this.hasTokenForMethod(methodKey, desiredTokenKey)) {
+        desiredToken = this.getTokenForMethod(methodKey, desiredTokenKey);
+        break;
+      }
+    }
+    return desiredToken;
+  }
+
+  public getMethodNameForToken(tokenName: string): string | undefined {
+    const desiredTokenKey = tokenName.toLowerCase();
+    let desiredMethodName: string | undefined = undefined;
+    for (let methodKey of this.scopedTokenSet.keys()) {
+      if (this.hasTokenForMethod(methodKey, desiredTokenKey)) {
+        desiredMethodName = methodKey;
+        break;
+      }
+    }
+    return desiredMethodName;
   }
 
   public getTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {

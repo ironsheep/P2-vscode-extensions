@@ -213,6 +213,8 @@ export class Spin2HoverProvider implements HoverProvider {
             `+ Hvr: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
           );
           this._logMessage(`+ Hvr:    file=[${tokenFindings.relatedFilename}], declCmt=(${tokenFindings.declarationComment})]`);
+        } else {
+          this._logMessage(`+ Hvr: get token failed?!!`);
         }
         const nameString = tokenFindings.adjustedName;
         const scopeString = tokenFindings.scope;
@@ -262,8 +264,9 @@ export class Spin2HoverProvider implements HoverProvider {
         }
         if (
           (tokenFindings.interpretation.includes("constant (32-bit)") && !tokenFindings.relatedObjectName) ||
-          tokenFindings.interpretation.includes("object variable") ||
+          tokenFindings.interpretation.includes("shared variable") ||
           tokenFindings.interpretation.includes("instance variable") ||
+          tokenFindings.interpretation.includes("inline-pasm variable") ||
           tokenFindings.interpretation.includes("enum value")
         ) {
           // if global constant push declaration line, first...
@@ -272,7 +275,7 @@ export class Spin2HoverProvider implements HoverProvider {
         if (tokenFindings.interpretation.includes("pasm label") && tokenFindings.relatedFilename) {
           mdLines.push("Refers to file: " + tokenFindings.relatedFilename + "<br>");
         }
-        if (tokenFindings.interpretation.includes("object-name") && tokenFindings.relatedFilename) {
+        if (tokenFindings.interpretation.includes("named instance") && tokenFindings.relatedFilename) {
           mdLines.push("An instance of: " + tokenFindings.relatedFilename + "<br>");
         }
         if (tokenFindings.relatedObjectName) {
@@ -349,7 +352,7 @@ export class Spin2HoverProvider implements HoverProvider {
             defInfo.declarationlines = ["(symbol) " + input.word];
             subTitleText = ` symbol: *Spin2 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_CONSTANT) {
-            defInfo.declarationlines = ["(constant) " + input.word];
+            defInfo.declarationlines = ["(constant 32-bit) " + input.word];
             subTitleText = ` constant: *Spin2 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
             defInfo.declarationlines = ["(method) " + builtInFindings.signature];
@@ -409,10 +412,17 @@ export class Spin2HoverProvider implements HoverProvider {
   }
 
   private adjustWordPosition(document: vscode.TextDocument, position: vscode.Position): [boolean, string, vscode.Position] {
-    const wordRange = document.getWordRangeAtPosition(position);
+    let wordRange: vscode.Range | undefined = document.getWordRangeAtPosition(position);
     const lineText = document.lineAt(position.line).text;
+    // do fixup for Spin2 pasm local labels
+    const P2_LABEL_PREFIX: string = ".";
+    if (wordRange?.start.character == 1 && lineText.charAt(0) == P2_LABEL_PREFIX) {
+      const newStart: vscode.Position = new Position(wordRange?.start.line, 0);
+      wordRange = new vscode.Range(newStart, wordRange.end);
+    }
     const word = wordRange ? document.getText(wordRange) : "";
-    this._logMessage(`+ Hvr: adjustWordPosition() ENTRY`);
+
+    this._logMessage(`+ Hvr: adjustWordPosition() ENTRY  wordRange=[${wordRange?.start.line}:${wordRange?.start.character}-${wordRange?.end.line}:${wordRange?.end.character}], word=[${word}]`);
     // TODO: fix this for spin comments vs. // comments
 
     /*

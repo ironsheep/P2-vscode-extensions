@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -133,6 +133,10 @@
       {
         "id": "local",
         "description": "Annotates a symbol that is declared local to a method"
+      },
+      {
+        "id": "pasmInline",
+        "description": "Annotates a symbol that is declared local to a method and within inline pasm code"
       },
       {
         "id": "instance",

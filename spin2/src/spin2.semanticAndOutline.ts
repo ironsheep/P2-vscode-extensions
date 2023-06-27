@@ -473,6 +473,7 @@ export const Spin2Legend = (function () {
     "definition",
     "defaultLibrary",
     "local",
+    "pasmInline",
     "instance",
     "missingDeclaration",
     "illegalUse",
@@ -1013,7 +1014,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             this._logState("- scan ln:" + (i + 1) + " POP currState=[" + currState + "]");
             // and ignore rest of this line
           } else {
-            this._getSPIN_PasmDeclaration(0, line);
+            this._getSPIN_PasmDeclaration(0, i + 1, line);
             // scan SPIN-Inline-Pasm line for debug() display declaration
             this._getDebugDisplay_Declaration(0, line);
           }
@@ -1741,7 +1742,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings.clearLocalPasmTokensForMethod(methodName);
   }
 
-  private _getSPIN_PasmDeclaration(startingOffset: number, line: string): void {
+  private _getSPIN_PasmDeclaration(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE    next8SLine ' or .nextLine in col 0
     //         nPhysLineIdx        long    0
     let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
@@ -1757,10 +1758,12 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const labelType: string = isDataDeclarationLine ? "variable" : "label";
       var labelModifiers: string[] = [];
       if (!isDataDeclarationLine) {
-        labelModifiers = labelName.startsWith(".") ? ["static"] : [];
+        labelModifiers = labelName.startsWith(".") ? ["pasmInline", "static"] : ["pasmInline"];
+      } else {
+        labelModifiers = ["pasmInline"];
       }
-      this._logPASM("  -- Inline PASM labelName=[" + labelName + "(" + labelType + ")]");
-      this.semanticFindings.setLocalPasmTokenForMethod(this.currentMethodName, labelName, new RememberedToken(labelType, labelModifiers));
+      this._logPASM("  -- Inline PASM labelName=[" + labelName + "(" + labelType + ")[" + labelModifiers + "]]");
+      this.semanticFindings.setLocalPasmTokenForMethod(this.currentMethodName, labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment());
     }
   }
 

@@ -13,13 +13,24 @@ Work to appear in upcoming releases:
 
 Possible next additions:
 
-- Add Hover popups for `PUB` and `PRI` method signature (help text)
+- Add Signature popups for `PUB`, `PRI` and Spin2 method signatures (help text)
 - Add Hover popups for pasm instructions (help text for each instruction)
 - Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
+- Add light theme 
 - Investigate and possibly add unique coloring for method pointers
 - Add spin2 instruction templates as Snippets (_for instructions with two or more parameters_)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.9.3] 2023-06-27
+
+Minor fixes to hover support for P2!
+
+- Now handle PUB/PRI inline pasm variables and labels
+- Adjust naming of method parameters, return values, local variables, and inline-pasm labels, variables
+- Adjust naming of object variables, methods, labels
+- Allow preceding non-doc comments to be multi-line (in addition to single-line) for constants, variables, labels
+- Provide missing signatures for float(), trunc() and round()
 
 ## [1.9.2] 2023-06-26
 
