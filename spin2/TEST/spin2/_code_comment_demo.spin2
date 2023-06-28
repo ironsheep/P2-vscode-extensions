@@ -10,10 +10,28 @@
 ''   Updated.... 26 Jun 2023
 ''
 '' =================================================================================================
+CON { comment position demo }
+
+' preceeding comment
+NEW_CONSTANT_1 = 5
+
+NEW_CONSTANT_2 = 7                          ' trailing comment
+
+' Enum with values commented:
+'  ENUM_VAL_1  - we have 1 becase
+'  ENUM_VAL_2  - yes, we have 2 too
+'  ENUM_VAL_3  - we have yet anotehr readons for 3
+#0, ENUM_VAL_1, ENUM_VAL_2, ENUM_VAL_3
+
+
+
 CON { timing }
 
   CLK_FREQ = 270_000_000                                        ' system freq as a constant
   _clkfreq = CLK_FREQ                                           ' set system clock
+
+' here 2 = 3!
+  VAL2 = ENUM_VAL_3
 
 CON { fixed io pins }
 
@@ -48,13 +66,20 @@ OBJ { included objects }
 
     ' use COG for s.bus serial input/decoding
     sbus    : "jm_sbus_rx"
-
-    'term    : "isp_serial_singleton"                         ' debug terminal output
+    term    : "isp_serial_singleton"                         ' debug terminal output
 
 DAT
 
+' DAT preceeding comment
+sillyVar        long    0       ' trailing but preceeding comment prefered
+sillyVar2       long    0       ' DAT trailing comment
+
+
 VAR
 
+' VAR preceeding comment
+    LONG  forDocExplan1
+    LONG  forDocExplan2         ' VAR trailing comment
 
 PUB null()
 '' This is not a top-level object

@@ -29,7 +29,6 @@ CON { app constants }
 
 PUB Main() | pwmSpecs, offset, encVal, priorEncVal
 
-
     debug(`term term4 pos 128 540 size 30 8 textsize 16 color cyan)
 
     debug(`term4 'p_gain=`(P_GAIN), MINms=`(MIN_MS_TO_MOV)')        ' <--- "MINms=" shouldn't be RED

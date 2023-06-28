@@ -612,7 +612,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               const numberLocals: number = (localsString.match(/,/g) || []).length + 1;
               const localsNames = localsString.split(/[ \t,]/).filter(Boolean);
               this._logMessage(`* iDc localsString=[${localsString}], localsNames=[${localsNames}]`);
-              linesToInsert.push("'" + endOfLineStr); // blank line
+              linesToInsert.push("" + endOfLineStr); // empty line so following is not shown in comments for method
               linesToInsert.push("' Local Variables:" + endOfLineStr); // blank line
               for (let localIdx = 0; localIdx < numberLocals; localIdx++) {
                 linesToInsert.push("'" + ` @local ${localsNames[localIdx]} - ` + endOfLineStr); // blank line

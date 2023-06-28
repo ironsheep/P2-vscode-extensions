@@ -16,11 +16,18 @@ Possible next additions:
 - Add Signature popups for `PUB`, `PRI` and Spin2 method signatures (help text)
 - Add Hover popups for pasm instructions (help text for each instruction)
 - Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
-- Add light theme 
+- Add light theme
 - Investigate and possibly add unique coloring for method pointers
 - Add spin2 instruction templates as Snippets (_for instructions with two or more parameters_)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.9.4] 2023-06-27
+
+Minor fixes to hover support for P2!
+
+- PRI methods want non-doc-comments vs doc-comments
+- Add blank line before locals in PUB/PRI generated method comments
 
 ## [1.9.3] 2023-06-27
 
@@ -38,7 +45,7 @@ Add new hover support for P2!
 
 - Now can hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item
 - Now supports hover for **Built-in Spin2** methods, variables, constants and smart-pin contstants to display pop-up documentation about the built-in item
-- Adds new Doc-Comment Generation for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line. 
+- Adds new Doc-Comment Generation for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line.
 - BUGFIX P2 no longer treats `asmclk` as pasm label (Oops)
 - BUGFIX P2 in debug() statements: variables accessed as sub bitfields now highlighted correctly (e.g., c.[2..7])
 - P2 syntax: added getcrc, strcopy

@@ -188,7 +188,8 @@ export class DocumentFindings {
         const bIsMethod: boolean = findings.token.type == "method";
         const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
         if (bIsMethod) {
-          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, eCommentFilter.docCommentOnly);
+          const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, commentType);
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
           if (!findings.declarationComment && canUseAlternateComment) {
