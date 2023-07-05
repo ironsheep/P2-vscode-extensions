@@ -2,30 +2,26 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { CancellationToken, Hover, HoverProvider, Position, TextDocument, WorkspaceConfiguration } from "vscode";
+
+import { CancellationToken, ParameterInformation, Position, SignatureHelp, SignatureHelpProvider, SignatureInformation, TextDocument, WorkspaceConfiguration } from "vscode";
 import { DocumentFindings } from "./spin.semantic.findings";
 import { ParseUtils, eBuiltInType } from "./spin2.utils";
 import { IPairs, definitionInfo, definitionInput, ExtensionUtils, getSpin2Config } from "./spin2.extension.utils";
-//import { IncomingMessage } from "http";
-//import { isDeepStrictEqual } from "util";
 
-export class Spin2HoverProvider implements HoverProvider {
+export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private hoverLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
-  private hoverOutputChannel: vscode.OutputChannel | undefined = undefined;
+  private signatureLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private signatureOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
-  private extensionUtils = new ExtensionUtils(this.hoverLogEnabled, this.hoverOutputChannel);
-
-  private firstTime: boolean = true;
-
+  private extensionUtils = new ExtensionUtils(this.signatureLogEnabled, this.signatureOutputChannel);
   constructor(symbolRepository: DocumentFindings, spinConfig?: WorkspaceConfiguration) {
     this.spinConfig = spinConfig;
     this.symbolsFound = symbolRepository;
-    if (this.hoverLogEnabled) {
-      if (this.hoverOutputChannel === undefined) {
+    if (this.signatureLogEnabled) {
+      if (this.signatureOutputChannel === undefined) {
         //Create output channel
-        this.hoverOutputChannel = vscode.window.createOutputChannel("Spin2 Hover DEBUG");
+        this.signatureOutputChannel = vscode.window.createOutputChannel("Spin2 Signature DEBUG");
         this._logMessage("Spin2 log started.");
       } else {
         this._logMessage("\n\n------------------   NEW FILE ----------------\n\n");
@@ -39,60 +35,79 @@ export class Spin2HoverProvider implements HoverProvider {
    * @returns nothing
    */
   private _logMessage(message: string): void {
-    if (this.hoverLogEnabled && this.hoverOutputChannel != undefined) {
+    if (this.signatureLogEnabled && this.signatureOutputChannel != undefined) {
       //Write to output window.
-      this.hoverOutputChannel.appendLine(message);
+      this.signatureOutputChannel.appendLine(message);
     }
   }
 
-  // fm GO project
-  //  export function isPositionInString()
-  //  export function adjustWordPosition()
-  //  public provideTypeDefinition()
-  //  export function definitionLocation()
-  //  definitionLocation
-  //  definitionInfo
-  //  GoDefinitionInformation
-  //  src/language/legacy/goDeclaration.ts
-
-  /**
-   *
-   * @param document
-   * @param position
-   * @param token
-   * @returns Hover | null
-   */
-  public provideHover(document: TextDocument, position: Position, token: CancellationToken): Thenable<Hover | null> {
-    this._logMessage(`+ Hvr: provideHover() ENTRY`);
+  public async provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): Promise<SignatureHelp | null> {
+    this._logMessage(`+ Sig: provideHover() ENTRY`);
     if (!this.spinConfig) {
       this.spinConfig = getSpin2Config(document.uri);
     }
     let spinConfig = this.spinConfig;
-    this._logMessage(`+ Hvr: provideHover() EXIT after providing def'location`);
-    return this.definitionLocation(document, position, spinConfig, true, token).then(
-      (definitionInfo) => {
-        if (definitionInfo == null) {
-          this._logMessage(`+ Hvr: provideHover() EXIT no info`);
-          return null;
-        }
-        const lines = definitionInfo.declarationlines.filter((line) => line !== "").map((line) => line.replace(/\t/g, "    "));
-        let text;
-        text = lines.join("\n").replace(/\n+$/, "");
-        const hoverTexts = new vscode.MarkdownString();
-        hoverTexts.supportHtml = true; // yes, let's support some html
-        hoverTexts.appendCodeblock(text, "spin2"); // should be spin2/spin but "code lanuguage not supported or defined" : bad ones are: json
-        if (definitionInfo.doc != null) {
-          hoverTexts.appendMarkdown(definitionInfo.doc);
-        }
-        const hover = new Hover(hoverTexts);
-        this._logMessage(`+ Hvr: provideHover() EXIT with hover`);
-        return hover;
-      },
-      () => {
-        this._logMessage(`+ Hvr: provideHover() EXIT null`);
+
+    const theCall = this.walkBackwardsToBeginningOfCall(document, position);
+    if (theCall == null) {
+      return Promise.resolve(null);
+    }
+    const callerPos = this.previousTokenPosition(document, theCall.openParen);
+    try {
+      const defInfo: definitionInfo | null = await this.definitionLocation(document, callerPos, spinConfig, true, token);
+      if (!defInfo) {
+        // The definition was not found
+        this._logMessage(`+ Sig: defInfo NOT found`);
         return null;
       }
-    );
+      this._logMessage(`+ Sig: defInfo.line=[${defInfo.line}], defInfo.doc=[${defInfo.doc}], defInfo.declarationlines=[${defInfo.declarationlines}]`);
+      if (defInfo.line === callerPos?.line) {
+        // This must be a function definition
+        this._logMessage(`+ Sig: IGNORING function/method definition`);
+        return null;
+      }
+
+      const declLine = document.lineAt(defInfo.line).text.trim(); // declaration line
+      const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();
+      let declarationText: string = (defInfo.declarationlines || []).join(" ").trim();
+      this._logMessage(`+ Sig: nonCommentDecl=[${nonCommentDecl}]`);
+      this._logMessage(`+ Sig: declarationText=[${declarationText}]`);
+      if (!declarationText) {
+        return null;
+      }
+      const result = new SignatureHelp();
+      let sig: string | undefined;
+      let si: SignatureInformation | undefined;
+      if (defInfo.doc?.includes("Custom Method")) {
+        // use this for user(custom) methods
+        sig = nonCommentDecl;
+        const methDescr: string = this.getMethodDescriptionFromDoc(defInfo.doc);
+        si = new SignatureInformation(sig, methDescr);
+        if (si) {
+          si.parameters = this.getParametersAndReturnTypeFromDoc(defInfo.doc);
+        }
+      } else if (defInfo.toolUsed === "gogetdoc") {
+        // use this for built-in methods
+        // declaration is of the form "func Add(a int, b int) int"
+        declarationText = declarationText.substring(5);
+        const funcNameStart = declarationText.indexOf(defInfo.name + "("); // Find 'functionname(' to remove anything before it
+        if (funcNameStart > 0) {
+          declarationText = declarationText.substring(funcNameStart);
+        }
+        si = new SignatureInformation(declarationText, defInfo.doc);
+        sig = declarationText.substring(defInfo.name?.length ?? 0);
+        if (si) {
+          si.parameters = this.getParametersAndReturnType(sig).params.map((paramText) => new ParameterInformation(paramText));
+        }
+      }
+      if (!si || !sig) return result;
+      result.signatures = [si];
+      result.activeSignature = 0;
+      result.activeParameter = Math.min(theCall.commas.length, si.parameters.length - 1);
+      return result;
+    } catch (e) {
+      return null;
+    }
   }
 
   private definitionLocation(
@@ -102,17 +117,17 @@ export class Spin2HoverProvider implements HoverProvider {
     includeDocs: boolean,
     token: vscode.CancellationToken
   ): Promise<definitionInfo | null> {
-    this._logMessage(`+ Hvr: definitionLocation() ENTRY`);
+    this._logMessage(`+ Sig: definitionLocation() ENTRY`);
     const isPositionInBlockComment: boolean = this.symbolsFound.isLineInBlockComment(position.line);
     const adjustedPos = this.extensionUtils.adjustWordPosition(document, position, isPositionInBlockComment);
     if (!adjustedPos[0]) {
-      this._logMessage(`+ Hvr: definitionLocation() EXIT fail`);
+      this._logMessage(`+ Sig: definitionLocation() EXIT fail`);
       return Promise.resolve(null);
     }
     const word = adjustedPos[1];
     position = adjustedPos[2];
     let fileBasename = path.basename(document.fileName);
-    this._logMessage(`+ Hvr: word=[${word}], adjPos=(${position.line},${position.character}), file=[${fileBasename}], line=[${document.lineAt(position.line).text}]`);
+    this._logMessage(`+ Sig: word=[${word}], adjPos=(${position.line},${position.character}), file=[${fileBasename}], line=[${document.lineAt(position.line).text}]`);
 
     if (!spinConfig) {
       spinConfig = getSpin2Config(document.uri);
@@ -123,7 +138,7 @@ export class Spin2HoverProvider implements HoverProvider {
       word,
       includeDocs,
     };
-    this._logMessage(`+ Hvr: definitionLocation() EXIT after getting symbol details`);
+    this._logMessage(`+ Sig: definitionLocation() EXIT after getting symbol details`);
     return this.getSymbolDetails(searchDetails, token, false);
   }
 
@@ -159,26 +174,26 @@ export class Spin2HoverProvider implements HoverProvider {
       let bFoundSomething: boolean = false; // we've no answer
       let builtInFindings = isDebugLine ? this.parseUtils.docTextForDebugBuiltIn(input.word) : this.parseUtils.docTextForBuiltIn(input.word);
       if (!builtInFindings.found) {
-        this._logMessage(`+ Hvr: built-in=[${input.word}], NOT found!`);
+        this._logMessage(`+ Sig: built-in=[${input.word}], NOT found!`);
       } else {
-        this._logMessage(`+ Hvr: built-in=[${input.word}], Found!`);
+        this._logMessage(`+ Sig: built-in=[${input.word}], Found!`);
       }
       let bFoundParseToken: boolean = this.symbolsFound.isKnownToken(input.word);
       if (!bFoundParseToken) {
-        this._logMessage(`+ Hvr: token=[${input.word}], NOT found!`);
+        this._logMessage(`+ Sig: token=[${input.word}], NOT found!`);
       } else {
-        this._logMessage(`+ Hvr: token=[${input.word}], Found!`);
+        this._logMessage(`+ Sig: token=[${input.word}], Found!`);
       }
       if (bFoundParseToken && !builtInFindings.found) {
         bFoundSomething = true;
         const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
         if (tokenFindings.found) {
           this._logMessage(
-            `+ Hvr: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
+            `+ Sig: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
           );
-          this._logMessage(`+ Hvr:    file=[${tokenFindings.relatedFilename}], declCmt=(${tokenFindings.declarationComment})]`);
+          this._logMessage(`+ Sig:    file=[${tokenFindings.relatedFilename}], declCmt=(${tokenFindings.declarationComment})]`);
         } else {
-          this._logMessage(`+ Hvr: get token failed?!!`);
+          this._logMessage(`+ Sig: get token failed?!!`);
         }
         const nameString = tokenFindings.adjustedName;
         const scopeString = tokenFindings.scope;
@@ -192,6 +207,7 @@ export class Spin2HoverProvider implements HoverProvider {
           typeInterpWName = `(${typeString}) ${nameString}`; // better formatting of interp
           typeInterp = `(${typeString})`;
         }
+        defInfo.line = tokenFindings.declarationLine; // report not our line but where the method is declared
         const declLine = input.document.lineAt(tokenFindings.declarationLine).text.trim(); // declaration line
         const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();
 
@@ -301,11 +317,11 @@ export class Spin2HoverProvider implements HoverProvider {
           if (input.word.toLowerCase() == "debug" && sourceLine.toLowerCase().startsWith("debug(")) {
             bISdebugStatement = true;
           }
-          this._logMessage(`+ Hvr: bISdebugStatement=[${bISdebugStatement}], sourceLine=[${sourceLine}]`);
+          this._logMessage(`+ Sig: bISdebugStatement=[${bISdebugStatement}], sourceLine=[${sourceLine}]`);
           let mdLines: string[] = [];
           bFoundSomething = true;
           defInfo.declarationlines = [];
-          this._logMessage(`+ Hvr: word=[${input.word}], descr=(${builtInFindings.description}), type=[spin2 built-in], cat=[${builtInFindings.category}]`);
+          this._logMessage(`+ Sig: word=[${input.word}], descr=(${builtInFindings.description}), type=[spin2 built-in], cat=[${builtInFindings.category}]`);
 
           let titleText: string | undefined = builtInFindings.category;
           let subTitleText: string | undefined = undefined;
@@ -325,7 +341,7 @@ export class Spin2HoverProvider implements HoverProvider {
             defInfo.declarationlines = ["(spin2 language) " + input.word];
             subTitleText = `: *Spin2 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_SYMBOL) {
-            this._logMessage(`+ Hvr: builtInFindings.type=[eBuiltInType.BIT_DEBUG_SYMBOL]`);
+            this._logMessage(`+ Sig: builtInFindings.type=[eBuiltInType.BIT_DEBUG_SYMBOL]`);
             if (bISdebugStatement) {
               defInfo.declarationlines = ["(DEBUG method) " + builtInFindings.signature];
               defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 debug built-in*<br>`, "- " + builtInFindings.description);
@@ -338,7 +354,7 @@ export class Spin2HoverProvider implements HoverProvider {
               subTitleText = `: *Spin2 debug built-in*`;
             }
           } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_METHOD) {
-            this._logMessage(`+ Hvr: builtInFindings.type=[eBuiltInType.BIT_DEBUG_METHOD]`);
+            this._logMessage(`+ Sig: builtInFindings.type=[eBuiltInType.BIT_DEBUG_METHOD]`);
             defInfo.declarationlines = ["(DEBUG method) " + builtInFindings.signature];
             subTitleText = `: *Spin2 debug built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_TYPE) {
@@ -373,5 +389,158 @@ export class Spin2HoverProvider implements HoverProvider {
         return reject(null); // we have no answer!
       }
     });
+  }
+
+  // Takes a Go function signature like:
+  //     (foo, bar string, baz number) (string, string)
+  // and returns an array of parameter strings:
+  //     ["foo", "bar string", "baz string"]
+  // Takes care of balancing parens so to not get confused by signatures like:
+  //     (pattern string, handler func(ResponseWriter, *Request)) {
+  private getParametersAndReturnType(signature: string): { params: string[]; returnType: string } {
+    const params: string[] = [];
+    let parenCount = 0;
+    let lastStart = 1;
+    for (let i = 1; i < signature.length; i++) {
+      switch (signature[i]) {
+        case "(":
+          parenCount++;
+          break;
+        case ")":
+          parenCount--;
+          if (parenCount < 0) {
+            if (i > lastStart) {
+              params.push(signature.substring(lastStart, i));
+            }
+            return {
+              params,
+              returnType: i < signature.length - 1 ? signature.substr(i + 1) : "",
+            };
+          }
+          break;
+        case ",":
+          if (parenCount === 0) {
+            params.push(signature.substring(lastStart, i));
+            lastStart = i + 2;
+          }
+          break;
+      }
+    }
+    return { params: [], returnType: "" };
+  }
+
+  private getMethodDescriptionFromDoc(docMD: string): string {
+    let methodDescr: string = "";
+    // this isolates mothd description lines and returns them
+    // skipping first line, and @param, @returns lines
+    const lines = docMD.split("<br>");
+    let descrLines: string[] = [];
+    if (lines.length > 0) {
+      for (let lnIdx = 1; lnIdx < lines.length; lnIdx++) {
+        const sglLine = lines[lnIdx];
+        if (sglLine.includes("@param")) {
+          continue;
+        }
+        if (sglLine.includes("@returns")) {
+          continue;
+        }
+        descrLines.push(sglLine);
+      }
+      if (descrLines.length > 0) {
+        methodDescr = descrLines.join(" ");
+      }
+    }
+
+    return methodDescr;
+  }
+
+  private getParametersAndReturnTypeFromDoc(docMD: string): ParameterInformation[] {
+    let parameterDetails: ParameterInformation[] = [];
+    // this ignores return type info and just provides deets on param's
+    const lines = docMD.split("<br>").filter(Boolean);
+    if (lines.length > 0) {
+      for (let lnIdx = 0; lnIdx < lines.length; lnIdx++) {
+        const sglLine = lines[lnIdx];
+        if (sglLine.includes("@param")) {
+          const lineParts: string[] = sglLine.split(/[ \t]/).filter(Boolean);
+          let paramName: string = lineParts[1];
+          this._logMessage(`+ Sig: gpartfd paramName=[${paramName}], lineParts=[${lineParts}]({${lineParts.length}})`);
+          const nameStartLocn: number = sglLine.indexOf(paramName);
+          if (nameStartLocn != -1) {
+            const paramDoc: string = sglLine.substring(nameStartLocn + paramName.length).trim();
+            this._logMessage(`+ Sig: gpartfd paramDoc=[${paramDoc}]`);
+            paramName = paramName.substring(1, paramName.length - 1);
+            const newParamInfo: ParameterInformation = new ParameterInformation(paramName, `${paramName} ${paramDoc}`);
+            parameterDetails.push(newParamInfo);
+          }
+        }
+      }
+    }
+    return parameterDetails;
+  }
+
+  private previousTokenPosition(document: TextDocument, position: Position): Position {
+    while (position.character > 0) {
+      const word = document.getWordRangeAtPosition(position);
+      if (word) {
+        position = word.start;
+        break;
+      } else {
+        position = position.translate(0, -1);
+      }
+    }
+    this._logMessage(`+ Sig: previousTokenPosition() = [lin=${position.line}, char=${position.character}]`);
+    return position;
+  }
+
+  /**
+   * Goes through the function params' lines and gets the number of commas and the start position of the call.
+   */
+  private walkBackwardsToBeginningOfCall(document: TextDocument, position: Position): { openParen: Position; commas: Position[] } | null {
+    let parenBalance = 0;
+    let maxLookupLines = 30;
+    const commas = [];
+
+    const lineText = document.lineAt(position.line).text;
+    const stringsFound: IPairs[] = this.extensionUtils.getStringPairOffsets(lineText);
+    const ticVarsFound: IPairs[] = this.extensionUtils.getPairOffsetsOfTicVarWraps(lineText);
+
+    for (let lineNr = position.line; lineNr >= 0 && maxLookupLines >= 0; lineNr--, maxLookupLines--) {
+      const line = document.lineAt(lineNr);
+
+      // Stop processing if we're inside a comment
+      if (this.extensionUtils.isPositionInComment(document, position, stringsFound)) {
+        return null;
+      }
+
+      // if its current line, get the text until the position given, otherwise get the full line.
+      const [currentLine, characterPosition] = lineNr === position.line ? [line.text.substring(0, position.character), position.character] : [line.text, line.text.length - 1];
+
+      for (let char = characterPosition; char >= 0; char--) {
+        switch (currentLine[char]) {
+          case "(":
+            parenBalance--;
+            if (parenBalance < 0) {
+              return {
+                openParen: new Position(lineNr, char),
+                commas,
+              };
+            }
+            break;
+          case ")":
+            parenBalance++;
+            break;
+          case ",":
+            {
+              const commaPos = new Position(lineNr, char);
+              if (parenBalance === 0 && !this.extensionUtils.isPositionInString(document, commaPos, stringsFound, ticVarsFound)) {
+                commas.push(commaPos);
+              }
+            }
+            break;
+        }
+      }
+    }
+    return null;
   }
 }

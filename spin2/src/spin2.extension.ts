@@ -17,6 +17,7 @@ import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider,
 import { DocGenerator } from "./spin.document.generate";
 import { ObjectTreeProvider, Dependency } from "./spin.object.dependencies";
 import { Spin2HoverProvider } from "./spin2.hover.behavior";
+import { Spin2SignatureHelpProvider } from "./spin2.signature.help";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -71,6 +72,12 @@ export const activate = (context: vscode.ExtensionContext) => {
 
   // register our  Spin1 hover provider
   //context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN1_FILE, new Spin1HoverProvider(spin1SemanticTokensProvider.docFindings())));
+
+  // register our  Spin2 signature help provider
+  context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(SPIN2_FILE, new Spin2SignatureHelpProvider(spin2SemanticTokensProvider.docFindings()), "(", ","));
+
+  // register our  Spin1 signature help provider
+  //context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN1_FILE, new Spin1SignatureHelpProvider(spin1SemanticTokensProvider.docFindings()), "(", ","));
 
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider

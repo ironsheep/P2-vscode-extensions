@@ -22,6 +22,12 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.5] 2023-07-??
+
+Add Signature Help support for P2!
+
+- When entering method calls signature help will show
+
 ## [1.9.4] 2023-06-27
 
 Minor fixes to hover support for P2!

@@ -81,8 +81,12 @@ VAR
     LONG  forDocExplan1
     LONG  forDocExplan2         ' VAR trailing comment
 
-PUB null()
+PUB null() | parms
 '' This is not a top-level object
+    circInMMforDiaInInch
+
+    repeat ' forever
+
 
 PUB circInMMforDiaInInch(nDiaInch) : nCircInMM
 '' Return circumference in mm for given diameter in inch
@@ -107,6 +111,16 @@ PRI circInMMforDiaInInchFloat(fDiaInch) : nCircInMM | fValue
         nCircInMM := trunc(fValue *. kMM_IN_INCH)
 
 pri newRampDn(tgt_incr, inDrv_incr, inDrv_state) : drv_incr, drv_state_ | testVar
+' this methods does
+'
+' @param tgt_incr - this ithe
+' @param inDrv_incr -
+' @param inDrv_state -
+' @returns drv_incr -
+' @returns drv_state_ -
+
+' Local Variables:
+' @local testVar -
     drv_incr := inDrv_incr
     drv_state_ := inDrv_state
     org
@@ -149,13 +163,13 @@ pri newRampDn(tgt_incr, inDrv_incr, inDrv_state) : drv_incr, drv_state_ | testVa
 .justIncr
                 ret
 
-final_ramp   long    0
-end_ramp   long    0
-curr_ramp   long    0
-abs_incr   long    0
-ramp_thresh     LONG    50_000              ' fm zero - TEST slow ramp to here then fast ramp ( ~1/5 of 0-max )
-ramp_fast_   long    50_000                   ' 50k angle increment: add/sub this every 500 uSec to ramp up to speed, or ramp down to zer
-ramp_slo_   long    12_000                    ' 8k angle decrement: add/sub this every 500 uSec to ramp up from zero (slower initial ramp so we don't fault)
+final_ramp      long    0
+end_ramp        long    0
+curr_ramp       long    0
+abs_incr        long    0
+ramp_thresh     LONG    50_000                  ' fm zero - TEST slow ramp to here then fast ramp ( ~1/5 of 0-max )
+ramp_fast_      long    50_000                  ' 50k angle increment: add/sub this every 500 uSec to ramp up to speed, or ramp down to zer
+ramp_slo_       long    12_000                    ' 8k angle decrement: add/sub this every 500 uSec to ramp up from zero (slower initial ramp so we don't fault)
     end
 
 
