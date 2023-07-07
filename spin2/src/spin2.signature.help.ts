@@ -60,19 +60,20 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
         this._logMessage(`+ Sig: defInfo NOT found`);
         return null;
       }
-      this._logMessage(`+ Sig: defInfo.line=[${defInfo.line}], defInfo.doc=[${defInfo.doc}], defInfo.declarationlines=[${defInfo.declarationlines}]`);
+      this._logMessage(`+ Sig: defInfo.line=[${defInfo.line}], defInfo.doc=[${defInfo.doc}], defInfo.declarationlines=[${defInfo.declarationlines}], defInfo.parameters=[${defInfo.parameters}]`);
       if (defInfo.line === callerPos?.line) {
         // This must be a function definition
         this._logMessage(`+ Sig: IGNORING function/method definition`);
         return null;
       }
 
-      const declLine = document.lineAt(defInfo.line).text.trim(); // declaration line
-      const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();
+      const declLine: string = defInfo.line != -1 ? document.lineAt(defInfo.line).text.trim() : ""; // declaration line
+      const nonCommentDecl: string = declLine.length > 0 ? this.parseUtils.getNonCommentLineRemainder(0, declLine).trim() : "";
       let declarationText: string = (defInfo.declarationlines || []).join(" ").trim();
       this._logMessage(`+ Sig: nonCommentDecl=[${nonCommentDecl}]`);
       this._logMessage(`+ Sig: declarationText=[${declarationText}]`);
       if (!declarationText) {
+        this._logMessage(`+ Sig: IGNORING no declarationText`);
         return null;
       }
       const result = new SignatureHelp();
@@ -86,28 +87,43 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
         if (si) {
           si.parameters = this.getParametersAndReturnTypeFromDoc(defInfo.doc);
         }
-      } else if (defInfo.toolUsed === "gogetdoc") {
+      } else if (defInfo.line == -1) {
         // use this for built-in methods
-        // declaration is of the form "func Add(a int, b int) int"
-        declarationText = declarationText.substring(5);
-        const funcNameStart = declarationText.indexOf(defInfo.name + "("); // Find 'functionname(' to remove anything before it
-        if (funcNameStart > 0) {
-          declarationText = declarationText.substring(funcNameStart);
-        }
-        si = new SignatureInformation(declarationText, defInfo.doc);
-        sig = declarationText.substring(defInfo.name?.length ?? 0);
-        if (si) {
-          si.parameters = this.getParametersAndReturnType(sig).params.map((paramText) => new ParameterInformation(paramText));
+        const methDescr: string = this.getMethodDescriptionFromDoc(defInfo.doc);
+        sig = "(Built-in) " + defInfo.declarationlines[0];
+        this._logMessage(`+ Sig: sig=[${sig}], methDescr=[${methDescr}]`);
+        if (sig) {
+          si = new SignatureInformation(sig, methDescr);
+          if (si && defInfo.parameters) {
+            si.parameters = this.getParametersAndReturnTypeFromParameterStringAr(defInfo.parameters);
+          }
         }
       }
       if (!si || !sig) return result;
       result.signatures = [si];
       result.activeSignature = 0;
+      this._logMessage(`+ Sig: theCall.commas.length=[${theCall.commas.length}], si.parameters.length=[${si.parameters.length}]`);
       result.activeParameter = Math.min(theCall.commas.length, si.parameters.length - 1);
       return result;
     } catch (e) {
       return null;
     }
+  }
+
+  private getParametersAndReturnTypeFromParameterStringAr(paramList: string[] | undefined): vscode.ParameterInformation[] {
+    // convert list of parameters frombuilt-in description tables to vscode ParameterInformation's
+    let parameterDetails: vscode.ParameterInformation[] = [];
+    if (paramList && paramList.length > 0) {
+      for (let paramIdx = 0; paramIdx < paramList.length; paramIdx++) {
+        const paramDescr = paramList[paramIdx];
+        const lineParts: string[] = paramDescr.split(/[ \t]/).filter(Boolean);
+        let paramName: string = lineParts[0];
+        this._logMessage(`+ Sig: gpartfpsa paramName=[${paramName}], paramDescr=[${paramDescr}})`);
+        const newParamInfo: ParameterInformation = new ParameterInformation(paramName, paramDescr);
+        parameterDetails.push(newParamInfo);
+      }
+    }
+    return parameterDetails;
   }
 
   private definitionLocation(
@@ -147,6 +163,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
     } // kill compiler warns for now...
     if (useTags) {
     } // kill compiler warns for now...  Probably remove these from interface
+    this._logMessage(`+ Sig: getSymbolDetails() input.word=[${input.word}]`);
     return new Promise((resolve, reject) => {
       const defInfo: definitionInfo = {
         file: input.document.uri.fsPath,
@@ -170,6 +187,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
       const sourceTextToRight: string = sourceLineRaw.substring(cursorCharPosn).trim();
       const isSignatureLine: boolean = sourceLine.toLowerCase().startsWith("pub") || sourceLine.toLowerCase().startsWith("pri");
       const isDebugLine: boolean = sourceLine.toLowerCase().startsWith("debug(");
+      this._logMessage(`+ Sig: getSymbolDetails() isSignatureLine=[${isSignatureLine}], isDebugLine=[${isDebugLine}]`);
 
       let bFoundSomething: boolean = false; // we've no answer
       let builtInFindings = isDebugLine ? this.parseUtils.docTextForDebugBuiltIn(input.word) : this.parseUtils.docTextForBuiltIn(input.word);
@@ -325,41 +343,13 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
 
           let titleText: string | undefined = builtInFindings.category;
           let subTitleText: string | undefined = undefined;
-          if (builtInFindings.type == eBuiltInType.BIT_VARIABLE) {
-            defInfo.declarationlines = ["(variable) " + input.word];
-            subTitleText = ` variable: *Spin2 built-in*`;
-          } else if (builtInFindings.type == eBuiltInType.BIT_SYMBOL) {
-            defInfo.declarationlines = ["(symbol) " + input.word];
-            subTitleText = ` symbol: *Spin2 built-in*`;
-          } else if (builtInFindings.type == eBuiltInType.BIT_CONSTANT) {
-            defInfo.declarationlines = ["(constant 32-bit) " + input.word];
-            subTitleText = ` constant: *Spin2 built-in*`;
-          } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
-            defInfo.declarationlines = ["(method) " + builtInFindings.signature];
+          if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
+            defInfo.declarationlines = [builtInFindings.signature];
             subTitleText = `: *Spin2 built-in*`;
-          } else if (builtInFindings.type == eBuiltInType.BIT_LANG_PART) {
-            defInfo.declarationlines = ["(spin2 language) " + input.word];
-            subTitleText = `: *Spin2 built-in*`;
-          } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_SYMBOL) {
-            this._logMessage(`+ Sig: builtInFindings.type=[eBuiltInType.BIT_DEBUG_SYMBOL]`);
-            if (bISdebugStatement) {
-              defInfo.declarationlines = ["(DEBUG method) " + builtInFindings.signature];
-              defInfo.doc = "".concat(`${builtInFindings.category}: *Spin2 debug built-in*<br>`, "- " + builtInFindings.description);
-              // deselect lines into mdLines mech...
-              mdLines = [];
-              titleText = undefined;
-              subTitleText = undefined;
-            } else {
-              defInfo.declarationlines = ["(DEBUG symbol) " + input.word];
-              subTitleText = `: *Spin2 debug built-in*`;
-            }
           } else if (builtInFindings.type == eBuiltInType.BIT_DEBUG_METHOD) {
             this._logMessage(`+ Sig: builtInFindings.type=[eBuiltInType.BIT_DEBUG_METHOD]`);
-            defInfo.declarationlines = ["(DEBUG method) " + builtInFindings.signature];
+            defInfo.declarationlines = [builtInFindings.signature];
             subTitleText = `: *Spin2 debug built-in*`;
-          } else if (builtInFindings.type == eBuiltInType.BIT_TYPE) {
-            defInfo.declarationlines = ["(Spin2 Storage) " + input.word];
-            subTitleText = `: *Spin2 built-in*`;
           }
           if (titleText && subTitleText) {
             if (builtInFindings.type == eBuiltInType.BIT_CONSTANT && bFoundParseToken) {
@@ -381,6 +371,8 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
               defInfo.doc = undefined;
             }
           }
+          defInfo.line = -1; // don;t have declaration line# for built-in!
+          defInfo.parameters = builtInFindings.parameters; // forward any parameters found...
         }
       }
       if (bFoundSomething) {
@@ -429,25 +421,27 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
     return { params: [], returnType: "" };
   }
 
-  private getMethodDescriptionFromDoc(docMD: string): string {
+  private getMethodDescriptionFromDoc(docMD: string | undefined): string {
     let methodDescr: string = "";
     // this isolates mothd description lines and returns them
     // skipping first line, and @param, @returns lines
-    const lines = docMD.split("<br>");
-    let descrLines: string[] = [];
-    if (lines.length > 0) {
-      for (let lnIdx = 1; lnIdx < lines.length; lnIdx++) {
-        const sglLine = lines[lnIdx];
-        if (sglLine.includes("@param")) {
-          continue;
+    if (docMD) {
+      const lines = docMD.split("<br>");
+      let descrLines: string[] = [];
+      if (lines.length > 0) {
+        for (let lnIdx = 1; lnIdx < lines.length; lnIdx++) {
+          const sglLine = lines[lnIdx];
+          if (sglLine.includes("@param")) {
+            continue;
+          }
+          if (sglLine.includes("@returns")) {
+            continue;
+          }
+          descrLines.push(sglLine);
         }
-        if (sglLine.includes("@returns")) {
-          continue;
+        if (descrLines.length > 0) {
+          methodDescr = descrLines.join(" ");
         }
-        descrLines.push(sglLine);
-      }
-      if (descrLines.length > 0) {
-        methodDescr = descrLines.join(" ");
       }
     }
 

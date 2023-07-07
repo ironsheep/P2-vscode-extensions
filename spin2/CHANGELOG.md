@@ -26,7 +26,8 @@ Possible next additions:
 
 Add Signature Help support for P2!
 
-- When entering method calls signature help will show
+- When typing method calls signature help will describe parameters needed, with meaning, as they are typed
+- BUGFIX Semantic P2: flag illegal use of trunc|float|round [with missing ()'s, or no parameter]
 
 ## [1.9.4] 2023-06-27
 

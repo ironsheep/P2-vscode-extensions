@@ -33,6 +33,7 @@ export interface IBuiltinDescription {
   category: string;
   description: string;
   signature: string;
+  parameters?: string[];
 }
 
 export const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
@@ -46,6 +47,9 @@ export const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
   ["bitmap", eDebugDisplayType.ddtBitmap],
   ["midi", eDebugDisplayType.ddtMidi],
 ]);
+
+// this is how we decribe our methods with parameters in our tables...
+type methodTuple = readonly [signature: string, description: string, parameters: string[]];
 
 export class ParseUtils {
   public etDebugStatement(startingOffset: number, line: string): string {
@@ -508,9 +512,10 @@ export class ParseUtils {
       desiredDocText.description = this._tableSpinBlockNames[nameKey];
     } else if (nameKey in this._tableSpinFloatConversions) {
       desiredDocText.category = "Float Conversions";
-      const protoWDescr: string[] = this._tableSpinFloatConversions[nameKey];
-      desiredDocText.signature = protoWDescr[0];
-      desiredDocText.description = protoWDescr[1]; // bold
+      let methodDescr: methodTuple = this._tableSpinFloatConversions[nameKey];
+      desiredDocText.signature = methodDescr[0];
+      desiredDocText.description = methodDescr[1];
+      desiredDocText.parameters = methodDescr[2];
     } else if (nameKey in this._tableSpinBinaryOperators) {
       desiredDocText.category = "Binary Operators";
       desiredDocText.description = this._tableSpinBinaryOperators[nameKey];
@@ -573,11 +578,15 @@ export class ParseUtils {
         } else {
           desiredDocText = this._docTextForSpinBuiltInLanguagePart(name);
           if (desiredDocText.found) {
-            desiredDocText.type = eBuiltInType.BIT_LANG_PART;
+            if (desiredDocText.category.includes("Float Conversions")) {
+              desiredDocText.type = eBuiltInType.BIT_METHOD;
+            } else {
+              desiredDocText.type = eBuiltInType.BIT_LANG_PART;
+            }
           } else {
             desiredDocText = this._docTextForSpinClockVars(name);
             if (desiredDocText.found) {
-              // desiredDocText.type =     nope, this one sets the type for us!
+              // desiredDocText.type =     -->  nope, this one sets the type for us!
             } else {
               desiredDocText = this._docTextForSpinStorageTypesAlignment(name);
               if (desiredDocText.found) {
@@ -591,8 +600,7 @@ export class ParseUtils {
                   if (desiredDocText.found) {
                     desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
                   } else {
-                    // TOD: add more calls here
-                    // FIXME: do next assignment
+                    // TODO: add more calls here
                   }
                 }
               }
@@ -874,9 +882,9 @@ export class ParseUtils {
 
   // -------------------------------------------------------------------------
   // keyword checks
-  private _tableDebugMethodsString: { [Identifier: string]: string[] } = {
-    zstr: ["ZSTR(hub_pointer)", "Output zero-terminated string at hub_pointer"],
-    lstr: ["LSTR(hub_pointer,size)", "Output 'size' characters of string at hub_pointer"],
+  private _tableDebugMethodsString: { [Identifier: string]: methodTuple } = {
+    zstr: ["ZSTR(hub_pointer)", "Output zero-terminated string found at hub_pointer", ["hub_pointer - address of zero-terminated string in HUB RAM"]],
+    lstr: ["LSTR(hub_pointer,byteCount)", "Output 'byteCount' characters found at hub_pointer", ["hub_pointer - address of bytes in HUB RAM", "byteCount - number of bytes at location in HUB RAM"]],
   };
 
   private _tableDebugMethodsUnsignedDec: { [Identifier: string]: string[] } = {
@@ -945,10 +953,18 @@ export class ParseUtils {
     sbin_long_array: ["SBIN_LONGARRAY(hub_pointer,size)", "Output hub LONG array as signed binary values"],
   };
 
-  private _tableDebugMethodsFloat: { [Identifier: string]: string[] } = {
-    fdec: ["FDEC(value)", "Output floating-point value (-3.4e+38 - 3.4e+38)"],
-    fdec_array: ["FDEC_ARRAY(hub_pointer,size)", "Output hub long array as floating-point values (-3.4e+38 - 3.4e+38)"],
-    fdec_reg_array: ["FDEC_REG_ARRAY(reg_pointer,size)", "Output register array as floating-point values (-3.4e+38 - 3.4e+38)"],
+  private _tableDebugMethodsFloat: { [Identifier: string]: methodTuple } = {
+    fdec: ["FDEC(value)", "Output floating-point value (-3.4e+38 - 3.4e+38)", ["value - integer 32-bit value"]],
+    fdec_array: [
+      "FDEC_ARRAY(hub_pointer,size)",
+      "Output hub long array as floating-point values (-3.4e+38 - 3.4e+38)",
+      ["hub_pointer - address of long array in HUB ram", "size - count of longs in the array"],
+    ],
+    fdec_reg_array: [
+      "FDEC_REG_ARRAY(reg_pointer,size)",
+      "Output register array as floating-point values (-3.4e+38 - 3.4e+38)",
+      ["reg_pointer - address of register array in COG ram", "size - count of registers in the array"],
+    ],
   };
 
   private _tableDebugMethodsMisc: { [Identifier: string]: string[] } = {
@@ -1010,9 +1026,10 @@ export class ParseUtils {
     if (this.isDebugMethod(name)) {
       desiredDocText.found = true;
       let protoWDescr: string[] = [];
+      let methodDescr: methodTuple = ["", "", []];
       if (nameKey in this._tableDebugMethodsString) {
         desiredDocText.category = "String Output";
-        protoWDescr = this._tableDebugMethodsString[nameKey];
+        methodDescr = this._tableDebugMethodsString[nameKey];
       } else if (nameKey in this._tableDebugMethodsUnsignedDec) {
         desiredDocText.category = "Unsigned Decimal Output";
         protoWDescr = this._tableDebugMethodsUnsignedDec[nameKey];
@@ -1033,7 +1050,7 @@ export class ParseUtils {
         protoWDescr = this._tableDebugMethodsSignedBin[nameKey];
       } else if (nameKey in this._tableDebugMethodsFloat) {
         desiredDocText.category = "Floating Point Output";
-        protoWDescr = this._tableDebugMethodsFloat[nameKey];
+        methodDescr = this._tableDebugMethodsFloat[nameKey];
       } else if (nameKey in this._tableDebugMethodsMisc) {
         bSupportsSuffix = false;
         desiredDocText.category = "Miscellaneous";
@@ -1043,7 +1060,11 @@ export class ParseUtils {
         desiredDocText.category = "Conditionals";
         protoWDescr = this._tableDebugMethodsConditionals[nameKey];
       }
-      if (!bIsUnderscoreSuffix || (bIsUnderscoreSuffix && bSupportsSuffix)) {
+      if (methodDescr[0].length > 0) {
+        desiredDocText.signature = methodDescr[0];
+        desiredDocText.description = methodDescr[1];
+        desiredDocText.parameters = methodDescr[2];
+      } else if (!bIsUnderscoreSuffix || (bIsUnderscoreSuffix && bSupportsSuffix)) {
         if (protoWDescr.length != 0) {
           desiredDocText.signature = protoWDescr[0];
           if (bIsUnderscoreSuffix) {
@@ -1170,10 +1191,10 @@ export class ParseUtils {
     return reservedStatus;
   }
 
-  private _tableSpinFloatConversions: { [Identifier: string]: string[] } = {
-    float: ["FLOAT(x)", "Convert integer x to float"],
-    trunc: ["TRUNC(x)", "Convert float x to truncated integer"],
-    round: ["ROUND(x)", "Convert float x to rounded integer"],
+  private _tableSpinFloatConversions: { [Identifier: string]: methodTuple } = {
+    float: ["FLOAT(x)", "Convert integer x to float", ["x - integer value to be converted"]],
+    trunc: ["TRUNC(x)", "Convert float x to truncated integer", ["x - float value to be converted (remove all after decimal)"]],
+    round: ["ROUND(x)", "Convert float x to rounded integer", ["x - float value to be converted (round to nearest integer)"]],
   };
 
   public isSpinReservedWord(name: string): boolean {
@@ -1363,7 +1384,7 @@ export class ParseUtils {
   };
 
   private _tableSpinPinMethods: { [Identifier: string]: string[] } = {
-    // key: [ signature, description ]
+    // key: [ signature, description, ["param1 - descr", "param2 - descr", "..."] ]
     pinw: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
     pinwrite: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
     pinr: ["PINR(PinField) : PinStates | PINREAD(PinField) : PinStates", "Read PinField pin(s)."],
@@ -1424,15 +1445,28 @@ export class ParseUtils {
     longfill: ["LONGFILL(Destination, Value, Count)", "Fill Count longs starting at Destination with Value."],
   };
 
-  private _tableSpinStringMethods: { [Identifier: string]: string[] } = {
-    strsize: ["STRSIZE(Addr) : Size", "Count bytes in zero-terminated string at Addr and return string size, not including the zero."],
-    strcomp: ["STRCOMP(AddrA,AddrB) : Match", "Compare zero-terminated strings at AddrA and AddrB, return -1 if match or 0 if mismatch."],
+  private _tableSpinStringMethods: { [Identifier: string]: methodTuple } = {
+    strsize: ["STRSIZE(Addr) : Size", "Count bytes in zero-terminated string at Addr and return string size, not including the zero.", ["Addr - address of zero-terminated string"]],
+    strcomp: [
+      "STRCOMP(AddrA,AddrB) : Match",
+      "Compare zero-terminated strings at AddrA and AddrB, return -1 if match or 0 if mismatch.",
+      ["AddrA - address of zero-terminated string", "AddrB - address of zero-terminated string"],
+    ],
     strcopy: [
       "STRCOPY(Destination, Source, Max)",
       "Copy a zero-terminated string of up to Max characters from Source to Destination. The copied string will occupy up to Max+1 bytes, including the zero terminator.",
+      ["Destination - address of place to put string copy", "Source - address of zero-terminated string to be copied", "Max - maximum number of bytes of string to copy (less the terminator)"],
     ],
-    string: ['STRING("Text",13) : StringAddress', "Compose a zero-terminated string (quoted characters and values 1..255 allowed), return address of string."],
-    getcrc: ["GETCRC(BytePtr, Poly, Count) : CRC", "Compute a CRC of Count bytes starting at BytePtr using a custom polynomial of up to 32 bits."],
+    string: [
+      'STRING(["string"[,char[,...]]]) : StringAddress',
+      "Compose a zero-terminated string (quoted characters and values 1..255 allowed), return address of string.",
+      ['"string" - quoted string', "char - byte value [1-255]"],
+    ],
+    getcrc: [
+      "GETCRC(BytePtr, Poly, Count) : CRC",
+      "Compute a CRC of Count bytes starting at BytePtr using a custom polynomial of up to 32 bits.",
+      ["BytePtr - address of source byte array", "Poly - 32bit polynomial to be used", "Count - number of bytes in the source byte array"],
+    ],
   };
 
   private _tableSpinIndexValueMethods: { [Identifier: string]: string[] } = {
@@ -1445,7 +1479,7 @@ export class ParseUtils {
   private _tableSpinControlFlowMethods: { [Identifier: string]: string[] } = {
     abort: [
       "ABORT [ErrorCode]",
-      "Instantly return, from any depth of nested method calls, back to a base caller which used '' before the method name. A single return value can be conveyed from the abort point back to the base caller.",
+      "Instantly return, from any depth of nested method calls, back to a base caller which used '\\' before the method name. A single return value can be conveyed from the abort point back to the base caller.",
     ],
     return: ["RETURN [Value[, Value[,...]]]", "Return zero or more values from a PUB/PRI method."],
   };
@@ -1486,6 +1520,7 @@ export class ParseUtils {
     if (this.isSpinBuiltinMethod(name)) {
       desiredDocText.found = true;
       let protoWDescr: string[] = [];
+      let methodDescr: methodTuple = ["", "", []];
       if (nameKey in this._tableSpinHubMethods) {
         desiredDocText.category = "Hub Method";
         protoWDescr = this._tableSpinHubMethods[nameKey];
@@ -1506,7 +1541,7 @@ export class ParseUtils {
         protoWDescr = this._tableSpinMemoryMethods[nameKey];
       } else if (nameKey in this._tableSpinStringMethods) {
         desiredDocText.category = "String Method";
-        protoWDescr = this._tableSpinStringMethods[nameKey];
+        methodDescr = this._tableSpinStringMethods[nameKey];
       } else if (nameKey in this._tableSpinIndexValueMethods) {
         desiredDocText.category = "Hub Method";
         protoWDescr = this._tableSpinIndexValueMethods[nameKey];
@@ -1514,7 +1549,11 @@ export class ParseUtils {
         desiredDocText.category = "Control Flow Method";
         protoWDescr = this._tableSpinControlFlowMethods[nameKey];
       }
-      if (protoWDescr.length != 0) {
+      if (methodDescr[0].length != 0) {
+        desiredDocText.signature = methodDescr[0];
+        desiredDocText.description = methodDescr[1];
+        desiredDocText.parameters = methodDescr[2];
+      } else if (protoWDescr.length != 0) {
         desiredDocText.signature = protoWDescr[0];
         desiredDocText.description = protoWDescr[1];
       }

@@ -30,6 +30,7 @@ export interface definitionInfo {
   column: number;
   doc?: string;
   declarationlines: string[];
+  parameters?: string[];
   name?: string;
   toolUsed: string;
 }

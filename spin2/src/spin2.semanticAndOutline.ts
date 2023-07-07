@@ -512,7 +512,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -2010,7 +2010,16 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   ptTokenModifiers: referenceDetails.modifiers,
                 });
               } else {
-                if (
+                if (this.parseUtils.isFloatConversion(namePart) && (assignmentRHSStr.indexOf(namePart + "(") == -1 || assignmentRHSStr.indexOf(namePart + "()") != -1)) {
+                  this._logCON("  --  CON MISSING parens=[" + namePart + "]");
+                  tokenSet.push({
+                    line: lineNbr,
+                    startCharacter: nameOffset,
+                    length: namePart.length,
+                    ptTokenType: "method",
+                    ptTokenModifiers: ["builtin", "missingDeclaration"],
+                  });
+                } else if (
                   !this.parseUtils.isSpinReservedWord(namePart) &&
                   !this.parseUtils.isBuiltinReservedWord(namePart) &&
                   !this.parseUtils.isDebugMethod(namePart) &&
@@ -3201,8 +3210,17 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               ptTokenModifiers: referenceDetails.modifiers,
             });
           } else {
-            // have unknown name!? is storage type spec?
-            if (this.parseUtils.isStorageType(namePart)) {
+            if (this.parseUtils.isFloatConversion(namePart) && (nonStringAssignmentRHSStr.indexOf(namePart + "(") == -1 || nonStringAssignmentRHSStr.indexOf(namePart + "()") != -1)) {
+              this._logSPIN("  --  SPIN MISSING PARENS name=[" + namePart + "]");
+              tokenSet.push({
+                line: lineNbr,
+                startCharacter: nameOffset,
+                length: namePart.length,
+                ptTokenType: "method",
+                ptTokenModifiers: ["builtin", "missingDeclaration"],
+              });
+            } else if (this.parseUtils.isStorageType(namePart)) {
+              // have unknown name!? is storage type spec?
               this._logSPIN("  --  SPIN RHS storageType=[" + namePart + "]");
               tokenSet.push({
                 line: lineNbr,
