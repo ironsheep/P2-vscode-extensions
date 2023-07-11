@@ -1,8 +1,5 @@
 # Parallax Propeller 2 VSCode support
 
-
-
-
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE) 
 [![Release][Release-shield]](https://github.com/ironsheep/P2-vscode-extensions/releases) 
@@ -13,9 +10,7 @@
 [![Installs][marketplace-installs]](https://marketplace.visualstudio.com/items?itemName=ironsheepproductionsllc.spin2) 
 [![Ratings][marketplace-rating]](https://marketplace.visualstudio.com/items?itemName=ironsheepproductionsllc.spin2)
 
-
-
-VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax Inc.](https://parallax.com) Propeller 2 [P2 or P2X8C4M64P](https://propeller.parallax.com/p2.html). The P2 community thrives in the [P2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller)
+VSCode support for the Propeller languages: Spin2 and Pasm2 for the [Parallax Inc.](https://parallax.com) Propeller 2 [P2 or P2X8C4M64P](https://propeller.parallax.com/p2.html) along with Spin and Pasm support for the Propeller 1.  The P2 and P1 communities thrive in the [P2 Forums](https://forums.parallax.com/categories/propeller-2-multicore-microcontroller) and the [P1 Forums](https://forums.parallax.com/categories/propeller-1-multicore-microcontroller)
 
 The **P2 Forum Thread** containing discussion of [this VSCode support](https://forums.parallax.com/discussion/170068/visual-studio-code-editor-for-p1-p2-spin-pasm#latest)
 
@@ -24,6 +19,7 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 - **P1: Syntax and Semantic Highlighting** for both Spin and Pasm
 - **P2: Syntax and Semantic Highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols as well as all debug() statements with parameter validation for all display types
 - **P2: Show Hovers Feature** Hovers show information about the symbol/object that's below the mouse cursor. In our case this is for both user written code and for Spin2 built-ins.
+- **P2: Signature Help Feature** As you are typing a method name show signature help for both user written methods and for Spin2 built-in methods.
 - **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
 - **Tab Sets** You can choose between `Propeller Tool`, `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 - File navigation from **Outline View**
@@ -36,7 +32,7 @@ We are working to routinely add features to this extension for the next month or
 
 - Improve Hover support for P2
 - Add similar Hover support for P1
-- Add "Help With Function and Method Signatures" Feature. When the user enters a function or method, display information about the function/method that is being called. Awaken this for P2 and P1
+- Add "Help With Function and Method Signatures" feature for P1
 
 These are not yet definate but I'm:
 

@@ -22,7 +22,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.9.5] 2023-07-??
+## [1.9.5] 2023-07-10
 
 Add Signature Help support for P2!
 
