@@ -34,6 +34,7 @@ export interface IBuiltinDescription {
   description: string;
   signature: string;
   parameters?: string[];
+  returns?: string[];
 }
 
 export const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
@@ -49,7 +50,7 @@ export const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
 ]);
 
 // this is how we decribe our methods with parameters in our tables...
-type methodTuple = readonly [signature: string, description: string, parameters: string[]];
+type TMethodTuple = readonly [signature: string, description: string, parameters: string[], returns?: string[] | undefined];
 
 export class ParseUtils {
   public etDebugStatement(startingOffset: number, line: string): string {
@@ -512,10 +513,15 @@ export class ParseUtils {
       desiredDocText.description = this._tableSpinBlockNames[nameKey];
     } else if (nameKey in this._tableSpinFloatConversions) {
       desiredDocText.category = "Float Conversions";
-      let methodDescr: methodTuple = this._tableSpinFloatConversions[nameKey];
+      let methodDescr: TMethodTuple = this._tableSpinFloatConversions[nameKey];
       desiredDocText.signature = methodDescr[0];
       desiredDocText.description = methodDescr[1];
-      desiredDocText.parameters = methodDescr[2];
+      if (methodDescr[2] && methodDescr[2].length > 0) {
+        desiredDocText.parameters = methodDescr[2];
+      }
+      if (methodDescr[3] && methodDescr[3].length > 0) {
+        desiredDocText.returns = methodDescr[3];
+      }
     } else if (nameKey in this._tableSpinBinaryOperators) {
       desiredDocText.category = "Binary Operators";
       desiredDocText.description = this._tableSpinBinaryOperators[nameKey];
@@ -525,6 +531,9 @@ export class ParseUtils {
     } else if (nameKey in this._tableSmartPinNames) {
       desiredDocText.category = "Smart Pin Configuration";
       desiredDocText.description = this._tableSmartPinNames[nameKey];
+    } else if (nameKey in this._tableEventNames) {
+      desiredDocText.category = "Event / Interrupt Source";
+      desiredDocText.description = this._tableEventNames[nameKey];
     } else if (nameKey in this._tableSpinPasmLangParts) {
       desiredDocText.category = "DAT HubExec/CogExec Directives";
       const protoWDescr: string[] = this._tableSpinPasmLangParts[nameKey];
@@ -747,6 +756,27 @@ export class ParseUtils {
     p_async_rx: "Asynchronous serial receive<br>%0000_0000_000_0000000000000_00_11111_0",
   };
 
+  private _tableEventNames: { [Identifier: string]: string } = {
+    // event names
+    event_atn: "(14) event Attention-requested from another COG",
+    event_ct1: "(01) event CT-passed-CT1",
+    event_ct2: "(02) event CT-passed-CT2",
+    event_ct3: "(03) event CT-passed-CT3",
+    event_fbw: "(09) event Hub FIFO block-wrap",
+    event_int: "(00) event Interrupt-occurred",
+    int_off: "(00) interrupts off",
+    event_pat: "(08) INA/INB pattern match/mismatch",
+    event_qmt: "(15) event GETQX/GETQY-on-empty",
+    event_se1: "(04) event Selectable event 1",
+    event_se2: "(05) event Selectable event 2",
+    event_se3: "(06) event Selectable event 3",
+    event_se4: "(07) event Selectable event 4",
+    event_xfi: "(11) event Streamer command-finished",
+    event_xmt: "(10) event Streamer command-empty",
+    event_xrl: "(13) event Streamer-read-last-LUT-location",
+    event_xro: "(12) event Streamer NCO-rollover",
+  };
+
   public isBuiltinReservedWord(name: string): boolean {
     // streamer constants, smart-pin constants
     const builtinNamesOfNote: string[] = [
@@ -829,153 +859,195 @@ export class ParseUtils {
       "x_rfword_rgb16",
       "x_write_off",
       "x_write_on",
-      // event names
-      "event_atn",
-      "event_ct1",
-      "event_ct2",
-      "event_ct3",
-      "event_fbw",
-      "event_int",
-      "event_pat",
-      "event_qmt",
-      "event_se1",
-      "event_se2",
-      "event_se3",
-      "event_se4",
-      "event_xfi",
-      "event_xmt",
-      "event_xrl",
-      "event_xro",
-      //
-      "pr0",
-      "pr1",
-      "pr2",
-      "pr3",
-      "pr4",
-      "pr5",
-      "pr6",
-      "pr7",
-      "ijmp1",
-      "ijmp2",
-      "ijmp3",
-      "iret1",
-      "iret2",
-      "iret3",
-      "pa",
-      "pb",
-      "ptra",
-      "ptrb",
-      "dira",
-      "dirb",
-      "outa",
-      "outb",
-      "ina",
-      "inb",
     ];
     const nameKey: string = name.toLowerCase();
     let reservedStatus: boolean = builtinNamesOfNote.indexOf(nameKey) != -1;
     if (!reservedStatus) {
       reservedStatus = nameKey in this._tableSmartPinNames;
     }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableEventNames;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinCogRegisters;
+    }
     return reservedStatus;
   }
 
   // -------------------------------------------------------------------------
   // keyword checks
-  private _tableDebugMethodsString: { [Identifier: string]: methodTuple } = {
+  private _tableDebugMethodsString: { [Identifier: string]: TMethodTuple } = {
     zstr: ["ZSTR(hub_pointer)", "Output zero-terminated string found at hub_pointer", ["hub_pointer - address of zero-terminated string in HUB RAM"]],
     lstr: ["LSTR(hub_pointer,byteCount)", "Output 'byteCount' characters found at hub_pointer", ["hub_pointer - address of bytes in HUB RAM", "byteCount - number of bytes at location in HUB RAM"]],
   };
 
-  private _tableDebugMethodsUnsignedDec: { [Identifier: string]: string[] } = {
-    udec: ["UDEC(value)", "Output unsigned decimal value (0 - 4_294_967_295)"],
-    udec_byte: ["UDEC_BYTE(value)", "Output BYTE-size(8-bit) unsigned decimal value (0 - 255)"],
-    udec_word: ["UDEC_WORD(value)", "Output WORD-size(16-bit) unsigned decimal value (0 - 65_535)"],
-    udec_long: ["UDEC_LONG(value)", "Output LONG-size(32-bit) unsigned decimal value (0 - 4_294_967_295)"],
-    udec_reg_array: ["UDEC_REG_ARRAY(reg_pointer,size)", "Output register array as unsigned decimal values (0 - 4_294_967_295)"],
-    udec_byte_array: ["UDEC_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as unsigned decimal values (0 - 255)"],
-    udec_word_array: ["UDEC_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as unsigned decimal value (0 - 65_535)"],
-    udec_long_array: ["UDEC_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as unsigned decimal value (0 - 4_294_967_295)"],
+  private _tableDebugMethodsUnsignedDec: { [Identifier: string]: TMethodTuple } = {
+    udec: ["UDEC(value)", "Output as auto-sized unsigned decimal value (0 - 4_294_967_295)", ["value - BYTE, WORD or LONG value"]],
+    udec_byte: ["UDEC_BYTE(byteValue)", "Output BYTE as unsigned decimal value (0 - 255)", ["byteValue - 8-bit value"]],
+    udec_word: ["UDEC_WORD(wordValue)", "Output WORD as unsigned decimal value (0 - 65_535)", ["wordValue - 16-bit value"]],
+    udec_long: ["UDEC_LONG(longValue)", "Output LONG as unsigned decimal value (0 - 4_294_967_295)", ["longValue - 32-bit value"]],
+    udec_reg_array: [
+      "UDEC_REG_ARRAY(reg_pointer, size)",
+      "Output register array as unsigned decimal values (0 - 4_294_967_295)",
+      ["reg_pointer - address of array of COG registers", "size - count of registers in array"],
+    ],
+    udec_byte_array: [
+      "UDEC_BYTE_ARRAY(hub_pointer, size)",
+      "Output hub BYTE array as unsigned decimal values (0 - 255)",
+      ["hub_pointer - address of array of BYTEs in HUB ram", "size - count of BYTEs in array"],
+    ],
+    udec_word_array: [
+      "UDEC_WORD_ARRAY(hub_pointer, size)",
+      "Output hub WORD array as unsigned decimal value (0 - 65_535)",
+      ["hub_pointer - address of array of WORDs in HUB ram", "size - count of WORDs in array"],
+    ],
+    udec_long_array: [
+      "UDEC_LONG_ARRAY(hub_pointer, size)",
+      "Output hub LONG array as unsigned decimal value (0 - 4_294_967_295)",
+      ["hub_pointer - address of array of LONGs in HUB ram", "size - count of LONGs in array"],
+    ],
   };
 
-  private _tableDebugMethodsSignedDec: { [Identifier: string]: string[] } = {
-    sdec: ["SDEC(value)", "Output signed decimal value (-2_147_483_648 - 2_147_483_647)"],
-    sdec_byte: ["SDEC_BYTE(value)", "Output BYTE-size(8-bit) signed decimal value (-128 - 127)"],
-    sdec_word: ["SDEC_WORD(value)", "Output WORD-size(16-bit) signed decimal value (-32_768 - 65_535)"],
-    sdec_long: ["SDEC_LONG(value)", "Output LONG-size(32-bit) signed decimal value (-2_147_483_648 - 2_147_483_647)"],
-    sdec_reg_array: ["SDEC_REG_ARRAY(reg_pointer,size)", "Output register array as signed decimal values (-2_147_483_648 - 2_147_483_647)"],
-    sdec_byte_array: ["SDEC_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as signed decimal values (-128 - 127)"],
-    sdec_word_array: ["SDEC_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as signed decimal value (-32_768 - 32_767)"],
-    sdec_long_array: ["SDEC_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as signed decimal value (-2_147_483_648 - 2_147_483_647)"],
+  private _tableDebugMethodsSignedDec: { [Identifier: string]: TMethodTuple } = {
+    sdec: ["SDEC(value)", "Output as auto-sized signed decimal value (-2_147_483_648 - 2_147_483_647)", ["value - BYTE, WORD or LONG value"]],
+    sdec_byte: ["SDEC_BYTE(byteValue)", "Output BYTE as signed decimal value (-128 - 127)", ["byteValue - 8-bit value"]],
+    sdec_word: ["SDEC_WORD(wordValue)", "Output WORD as signed decimal value (-32_768 - 65_535)", ["wordValue - 16-bit value"]],
+    sdec_long: ["SDEC_LONG(longValue)", "Output LONG as signed decimal value (-2_147_483_648 - 2_147_483_647)", ["longValue - 32-bit value"]],
+    sdec_reg_array: [
+      "SDEC_REG_ARRAY(reg_pointer, size)",
+      "Output COG register array as signed decimal values (-2_147_483_648 - 2_147_483_647)",
+      ["reg_pointer - address of array of COG registers", "size - count of registers in array"],
+    ],
+    sdec_byte_array: [
+      "SDEC_BYTE_ARRAY(hub_pointer, size)",
+      "Output hub BYTE array as signed decimal values (-128 - 127)",
+      ["hub_pointer - address of array of BYTEs in HUB ram", "size - count of BYTEs in array"],
+    ],
+    sdec_word_array: [
+      "SDEC_WORD_ARRAY(hub_pointer, size)",
+      "Output hub WORD array as signed decimal value (-32_768 - 32_767)",
+      ["hub_pointer - address of array of WORDs in HUB ram", "size - count of WORDs in array"],
+    ],
+    sdec_long_array: [
+      "SDEC_LONG_ARRAY(hub_pointer, size)",
+      "Output hub LONG array as signed decimal value (-2_147_483_648 - 2_147_483_647)",
+      ["hub_pointer - address of array of LONGs in HUB ram", "size - count of LONGs in array"],
+    ],
   };
 
-  private _tableDebugMethodsUnsignedHex: { [Identifier: string]: string[] } = {
-    uhex: ["UHEX(value)", "Output auto-size unsigned hex value ($0 - $FFFF_FFFF)"],
-    uhex_byte: ["UHEX_BYTE(value)", "Output BYTE-size(8-bit) unsigned hex value ($00 - $FF)"],
-    uhex_word: ["UHEX_WORD(value)", "Output WORD-size(16-bit) unsigned hex value ($0000 - $FFFF)"],
-    uhex_long: ["UHEX_LONG(value)", "Output LONG-size(32-bit) unsigned hex value ($0000_0000 - $FFFF_FFFF)"],
-    uhex_reg_array: ["UHEX_REG_ARRAY(reg_pointer,size)", "Output register array as unsigned hex values ($0000_0000 - $FFFF_FFFF)"],
-    uhex_byte_array: ["UHEX_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as unsigned hex values ($00 - $FF)"],
-    uhex_word_array: ["UHEX_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as unsigned hex values ($0000 - $FFFF)"],
-    uhex_long_array: ["UHEX_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as unsigned hex values ($0000_0000 - $FFFF_FFFF)"],
+  private _tableDebugMethodsUnsignedHex: { [Identifier: string]: TMethodTuple } = {
+    uhex: ["UHEX(value)", "Output as auto-sized unsigned hex value ($0 - $FFFF_FFFF)", ["value - BYTE, WORD or LONG value"]],
+    uhex_byte: ["UHEX_BYTE(byteValue)", "Output BYTE as unsigned hex value ($00 - $FF)", ["byteValue - 8-bit value"]],
+    uhex_word: ["UHEX_WORD(wordValue)", "Output WORD as unsigned hex value ($0000 - $FFFF)", ["wordValue - 16-bit value"]],
+    uhex_long: ["UHEX_LONG(longValue)", "Output LONG as unsigned hex value ($0000_0000 - $FFFF_FFFF)", ["longValue - 32-bit value"]],
+    uhex_reg_array: [
+      "UHEX_REG_ARRAY(reg_pointer, size)",
+      "Output register array as unsigned hex values ($0000_0000 - $FFFF_FFFF)",
+      ["reg_pointer - address of array of COG registers", "size - count of registers in array"],
+    ],
+    uhex_byte_array: [
+      "UHEX_BYTE_ARRAY(hub_pointer, size)",
+      "Output hub BYTE array as unsigned hex values ($00 - $FF)",
+      ["hub_pointer - address of array of BYTEs in HUB ram", "size - count of BYTEs in array"],
+    ],
+    uhex_word_array: [
+      "UHEX_WORD_ARRAY(hub_pointer, size)",
+      "Output hub WORD array as unsigned hex values ($0000 - $FFFF)",
+      ["hub_pointer - address of array of WORDs in HUB ram", "size - count of WORDs in array"],
+    ],
+    uhex_long_array: [
+      "UHEX_LONG_ARRAY(hub_pointer, size)",
+      "Output hub LONG array as unsigned hex values ($0000_0000 - $FFFF_FFFF)",
+      ["hub_pointer - address of array of LONGs in HUB ram", "size - count of LONGs in array"],
+    ],
   };
 
-  private _tableDebugMethodsSignedHex: { [Identifier: string]: string[] } = {
-    shex: ["SHEX(value)", "Output auto-size signed hex value (-$8000_0000 - $7FFF_FFFF)"],
-    shex_byte: ["SHEX_BYTE(value)", "Output BYTE-size(8-bit) signed hex value (-$80 - $7F)"],
-    shex_word: ["SHEX_WORD(value)", "Output WORD-size(16-bit) signed hex value (-$8000 - $7FFF)"],
-    shex_long: ["SHEX_LONG(value)", "Output LONG-size(32-bit) signed hex value (-$8000_0000 - $7FFF_FFFF)"],
-    shex_reg_array: ["SHEX_REG_ARRAY(reg_pointer,size)", "Output register array as signed hex values (-$8000_0000 - $7FFF_FFFF)"],
-    shex_byte_array: ["SHEX_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as signed hex values (-$80 - $7F)"],
-    shex_word_array: ["SHEX_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as signed hex values (-$8000 - $7FFF)"],
-    shex_long_array: ["SHEX_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as signed hex values (-$8000_0000 - $7FFF_FFFF)"],
+  private _tableDebugMethodsSignedHex: { [Identifier: string]: TMethodTuple } = {
+    shex: ["SHEX(value)", "Output as auto-sized signed hex value (-$8000_0000 - $7FFF_FFFF)", ["value - BYTE, WORD or LONG value"]],
+    shex_byte: ["SHEX_BYTE(byteValue)", "Output BYTE as signed hex value (-$80 - $7F)", ["byteValue - 8-bit value"]],
+    shex_word: ["SHEX_WORD(wordValue)", "Output WORD as signed hex value (-$8000 - $7FFF)", ["wordValue - 16-bit value"]],
+    shex_long: ["SHEX_LONG(longValue)", "Output LONG as signed hex value (-$8000_0000 - $7FFF_FFFF)", ["longValue - 32-bit value"]],
+    shex_reg_array: [
+      "SHEX_REG_ARRAY(reg_pointer, size)",
+      "Output register array as signed hex values (-$8000_0000 - $7FFF_FFFF)",
+      ["reg_pointer - address of array of COG registers", "size - count of registers in array"],
+    ],
+    shex_byte_array: [
+      "SHEX_BYTE_ARRAY(hub_pointer, size)",
+      "Output hub BYTE array as signed hex values (-$80 - $7F)",
+      ["hub_pointer - address of array of BYTEs in HUB ram", "size - count of BYTEs in array"],
+    ],
+    shex_word_array: [
+      "SHEX_WORD_ARRAY(hub_pointer, size)",
+      "Output hub WORD array as signed hex values (-$8000 - $7FFF)",
+      ["hub_pointer - address of array of WORDs in HUB ram", "size - count of WORDs in array"],
+    ],
+    shex_long_array: [
+      "SHEX_LONG_ARRAY(hub_pointer, size)",
+      "Output hub LONG array as signed hex values (-$8000_0000 - $7FFF_FFFF)",
+      ["hub_pointer - address of array of LONGs in HUB ram", "size - count of LONGs in array"],
+    ],
   };
 
-  private _tableDebugMethodsUnsignedBin: { [Identifier: string]: string[] } = {
-    ubin: ["UBIN(value)", "Output auto-size unsigned binary value"],
-    ubin_byte: ["UBIN_BYTE(value)", "Output BYTE-size(8-bit) unsigned binary value"],
-    ubin_word: ["UBIN_WORD(value)", "Output WORD-size(16-bit) unsigned binary value"],
-    ubin_long: ["UBIN_LONG(value)", "Output LONG-size(32-bit) unsigned binary value"],
-    ubin_reg_array: ["UBIN_REG_ARRAY(reg_pointer,size)", "Output register array as unsigned binary values"],
-    ubin_byte_array: ["UBIN_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as unsigned binary values"],
-    ubin_word_array: ["UBIN_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as unsigned binary values"],
-    ubin_long_array: ["UBIN_LONG_ARRAY(hub_pointer,size)", "Output hub LONG array as unsigned binary values"],
+  private _tableDebugMethodsUnsignedBin: { [Identifier: string]: TMethodTuple } = {
+    ubin: ["UBIN(value)", "Output as auto-sized unsigned binary value", ["value - BYTE, WORD or LONG value"]],
+    ubin_byte: ["UBIN_BYTE(byteValue)", "Output BYTE as unsigned binary value", ["byteValue - 8-bit value"]],
+    ubin_word: ["UBIN_WORD(wordValue)", "Output WORD as unsigned binary value", ["wordValue - 16-bit value"]],
+    ubin_long: ["UBIN_LONG(longValue)", "Output LONG as unsigned binary value", ["longValue - 32-bit value"]],
+    ubin_reg_array: ["UBIN_REG_ARRAY(reg_pointer, size)", "Output register array as unsigned binary values", ["reg_pointer - address of array of COG registers", "size - count of registers in array"]],
+    ubin_byte_array: [
+      "UBIN_BYTE_ARRAY(hub_pointer, size)",
+      "Output hub BYTE array as unsigned binary values",
+      ["hub_pointer - address of array of BYTEs in HUB ram", "size - count of BYTEs in array"],
+    ],
+    ubin_word_array: [
+      "UBIN_WORD_ARRAY(hub_pointer, size)",
+      "Output hub WORD array as unsigned binary values",
+      ["hub_pointer - address of array of WORDs in HUB ram", "size - count of WORDs in array"],
+    ],
+    ubin_long_array: [
+      "UBIN_LONG_ARRAY(hub_pointer, size)",
+      "Output hub LONG array as unsigned binary values",
+      ["hub_pointer - address of array of LONGs in HUB ram", "size - count of LONGs in array"],
+    ],
   };
 
-  private _tableDebugMethodsSignedBin: { [Identifier: string]: string[] } = {
-    sbin: ["SBIN(value)", "Output auto-size signed binary value"],
-    sbin_byte: ["SBIN_BYTE(value)", "Output BYTE-size(8-bit) signed binary value"],
-    sbin_word: ["SBIN_WORD(value)", "Output WORD-size(16-bit) signed binary value"],
-    sbin_long: ["SBIN_LONG(value)", "Output LONG-size(32-bit) signed binary value"],
-    sbin_reg_array: ["SBIN_REG_ARRAY(reg_pointer,size)", "Output register array as signed binary values"],
-    sbin_byte_array: ["SBIN_BYTE_ARRAY(hub_pointer,size)", "Output hub BYTE array as signed binary values"],
-    sbin_word_array: ["SBIN_WORD_ARRAY(hub_pointer,size)", "Output hub WORD array as signed binary values"],
-    sbin_long_array: ["SBIN_LONGARRAY(hub_pointer,size)", "Output hub LONG array as signed binary values"],
+  private _tableDebugMethodsSignedBin: { [Identifier: string]: TMethodTuple } = {
+    sbin: ["SBIN(value)", "Output as auto-sized signed binary value", ["value - BYTE, WORD or LONG value"]],
+    sbin_byte: ["SBIN_BYTE(byteValue)", "Output BYTE as signed binary value", ["byteValue - 8-bit value"]],
+    sbin_word: ["SBIN_WORD(wordValue)", "Output WORD as signed binary value", ["wordValue - 16-bit value"]],
+    sbin_long: ["SBIN_LONG(longValue)", "Output LONG as signed binary value", ["longValue - 32-bit value"]],
+    sbin_reg_array: ["SBIN_REG_ARRAY(reg_pointer, size)", "Output register array as signed binary values", ["reg_pointer - address of array of COG registers", "size - count of registers in array"]],
+    sbin_byte_array: ["SBIN_BYTE_ARRAY(hub_pointer, size)", "Output hub BYTE array as signed binary values", ["hub_pointer - address of array of BYTEs in HUB ram", "size - count of BYTEs in array"]],
+    sbin_word_array: ["SBIN_WORD_ARRAY(hub_pointer, size)", "Output hub WORD array as signed binary values", ["hub_pointer - address of array of WORDs in HUB ram", "size - count of WORDs in array"]],
+    sbin_long_array: ["SBIN_LONGARRAY(hub_pointer, size)", "Output hub LONG array as signed binary values", ["hub_pointer - address of array of LONGs in HUB ram", "size - count of LONGs in array"]],
   };
 
-  private _tableDebugMethodsFloat: { [Identifier: string]: methodTuple } = {
-    fdec: ["FDEC(value)", "Output floating-point value (-3.4e+38 - 3.4e+38)", ["value - integer 32-bit value"]],
+  private _tableDebugMethodsFloat: { [Identifier: string]: TMethodTuple } = {
+    fdec: ["FDEC(value)", "Output floating-point value (-3.4e+38 - 3.4e+38)", ["value - float 32-bit value"]],
     fdec_array: [
-      "FDEC_ARRAY(hub_pointer,size)",
+      "FDEC_ARRAY(hub_pointer, size)",
       "Output hub long array as floating-point values (-3.4e+38 - 3.4e+38)",
       ["hub_pointer - address of long array in HUB ram", "size - count of longs in the array"],
     ],
     fdec_reg_array: [
-      "FDEC_REG_ARRAY(reg_pointer,size)",
+      "FDEC_REG_ARRAY(reg_pointer, size)",
       "Output register array as floating-point values (-3.4e+38 - 3.4e+38)",
       ["reg_pointer - address of register array in COG ram", "size - count of registers in the array"],
     ],
   };
 
-  private _tableDebugMethodsMisc: { [Identifier: string]: string[] } = {
-    dly: ["DLY(milliseconds)", "Delay for some milliseconds to slow down continuous message outputs for this cog."],
+  private _tableDebugMethodsMisc: { [Identifier: string]: TMethodTuple } = {
+    dly: ["DLY(milliseconds)", "Delay for some milliseconds to slow down continuous message outputs for this cog", ["milliseconds - number of 1/1_000's of seconds to delay"]],
     pc_key: [
       "PC_KEY(pointer_to_long)",
-      "FOR USE IN GRAPHICAL DEBUG() DISPLAYS - Must be the last command in a DEBUG() statement.<br>Returns any new host-PC keypress that occurred within the last 100ms into a long inside the chip. The DEBUG() Display must have focus for keypresses to be noticed.",
+      "FOR USE IN GRAPHICAL DEBUG() DISPLAYS - Must be the last command in a DEBUG() statement<br>Returns any new host-PC keypress that occurred within the last 100ms into a long inside the chip<br>The DEBUG() Display must have focus for keypresses to be noticed",
+      ["pointer_to_long - address to long to receive the pressed key-value"],
     ],
     pc_mouse: [
       "PC_MOUSE(pointer_to_7_longs)",
-      "FOR USE IN GRAPHICAL DEBUG DISPLAYS - Must be the last command in a DEBUG() statement.<br>Returns the current host-PC mouse status into a 7-long structure inside the chip",
+      "FOR USE IN GRAPHICAL DEBUG DISPLAYS - Must be the last command in a DEBUG() statement<br>Returns the current host-PC mouse status into a 7-long structure inside the chip",
+      ["pointer_to_7_longs - address of the 7-long structure to receive the mouse status"],
     ],
   };
 
@@ -1026,35 +1098,35 @@ export class ParseUtils {
     if (this.isDebugMethod(name)) {
       desiredDocText.found = true;
       let protoWDescr: string[] = [];
-      let methodDescr: methodTuple = ["", "", []];
+      let methodDescr: TMethodTuple = ["", "", []];
       if (nameKey in this._tableDebugMethodsString) {
         desiredDocText.category = "String Output";
         methodDescr = this._tableDebugMethodsString[nameKey];
       } else if (nameKey in this._tableDebugMethodsUnsignedDec) {
         desiredDocText.category = "Unsigned Decimal Output";
-        protoWDescr = this._tableDebugMethodsUnsignedDec[nameKey];
+        methodDescr = this._tableDebugMethodsUnsignedDec[nameKey];
       } else if (nameKey in this._tableDebugMethodsSignedDec) {
         desiredDocText.category = "Signed Decimal Output";
-        protoWDescr = this._tableDebugMethodsSignedDec[nameKey];
+        methodDescr = this._tableDebugMethodsSignedDec[nameKey];
       } else if (nameKey in this._tableDebugMethodsUnsignedHex) {
         desiredDocText.category = "Unsigned Hexedecimal Output";
-        protoWDescr = this._tableDebugMethodsUnsignedHex[nameKey];
+        methodDescr = this._tableDebugMethodsUnsignedHex[nameKey];
       } else if (nameKey in this._tableDebugMethodsSignedHex) {
         desiredDocText.category = "Signed Hexedecimal Output";
-        protoWDescr = this._tableDebugMethodsSignedHex[nameKey];
+        methodDescr = this._tableDebugMethodsSignedHex[nameKey];
       } else if (nameKey in this._tableDebugMethodsUnsignedBin) {
         desiredDocText.category = "Unsigned Binary Output";
-        protoWDescr = this._tableDebugMethodsUnsignedBin[nameKey];
+        methodDescr = this._tableDebugMethodsUnsignedBin[nameKey];
       } else if (nameKey in this._tableDebugMethodsSignedBin) {
         desiredDocText.category = "Signed Binary Output";
-        protoWDescr = this._tableDebugMethodsSignedBin[nameKey];
+        methodDescr = this._tableDebugMethodsSignedBin[nameKey];
       } else if (nameKey in this._tableDebugMethodsFloat) {
         desiredDocText.category = "Floating Point Output";
         methodDescr = this._tableDebugMethodsFloat[nameKey];
       } else if (nameKey in this._tableDebugMethodsMisc) {
         bSupportsSuffix = false;
         desiredDocText.category = "Miscellaneous";
-        protoWDescr = this._tableDebugMethodsMisc[nameKey];
+        methodDescr = this._tableDebugMethodsMisc[nameKey];
       } else if (nameKey in this._tableDebugMethodsConditionals) {
         bSupportsSuffix = false;
         desiredDocText.category = "Conditionals";
@@ -1063,7 +1135,12 @@ export class ParseUtils {
       if (methodDescr[0].length > 0) {
         desiredDocText.signature = methodDescr[0];
         desiredDocText.description = methodDescr[1];
-        desiredDocText.parameters = methodDescr[2];
+        if (methodDescr[2] && methodDescr[2].length > 0) {
+          desiredDocText.parameters = methodDescr[2];
+        }
+        if (methodDescr[3] && methodDescr[3].length > 0) {
+          desiredDocText.returns = methodDescr[3];
+        }
       } else if (!bIsUnderscoreSuffix || (bIsUnderscoreSuffix && bSupportsSuffix)) {
         if (protoWDescr.length != 0) {
           desiredDocText.signature = protoWDescr[0];
@@ -1082,7 +1159,7 @@ export class ParseUtils {
   }
 
   private _tableDebugInvokeSymbols: { [Identifier: string]: string } = {
-    debug: "invoke this cog's PASM-level debugger.",
+    debug: "invoke this cog's PASM-level debugger",
     debug_main:
       'each cog\'s PASM-level debugger will initially be invoked when a COGINIT occurs, and it will be ready to single-step through main (non-interrupt) code. In this case, DEBUG commands will be ignored, until you select "DEBUG" sensitivity in the debugger.',
     debug_coginit: "each cog's PASM-level debugger will initially be invoked when a COGINIT occurs",
@@ -1095,21 +1172,21 @@ export class ParseUtils {
   }
 
   private _tableDebugControlSymbols: { [Identifier: string]: string } = {
-    download_baud: "(default 2_000_000)<br>Sets the download baud rate.",
-    debug_cogs: "(default %1111_1111)<br>Selects which cogs have debug interrupts enabled. Bits 7..0 enable debugging interrupts in cogs 7..0.",
-    debug_delay: "(default 0)<br>Sets a delay in milliseconds before your application runs and begins transmitting DEBUG messages.",
-    debug_pin_tx: "(default 62)<br>Sets the DEBUG serial output pin. For DEBUG windows to open, DEBUG_PIN must be 62.",
-    debug_pin_rx: "(default 63)<br>Sets the DEBUG serial input pin for interactivity with the host PC.",
-    debug_baud: "(default download_baud)<br>Sets the DEBUG baud rate. May be necessary to add DEBUG_DELAY if DEBUG_BAUD is less than DOWNLOAD_BAUD.",
-    debug_timestamp: "By declaring this symbol, each DEBUG message will be time-stamped with the 64-bit CT value.",
-    debug_log_size: "(default 0)<br>Sets the maximum size in bytes of the 'DEBUG.log' file which will collect DEBUG messages. A value of 0 will inhibit log file generation.",
-    debug_left: "Sets the left screen coordinate where the DEBUG message window will appear.",
-    debug_top: "Sets the top screen coordinate where the DEBUG message window will appear.",
-    debug_width: "Sets the width of the DEBUG message window.",
-    debug_height: "Sets the height of the DEBUG message window.",
-    debug_display_left: "(default 0)<br>Sets the overall left screen offset where any DEBUG displays will appear (adds to 'POS' x coordinate in each DEBUG display).",
-    debug_display_top: "(default 0)<br>Sets the overall top screen offset where any DEBUG displays will appear (adds to 'POS' y coordinate in each DEBUG display).",
-    debug_windows_off: "(default 0)<br>Disables any DEBUG windows from opening after downloading, if set to a non-zero value.",
+    download_baud: "(default 2_000_000)<br>Sets the download baud rate",
+    debug_cogs: "(default %1111_1111)<br>Selects which cogs have debug interrupts enabled. Bits 7..0 enable debugging interrupts in cogs 7..0",
+    debug_delay: "(default 0)<br>Sets a delay in milliseconds before your application runs and begins transmitting DEBUG messages",
+    debug_pin_tx: "(default 62)<br>Sets the DEBUG serial output pin. For DEBUG windows to open, DEBUG_PIN must be 62",
+    debug_pin_rx: "(default 63)<br>Sets the DEBUG serial input pin for interactivity with the host PC",
+    debug_baud: "(default download_baud)<br>Sets the DEBUG baud rate. May be necessary to add DEBUG_DELAY if DEBUG_BAUD is less than DOWNLOAD_BAUD",
+    debug_timestamp: "By declaring this symbol, each DEBUG message will be time-stamped with the 64-bit CT value",
+    debug_log_size: "(default 0)<br>Sets the maximum size in bytes of the 'DEBUG.log' file which will collect DEBUG messages. A value of 0 will inhibit log file generation",
+    debug_left: "Sets the left screen coordinate where the DEBUG message window will appear",
+    debug_top: "Sets the top screen coordinate where the DEBUG message window will appear",
+    debug_width: "Sets the width of the DEBUG message window",
+    debug_height: "Sets the height of the DEBUG message window",
+    debug_display_left: "(default 0)<br>Sets the overall left screen offset where any DEBUG displays will appear (adds to 'POS' x coordinate in each DEBUG display)",
+    debug_display_top: "(default 0)<br>Sets the overall top screen offset where any DEBUG displays will appear (adds to 'POS' y coordinate in each DEBUG display)",
+    debug_windows_off: "(default 0)<br>Disables any DEBUG windows from opening after downloading, if set to a non-zero value",
   };
 
   public isDebugControlSymbol(name: string): boolean {
@@ -1147,7 +1224,7 @@ export class ParseUtils {
   }
 
   // operators
-  // FIXME: do? add signature forms for all but last 3, logicals
+  // MAYBE??: add signature forms for all but last 3, logicals
   private _tableSpinBinaryOperators: { [Identifier: string]: string } = {
     sar: "Shift x right by y bits, insert MSB's",
     ror: "Rotate x right by y bits",
@@ -1160,9 +1237,9 @@ export class ParseUtils {
     frac: "Unsigned fraction, (x << 32) / y",
     addbits: "Make bitfield, (x & $1F) | (y & $1F) << 5",
     addpins: "Make pinfield, (x & $3F) | (y & $1F) << 6",
-    and: "Logical AND (x <> 0 AND y <> 0, returns 0 or -1)",
-    or: "Logical OR (x <> 0 OR y <> 0, returns 0 or -1)",
-    xor: "Logical XOR (x <> 0 XOR y <> 0, returns 0 or -1)",
+    and: "Logical AND (x <> 0 AND y <> 0, returns FALSE (0) or TRUE (-1))",
+    or: "Logical OR (x <> 0 OR y <> 0, returns FALSE (0) or TRUE (-1))",
+    xor: "Logical XOR (x <> 0 XOR y <> 0, returns FALSE (0) or TRUE (-1))",
   };
 
   public isBinaryOperator(name: string): boolean {
@@ -1191,10 +1268,10 @@ export class ParseUtils {
     return reservedStatus;
   }
 
-  private _tableSpinFloatConversions: { [Identifier: string]: methodTuple } = {
-    float: ["FLOAT(x)", "Convert integer x to float", ["x - integer value to be converted"]],
-    trunc: ["TRUNC(x)", "Convert float x to truncated integer", ["x - float value to be converted (remove all after decimal)"]],
-    round: ["ROUND(x)", "Convert float x to rounded integer", ["x - float value to be converted (round to nearest integer)"]],
+  private _tableSpinFloatConversions: { [Identifier: string]: TMethodTuple } = {
+    float: ["FLOAT(x): floatValue", "Convert integer x to float", ["x - integer value to be converted"], ["floatValue - x-value represented as float"]],
+    trunc: ["TRUNC(x): integerValue", "Convert float x to truncated integer", ["x - float value to be converted (remove all after decimal)"], ["integerValue - result of truncation operation"]],
+    round: ["ROUND(x): integerValue", "Convert float x to rounded integer", ["x - float value to be converted (round to nearest integer)"], ["integerValue - result of rounding operation"]],
   };
 
   public isSpinReservedWord(name: string): boolean {
@@ -1265,7 +1342,7 @@ export class ParseUtils {
   };
 
   private _tableSpinMethodPointerSymbols: { [Identifier: string]: string } = {
-    send: "SEND is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods.",
+    send: "SEND is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods",
     recv: "RECV, like SEND, is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods",
   };
 
@@ -1365,121 +1442,308 @@ export class ParseUtils {
   // ----------------------------------------------------------------------------
   // Built-in SPIN methods P2
   //
-  private _tableSpinHubMethods: { [Identifier: string]: string[] } = {
-    hubset: ["HUBSET(Value)", "Execute HUBSET instruction using Value."],
-    clkset: ["CLKSET(NewCLKMODE, NewCLKFREQ)", "Safely establish new clock settings, updates CLKMODE and CLKFREQ."],
-    cogspin: ["COGSPIN(CogNum, Method({Pars}), StkAddr)", "Start Spin2 method in a cog, returns cog's ID if used as an expression element, -1 = no cog free."],
-    coginit: ["COGINIT(CogNum, PASMaddr, PTRAvalue)", "Start PASM code in a cog, returns cog's ID if used as an expression element, -1 = no cog free."],
-    cogstop: ["COGSTOP(CogNum)", "Stop cog CogNum."],
-    cogid: ["COGID() : CogNum", "Get this cog's ID."],
-    cogchk: ["COGCHK(CogNum) : Running", "Check if cog CogNum is running, returns -1 if running or 0 if not."],
-    locknew: ["LOCKNEW() : LockNum", "Check out a new LOCK from inventory, LockNum = 0..15 if successful or < 0 if no LOCK available."],
-    lockret: ["LOCKRET(LockNum)", "Return a certain LOCK to inventory."],
-    locktry: ["LOCKTRY(LockNum) : LockState", "Try to capture a certain LOCK, LockState = -1 if successful or 0 if another cog has captured the LOCK."],
-    lockrel: ["LOCKREL(LockNum)", "Release a certain LOCK."],
-    lockchk: ["LOCKCHK(LockNum) : LockState", "Check a certain LOCK's state, LockState[31] = captured, LockState[3:0] = current or last owner cog."],
-    cogatn: ["COGATN(CogMask)", "Strobe ATN input(s) of cog(s) according to 16-bit CogMask."],
-    pollatn: ["POLLATN() : AtnFlag", "Check if this cog has received an ATN strobe, AtnFlag = -1 if ATN strobed or 0 if not strobed."],
-    waitatn: ["WAITATN()", "Wait for this cog to receive an ATN strobe."],
+  private _tableSpinHubMethods: { [Identifier: string]: TMethodTuple } = {
+    hubset: ["HUBSET(Value)", "Set HUB configuration to Value, or reset the Propeller", ["Value - hub configuration value"]],
+    clkset: ["CLKSET(NewCLKMODE, NewCLKFREQ)", "Safely establish new clock settings, updates CLKMODE and CLKFREQ", ["NewCLKMODE - desired clock mode value", "NewCLKFREQ - desired clock frequency"]],
+    cogspin: [
+      "COGSPIN(CogNum, Method({Pars}), StkAddr)[ : CogId]",
+      "Start Spin2 method in a cog, returns cog's ID if used as an expression element, -1 = no cog free",
+      ["CogNum - id of COG to be started (or NEWCOG for next available)", "Method({Pars}) - method (with parameters) to be run in cog", "StkAddr - Address of memory to be used as stack"],
+      ["CogId - cog's ID if used as an expression element, -1 = no cog free"],
+    ],
+    coginit: [
+      "COGINIT(CogNum, PASMaddr, PTRAvalue)[ : CogId]",
+      "Start PASM code in a cog, returns cog's ID if used as an expression element, -1 = no cog free",
+      ["CogNum - COG id of cog to be started and/or COGINIT Symbol (e.g., COGEXEC_NEW)", "PASMaddr - Address of pasm2 code to be run in COG", "PTRAvalue - value to be passed to new COG a startup"],
+      ["CogId - cog's ID if used as an expression element, -1 = no cog free"],
+    ],
+    cogstop: ["COGSTOP(CogNum)", "Stop cog CogNum", ["CogNum - id of COG to be stopped"]],
+    cogid: ["COGID() : CogNum", "Get this cog's ID", [], ["CogNum - ID of currently running COG"]],
+    cogchk: ["COGCHK(CogNum) : Running", "Check if COG CogNum is running", ["CogNum - id of COG to be checked"], ["Running - TRUE (-1) if running or FALSE (0) if not"]],
+    locknew: ["LOCKNEW() : LockNum", "Check out a new LOCK from inventory", [], ["LockNum - 0..15 if successful or < 0 if no LOCK available"]],
+    lockret: ["LOCKRET(LockNum)", "Return a LOCK to inventory", ["LockNum - [0-15] id of the lock to be returned"]],
+    locktry: [
+      "LOCKTRY(LockNum) : LockState",
+      "Try to capture a LOCK",
+      ["LockNum - [0-15] id of the lock to capture"],
+      ["LockState - TRUE (-1) if successful or FALSE (0) if another cog has captured the LOCK."],
+    ],
+    lockrel: ["LOCKREL(LockNum)", "Release a LOCK", ["LockNum - [0-15] id of the lock to release"]],
+    lockchk: [
+      "LOCKCHK(LockNum) : LockState",
+      "Check a certain LOCK's state",
+      ["LockNum - [0-15] id of the lock to check"],
+      ["LockState - LockState[31] = captured, LockState[3:0] = current or last owner cog"],
+    ],
+    cogatn: ["COGATN(CogMask)", "Strobe ATN input(s) of cog(s) according to 16-bit CogMask", ["CogMask - [0-15] bitmask list of cogs to be Strobed"]],
+    pollatn: ["POLLATN() : AtnFlag", "Check if this cog has received an ATN strobe", [], ["AtnFlag - is TRUE (-1) if ATN strobed or FALSE (0) if not strobed"]],
+    waitatn: ["WAITATN()", "Wait for this cog to receive an ATN strobe", []],
   };
 
-  private _tableSpinPinMethods: { [Identifier: string]: string[] } = {
-    // key: [ signature, description, ["param1 - descr", "param2 - descr", "..."] ]
-    pinw: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
-    pinwrite: ["PINW(PinField, Data) | PINWRITE(PinField, Data)", "Drive PinField pin(s) with Data."],
-    pinr: ["PINR(PinField) : PinStates | PINREAD(PinField) : PinStates", "Read PinField pin(s)."],
-    pinread: ["PINR(PinField) : PinStates | PINREAD(PinField) : PinStates", "Read PinField pin(s)."],
-    pinl: ["PINL(PinField) | PINLOW(PinField)", "Drive PinField pin(s) low."],
-    pinlow: ["PINL(PinField) | PINLOW(PinField)", "Drive PinField pin(s) low."],
-    pinh: ["PINH(PinField) | PINHIGH(PinField)", "Drive PinField pin(s) high."],
-    pinhigh: ["PINH(PinField) | PINHIGH(PinField)", "Drive PinField pin(s) high."],
-    pint: ["PINT(PinField) | PINTOGGLE(PinField)", "Drive and toggle PinField pin(s)."],
-    pintoggle: ["PINT(PinField) | PINTOGGLE(PinField)", "Drive and toggle PinField pin(s)."],
-    pinf: ["PINF(PinField) | PINFLOAT(PinField)", "Float PinField pin(s)."],
-    pinfloat: ["PINF(PinField) | PINFLOAT(PinField)", "Float PinField pin(s)."],
-    pinstart: ["PINSTART(PinField, Mode, Xval, Yval)", "Start PinField smart pin(s): DIR=0, then WRPIN=Mode, WXPIN=Xval, WYPIN=Yval, then DIR=1."],
-    pinclear: ["PINCLEAR(PinField)", "Clear PinField smart pin(s): DIR=0, then WRPIN=0."],
-    wrpin: ["WRPIN(PinField, Data)", "Write 'mode' register(s) of PinField smart pin(s) with Data."],
-    wxpin: ["WXPIN(PinField, Data)", "Write 'X' register(s) of PinField smart pin(s) with Data."],
-    wypin: ["WYPIN(PinField, Data)", "Write 'Y' register(s) of PinField smart pin(s) with Data."],
-    akpin: ["AKPIN(PinField)", "Acknowledge PinField smart pin(s)."],
-    rdpin: ["RDPIN(Pin) : Zval", "Read Pin smart pin and acknowledge, Zval[31] = C flag from RDPIN, other bits are RDPIN data."],
-    rqpin: ["RQPIN(Pin) : Zval", "Read Pin smart pin without acknowledge, Zval[31] = C flag from RQPIN, other bits are RQPIN data."],
+  private _tableSpinPinMethods: { [Identifier: string]: TMethodTuple } = {
+    // key: [ signature, description, ["param1 - descr", "param2 - descr", "..."], ["return1 - descr", "return2 - descr", "..."] ]
+    pinw: [
+      "PINW(PinField, Data)",
+      "Drive PinField pin(s) with Data<br>(same as PINWRITE(PinField, Data)",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)", "Data - bit values to write, ea. bit in same position as each active pin in `PinField`"],
+    ],
+    pinwrite: [
+      "PINWRITE(PinField, Data)",
+      "Drive PinField pin(s) with Data<br>(same as PINW(PinField, Data)",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)", "Data - bit values to write, ea. bit in same position as each active pin in `PinField`"],
+    ],
+    pinr: [
+      "PINR(PinField) : PinStates : PinStates",
+      "Read PinField pin(s)<br>(same as PINREAD(PinField) : PinStates)",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"],
+      ["PinStates - bit values read, one bit in same position as each active pin in `PinField`"],
+    ],
+    pinread: [
+      "PINREAD(PinField) : PinStates",
+      "Read PinField pin(s)<br>(same as PINR(PinField) : PinStates)",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"],
+      ["PinStates - bit values read, one bit in same position as each active pin in `PinField`"],
+    ],
+    pinl: ["PINL(PinField)", "Drive PinField pin(s) low<br>(same as PINLOW(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pinlow: ["PINLOW(PinField)", "Drive PinField pin(s) low<br>(same as PINL(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pinh: ["PINH(PinField)", "Drive PinField pin(s) high<br>(same as PINHIGH(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pinhigh: ["PINHIGH(PinField)", "Drive PinField pin(s) high<br>(same as PINH(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pint: ["PINT(PinField)", "Drive and toggle PinField pin(s)<br>(same as PINTOGGLE(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pintoggle: ["PINTOGGLE(PinField)", "Drive and toggle PinField pin(s)<br>(same as PINT(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pinf: ["PINF(PinField)", "Float PinField pin(s)<br>(same as PINFLOAT(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pinfloat: ["PINFLOAT(PinField)", "Float PinField pin(s)<br>(same as PINF(PinField))", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    pinstart: [
+      "PINSTART(PinField, Mode, Xval, Yval)",
+      "Start PinField smart pin(s): DIR=0, then WRPIN=Mode, WXPIN=Xval, WYPIN=Yval, then DIR=1",
+      [
+        "PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)",
+        "Mode - mode bits for selected smart pin(s)",
+        "XVal - initial value for X register of selected smart pin(s)",
+        "YVal - initial value for Y register of selected smart pin(s)",
+      ],
+    ],
+    pinclear: ["PINCLEAR(PinField)", "Clear PinField smart pin(s): DIR=0, then WRPIN=0", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    wrpin: [
+      "WRPIN(PinField, Data)",
+      "Write 'mode' register(s) of PinField smart pin(s) with Data",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)", "Data - mode bits for selected smart pin(s)"],
+    ],
+    wxpin: [
+      "WXPIN(PinField, Data)",
+      "Write 'X' register(s) of PinField smart pin(s) with Data",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)", "Data - initial value for X register of selected smart pin(s)"],
+    ],
+    wypin: [
+      "WYPIN(PinField, Data)",
+      "Write 'Y' register(s) of PinField smart pin(s) with Data",
+      ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)", "Data - initial value for Y register of selected smart pin(s)"],
+    ],
+    akpin: ["AKPIN(PinField)", "Acknowledge PinField smart pin(s)", ["PinField - selects one or more pins within same 32-bit block (P0-P31 or P32-P63)"]],
+    rdpin: [
+      "RDPIN(Pin) : Zval",
+      "Read Pin smart pin and acknowledge<br> NOTE: this read overwrites zval[31] with the c flag value, but this does not interfere with expected data",
+      ["Pin - a single smart pin (P0-P63)"],
+      ["Zval - Zval[31] = C flag from RQPIN, other bits are RQPIN data"],
+    ],
+    rqpin: [
+      "RQPIN(Pin) : Zval",
+      "Read Pin smart pin without acknowledge<br> NOTE: this read overwrites zval[31] with the c flag value, but this does not interfere with expected data",
+      ["Pin - a single smart pin (P0-P63)"],
+      ["Zval - Zval[31] = C flag from RQPIN, other bits are RQPIN data"],
+    ],
   };
 
-  private _tableSpinTimingMethods: { [Identifier: string]: string[] } = {
-    getct: ["GETCT() : Count", "Get 32-bit system counter."],
-    pollct: ["POLLCT(Tick) : Past", "Check if system counter has gone past 'Tick', returns -1 if past or 0 if not past."],
-    waitct: ["WAITCT(Tick)", "Wait for system counter to get past 'Tick'."],
-    waitus: ["WAITUS(Microseconds)", "Wait Microseconds, uses CLKFREQ, duration must not exceed $8000_0000 clocks."],
-    waitms: ["WAITMS(Milliseconds)", "Wait Milliseconds, uses CLKFREQ, duration must not exceed $8000_0000 clocks."],
-    getsec: ["GETSEC() : Seconds", "Get seconds since booting, uses 64-bit system counter and CLKFREQ, rolls over every 136 years."],
-    getms: ["GETMS() : Milliseconds", "Get milliseconds since booting, uses 64-bit system counter and CLKFREQ, rolls over every 49.7 days."],
+  private _tableSpinTimingMethods: { [Identifier: string]: TMethodTuple } = {
+    getct: ["GETCT() : Count", "Get 32-bit system counter", [], ["Count - the current 32-bit system counter value"]],
+    pollct: ["POLLCT(Tick) : Past", "Check if system counter has gone past 'Tick'", ["Tick - a 32-bit counter check value"], ["Past - returns TRUE (-1) if past or FALSE (0) if not"]],
+    waitct: ["WAITCT(Tick)", "Wait for system counter to get past 'Tick'", ["Tick - 32-bit counter value"]],
+    waitus: ["WAITUS(Microseconds)", "Wait Microseconds, uses CLKFREQ, duration must not exceed $8000_0000 clocks", ["Microseconds - number of 1/1_000_000's of a second to wait"]],
+    waitms: ["WAITMS(Milliseconds)", "Wait Milliseconds, uses CLKFREQ, duration must not exceed $8000_0000 clocks", ["Milliseconds - number of 1/1_000's of a second to wait"]],
+    getsec: ["GETSEC() : Seconds", "Get seconds since booting, uses 64-bit system counter and CLKFREQ, rolls over every 136 years", [], ["Seconds - seconds since boot"]],
+    getms: ["GETMS() : Milliseconds", "Get milliseconds since booting, uses 64-bit system counter and CLKFREQ, rolls over every 49.7 days", [], ["Milliseconds - milliseconds since boot"]],
   };
 
-  private _tablePasmInterfaceMethods: { [Identifier: string]: string[] } = {
-    call: ["CALL(RegisterOrHubAddr)", "CALL PASM code at Addr, PASM code should avoid registers $130..$1D7 and LUT."],
-    regexec: ["REGEXEC(HubAddr)", "Load a self-defined chunk of PASM code at HubAddr into registers and CALL it. See REGEXEC description."],
-    regload: ["REGLOAD(HubAddr)", "Load a self-defined chunk of PASM code or data at HubAddr into registers. See REGLOAD description."],
+  private _tablePasmInterfaceMethods: { [Identifier: string]: TMethodTuple } = {
+    call: [
+      "CALL(RegisterOrHubAddr)",
+      "CALL PASM code at Addr, PASM code should avoid registers $130..$1D7 and LUT",
+      ["RegisterOrHubAddr - address of COG register containing instruction to be executed"],
+    ],
+    regexec: [
+      "REGEXEC(HubAddr)",
+      "Load a self-defined chunk of PASM code from HubAddr into COG registers and CALL it",
+      ["HubAddr - address of chunk which is preceded with two words which provide the starting register and the number of registers (longs) to load, minus 1"],
+    ],
+    regload: [
+      "REGLOAD(HubAddr)",
+      "Load a self-defined chunk of PASM code or data from HubAddr into registers",
+      ["HubAddr - address of chunk which is preceded with two words which provide the starting register and the number of registers (longs) to load, minus 1"],
+    ],
   };
 
-  private _tableSpinMathMethods: { [Identifier: string]: string[] } = {
-    rotxy: ["ROTXY(x, y, angle32bit) : rotx, roty", "Rotate (x,y) by angle32bit and return rotated (x,y)."],
-    polxy: ["POLXY(length, angle32bit) : x, y", "Convert (length,angle32bit) to (x,y)."],
-    xypol: ["XYPOL(x, y) : length, angle32bit", "Convert (x,y) to (length,angle32bit)."],
-    qsin: ["QSIN(length, angle, twopi) : y", "Rotate (length,0) by (angle / twopi) * 2Pi and return y. Use 0 for twopi = $1_0000_0000. Twopi is unsigned."],
-    qcos: ["QCOS(length, angle, twopi) : x", "Rotate (length,0) by (angle / twopi) * 2Pi and return x. Use 0 for twopi = $1_0000_0000. Twopi is unsigned."],
-    muldiv64: ["MULDIV64(mult1,mult2,divisor) : quotient", "Divide the 64-bit product of 'mult1' and 'mult2' by 'divisor', return quotient (unsigned operation)."],
-    getrnd: ["GETRND() : rnd", "Get random long (from xoroshiro128** PRNG, seeded on boot with thermal noise from ADC)."],
-    nan: ["NAN(float) : NotANumber", "Determine if a floating-point value is not a number, returns true (-1) or false (0)."],
+  private _tableSpinMathMethods: { [Identifier: string]: TMethodTuple } = {
+    rotxy: [
+      "ROTXY(x, y, angle32bit) : rotx, roty",
+      "Rotate (x,y) by angle32bit and return rotated (x,y)",
+      ["x - horizontal coordinate", "y - vertical coordinate", "angle32bit - unsigned 32-bit angle, where $00000000..$FFFFFFFF = 0..359.9999999 degrees"],
+      ["x - x rotated by angle32bit", "y - y rotated by angle32bit"],
+    ],
+    polxy: [
+      "POLXY(length, angle32bit) : x, y",
+      "Convert (length,angle32bit) to (x,y)",
+      ["length - integer distance from 0,0", "angle32bit - unsigned 32-bit angle, where $00000000..$FFFFFFFF = 0..359.9999999 degrees"],
+      ["x - resulting X", "y - resulting Y"],
+    ],
+    xypol: [
+      "XYPOL(x, y) : length, angle32bit",
+      "Convert (x,y) to (length,angle32bit)",
+      ["x - horizontal coordinate", "y - vertical coordinate"],
+      ["length - integer distance from 0,0", "angle32bit - unsigned 32-bit angle, where $00000000..$FFFFFFFF = 0..359.9999999 degrees"],
+    ],
+    qsin: [
+      "QSIN(length, step, stepsInCircle) : y",
+      "Rotate (length,0) by (step / stepsInCircle) * 2Pi and return y.",
+      [
+        "length - integer distance from 0,0",
+        "step - is the positon on the circle in terms of stepsInCircle",
+        "stepsInCircle - unsigned number of steps around the circle. Use 0 for stepsInCircle = $1_0000_0000",
+      ],
+      ["y - computed Y value from rotation"],
+    ],
+    qcos: [
+      "QCOS(length, step, stepsInCircle) : x",
+      "Rotate (length, 0) by (step / stepsInCircle) * 2Pi and return x",
+      [
+        "length - integer distance from 0,0",
+        "step - is the positon on the circle in terms of stepsInCircle",
+        "stepsInCircle - unsigned number of steps around the circle. Use 0 for stepsInCircle = $1_0000_0000",
+      ],
+      ["x - computed X value from rotation"],
+    ],
+    muldiv64: [
+      "MULDIV64(mult1,mult2,divisor) : quotient",
+      "Divide the 64-bit product of 'mult1' and 'mult2' by 'divisor', return quotient (unsigned operation)",
+      ["mult1 - the 32-bit multiplicand", "mult2 - the 32-bit multiplier", "divisor - the 32-bit value to divide by"],
+      ["quotient - 32-bit result of multiply followed by divide"],
+    ],
+    getrnd: ["GETRND() : rnd", "Get random long (from xoroshiro128** pseudo-random number generator, seeded on boot with thermal noise from ADC)", [], ["rnd - a random 32-bit integer"]],
+    nan: [
+      "NAN(float) : NotANumber",
+      "Determine if a floating-point value is not a number",
+      ["float - floating point number to be evaluated"],
+      ["NotANumber - returns TRUE (-1) if number or FALSE (0) if not"],
+    ],
   };
 
-  private _tableSpinMemoryMethods: { [Identifier: string]: string[] } = {
-    getregs: ["GETREGS(HubAddr, CogAddr, Count)", "Move Count registers at CogAddr to longs at HubAddr."],
-    setregs: ["SETREGS(HubAddr, CogAddr, Count)", "Move Count longs at HubAddr to registers at CogAddr."],
-    bytemove: ["BYTEMOVE(Destination, Source, Count)", "Move Count bytes from Source to Destination."],
-    wordmove: ["WORDMOVE(Destination, Source, Count)", "Move Count words from Source to Destination."],
-    longmove: ["LONGMOVE(Destination, Source, Count)", "Move Count longs from Source to Destination."],
-    bytefill: ["BYTEFILL(Destination, Value, Count)", "Fill Count bytes starting at Destination with Value."],
-    wordfill: ["WORDFILL(Destination, Value, Count)", "Fill Count words starting at Destination with Value."],
-    longfill: ["LONGFILL(Destination, Value, Count)", "Fill Count longs starting at Destination with Value."],
+  private _tableSpinMemoryMethods: { [Identifier: string]: TMethodTuple } = {
+    getregs: [
+      "GETREGS(HubAddr, CogAddr, Count)",
+      "Move Count registers at CogAddr to longs at HubAddr",
+      ["HubAddr - address of HUB long array to receive values", "CogAddr - address of COG register array to be copied", "Count - number of registers to be copied"],
+    ],
+    setregs: [
+      "SETREGS(HubAddr, CogAddr, Count)",
+      "Move Count longs at HubAddr to registers at CogAddr",
+      ["HubAddr - address of HUB long array to be copied", "CogAddr - address of COG register array to receive values", "Count - number of registers to be copied"],
+    ],
+    bytemove: [
+      "BYTEMOVE(Destination, Source, Count)",
+      "Move Count bytes from Source to Destination",
+      ["Destination - address of BYTE array to receive values", "Source - address of BYTE array to be copied", "Count - the number of BYTEs to be copied"],
+    ],
+    wordmove: [
+      "WORDMOVE(Destination, Source, Count)",
+      "Move Count words from Source to Destination",
+      ["Destination - address of WORD array to receive values", "Source - address of WORD array to be copied", "Count - the number of WORDs to be copied"],
+    ],
+    longmove: [
+      "LONGMOVE(Destination, Source, Count)",
+      "Move Count longs from Source to Destination",
+      ["Destination - address of LONG array to receive values", "Source - address of LONG array to be copied", "Count - the number of LONGs to be copied"],
+    ],
+    bytefill: [
+      "BYTEFILL(Destination, Value, Count)",
+      "Fill Count bytes starting at Destination with Value",
+      ["Destination - address of BYTE array to receive values", "Value - 8-bit value", "Count - the number of BYTEs to be filled"],
+    ],
+    wordfill: [
+      "WORDFILL(Destination, Value, Count)",
+      "Fill Count words starting at Destination with Value",
+      ["Destination - address of WORD array to receive values", "Value - 16-bit value", "Count - the number of WORDs to be filled"],
+    ],
+    longfill: [
+      "LONGFILL(Destination, Value, Count)",
+      "Fill Count longs starting at Destination with Value",
+      ["Destination - address of LONG array to receive values", "Value - 32-bit value", "Count - the number of LONGs to be filled"],
+    ],
   };
 
-  private _tableSpinStringMethods: { [Identifier: string]: methodTuple } = {
-    strsize: ["STRSIZE(Addr) : Size", "Count bytes in zero-terminated string at Addr and return string size, not including the zero.", ["Addr - address of zero-terminated string"]],
+  private _tableSpinStringMethods: { [Identifier: string]: TMethodTuple } = {
+    strsize: ["STRSIZE(Addr) : Size", "Count bytes in zero-terminated string at Addr and return string size, not including the zero", ["Addr - address of zero-terminated string"]],
     strcomp: [
       "STRCOMP(AddrA,AddrB) : Match",
-      "Compare zero-terminated strings at AddrA and AddrB, return -1 if match or 0 if mismatch.",
+      "Compare zero-terminated strings at AddrA and AddrB",
       ["AddrA - address of zero-terminated string", "AddrB - address of zero-terminated string"],
+      ["Match - return TRUE (-1) if match or FALSE (0) if not"],
     ],
     strcopy: [
       "STRCOPY(Destination, Source, Max)",
-      "Copy a zero-terminated string of up to Max characters from Source to Destination. The copied string will occupy up to Max+1 bytes, including the zero terminator.",
+      "Copy a zero-terminated string of up to Max characters from Source to Destination. The copied string will occupy up to Max+1 bytes, including the zero terminator",
       ["Destination - address of place to put string copy", "Source - address of zero-terminated string to be copied", "Max - maximum number of bytes of string to copy (less the terminator)"],
     ],
-    string: [
-      'STRING(["string"[,char[,...]]]) : StringAddress',
-      "Compose a zero-terminated string (quoted characters and values 1..255 allowed), return address of string.",
-      ['"string" - quoted string', "char - byte value [1-255]"],
-    ],
+
     getcrc: [
       "GETCRC(BytePtr, Poly, Count) : CRC",
-      "Compute a CRC of Count bytes starting at BytePtr using a custom polynomial of up to 32 bits.",
-      ["BytePtr - address of source byte array", "Poly - 32bit polynomial to be used", "Count - number of bytes in the source byte array"],
+      "Compute a CRC of Count bytes starting at BytePtr using a custom polynomial of up to 32 bits",
+      ["BytePtr - address of source byte array", "Poly - the 32-bit polynomial to be used", "Count - number of bytes in the source byte array"],
+      ["CRC - the 32-bit computed CRC value"],
+    ],
+  };
+
+  private _tableSpinStringBuilder: { [Identifier: string]: string[] } = {
+    // NOTE: this does NOT support signature help! (paramaters are not highlighted for signature help due to variant forms for string() being allowed)
+    string: [
+      'STRING("Text",13) : StringAddress',
+      "Compose a zero-terminated string (quoted characters and values 1..255 allowed), return address of string<br><br>@param `listOfElements` - a comma separated list of elements to be built into a string (quoted characters and values 1..255 allowed)<br>@returns `StringAddress` - address of where string was placed in ram",
     ],
   };
 
   private _tableSpinIndexValueMethods: { [Identifier: string]: string[] } = {
-    lookup: ["LOOKUP(Index: v1, v2..v3, etc) : Value", "Lookup value (values and ranges allowed) using 1-based index, return value (0 if index out of range)."],
-    lookupz: ["LOOKUPZ(Index: v1, v2..v3, etc) : Value", "Lookup value (values and ranges allowed) using 0-based index, return value (0 if index out of range)."],
-    lookdown: ["LOOKDOWN(Value: v1, v2..v3, etc) : Index", "Determine 1-based index of matching value (values and ranges allowed), return index (0 if no match)."],
-    lookdownz: ["LOOKDOWNZ(Value: v1, v2..v3, etc) : Index", "Determine 0-based index of matching value (values and ranges allowed), return index (0 if no match)."],
+    // NOTE: this does NOT support signature help! (paramaters are not highlighted for signature help due to ':' being param separater)
+    lookup: [
+      "LOOKUP(Index: ExpressionList) : Value",
+      "Lookup value (values and ranges allowed) using 1-based index, return value (0 if index out of range)<br><br>" +
+        "@param `Index` - an expression indicating the position of the desired value in ExpressionList<br>" +
+        "@param `ExpressionList` - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Value` - the value found (or 0 if index out of range)<br>",
+    ],
+    lookupz: [
+      "LOOKUPZ(Index: ExpressionList) : Value",
+      "Lookup value (values and ranges allowed) using 0-based index, return value (0 if index out of range)<br><br>" +
+        "@param `Index' -  is an expression indicating the position of the desired value in ExpressionList<br>" +
+        "@param `ExpressionList' - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Value` - the value found (or 0 if index out of range)<br>",
+    ],
+    lookdown: [
+      "LOOKDOWN(Value: ExpressionList) : Index",
+      "Determine 1-based index of matching value (values and ranges allowed), return index (0 if no match)<br><br>" +
+        "@param `Value' - is an expression indicating the value to find in ExpressionList<br>" +
+        "@param `ExpressionList' - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Index` - the index found (or 0 if no match for value in list)<br>",
+    ],
+    lookdownz: [
+      "LOOKDOWNZ(Value: ExpressionList) : Index",
+      "Determine 0-based index of matching value (values and ranges allowed), return index (0 if no match)<br><br>" +
+        "@param `Value' - is an expression indicating the value to find in ExpressionList<br>" +
+        "@param `ExpressionList' - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Index` - the index found (or 0 if no match for value in list)<br>",
+    ],
   };
 
   private _tableSpinControlFlowMethods: { [Identifier: string]: string[] } = {
     abort: [
       "ABORT [ErrorCode]",
-      "Instantly return, from any depth of nested method calls, back to a base caller which used '\\' before the method name. A single return value can be conveyed from the abort point back to the base caller.",
+      "Instantly return, from any depth of nested method calls, back to a base caller which used '\\' before the method name. A single return value can be conveyed from the abort point back to the base caller",
     ],
     return: ["RETURN [Value[, Value[,...]]]", "Return zero or more values from a PUB/PRI method."],
   };
@@ -1500,9 +1764,12 @@ export class ParseUtils {
               if (!reservedStatus) {
                 reservedStatus = nameKey in this._tableSpinStringMethods;
                 if (!reservedStatus) {
-                  reservedStatus = nameKey in this._tableSpinIndexValueMethods;
+                  reservedStatus = nameKey in this._tableSpinStringBuilder;
                   if (!reservedStatus) {
-                    reservedStatus = nameKey in this._tableSpinControlFlowMethods;
+                    reservedStatus = nameKey in this._tableSpinIndexValueMethods;
+                    if (!reservedStatus) {
+                      reservedStatus = nameKey in this._tableSpinControlFlowMethods;
+                    }
                   }
                 }
               }
@@ -1520,28 +1787,31 @@ export class ParseUtils {
     if (this.isSpinBuiltinMethod(name)) {
       desiredDocText.found = true;
       let protoWDescr: string[] = [];
-      let methodDescr: methodTuple = ["", "", []];
+      let methodDescr: TMethodTuple = ["", "", []];
       if (nameKey in this._tableSpinHubMethods) {
         desiredDocText.category = "Hub Method";
-        protoWDescr = this._tableSpinHubMethods[nameKey];
+        methodDescr = this._tableSpinHubMethods[nameKey];
       } else if (nameKey in this._tableSpinPinMethods) {
         desiredDocText.category = "Pin Method";
-        protoWDescr = this._tableSpinPinMethods[nameKey];
+        methodDescr = this._tableSpinPinMethods[nameKey];
       } else if (nameKey in this._tableSpinTimingMethods) {
         desiredDocText.category = "Timing Method";
-        protoWDescr = this._tableSpinTimingMethods[nameKey];
+        methodDescr = this._tableSpinTimingMethods[nameKey];
       } else if (nameKey in this._tablePasmInterfaceMethods) {
         desiredDocText.category = "Pasm Interface Method";
-        protoWDescr = this._tablePasmInterfaceMethods[nameKey];
+        methodDescr = this._tablePasmInterfaceMethods[nameKey];
       } else if (nameKey in this._tableSpinMathMethods) {
         desiredDocText.category = "Math Method";
-        protoWDescr = this._tableSpinMathMethods[nameKey];
+        methodDescr = this._tableSpinMathMethods[nameKey];
       } else if (nameKey in this._tableSpinMemoryMethods) {
         desiredDocText.category = "Memory Method";
-        protoWDescr = this._tableSpinMemoryMethods[nameKey];
+        methodDescr = this._tableSpinMemoryMethods[nameKey];
       } else if (nameKey in this._tableSpinStringMethods) {
         desiredDocText.category = "String Method";
         methodDescr = this._tableSpinStringMethods[nameKey];
+      } else if (nameKey in this._tableSpinStringBuilder) {
+        desiredDocText.category = "String Method";
+        protoWDescr = this._tableSpinStringBuilder[nameKey];
       } else if (nameKey in this._tableSpinIndexValueMethods) {
         desiredDocText.category = "Hub Method";
         protoWDescr = this._tableSpinIndexValueMethods[nameKey];
@@ -1552,7 +1822,12 @@ export class ParseUtils {
       if (methodDescr[0].length != 0) {
         desiredDocText.signature = methodDescr[0];
         desiredDocText.description = methodDescr[1];
-        desiredDocText.parameters = methodDescr[2];
+        if (methodDescr[2] && methodDescr[2].length > 0) {
+          desiredDocText.parameters = methodDescr[2];
+        }
+        if (methodDescr[3] && methodDescr[3].length > 0) {
+          desiredDocText.returns = methodDescr[3];
+        }
       } else if (protoWDescr.length != 0) {
         desiredDocText.signature = protoWDescr[0];
         desiredDocText.description = protoWDescr[1];
@@ -1600,21 +1875,21 @@ export class ParseUtils {
   }
 
   private _tableClockConstants: { [Identifier: string]: string } = {
-    _clkfreq: "Selects XI/XO-crystal-plus-PLL mode, assumes 20 MHz crystal.",
-    _xtlfreq: "Selects XI/XO-crystal mode and frequency.",
-    _xinfreq: "Selects XI-input mode and frequency.",
-    _rcslow: "Selects internal RCSLOW oscillator which runs at ~20 KHz.",
+    _clkfreq: "Selects XI/XO-crystal-plus-PLL mode, assumes 20 MHz crystal",
+    _xtlfreq: "Selects XI/XO-crystal mode and frequency",
+    _xinfreq: "Selects XI-input mode and frequency",
+    _rcslow: "Selects internal RCSLOW oscillator which runs at ~20 KHz",
     _rcfast: "Selects internal RCFAST oscillator which runs at 20 MHz+",
   };
 
   private _tableClockSpinSymbols: { [Identifier: string]: string } = {
-    clkmode_: "The compiled clock mode, settable via HUBSET.",
-    clkfreq_: "The compiled clock frequency.",
+    clkmode_: "The compiled clock mode, settable via HUBSET",
+    clkfreq_: "The compiled clock frequency",
   };
 
   private _tableClockSpinVariables: { [Identifier: string]: string } = {
-    clkmode: "The current clock mode, located at LONG[$40]. Initialized with the 'clkmode_' value.",
-    clkfreq: "The current clock frequency, located at LONG[$44]. Initialized with the 'clkfreq_' value.",
+    clkmode: "The current clock mode, located at LONG[$40]. Initialized with the 'clkmode_' value",
+    clkfreq: "The current clock frequency, located at LONG[$44]. Initialized with the 'clkfreq_' value",
   };
 
   private _docTextForSpinClockVars(name: string): IBuiltinDescription {
@@ -2288,8 +2563,8 @@ export class ParseUtils {
     byte: "8-bit storage",
     word: "16-bit storage",
     long: "32-bit storage",
-    bytefit: "like BYTE for use in DAT sections, but verifies BYTE data are -$80 to $FF.",
-    wordfit: "like WORD for use in DAT sections, but verifies word data are -$8000 to $FFFF.",
+    bytefit: "like BYTE for use in DAT sections, but verifies BYTE data are -$80 to $FF",
+    wordfit: "like WORD for use in DAT sections, but verifies word data are -$8000 to $FFFF",
   };
 
   private _tableSpinStorageSpecials: { [Identifier: string]: string[] } = {

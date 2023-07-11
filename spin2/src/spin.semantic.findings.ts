@@ -829,7 +829,9 @@ export class RememberedComment {
       }
       if (nameItem) {
         // now wrap the name in single back ticks
-        workline = workline.replace(nameItem, "`" + nameItem + "`");
+        const originameItem: string = nameItem;
+        nameItem = nameItem.replace("`", "").replace("`", "");
+        workline = workline.replace(originameItem, "`" + nameItem + "`");
         tempLines[idx] = workline;
       }
     }

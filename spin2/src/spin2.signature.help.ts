@@ -5,12 +5,12 @@ import * as path from "path";
 
 import { CancellationToken, ParameterInformation, Position, SignatureHelp, SignatureHelpProvider, SignatureInformation, TextDocument, WorkspaceConfiguration } from "vscode";
 import { DocumentFindings } from "./spin.semantic.findings";
-import { ParseUtils, eBuiltInType } from "./spin2.utils";
-import { IPairs, definitionInfo, definitionInput, ExtensionUtils, getSpin2Config } from "./spin2.extension.utils";
+import { ParseUtils, eBuiltInType, IBuiltinDescription } from "./spin2.utils";
+import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Config } from "./spin2.extension.utils";
 
 export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private signatureLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private signatureLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private signatureOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
@@ -54,7 +54,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
     }
     const callerPos = this.previousTokenPosition(document, theCall.openParen);
     try {
-      const defInfo: definitionInfo | null = await this.definitionLocation(document, callerPos, spinConfig, true, token);
+      const defInfo: IDefinitionInfo | null = await this.definitionLocation(document, callerPos, spinConfig, true, token);
       if (!defInfo) {
         // The definition was not found
         this._logMessage(`+ Sig: defInfo NOT found`);
@@ -132,7 +132,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
     spinConfig: vscode.WorkspaceConfiguration | undefined,
     includeDocs: boolean,
     token: vscode.CancellationToken
-  ): Promise<definitionInfo | null> {
+  ): Promise<IDefinitionInfo | null> {
     this._logMessage(`+ Sig: definitionLocation() ENTRY`);
     const isPositionInBlockComment: boolean = this.symbolsFound.isLineInBlockComment(position.line);
     const adjustedPos = this.extensionUtils.adjustWordPosition(document, position, isPositionInBlockComment);
@@ -148,7 +148,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
     if (!spinConfig) {
       spinConfig = getSpin2Config(document.uri);
     }
-    const searchDetails: definitionInput = {
+    const searchDetails: IDefinitionInput = {
       document,
       position,
       word,
@@ -158,14 +158,14 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
     return this.getSymbolDetails(searchDetails, token, false);
   }
 
-  private getSymbolDetails(input: definitionInput, token: vscode.CancellationToken, useTags: boolean): Promise<definitionInfo | null> {
+  private getSymbolDetails(input: IDefinitionInput, token: vscode.CancellationToken, useTags: boolean): Promise<IDefinitionInfo | null> {
     if (token) {
     } // kill compiler warns for now...
     if (useTags) {
     } // kill compiler warns for now...  Probably remove these from interface
     this._logMessage(`+ Sig: getSymbolDetails() input.word=[${input.word}]`);
     return new Promise((resolve, reject) => {
-      const defInfo: definitionInfo = {
+      const defInfo: IDefinitionInfo = {
         file: input.document.uri.fsPath,
         line: input.position.line,
         column: input.position.character,
@@ -190,7 +190,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
       this._logMessage(`+ Sig: getSymbolDetails() isSignatureLine=[${isSignatureLine}], isDebugLine=[${isDebugLine}]`);
 
       let bFoundSomething: boolean = false; // we've no answer
-      let builtInFindings = isDebugLine ? this.parseUtils.docTextForDebugBuiltIn(input.word) : this.parseUtils.docTextForBuiltIn(input.word);
+      let builtInFindings: IBuiltinDescription = isDebugLine ? this.parseUtils.docTextForDebugBuiltIn(input.word) : this.parseUtils.docTextForBuiltIn(input.word);
       if (!builtInFindings.found) {
         this._logMessage(`+ Sig: built-in=[${input.word}], NOT found!`);
       } else {
@@ -373,6 +373,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
           }
           defInfo.line = -1; // don;t have declaration line# for built-in!
           defInfo.parameters = builtInFindings.parameters; // forward any parameters found...
+          defInfo.returns = builtInFindings.returns; // forward any returns found...
         }
       }
       if (bFoundSomething) {

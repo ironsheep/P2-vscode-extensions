@@ -5,13 +5,13 @@ import * as path from "path";
 import { CancellationToken, Hover, HoverProvider, Position, TextDocument, WorkspaceConfiguration } from "vscode";
 import { DocumentFindings } from "./spin.semantic.findings";
 import { ParseUtils, eBuiltInType } from "./spin2.utils";
-import { IPairs, definitionInfo, definitionInput, ExtensionUtils, getSpin2Config } from "./spin2.extension.utils";
+import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Config } from "./spin2.extension.utils";
 //import { IncomingMessage } from "http";
 //import { isDeepStrictEqual } from "util";
 
 export class Spin2HoverProvider implements HoverProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private hoverLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private hoverLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private hoverOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
@@ -51,7 +51,7 @@ export class Spin2HoverProvider implements HoverProvider {
   //  public provideTypeDefinition()
   //  export function definitionLocation()
   //  definitionLocation
-  //  definitionInfo
+  //  IDefinitionInfo
   //  GoDefinitionInformation
   //  src/language/legacy/goDeclaration.ts
 
@@ -70,19 +70,19 @@ export class Spin2HoverProvider implements HoverProvider {
     let spinConfig = this.spinConfig;
     this._logMessage(`+ Hvr: provideHover() EXIT after providing def'location`);
     return this.definitionLocation(document, position, spinConfig, true, token).then(
-      (definitionInfo) => {
-        if (definitionInfo == null) {
+      (IDefinitionInfo) => {
+        if (IDefinitionInfo == null) {
           this._logMessage(`+ Hvr: provideHover() EXIT no info`);
           return null;
         }
-        const lines = definitionInfo.declarationlines.filter((line) => line !== "").map((line) => line.replace(/\t/g, "    "));
+        const lines = IDefinitionInfo.declarationlines.filter((line) => line !== "").map((line) => line.replace(/\t/g, "    "));
         let text;
         text = lines.join("\n").replace(/\n+$/, "");
         const hoverTexts = new vscode.MarkdownString();
         hoverTexts.supportHtml = true; // yes, let's support some html
         hoverTexts.appendCodeblock(text, "spin2"); // should be spin2/spin but "code lanuguage not supported or defined" : bad ones are: json
-        if (definitionInfo.doc != null) {
-          hoverTexts.appendMarkdown(definitionInfo.doc);
+        if (IDefinitionInfo.doc != null) {
+          hoverTexts.appendMarkdown(IDefinitionInfo.doc);
         }
         const hover = new Hover(hoverTexts);
         this._logMessage(`+ Hvr: provideHover() EXIT with hover`);
@@ -101,7 +101,7 @@ export class Spin2HoverProvider implements HoverProvider {
     spinConfig: vscode.WorkspaceConfiguration | undefined,
     includeDocs: boolean,
     token: vscode.CancellationToken
-  ): Promise<definitionInfo | null> {
+  ): Promise<IDefinitionInfo | null> {
     this._logMessage(`+ Hvr: definitionLocation() ENTRY`);
     const isPositionInBlockComment: boolean = this.symbolsFound.isLineInBlockComment(position.line);
     const adjustedPos = this.extensionUtils.adjustWordPosition(document, position, isPositionInBlockComment);
@@ -117,7 +117,7 @@ export class Spin2HoverProvider implements HoverProvider {
     if (!spinConfig) {
       spinConfig = getSpin2Config(document.uri);
     }
-    const searchDetails: definitionInput = {
+    const searchDetails: IDefinitionInput = {
       document,
       position,
       word,
@@ -127,13 +127,13 @@ export class Spin2HoverProvider implements HoverProvider {
     return this.getSymbolDetails(searchDetails, token, false);
   }
 
-  private getSymbolDetails(input: definitionInput, token: vscode.CancellationToken, useTags: boolean): Promise<definitionInfo | null> {
+  private getSymbolDetails(input: IDefinitionInput, token: vscode.CancellationToken, useTags: boolean): Promise<IDefinitionInfo | null> {
     if (token) {
     } // kill compiler warns for now...
     if (useTags) {
     } // kill compiler warns for now...  Probably remove these from interface
     return new Promise((resolve, reject) => {
-      const defInfo: definitionInfo = {
+      const defInfo: IDefinitionInfo = {
         file: input.document.uri.fsPath,
         line: input.position.line,
         column: input.position.character,
@@ -198,7 +198,8 @@ export class Spin2HoverProvider implements HoverProvider {
         // -------------------------------
         // load CODE section of hover
         //
-        if (typeString.includes("method")) {
+        const isMethod: boolean = typeString.includes("method");
+        if (isMethod) {
           if (tokenFindings.scope.includes("object")) {
             defInfo.declarationlines = [`(${scopeString} ${typeString}) ${nameString}`];
           } else if (isSignatureLine) {
@@ -221,7 +222,7 @@ export class Spin2HoverProvider implements HoverProvider {
         // load MarkDown section
         //
         let mdLines: string[] = [];
-        if (typeString.includes("method")) {
+        if (isMethod) {
           //if (!isSignatureLine) {
           mdLines.push(`Custom Method: User defined<br>`);
           //}
@@ -247,10 +248,14 @@ export class Spin2HoverProvider implements HoverProvider {
         }
         if (tokenFindings.declarationComment) {
           // have object comment
-          mdLines.push(tokenFindings.declarationComment);
+          if (isMethod) {
+            mdLines.push("- " + tokenFindings.declarationComment);
+          } else {
+            mdLines.push(tokenFindings.declarationComment);
+          }
         } else {
           // no object comment
-          if (typeString.includes("method")) {
+          if (isMethod) {
             // if methods show that we should have doc-comment, except for external object reference were we can't get to doc comments, yet!...
             if (!tokenFindings.relatedObjectName) {
               mdLines.push(`*(no doc-comment provided)*`);
@@ -264,40 +269,13 @@ export class Spin2HoverProvider implements HoverProvider {
         } else {
           defInfo.doc = undefined;
         }
-        /*
-                if (tokenFindings.declarationComment) {
-                  // have declaration comment...
-                  if (typeString.includes("method")) {
-                    // is method with doc
-                    if (!isSignatureLine) {
-                      defInfo.doc = "".concat(`Custom Method: User defined<br>`, tokenFindings.declarationComment);
-                    } else {
-                      defInfo.doc = "".concat(tokenFindings.declarationComment);
-                    }
-                  } else {
-                    // is non-method with doc
-                    defInfo.doc = "".concat(tokenFindings.declarationComment);
-                  }
-                } else {
-                  if (typeString.includes("method")) {
-                    // no declaration comment but is user-defined method
-                    const noCommentProvided = `*(no doc-comment provided)*`;
-                    if (!isSignatureLine) {
-                      defInfo.doc = "".concat(`Custom Method: User defined<br>`, noCommentProvided);
-                    } else {
-                      defInfo.doc = "".concat(noCommentProvided); // TODO: add doc comments here when we finally get them...
-                    }
-                  } else {
-                    // no doc-comment, not method
-                    defInfo.doc = `${docRootCommentMD}`;
-                  }
-                }
-                */
       } else {
         // -------------------------------
         // no token, let's check for built-in language parts
         if (builtInFindings.found) {
           let bISdebugStatement: boolean = false;
+          const bHaveParams = builtInFindings.parameters && builtInFindings.parameters.length > 0 ? true : false;
+          const bHaveReturns = builtInFindings.returns && builtInFindings.returns.length > 0 ? true : false;
           if (input.word.toLowerCase() == "debug" && sourceLine.toLowerCase().startsWith("debug(")) {
             bISdebugStatement = true;
           }
@@ -319,7 +297,7 @@ export class Spin2HoverProvider implements HoverProvider {
             defInfo.declarationlines = ["(constant 32-bit) " + input.word];
             subTitleText = ` constant: *Spin2 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
-            defInfo.declarationlines = ["(method) " + builtInFindings.signature];
+            defInfo.declarationlines = ["(built-in method) " + builtInFindings.signature];
             subTitleText = `: *Spin2 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_LANG_PART) {
             defInfo.declarationlines = ["(spin2 language) " + input.word];
@@ -356,6 +334,29 @@ export class Spin2HoverProvider implements HoverProvider {
             }
             mdLines.push(`${titleText}${subTitleText}<br>`);
             mdLines.push("- " + builtInFindings.description);
+          }
+          if (bHaveParams || bHaveReturns) {
+            mdLines.push("<br><br>"); // blank line
+          }
+          if (bHaveParams && builtInFindings.parameters) {
+            for (let parmIdx = 0; parmIdx < builtInFindings.parameters.length; parmIdx++) {
+              const paramDescr = builtInFindings.parameters[parmIdx];
+              const lineParts: string[] = paramDescr.split(" - ");
+              const valueName: string = lineParts[0].replace("`", "").replace("`", "");
+              if (lineParts.length >= 2) {
+                mdLines.push("@param `" + valueName + "` - " + paramDescr.substring(lineParts[0].length + 3) + "<br>"); // formatted parameter description
+              }
+            }
+          }
+          if (bHaveReturns && builtInFindings.returns) {
+            for (let parmIdx = 0; parmIdx < builtInFindings.returns.length; parmIdx++) {
+              const returnsDescr = builtInFindings.returns[parmIdx];
+              const lineParts: string[] = returnsDescr.split(" - ");
+              const valueName: string = lineParts[0].replace("`", "").replace("`", "");
+              if (lineParts.length >= 2) {
+                mdLines.push("@returns `" + valueName + "` - " + returnsDescr.substring(lineParts[0].length + 3) + "<br>"); // formatted parameter description
+              }
+            }
           }
           if (mdLines.length > 0) {
             defInfo.doc = mdLines.join(" ");

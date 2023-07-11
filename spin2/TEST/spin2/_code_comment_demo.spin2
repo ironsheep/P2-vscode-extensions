@@ -59,7 +59,7 @@ CON { driver interface Constants}
     '  DCS_ESTOP            - motor in emergency stop (external stop requested)
     #0, DCS_Unknown, DCS_STOPPED, DCS_SPIN_UP, DCS_AT_SPEED, DCS_SPIN_DN, DCS_SLOW_TO_CHG, DCS_FAULTED, DCS_ESTOP
 
-    user2 = trunc(5.4)   ' <<< SHOULD be RED trunc without ()! or with empty ()'s
+    user2 = trunc()   ' <<< SHOULD be RED trunc without ()! or with empty ()'s
 
 OBJ { included objects }
 
@@ -90,12 +90,38 @@ PUB null()
 PRI extensionTesting()
 
     ' the following for signature() testing!
-    circInMMforDiaInInch
+    circInMMforDiaInInch()
 
-    newRampDn
+    newRampDn()
 
-    strcopy
+    strcopy(dest, src, 5)
+    string
 
+    lookup
+    lookdown
+    lookupz
+    lookdownz
+
+    cogstop(6)
+    cogid
+    cogchk
+
+    pinw
+    pinwrite
+    pinr
+    states := pinread ' hmmm remove lines after <br> for signature help???
+
+    zval := rdpin(32)
+    zval := rqpin(32)
+    akpin(32)
+
+    rotx, roty := rotxy(x, y, angle32bit)
+    x, y := polxy(length, angle32bit)
+    length, angle32bit := xypol(x, y)
+    qsin
+    qcos
+    muldiv64
+    getrnd
     nan
 
     forDocExplan1 := trunc   ' <<< SHOULD be RED := trunc without ()! or with empty ()'s
@@ -126,16 +152,16 @@ PRI circInMMforDiaInInchFloat(fDiaInch) : nCircInMM | fValue
         nCircInMM := trunc(fValue *. kMM_IN_INCH)
 
 pri newRampDn(tgt_incr, inDrv_incr, inDrv_state) : drv_incr, drv_state_ | testVar
-' this methods does
+' TEST: Exercise the new pasm code to check functionality
 '
-' @param tgt_incr - this ithe
-' @param inDrv_incr -
-' @param inDrv_state -
-' @returns drv_incr -
-' @returns drv_state_ -
+' @param tgt_incr - the Desired final increment
+' @param inDrv_incr - initial driver increment
+' @param inDrv_state - initial driver state
+' @returns drv_incr - simulated driver increment
+' @returns drv_state_ - simulated driver state
 
 ' Local Variables:
-' @local testVar -
+' @local testVar - not used, for highlight testing
     drv_incr := inDrv_incr
     drv_state_ := inDrv_state
     org

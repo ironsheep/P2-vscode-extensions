@@ -24,18 +24,19 @@ function getConfig(section: string, uri?: vscode.Uri | null) {
   return vscode.workspace.getConfiguration(section, uri);
 }
 
-export interface definitionInfo {
+export interface IDefinitionInfo {
   file?: string;
   line: number;
   column: number;
   doc?: string;
   declarationlines: string[];
   parameters?: string[];
+  returns?: string[];
   name?: string;
   toolUsed: string;
 }
 
-export interface definitionInput {
+export interface IDefinitionInput {
   document: vscode.TextDocument;
   position: vscode.Position;
   word: string;

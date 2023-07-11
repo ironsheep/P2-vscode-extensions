@@ -1,5 +1,28 @@
 "use strict";
-// src/spin2.utils.ts
+// src/spin1.utils.ts
+
+export enum eBuiltInType {
+  Unknown = 0,
+  BIT_VARIABLE,
+  BIT_METHOD,
+  BIT_SYMBOL,
+  BIT_CONSTANT,
+  BIT_LANG_PART,
+  BIT_TYPE,
+}
+
+export interface IBuiltinDescription {
+  found: boolean;
+  type: eBuiltInType; // [variable|method]
+  category: string;
+  description: string;
+  signature: string;
+  parameters?: string[];
+  returns?: string[];
+}
+
+// this is how we decribe our methods with parameters in our tables...
+type methodTuple = readonly [signature: string, description: string, parameters: string[], returns?: string[] | undefined];
 
 export class ParseUtils {
   public getNonInlineCommentLine(line: string): string {
@@ -31,6 +54,59 @@ export class ParseUtils {
     //    this.logMessage('  --          [' + nonInlineCommentStr + ']');
     //}
     return nonInlineCommentStr;
+  }
+
+  public docTextForBuiltIn(name: string): IBuiltinDescription {
+    if (name) {
+    }
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    /*
+        let desiredDocText: IBuiltinDescription = this._docTextForSpinBuiltInVariable(name);
+    if (desiredDocText.found) {
+      desiredDocText.type = eBuiltInType.BIT_VARIABLE;
+    } else {
+      desiredDocText = this._docTextForSpinBuiltInMethod(name);
+      if (desiredDocText.found) {
+        desiredDocText.type = eBuiltInType.BIT_METHOD;
+      } else {
+        desiredDocText = this._docTextForCogAndNumericSymbols(name);
+        if (desiredDocText.found) {
+          desiredDocText.type = eBuiltInType.BIT_SYMBOL;
+        } else {
+          desiredDocText = this._docTextForSpinBuiltInLanguagePart(name);
+          if (desiredDocText.found) {
+            if (desiredDocText.category.includes("Float Conversions")) {
+              desiredDocText.type = eBuiltInType.BIT_METHOD;
+            } else {
+              desiredDocText.type = eBuiltInType.BIT_LANG_PART;
+            }
+          } else {
+            desiredDocText = this._docTextForSpinClockVars(name);
+            if (desiredDocText.found) {
+              // desiredDocText.type =     -->  nope, this one sets the type for us!
+            } else {
+              desiredDocText = this._docTextForSpinStorageTypesAlignment(name);
+              if (desiredDocText.found) {
+                desiredDocText.type = eBuiltInType.BIT_TYPE;
+              } else {
+                desiredDocText = this._docTextForSpinDebugBuiltInInvoke(name);
+                if (desiredDocText.found) {
+                  desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
+                } else {
+                  desiredDocText = this._docTextForSpinDebugBuiltInSymbols(name);
+                  if (desiredDocText.found) {
+                    desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
+                  } else {
+                    // TODO: add more calls here
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }*/
+    return desiredDocText;
   }
 
   public getNonCommentLineRemainder(startingOffset: number, line: string): string {
