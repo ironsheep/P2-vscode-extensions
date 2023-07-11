@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.5",
+  "version": "1.9.6",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -31,8 +31,6 @@
   "license": "MIT",
   "main": "out/spin2.extension.js",
   "activationEvents": [
-    "onLanguage:spin2",
-    "onLanguage:spin",
     "onStartupFinished"
   ],
   "engines": {
