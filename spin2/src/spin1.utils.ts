@@ -655,6 +655,7 @@ export class ParseUtils {
   };
 
   private _tableSpinCogControlMethods: { [Identifier: string]: TMethodTuple } = {
+    // FIXME: adjust cognew and coginit param descriptions (show spin & pasm)
     coginit: [
       "COGINIT(CogID, SpinMethod(ParameterList), StackPointer) | COGINIT(CogID, AsmAddress, Parameter)",
       "Start or restart a cog by ID to run Spin code or Propeller Assembly code",
@@ -678,7 +679,7 @@ export class ParseUtils {
 
   public isSpinBuiltinMethod(name: string): boolean {
     const nameKey: string = name.toLowerCase();
-    const spinMethodNames: string[] = ["call", "clkset", "coginit", "cogspin", "cogstop", "cognew", "reboot", "string", "constant"];
+    const spinMethodNames: string[] = ["call", "clkset"];
     let reservedStatus: boolean = spinMethodNames.indexOf(nameKey) != -1;
     if (!reservedStatus) {
       reservedStatus = nameKey in this._tableSpinMemoryMethods;
@@ -694,6 +695,9 @@ export class ParseUtils {
     }
     if (!reservedStatus) {
       reservedStatus = nameKey in this._tableSpinCogControlMethods;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinDirectives;
     }
     return reservedStatus;
   }
