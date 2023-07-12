@@ -560,6 +560,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       .map((selection) => {
         let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
         let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
+        const isSpin1Doc: boolean = document.fileName.toLowerCase().endsWith(".spin");
         this._logMessage(
           `* iDc selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
         );
@@ -599,6 +600,37 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               for (let retValIdx = 0; retValIdx < numberReturns; retValIdx++) {
                 linesToInsert.push(commentPrefix + ` @returns ${returnNames[retValIdx]} - ` + endOfLineStr); // blank line
               }
+            }
+            let posTrailingComment = currLine.indexOf("'");
+            if (posTrailingComment == -1) {
+              posTrailingComment = currLine.indexOf("{");
+            }
+            if (bHasLocalVariables) {
+              // locals are always non-doc single-line comments
+              const posStartLocal = currLine.indexOf("|") + 1;
+              const posEndLocal = posTrailingComment != -1 ? posTrailingComment : currLine.length;
+              const localsString: string = currLine.substring(posStartLocal, posEndLocal);
+              const numberLocals: number = (localsString.match(/,/g) || []).length + 1;
+              const localsNames = localsString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc localsString=[${localsString}], localsNames=[${localsNames}]`);
+              linesToInsert.push("" + endOfLineStr); // empty line so following is not shown in comments for method
+              linesToInsert.push("' Local Variables:" + endOfLineStr); // blank line
+              for (let localIdx = 0; localIdx < numberLocals; localIdx++) {
+                linesToInsert.push("'" + ` @local ${localsNames[localIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+          } else if (isSpin1Doc) {
+            // spin1 methods don't need parens when no parameters are specified
+            const bHasReturnValues: boolean = currLine.includes(":") ? true : false;
+            const bHasLocalVariables: boolean = currLine.includes("|") ? true : false;
+            if (bHasReturnValues) {
+              const posStartReturn = currLine.indexOf(":") + 1;
+              const posEndReturn = bHasLocalVariables ? currLine.indexOf("|") - 1 : currLine.length;
+              const returnsString: string = currLine.substring(posStartReturn, posEndReturn);
+              // spin1 only allows 1 return variable
+              const returnNames = returnsString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc returnsString=[${returnsString}], returnNames=[${returnNames}]`);
+              linesToInsert.push(commentPrefix + ` @returns ${returnNames[0]} - ` + endOfLineStr); // blank line
             }
             let posTrailingComment = currLine.indexOf("'");
             if (posTrailingComment == -1) {
@@ -720,7 +752,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return result;
   }
 
-  // track comment preceing declaration line
+  // track comment preceding declaration line
   private priorSingleLineComment: string | undefined = undefined;
   private rightEdgeComment: string | undefined = undefined;
 

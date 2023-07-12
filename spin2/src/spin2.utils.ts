@@ -1679,7 +1679,7 @@ export class ParseUtils {
   };
 
   private _tableSpinStringMethods: { [Identifier: string]: TMethodTuple } = {
-    strsize: ["STRSIZE(Addr) : Size", "Count bytes in zero-terminated string at Addr and return string size, not including the zero", ["Addr - address of zero-terminated string"]],
+    strsize: ["STRSIZE(Addr) : Size", "Count bytes of zero-terminated string at Addr", ["Addr - address of zero-terminated string"], ["Size - the string length, not including the zero"]],
     strcomp: [
       "STRCOMP(AddrA,AddrB) : Match",
       "Compare zero-terminated strings at AddrA and AddrB",

@@ -12,8 +12,20 @@ OBJ
     serIO[3] : "jm_serial"         ' jm  serial object
 
 pub main : ok
+'' ...
+''
+'' @returns ok -
+
+pri notMain : ok
+' ...
+'
+' @returns ok -
 
 PRI pullUpValueForEnum(pullupRqst) : pullup
+' ...
+'
+' @param pullupRqst -
+' @returns pullup -
   case pullupRqst
     serIO.PU_NONE : pullup := P_HIGH_FLOAT                            ' use external pull-up
     serIO.PU_1K5  : pullup := P_HIGH_1K5                              ' 1.5k

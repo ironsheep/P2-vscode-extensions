@@ -291,5 +291,5 @@ export class ExtensionUtils {
     }
   }
 
-  private spinControlFlowKeywords: string[] = ["if", "ifnot", "elseif", "elseifnot", "else", "case", "case_fast", "repeat", "from", "to", "step", "while", "until", "next", "quit"];
+  private spinControlFlowKeywords: string[] = ["if", "ifnot", "elseif", "elseifnot", "else", "while", "repeat", "until", "from", "to", "step", "next", "quit", "case", "other", "abort", "return"];
 }

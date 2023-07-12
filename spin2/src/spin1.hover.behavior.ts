@@ -11,7 +11,7 @@ import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Conf
 
 export class Spin1HoverProvider implements HoverProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private hoverLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private hoverLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private hoverOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
@@ -197,7 +197,8 @@ export class Spin1HoverProvider implements HoverProvider {
         // -------------------------------
         // load CODE section of hover
         //
-        if (typeString.includes("method")) {
+        const isMethod: boolean = typeString.includes("method");
+        if (isMethod) {
           if (tokenFindings.scope.includes("object")) {
             defInfo.declarationlines = [`(${scopeString} ${typeString}) ${nameString}`];
           } else if (isSignatureLine) {
@@ -220,7 +221,7 @@ export class Spin1HoverProvider implements HoverProvider {
         // load MarkDown section
         //
         let mdLines: string[] = [];
-        if (typeString.includes("method")) {
+        if (isMethod) {
           //if (!isSignatureLine) {
           mdLines.push(`Custom Method: User defined<br>`);
           //}
@@ -246,10 +247,14 @@ export class Spin1HoverProvider implements HoverProvider {
         }
         if (tokenFindings.declarationComment) {
           // have object comment
-          mdLines.push(tokenFindings.declarationComment);
+          if (isMethod) {
+            mdLines.push("- " + tokenFindings.declarationComment);
+          } else {
+            mdLines.push(tokenFindings.declarationComment);
+          }
         } else {
           // no object comment
-          if (typeString.includes("method")) {
+          if (isMethod) {
             // if methods show that we should have doc-comment, except for external object reference were we can't get to doc comments, yet!...
             if (!tokenFindings.relatedObjectName) {
               mdLines.push(`*(no doc-comment provided)*`);
@@ -267,11 +272,9 @@ export class Spin1HoverProvider implements HoverProvider {
         // -------------------------------
         // no token, let's check for built-in language parts
         if (builtInFindings.found) {
-          let bISdebugStatement: boolean = false;
-          if (input.word.toLowerCase() == "debug" && sourceLine.toLowerCase().startsWith("debug(")) {
-            bISdebugStatement = true;
-          }
-          this._logMessage(`+ Hvr: bISdebugStatement=[${bISdebugStatement}], sourceLine=[${sourceLine}]`);
+          const bHaveParams = builtInFindings.parameters && builtInFindings.parameters.length > 0 ? true : false;
+          const bHaveReturns = builtInFindings.returns && builtInFindings.returns.length > 0 ? true : false;
+          this._logMessage(`+ Hvr: bHaveParams=[${bHaveParams}], bHaveReturns=[${bHaveReturns}], sourceLine=[${sourceLine}]`);
           let mdLines: string[] = [];
           bFoundSomething = true;
           defInfo.declarationlines = [];
@@ -281,6 +284,10 @@ export class Spin1HoverProvider implements HoverProvider {
           let subTitleText: string | undefined = undefined;
           if (builtInFindings.type == eBuiltInType.BIT_VARIABLE) {
             defInfo.declarationlines = ["(variable) " + input.word];
+            // in one case, we are doubling "variable", remove one...
+            if (titleText.includes("Spin Variable")) {
+              titleText = "Spin";
+            }
             subTitleText = ` variable: *Spin1 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_SYMBOL) {
             defInfo.declarationlines = ["(symbol) " + input.word];
@@ -290,6 +297,9 @@ export class Spin1HoverProvider implements HoverProvider {
             subTitleText = ` constant: *Spin1 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
             defInfo.declarationlines = ["(built-in method) " + builtInFindings.signature];
+            subTitleText = `: *Spin1 built-in*`;
+          } else if (builtInFindings.type == eBuiltInType.BIT_PASM_DIRECTIVE) {
+            defInfo.declarationlines = ["(built-in directive) " + builtInFindings.signature];
             subTitleText = `: *Spin1 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_LANG_PART) {
             defInfo.declarationlines = ["(spin1 language) " + input.word];
@@ -309,6 +319,29 @@ export class Spin1HoverProvider implements HoverProvider {
             }
             mdLines.push(`${titleText}${subTitleText}<br>`);
             mdLines.push("- " + builtInFindings.description);
+          }
+          if (bHaveParams || bHaveReturns) {
+            mdLines.push("<br><br>"); // blank line
+          }
+          if (bHaveParams && builtInFindings.parameters) {
+            for (let parmIdx = 0; parmIdx < builtInFindings.parameters.length; parmIdx++) {
+              const paramDescr = builtInFindings.parameters[parmIdx];
+              const lineParts: string[] = paramDescr.split(" - ");
+              const valueName: string = lineParts[0].replace("`", "").replace("`", "");
+              if (lineParts.length >= 2) {
+                mdLines.push("@param `" + valueName + "` - " + paramDescr.substring(lineParts[0].length + 3) + "<br>"); // formatted parameter description
+              }
+            }
+          }
+          if (bHaveReturns && builtInFindings.returns) {
+            for (let parmIdx = 0; parmIdx < builtInFindings.returns.length; parmIdx++) {
+              const returnsDescr = builtInFindings.returns[parmIdx];
+              const lineParts: string[] = returnsDescr.split(" - ");
+              const valueName: string = lineParts[0].replace("`", "").replace("`", "");
+              if (lineParts.length >= 2) {
+                mdLines.push("@returns `" + valueName + "` - " + returnsDescr.substring(lineParts[0].length + 3) + "<br>"); // formatted parameter description
+              }
+            }
           }
           if (mdLines.length > 0) {
             defInfo.doc = mdLines.join(" ");

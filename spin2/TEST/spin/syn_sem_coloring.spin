@@ -35,7 +35,7 @@ OBJ { Objects Used by this Object }
 DAT
     strings1      byte  "string",0
 
-PUB getServerStatus(x, y): server, port, ssl, ca | temp
+PUB getServerStatus(x, y): server, port, ssl, ca | temp  ' <<<< -- more than 1 return value not allows in spin1!  RED?!!!
     unpack(5)
     getServerStatus(5, 4)
 
@@ -44,7 +44,7 @@ PUB getServerStatus(x, y): server, port, ssl, ca | temp
     ca := 5
     temp := x
 
-PRI Unpack(x) : s, e, b | shift, exp_fixup
+PRI Unpack(x) : s | shift, exp_fixup, e, b
   s := x>>31
   e := (x>>EXP_SHIFT) & EXP_MASK
   b := x & ((1<<EXP_SHIFT)-1)

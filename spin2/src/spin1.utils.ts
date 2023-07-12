@@ -5,6 +5,7 @@ export enum eBuiltInType {
   Unknown = 0,
   BIT_VARIABLE,
   BIT_METHOD,
+  BIT_PASM_DIRECTIVE,
   BIT_SYMBOL,
   BIT_CONSTANT,
   BIT_LANG_PART,
@@ -22,7 +23,7 @@ export interface IBuiltinDescription {
 }
 
 // this is how we decribe our methods with parameters in our tables...
-type methodTuple = readonly [signature: string, description: string, parameters: string[], returns?: string[] | undefined];
+type TMethodTuple = readonly [signature: string, description: string, parameters: string[], returns?: string[] | undefined];
 
 export class ParseUtils {
   public getNonInlineCommentLine(line: string): string {
@@ -54,59 +55,6 @@ export class ParseUtils {
     //    this.logMessage('  --          [' + nonInlineCommentStr + ']');
     //}
     return nonInlineCommentStr;
-  }
-
-  public docTextForBuiltIn(name: string): IBuiltinDescription {
-    if (name) {
-    }
-    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
-    /*
-        let desiredDocText: IBuiltinDescription = this._docTextForSpinBuiltInVariable(name);
-    if (desiredDocText.found) {
-      desiredDocText.type = eBuiltInType.BIT_VARIABLE;
-    } else {
-      desiredDocText = this._docTextForSpinBuiltInMethod(name);
-      if (desiredDocText.found) {
-        desiredDocText.type = eBuiltInType.BIT_METHOD;
-      } else {
-        desiredDocText = this._docTextForCogAndNumericSymbols(name);
-        if (desiredDocText.found) {
-          desiredDocText.type = eBuiltInType.BIT_SYMBOL;
-        } else {
-          desiredDocText = this._docTextForSpinBuiltInLanguagePart(name);
-          if (desiredDocText.found) {
-            if (desiredDocText.category.includes("Float Conversions")) {
-              desiredDocText.type = eBuiltInType.BIT_METHOD;
-            } else {
-              desiredDocText.type = eBuiltInType.BIT_LANG_PART;
-            }
-          } else {
-            desiredDocText = this._docTextForSpinClockVars(name);
-            if (desiredDocText.found) {
-              // desiredDocText.type =     -->  nope, this one sets the type for us!
-            } else {
-              desiredDocText = this._docTextForSpinStorageTypesAlignment(name);
-              if (desiredDocText.found) {
-                desiredDocText.type = eBuiltInType.BIT_TYPE;
-              } else {
-                desiredDocText = this._docTextForSpinDebugBuiltInInvoke(name);
-                if (desiredDocText.found) {
-                  desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
-                } else {
-                  desiredDocText = this._docTextForSpinDebugBuiltInSymbols(name);
-                  if (desiredDocText.found) {
-                    desiredDocText.type = eBuiltInType.BIT_DEBUG_SYMBOL;
-                  } else {
-                    // TODO: add more calls here
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }*/
-    return desiredDocText;
   }
 
   public getNonCommentLineRemainder(startingOffset: number, line: string): string {
@@ -291,85 +239,461 @@ export class ParseUtils {
     return firstNonWhiteIndex;
   }
 
-  // -------------------------------------------------------------------------
-  // keyword checks
-  public isBuiltinReservedWord(name: string): boolean {
-    // streamer constants, smart-pin constants
-    const builtinNamesOfNote: string[] = [
-      //
-      "dira",
-      "dirb",
-      "ina",
-      "inb",
-      "outa",
-      "outb",
-      "cnt",
-      "ctra",
-      "ctrb",
-      "frqa",
-      "frqb",
-      "phsa",
-      "phsb",
-      "vcfg",
-      "vscl",
-      "par",
-      "spr",
-    ];
-    const reservedStatus: boolean = builtinNamesOfNote.indexOf(name.toLowerCase()) != -1;
+  public docTextForBuiltIn(name: string): IBuiltinDescription {
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    desiredDocText = this._docTextForSpinBuiltInLanguagePart(name);
+    if (desiredDocText.found) {
+      if (desiredDocText.category.includes("Method")) {
+        desiredDocText.type = eBuiltInType.BIT_METHOD;
+      } else if (desiredDocText.category.includes("Variable")) {
+        desiredDocText.type = eBuiltInType.BIT_VARIABLE;
+      } else if (desiredDocText.category.includes("Constant")) {
+        desiredDocText.type = eBuiltInType.BIT_CONSTANT;
+      } else if (desiredDocText.category.includes("Float Conversions")) {
+        desiredDocText.type = eBuiltInType.BIT_METHOD;
+      } else if (desiredDocText.category.includes("DAT Special")) {
+        desiredDocText.type = eBuiltInType.BIT_PASM_DIRECTIVE; // special for res/file
+      } else if (desiredDocText.category.includes("Directive")) {
+        desiredDocText.type = eBuiltInType.BIT_PASM_DIRECTIVE; // special for org/fit
+      } else {
+        desiredDocText.type = eBuiltInType.BIT_LANG_PART;
+      }
+    } else {
+      // TODO: add more calls here
+    }
+
+    return desiredDocText;
+  }
+
+  private _docTextForSpinBuiltInLanguagePart(name: string): IBuiltinDescription {
+    const nameKey: string = name.toLowerCase();
+    let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    let methodDescr: TMethodTuple = ["", "", []];
+    let protoWDescr: string[] = [];
+    if (nameKey in this._tableSpinBlockNames) {
+      desiredDocText.category = "Block Name";
+      desiredDocText.description = this._tableSpinBlockNames[nameKey];
+    } else if (nameKey in this._tableSpinFloatConversions) {
+      desiredDocText.category = "Float Conversions";
+      methodDescr = this._tableSpinFloatConversions[nameKey];
+    } else if (nameKey in this._tableSpin1ClkModeConstantNames) {
+      desiredDocText.category = "_CLKMODE Constant";
+      desiredDocText.description = this._tableSpin1ClkModeConstantNames[nameKey];
+    } else if (nameKey in this._tableSpin1ConfigurationROVariableNames) {
+      desiredDocText.category = "Application R/O Variable";
+      desiredDocText.description = this._tableSpin1ConfigurationROVariableNames[nameKey];
+    } else if (nameKey in this._tableSpin1ConstantNames) {
+      desiredDocText.category = "Spin Constant";
+      desiredDocText.description = this._tableSpin1ConstantNames[nameKey];
+    } else if (nameKey in this._tableSpin1ConfigurationVariableNames) {
+      desiredDocText.category = "Spin Variable";
+      desiredDocText.description = this._tableSpin1ConfigurationVariableNames[nameKey];
+    } else if (nameKey in this._tableSpin1VariableNames) {
+      desiredDocText.category = "Spin Variable";
+      desiredDocText.description = this._tableSpin1VariableNames[nameKey];
+    } else if (nameKey in this._tableSpinDirectives) {
+      desiredDocText.category = "Spin Directives";
+      desiredDocText.description = this._tableSpinDirectives[nameKey];
+    } else if (nameKey in this._tableSpinStorageTypes) {
+      desiredDocText.category = "Storage Types";
+      desiredDocText.description = this._tableSpinStorageTypes[nameKey];
+    } else if (nameKey in this._tableSpinStorageSpecials) {
+      desiredDocText.category = "DAT Special";
+      protoWDescr = this._tableSpinStorageSpecials[nameKey];
+    } else if (nameKey in this._tableSpinRegisters) {
+      desiredDocText.category = "Registers";
+      desiredDocText.description = this._tableSpinRegisters[nameKey];
+    } else if (nameKey in this._tableSpinStringMethods) {
+      desiredDocText.category = "String Method";
+      methodDescr = this._tableSpinStringMethods[nameKey];
+    } else if (nameKey in this._tableSpinMemoryMethods) {
+      desiredDocText.category = "Memory Method";
+      methodDescr = this._tableSpinMemoryMethods[nameKey];
+    } else if (nameKey in this._tableSpinIndexValueMethods) {
+      desiredDocText.category = "Memory Method";
+      protoWDescr = this._tableSpinIndexValueMethods[nameKey];
+    } else if (nameKey in this._tableSpinProcessControlMethods) {
+      desiredDocText.category = "Process Control Method";
+      methodDescr = this._tableSpinProcessControlMethods[nameKey];
+    } else if (nameKey in this._tableSpinCogControlMethods) {
+      desiredDocText.category = "COG Control Method";
+      methodDescr = this._tableSpinCogControlMethods[nameKey];
+    } else if (nameKey in this._tableSpinPasmLangParts) {
+      desiredDocText.category = "Pasm Directive";
+      protoWDescr = this._tableSpinPasmLangParts[nameKey];
+    }
+
+    if (methodDescr[0].length > 0) {
+      desiredDocText.signature = methodDescr[0];
+      desiredDocText.description = methodDescr[1];
+      if (methodDescr[2] && methodDescr[2].length > 0) {
+        desiredDocText.parameters = methodDescr[2];
+      }
+      if (methodDescr[3] && methodDescr[3].length > 0) {
+        desiredDocText.returns = methodDescr[3];
+      }
+    } else if (protoWDescr.length != 0) {
+      desiredDocText.signature = protoWDescr[0];
+      desiredDocText.description = protoWDescr[1];
+    }
+
+    if (desiredDocText.category.length > 0) {
+      desiredDocText.found = true;
+    }
+    return desiredDocText;
+  }
+
+  // ----------------------------------------------------------------------------
+  // Built-in SPIN variables P1
+  //
+  private _tableSpinBlockNames: { [Identifier: string]: string } = {
+    con: "32-bit Constant declarations<br>*(NOTE: CON is the initial/default block type)*",
+    obj: "Referenced object instantiations<br>*(objects manipulated by this object)*",
+    var: "Object Instance variable declarations",
+    pub: "Public method for use by the parent object and within this object",
+    pri: "Private method for use within this object",
+    dat: "Object Shared variable declarations and/or PASM code",
+  };
+
+  private _tableSpinPasmLangParts: { [Identifier: string]: string[] } = {
+    // DAT cogexec
+    org: [
+      "ORG <Address>",
+      "Adjust compile-time assembly pointer<br>@param `Address` - an optional Cog RAM address (0-495) to assemble the following assembly code with. If Address is not given, the value 0 is used",
+    ],
+    fit: [
+      "FIT <Address>",
+      "Validate that previous instructions/data fit entirely below a specific address<br>@param `Address` - an optional Cog RAM address (0-$1F0) for which prior assembly code should not reach. If Address is not given, the value $1F0 is used (the address of the first special purpose register)",
+    ],
+  };
+
+  private _tableSpinFloatConversions: { [Identifier: string]: TMethodTuple } = {
+    float: ["FLOAT(x): floatValue", "Convert integer x to float", ["x - integer value to be converted"], ["floatValue - x-value represented as float"]],
+    trunc: ["TRUNC(x): integerValue", "Convert float x to truncated integer", ["x - float value to be converted (remove all after decimal)"], ["integerValue - result of truncation operation"]],
+    round: ["ROUND(x): integerValue", "Convert float x to rounded integer", ["x - float value to be converted (round to nearest integer)"], ["integerValue - result of rounding operation"]],
+  };
+
+  public isFloatConversion(name: string): boolean {
+    const nameKey: string = name.toLowerCase();
+    const reservedStatus: boolean = nameKey in this._tableSpinFloatConversions;
     return reservedStatus;
   }
 
+  private _tableSpinStorageTypes: { [Identifier: string]: string } = {
+    byte: "8-bit storage",
+    word: "16-bit storage",
+    long: "32-bit storage",
+  };
+
+  private _tableSpinStorageSpecials: { [Identifier: string]: string[] } = {
+    res: ["symbol   RES n", "Reserve next 'n' long(s) for symbol"],
+    file: ['FileDat  FILE "Filename"', 'include binary file, "FileDat" is a BYTE symbol that points to file'],
+  };
+
+  public isDatNFileStorageType(name: string): boolean {
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableSpinStorageTypes;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinStorageSpecials;
+    }
+    return reservedStatus;
+  }
+
+  public isDatStorageType(name: string): boolean {
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableSpinStorageTypes;
+    if (!reservedStatus) {
+      reservedStatus = nameKey == "res" ? nameKey in this._tableSpinStorageSpecials : false;
+    }
+    return reservedStatus;
+  }
+
+  public isStorageType(name: string): boolean {
+    const nameKey: string = name.toLowerCase();
+    const reservedStatus: boolean = nameKey in this._tableSpinStorageTypes;
+    return reservedStatus;
+  }
+
+  private _tableSpinDirectives: { [Identifier: string]: string } = {
+    string: "Declare in-line string expression; resolved at compile time",
+    constant: "Declare in-line constant expression; resolved at compile time",
+  };
+
+  private _tableSpinRegisters: { [Identifier: string]: string } = {
+    dira: "Direction Register for 32-bit port A (P0-P31)",
+    dirb: "Direction Register for 32-bit port B (P32-P63, future use)",
+    ina: "Input Register for 32-bit port A (P0-P31, read only)",
+    inb: "Input Register for 32-bit port B (P32-P63, read only, future use)",
+    outa: "Output Register for 32-bit port A (P0-P31)",
+    outb: "Output Register for 32-bit port B (P32-P63, future use)",
+    cnt: "32-bit System Counter Register (read only)",
+    ctra: "Counter A Control Register",
+    ctrb: "Counter B Control Register",
+    frqa: "Counter A Frequency Register",
+    frqb: "Counter B Frequency Register",
+    phsa: "Counter A Phase-Locked Loop (PLL) Register",
+    phsb: "Counter B Phase-Locked Loop (PLL) Register",
+    vcfg: "Video Configuration Register",
+    vscl: "Video Scale Register",
+    par: "Cog Boot Parameter Register (read only)",
+    spr: "Special-Purpose Register array; indirect cog register access",
+  };
+
+  // -------------------------------------------------------------------------
+  // keyword checks
+  public isBuiltinReservedWord(name: string): boolean {
+    // register names
+    const nameKey: string = name.toLowerCase();
+    const reservedStatus: boolean = nameKey in this._tableSpinRegisters;
+    return reservedStatus;
+  }
+
+  private _tableSpin1ConstantNames: { [Identifier: string]: string } = {
+    true: "Logical true: -1 ($FFFF_FFFF)",
+    false: "Logical false: 0 ($0000_0000)",
+    posx: "Maximum positive integer: 2,147,483,647 ($7FFF_FFFF)",
+    negx: "Maximum negative integer: -2,147,483,648 ($8000_0000)",
+    pi: "Floating-point value for PI: ~3.141593 ($4049_0FDB)",
+  };
+
+  private _tableSpin1ClkModeConstantNames: { [Identifier: string]: string } = {
+    rcfast: "internal fast oscillator. No external parts. May range from 8 MHz to 20 MHz.",
+    rcslow: "internal slow oscillator. Very low power. No external parts. May range from 13 kHz to 33 kHz.",
+    xinput: "external clock/osc (XI pin). DC to 80 MHz Input",
+    xtal1: "external low-speed crystal. 4 to 16 MHz Crystal/Resonator",
+    xtal2: "external medium-speed crystal. 8 to 32 MHz Crystal/Resonator",
+    xtal3: "external high-speed crystal. 20 to 60 MHz Crystal/Resonator",
+    pll1x: "external frequency times 1",
+    pll2x: "external frequency times 2",
+    pll4x: "external frequency times 4",
+    pll8x: "external frequency times 8",
+    pll16x: "external frequency times 16",
+  };
+
+  private _tableSpin1ConfigurationROVariableNames: { [Identifier: string]: string } = {
+    _clkmode: "Application-defined clock mode (read-only)",
+    _clkfreq: "Application-defined clock frequency (read-only)",
+    _xinfreq: "Application-defined external clock frequency (read-only)",
+    _stack: "Application-defined stack space to reserve (read-only)",
+    _free: "Application-defined free space to reserve (read-only)",
+    chipver: "Propeller chip version number (read-only)",
+    cogid: "Current cog’s ID number (0-7) (read-only)",
+    cnt: "Current 32-bit System Counter value (read-only)",
+  };
+
+  private _tableSpin1ConfigurationVariableNames: { [Identifier: string]: string } = {
+    clkmode: "Current clock mode setting",
+    clkfreq: "Current clock frequency",
+    clkset: "Set clock mode and clock frequency",
+  };
+
+  private _tableSpin1VariableNames: { [Identifier: string]: string } = {
+    result: "The return value variable for methods",
+  };
+
   public isSpinBuiltInConstant(name: string): boolean {
-    const spinVariablesOfNote: string[] = ["clkmode", "clkfreq", "chipver", "cogid", "cnt", "xtal1", "xtal2", "xtal3", "rcfast", "rcslow", "pll1x", "pll2x", "pll4x", "pll8x", "pll16x"];
-    let reservedStatus: boolean = spinVariablesOfNote.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableSpin1ConfigurationVariableNames;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpin1ClkModeConstantNames;
+    }
     return reservedStatus;
   }
 
   public isSpinBuiltInVariable(name: string): boolean {
-    const spinVariablesOfNote: string[] = ["_clkmode", "_xinfreq", "dira", "dirb", "ina", "inb", "outa", "outb", "ctra", "ctrb", "frqa", "frqb", "phsa", "phsb", "vcfg", "vscl", "par", "spr"];
-    let reservedStatus: boolean = spinVariablesOfNote.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    let reservedStatus: boolean = nameKey in this._tableSpinRegisters;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpin1ConfigurationROVariableNames;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey == "result"; // yes, this is built-in!
+    }
     return reservedStatus;
   }
 
   public isSpinReservedWord(name: string): boolean {
-    const spinInstructionsOfNote: string[] = [
-      "float",
-      "round",
-      "trunc",
-      "nan",
-      "_clkmode",
-      "_clkfreq",
-      "_free",
-      "_stack",
-      "if",
-      "ifnot",
-      "elseif",
-      "elseifnot",
-      "else",
-      "while",
-      "repeat",
-      "until",
-      "from",
-      "to",
-      "step",
-      "next",
-      "quit",
-      "case",
-      "other",
-      "abort",
-      "return",
-      "true",
-      "false",
-      "posx",
-      "negx",
-      "pi",
-    ];
-    let reservedStatus: boolean = spinInstructionsOfNote.indexOf(name.toLowerCase()) != -1;
+    const nameKey: string = name.toLowerCase();
+    const spin1FlowControl: string[] = ["if", "ifnot", "elseif", "elseifnot", "else", "while", "repeat", "until", "from", "to", "step", "next", "quit", "case", "other", "abort", "return"];
+    let reservedStatus: boolean = spin1FlowControl.indexOf(nameKey) != -1;
     if (reservedStatus == false) {
       reservedStatus = this.isBinaryOperator(name);
     }
     if (reservedStatus == false) {
       reservedStatus = this.isUnaryOperator(name);
+    }
+    if (reservedStatus == false) {
+      reservedStatus = this.isFloatConversion(name);
+    }
+    if (reservedStatus == false) {
+      reservedStatus = nameKey in this._tableSpin1ConstantNames;
+    }
+    if (reservedStatus == false) {
+      reservedStatus = nameKey in this._tableSpin1ConfigurationROVariableNames;
+    }
+    if (reservedStatus == false) {
+      reservedStatus = nameKey in this._tableSpin1ConfigurationVariableNames;
+    }
+    if (reservedStatus == false) {
+      reservedStatus = nameKey in this._tableSpinPasmLangParts;
+    }
+    return reservedStatus;
+  }
+
+  private _tableSpinMemoryMethods: { [Identifier: string]: TMethodTuple } = {
+    bytemove: [
+      "BYTEMOVE(Destination, Source, Count)",
+      "Move Count bytes from Source to Destination",
+      ["Destination - address of BYTE array to receive values", "Source - address of BYTE array to be copied", "Count - the number of BYTEs to be copied"],
+    ],
+    wordmove: [
+      "WORDMOVE(Destination, Source, Count)",
+      "Move Count words from Source to Destination",
+      ["Destination - address of WORD array to receive values", "Source - address of WORD array to be copied", "Count - the number of WORDs to be copied"],
+    ],
+    longmove: [
+      "LONGMOVE(Destination, Source, Count)",
+      "Move Count longs from Source to Destination",
+      ["Destination - address of LONG array to receive values", "Source - address of LONG array to be copied", "Count - the number of LONGs to be copied"],
+    ],
+    bytefill: [
+      "BYTEFILL(Destination, Value, Count)",
+      "Fill Count bytes starting at Destination with Value",
+      ["Destination - address of BYTE array to receive values", "Value - 8-bit value", "Count - the number of BYTEs to be filled"],
+    ],
+    wordfill: [
+      "WORDFILL(Destination, Value, Count)",
+      "Fill Count words starting at Destination with Value",
+      ["Destination - address of WORD array to receive values", "Value - 16-bit value", "Count - the number of WORDs to be filled"],
+    ],
+    longfill: [
+      "LONGFILL(Destination, Value, Count)",
+      "Fill Count longs starting at Destination with Value",
+      ["Destination - address of LONG array to receive values", "Value - 32-bit value", "Count - the number of LONGs to be filled"],
+    ],
+  };
+
+  private _tableSpinIndexValueMethods: { [Identifier: string]: string[] } = {
+    // NOTE: this does NOT support signature help! (paramaters are not highlighted for signature help due to ':' being param separater)
+    lookup: [
+      "LOOKUP(Index: ExpressionList) : Value",
+      "Lookup value (values and ranges allowed) using 1-based index, return value (0 if index out of range)<br><br>" +
+        "@param `Index` - an expression indicating the position of the desired value in ExpressionList<br>" +
+        "@param `ExpressionList` - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Value` - the value found (or 0 if index out of range)<br>",
+    ],
+    lookupz: [
+      "LOOKUPZ(Index: ExpressionList) : Value",
+      "Lookup value (values and ranges allowed) using 0-based index, return value (0 if index out of range)<br><br>" +
+        "@param `Index' -  is an expression indicating the position of the desired value in ExpressionList<br>" +
+        "@param `ExpressionList' - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Value` - the value found (or 0 if index out of range)<br>",
+    ],
+    lookdown: [
+      "LOOKDOWN(Value: ExpressionList) : Index",
+      "Determine 1-based index of matching value (values and ranges allowed), return index (0 if no match)<br><br>" +
+        "@param `Value' - is an expression indicating the value to find in ExpressionList<br>" +
+        "@param `ExpressionList' - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Index` - the index found (or 0 if no match for value in list)<br>",
+    ],
+    lookdownz: [
+      "LOOKDOWNZ(Value: ExpressionList) : Index",
+      "Determine 0-based index of matching value (values and ranges allowed), return index (0 if no match)<br><br>" +
+        "@param `Value' - is an expression indicating the value to find in ExpressionList<br>" +
+        "@param `ExpressionList' - a comma-separated list of expressions. Quoted strings of characters are also allowed; they are treated as a comma-separated list of characters<br>" +
+        "@returns `Index` - the index found (or 0 if no match for value in list)<br>",
+    ],
+  };
+
+  private _tableSpinStringMethods: { [Identifier: string]: TMethodTuple } = {
+    strsize: ["STRSIZE(Addr) : Size", "Count bytes of zero-terminated string at Addr", ["Addr - address of zero-terminated string"], ["Size - the string length, not including the zero"]],
+    strcomp: [
+      "STRCOMP(AddrA,AddrB) : Match",
+      "Compare zero-terminated strings at AddrA and AddrB",
+      ["AddrA - address of zero-terminated string", "AddrB - address of zero-terminated string"],
+      ["Match - return TRUE (-1) if match or FALSE (0) if not"],
+    ],
+  };
+
+  private _tableSpinProcessControlMethods: { [Identifier: string]: TMethodTuple } = {
+    locknew: ["LOCKNEW : ID", "Check out a new lock returning its ID", [], ["ID -  the ID number (0–7) of the lock checked out (or -1 is none were available)"]],
+    lockret: ["LOCKRET(ID)", "Release lock back to lock pool, making it available for future LOCKNEW requests", ["ID - is the ID number (0–7) of the lock"]],
+    lockset: ["LOCKSET(ID) : prevState", "Set lock to true returning its previous state", ["ID - is the ID number (0–7) of the lock to set"], ["prevState - state of the lock before it was set"]],
+    lockclr: [
+      "LOCKCLR(ID) : prevState",
+      "Clear lock to false returning its previous state",
+      ["ID - is the ID number (0–7) of the lock to clear"],
+      ["prevState - state of the lock before it was cleared"],
+    ],
+    waitcnt: ["WAITCNT(value)", "Wait for System Counter, pausing a cog’s execution temporarily", ["value - the desired 32-bit System Counter value to wait for"]],
+    waitpeq: [
+      "WAITPEQ(State, Mask, Port)",
+      "Pause a cog’s execution until I/O pin(s) match designated state(s)",
+      [
+        "State - the logic state(s) to compare the pin(s) against. It is a 32-bit value that indicates the high or low states of up to 32 I/O pins. State is compared against either (INA & Mask), or (INB & Mask), depending on Port.",
+        "Mask - the desired pin(s) to monitor. Mask is a 32-bit value that contains high (1) bits for every I/O pin that should be monitored; low (0) bits indicate pins that should be ignored. Mask is bitwised-ANDed with the 32-bit port’s input states and the resulting value is compared against the entire State value",
+        "Port - is a 1-bit value indicating the I/O port to monitor; 0 = Port A, 1 = Port B. Only Port A exists on current (P8X32A) Propeller chips",
+      ],
+    ],
+    waitpne: [
+      "WAITPNE(State, Mask, Port )",
+      "Pause a cog’s execution until I/O pin(s) do not match designated state(s)",
+      [
+        "State - the logic state(s) to compare the pin(s) against. It is a 32-bit value that indicates the high or low states of up to 32 I/O pins. State is compared against either (INA & Mask), or (INB & Mask), depending on Port.",
+        "Mask - the desired pin(s) to monitor. Mask is a 32-bit value that contains high (1) bits for every I/O pin that should be monitored; low (0) bits indicate pins that should be ignored. Mask is bitwised-ANDed with the 32-bit port’s input states and the resulting value is compared against the entire State value",
+        "Port - is a 1-bit value indicating the I/O port to monitor; 0 = Port A, 1 = Port B. Only Port A exists on current (P8X32A) Propeller chips",
+      ],
+    ],
+    waitvid: [
+      "WAITVID(Colors, Pixels)",
+      "Pause a cog’s execution until its Video Generator is available to take pixel data",
+      [
+        "Colors - a long containing four byte-sized color values, each describing the four possible colors of the pixel patterns in Pixels",
+        "Pixels - the next 16-pixel by 2-bit (or 32-pixel by 1-bit) pixel pattern to display",
+      ],
+    ],
+  };
+
+  private _tableSpinCogControlMethods: { [Identifier: string]: TMethodTuple } = {
+    coginit: [
+      "COGINIT(CogID, SpinMethod(ParameterList), StackPointer) | COGINIT(CogID, AsmAddress, Parameter)",
+      "Start or restart a cog by ID to run Spin code or Propeller Assembly code",
+      [
+        "CogID - the ID (0 - 7) of the cog to start, or restart. A CogID value of 8 - 15 results in the next available cog being started, if possible",
+        "SpinMethod - the Spin method that the affected cog should run. Optionally, it can be followed by a parameter list enclosed in parentheses",
+        "StackPointer - a pointer to memory, such as a long array, reserved for stack space for the affected cog. The affected cog uses this space to store temporary data during further calls and expression evaluations. If insufficient space is allocated, either the application will fail to run or it will run with strange results",
+      ],
+    ],
+    cognew: [
+      "COGNEW(SpinMethod(ParameterList), StackPointer) | COGNEW(AsmAddress, Parameter)",
+      "Start the next available cog to run Spin code or Propeller Assembly code",
+      [
+        "SpinMethod - the Spin method that the affected cog should run. Optionally, it can be followed by a parameter list enclosed in parentheses",
+        "StackPointer - a pointer to memory, such as a long array, reserved for stack space for the affected cog. The affected cog uses this space to store temporary data during further calls and expression evaluations. If insufficient space is allocated, either the application will fail to run or it will run with strange results",
+      ],
+    ],
+    cogstop: ["COGSTOP(CogID)", "Stop cog by its ID", ["CogID - theID(0-7) of the cog to stop"]],
+    reboot: ["REBOOT", "Reset the Propeller chip", []],
+  };
+
+  public isSpinBuiltinMethod(name: string): boolean {
+    const nameKey: string = name.toLowerCase();
+    const spinMethodNames: string[] = ["call", "clkset", "coginit", "cogspin", "cogstop", "cognew", "reboot", "string", "constant"];
+    let reservedStatus: boolean = spinMethodNames.indexOf(nameKey) != -1;
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinMemoryMethods;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinIndexValueMethods;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinStringMethods;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinProcessControlMethods;
+    }
+    if (!reservedStatus) {
+      reservedStatus = nameKey in this._tableSpinCogControlMethods;
     }
     return reservedStatus;
   }
@@ -912,56 +1236,14 @@ export class ParseUtils {
   }
 
   public isBinaryOperator(name: string): boolean {
-    const binaryOperationsOfNote: string[] = ["sar", "ror", "rol", "rev", "zerox", "signx", "sca", "scas", "frac", "addbits", "addpins", "and", "or", "xor"];
+    const binaryOperationsOfNote: string[] = ["and", "or"];
     const reservedStatus: boolean = binaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
 
   public isUnaryOperator(name: string): boolean {
-    const unaryOperationsOfNote: string[] = ["not", "abs", "fabs", "encod", "decod", "bmask", "ones", "sqrt", "fsqrt", "qlog", "qexp"];
+    const unaryOperationsOfNote: string[] = ["not"];
     const reservedStatus: boolean = unaryOperationsOfNote.indexOf(name.toLowerCase()) != -1;
-    return reservedStatus;
-  }
-
-  public isFloatConversion(name: string): boolean {
-    const floatConversionOfNote: string[] = ["float", "round", "trunc"];
-    const reservedStatus: boolean = floatConversionOfNote.indexOf(name.toLowerCase()) != -1;
-    return reservedStatus;
-  }
-
-  public isSpinBuiltinMethod(name: string): boolean {
-    const spinMethodNames: string[] = [
-      "bytefill",
-      "bytemove",
-      "call",
-      "clkset",
-      "coginit",
-      "cogspin",
-      "cogstop",
-      "cognew",
-      "lockclr",
-      "locknew",
-      "lockret",
-      "lockset",
-      "longfill",
-      "longmove",
-      "lookdown",
-      "lookdownz",
-      "lookup",
-      "lookupz",
-      "reboot",
-      "strcomp",
-      "strsize",
-      "string",
-      "constant",
-      "waitcnt",
-      "waitpeq",
-      "waitpne",
-      "waitvid",
-      "wordfill",
-      "wordmove",
-    ];
-    const reservedStatus: boolean = spinMethodNames.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
 
@@ -998,7 +1280,7 @@ export class ParseUtils {
   }
 
   public isReservedPasmSymbols(name: string): boolean {
-    const reservedPasmSymbolNames: string[] = ["org", "fit", "end"];
+    const reservedPasmSymbolNames: string[] = ["org", "fit"];
     const reservedStatus: boolean = reservedPasmSymbolNames.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
@@ -1101,12 +1383,6 @@ export class ParseUtils {
     return instructionStatus;
   }
 
-  public isIllegalInlinePasmDirective(name: string): boolean {
-    const illegalInlinePasmDirective: string[] = ["file"];
-    const illegalStatus: boolean = illegalInlinePasmDirective.indexOf(name.toLowerCase()) != -1;
-    return illegalStatus;
-  }
-
   public isPasmConditional(name: string): boolean {
     let returnStatus: boolean = false;
     if (name.length >= 2) {
@@ -1133,8 +1409,6 @@ export class ParseUtils {
           haveLabelStatus = false;
         } else if (this.isPasmConditional(name)) {
           haveLabelStatus = false;
-        } else if (this.isIllegalInlinePasmDirective(name)) {
-          haveLabelStatus = false;
         } else if (this.isPasmInstruction(name)) {
           haveLabelStatus = false;
         } else if (this.isPasmNonArgumentInstruction(name)) {
@@ -1143,40 +1417,6 @@ export class ParseUtils {
       }
     }
     return haveLabelStatus;
-  }
-
-  public isDatNFileStorageType(name: string): boolean {
-    let returnStatus: boolean = false;
-    if (name.length > 2) {
-      const checkType: string = name.toUpperCase();
-      // yeah, FILE too!  (oddly enough)
-      if (checkType == "FILE" || this.isDatStorageType(checkType)) {
-        returnStatus = true;
-      }
-    }
-    return returnStatus;
-  }
-
-  public isDatStorageType(name: string): boolean {
-    let returnStatus: boolean = false;
-    if (name.length > 2) {
-      const checkType: string = name.toUpperCase();
-      if (checkType == "RES" || this.isStorageType(checkType)) {
-        returnStatus = true;
-      }
-    }
-    return returnStatus;
-  }
-
-  public isStorageType(name: string): boolean {
-    let returnStatus: boolean = false;
-    if (name.length > 3) {
-      const checkType: string = name.toUpperCase();
-      if (checkType == "BYTE" || checkType == "WORD" || checkType == "LONG") {
-        returnStatus = true;
-      }
-    }
-    return returnStatus;
   }
 
   //

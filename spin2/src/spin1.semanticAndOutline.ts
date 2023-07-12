@@ -2,6 +2,7 @@
 // src/spin1.semanticAndOutline.ts
 
 import * as vscode from "vscode";
+import { EndOfLine } from "vscode";
 //import { Z_UNKNOWN } from "zlib";
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
 import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
@@ -399,7 +400,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -412,6 +413,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private logTokenDiscover: boolean = true;
 
   private semanticFindings: DocumentFindings;
+  private conEnumInProgress: boolean = false;
+
+  private configuration = semanticConfiguration;
+
+  private currentMethodName: string = "";
+
+  private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
 
   public constructor() {
     if (this.spin1DebugLogEnabled) {
@@ -431,6 +439,85 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return this.semanticFindings;
   }
 
+  public insertDocComment(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
+    return selections
+      .map((selection) => {
+        let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
+        let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
+        this._logMessage(
+          `* iDc selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
+        );
+        const { firstLine, lastLine, lineCount } = this._lineNumbersFromSelection(document, selection);
+        const cursorPos: vscode.Position = new vscode.Position(firstLine + 1, 0);
+        let linesToInsert: string[] = [];
+        let currLine: string = document.lineAt(firstLine).text.trim();
+        const linePrefix = currLine.length > 3 ? currLine.substring(0, 3).toLowerCase() : "";
+        const isSignature: boolean = linePrefix.startsWith("pub") || linePrefix.startsWith("pri");
+        const isPRI: boolean = linePrefix.startsWith("pri");
+        if (isSignature) {
+          const commentPrefix = isPRI ? "'" : "''";
+          linesToInsert.push(commentPrefix + " ..." + endOfLineStr); // for description
+          linesToInsert.push(commentPrefix + " " + endOfLineStr); // blank line
+          const posOpenParen = currLine.indexOf("(");
+          const posCloseParen = currLine.indexOf(")");
+          if (posOpenParen != -1 && posCloseParen != -1) {
+            const bHasParameters: boolean = posCloseParen - posOpenParen > 1 ? true : false;
+            if (bHasParameters) {
+              const paramString: string = currLine.substring(posOpenParen + 1, posCloseParen);
+              const numberParameters: number = (paramString.match(/,/g) || []).length + 1;
+              const paramNames = paramString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc paramString=[${paramString}], paramNames=[${paramNames}]`);
+              for (let paramIdx = 0; paramIdx < numberParameters; paramIdx++) {
+                linesToInsert.push(commentPrefix + ` @param ${paramNames[paramIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+            const bHasReturnValues: boolean = currLine.includes(":") ? true : false;
+            const bHasLocalVariables: boolean = currLine.includes("|") ? true : false;
+            if (bHasReturnValues) {
+              const posStartReturn = currLine.indexOf(":") + 1;
+              const posEndReturn = bHasLocalVariables ? currLine.indexOf("|") - 1 : currLine.length;
+              const returnsString: string = currLine.substring(posStartReturn, posEndReturn);
+              const numberReturns: number = (returnsString.match(/,/g) || []).length + 1;
+              const returnNames = returnsString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc returnsString=[${returnsString}], returnNames=[${returnNames}]`);
+              for (let retValIdx = 0; retValIdx < numberReturns; retValIdx++) {
+                linesToInsert.push(commentPrefix + ` @returns ${returnNames[retValIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+            let posTrailingComment = currLine.indexOf("'");
+            if (posTrailingComment == -1) {
+              posTrailingComment = currLine.indexOf("{");
+            }
+            if (bHasLocalVariables) {
+              // locals are always non-doc single-line comments
+              const posStartLocal = currLine.indexOf("|") + 1;
+              const posEndLocal = posTrailingComment != -1 ? posTrailingComment : currLine.length;
+              const localsString: string = currLine.substring(posStartLocal, posEndLocal);
+              const numberLocals: number = (localsString.match(/,/g) || []).length + 1;
+              const localsNames = localsString.split(/[ \t,]/).filter(Boolean);
+              this._logMessage(`* iDc localsString=[${localsString}], localsNames=[${localsNames}]`);
+              linesToInsert.push("" + endOfLineStr); // empty line so following is not shown in comments for method
+              linesToInsert.push("' Local Variables:" + endOfLineStr); // blank line
+              for (let localIdx = 0; localIdx < numberLocals; localIdx++) {
+                linesToInsert.push("'" + ` @local ${localsNames[localIdx]} - ` + endOfLineStr); // blank line
+              }
+            }
+          }
+        } else {
+          this._logMessage(`* iDc SKIP - NOT on signature line`);
+        }
+
+        // insert the lines, if any
+        if (linesToInsert.length > 0) {
+          for (let line of linesToInsert) {
+            results.push(vscode.TextEdit.insert(cursorPos, `${line}`));
+          }
+        }
+        return results;
+      })
+      .reduce((selections, selection) => selections.concat(selection), []);
+  }
+
   async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
     // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
     if (cancelToken) {
@@ -446,15 +533,43 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return builder.build();
   }
 
-  private conEnumInProgress: boolean = false;
+  private _lineNumbersFromSelection(document: vscode.TextDocument, selection: vscode.Selection): { firstLine: number; lastLine: number; lineCount: number } {
+    let lineCount: number = 0;
+    let firstLine: number = 0;
+    let lastLine: number = 0;
+    // what kind of section do we have?
+    if (selection.isEmpty) {
+      // empty, just a cursor location
+      firstLine = selection.start.line;
+      lastLine = selection.end.line;
+      lineCount = lastLine - firstLine + 1;
+    } else {
+      // non-empty then let's figure out which lines could change
+      const allSelectedText: string = document.getText(selection);
+      const lines: string[] = allSelectedText.split(/\r?\n/);
+      lineCount = lines.length;
+      firstLine = selection.start.line;
+      lastLine = selection.end.line;
+      //this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], allSelectedText=[${allSelectedText}](${allSelectedText.length}), lines=[${lines}](${lines.length})`);
+      for (var currLineIdx: number = 0; currLineIdx < lines.length; currLineIdx++) {
+        if (lines[currLineIdx].length == 0) {
+          if (currLineIdx == lines.length - 1) {
+            lastLine--;
+            lineCount--;
+          }
+        }
+      }
+      if (firstLine > lastLine && lineCount == 0) {
+        // have odd selection case, let's override it!
+        // (selection contained just a newline!)
+        firstLine--;
+        lastLine = firstLine;
+        lineCount = 1;
+      }
+    }
 
-  private configuration = semanticConfiguration;
-
-  // list of directives found in file
-
-  private currentMethodName: string = "";
-
-  private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
+    return { firstLine, lastLine, lineCount };
+  }
 
   private _encodeTokenType(tokenType: string): number {
     if (tokenTypes.has(tokenType)) {
@@ -487,7 +602,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return result;
   }
 
-  // track comment preceing declaration line
+  // track comment preceding declaration line
   private priorSingleLineComment: string | undefined = undefined;
   private rightEdgeComment: string | undefined = undefined;
 
@@ -507,20 +622,60 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     let priorState: eParseState = currState;
     let prePasmState: eParseState = currState;
 
+    // track block comments
+    let currBlockComment: RememberedComment | undefined = undefined;
+    let currSingleLineBlockComment: RememberedComment | undefined = undefined;
+
     const tokenSet: IParsedToken[] = [];
 
-    //
+    // ==============================================================================
     // prepass to find PRI/PUB method, OBJ names, and VAR/DAT names
     //
 
     // -------------------- PRE-PARSE just locating symbol names --------------------
+    // also track and record block comments (both braces and tic's!)
+    // let's also track prior single line and trailing comment on same line
     this._logMessage("---> Pre SCAN");
+    let bBuildingSingleLineCmtBlock: boolean = false;
+    let bBuildingSingleLineDocCmtBlock: boolean = false;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
       const trimmedNonCommentLine = this.parseUtils.getNonCommentLineRemainder(0, line);
+      const offSet: number = trimmedNonCommentLine.length > 0 ? line.indexOf(trimmedNonCommentLine) + 1 : line.indexOf(trimmedLine) + 1;
+      const tempComment = line.substring(trimmedNonCommentLine.length + offSet).trim();
+      this.rightEdgeComment = tempComment.length > 0 ? tempComment : undefined;
       const sectionStatus = this._isSectionStartLine(line);
       const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
+
+      // special blocks of doc-comment and non-doc comment lines handling
+      if (bBuildingSingleLineDocCmtBlock && !trimmedLine.startsWith("''")) {
+        // process single line doc-comment
+        bBuildingSingleLineDocCmtBlock = false;
+        // add record single line comment block if > 1 line and clear
+        if (currSingleLineBlockComment) {
+          currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
+          // NOTE: single line doc comments can be 1 line long!!! (unlike single line non-doc comments)
+          this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
+          this.semanticFindings.recordComment(currSingleLineBlockComment);
+          currSingleLineBlockComment = undefined;
+        }
+      } else if (bBuildingSingleLineCmtBlock && !trimmedLine.startsWith("'")) {
+        // process single line non-doc comment
+        bBuildingSingleLineCmtBlock = false;
+        // add record single line comment block if > 1 line and clear
+        if (currSingleLineBlockComment) {
+          // NOTE: single line non-doc comments must be 2 or more lines long!!! (unlike single line doc comments)
+          if (currSingleLineBlockComment.lineCount > 1) {
+            currSingleLineBlockComment.closeAsSingleLineBlock(i - 1);
+            this._logMessage("---> Pre SCAN: found comment " + currSingleLineBlockComment.spanString());
+            this.semanticFindings.recordComment(currSingleLineBlockComment);
+          }
+          currSingleLineBlockComment = undefined;
+        }
+      }
+
+      // now start our processing
       if (currState == eParseState.inMultiLineComment) {
         // in multi-line non-doc-comment, hunt for end '}' to exit
         // ALLOW {...} on same line without closing!
@@ -546,6 +701,14 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         closingOffset = trimmedLine.indexOf("}", currOffset);
         if (closingOffset != -1) {
           // have close, comment ended
+          // end the comment recording
+          currBlockComment?.appendLastLine(i, line);
+          // record new comment
+          if (currBlockComment) {
+            this.semanticFindings.recordComment(currBlockComment);
+            this._logMessage("---> Pre SCAN: found comment " + currBlockComment.spanString());
+            currBlockComment = undefined;
+          }
           currState = priorState;
         }
         //  DO NOTHING Let Syntax highlighting do this
@@ -555,12 +718,93 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         let closingOffset = line.indexOf("}}");
         if (closingOffset != -1) {
           // have close, comment ended
+          // end the comment recording
+          currBlockComment?.appendLastLine(i, line);
+          // record new comment
+          if (currBlockComment) {
+            this.semanticFindings.recordComment(currBlockComment);
+            this._logMessage("---> Pre SCAN: found comment " + currBlockComment.spanString());
+            currBlockComment = undefined;
+          }
           currState = priorState;
         }
         //  DO NOTHING Let Syntax highlighting do this
         continue;
+      } else if (trimmedLine.length == 0) {
+        // a blank line clears pending single line comments
+        this.priorSingleLineComment = undefined;
+        continue;
       } else if (this.parseUtils.isFlexspinPreprocessorDirective(lineParts[0])) {
         this._getPreProcessor_Declaration(0, i + 1, line);
+        // a FlexspinPreprocessorDirective line clears pending single line comments
+        this.priorSingleLineComment = undefined;
+        continue;
+      } else if (trimmedLine.startsWith("{{")) {
+        // process multi-line doc comment
+        let openingOffset = line.indexOf("{{");
+        const closingOffset = line.indexOf("}}", openingOffset + 2);
+        if (closingOffset != -1) {
+          // is single line comment, just ignore it Let Syntax highlighting do this
+          // record new single-line comment
+          let oneLineComment = new RememberedComment(eCommentType.multiLineDocComment, i, line);
+          oneLineComment.closeAsSingleLine();
+          if (!oneLineComment.isBlankLine) {
+            this.semanticFindings.recordComment(oneLineComment);
+            this._logMessage("---> Pre SCAN: found comment " + oneLineComment.spanString());
+          }
+          currBlockComment = undefined; // just making sure...
+        } else {
+          // is open of multiline comment
+          priorState = currState;
+          currState = eParseState.inMultiLineDocComment;
+          // start  NEW comment
+          currBlockComment = new RememberedComment(eCommentType.multiLineDocComment, i, line);
+          //  DO NOTHING Let Syntax highlighting do this
+        }
+        continue;
+      } else if (trimmedLine.startsWith("{")) {
+        // process possible multi-line non-doc comment
+        // do we have a close on this same line?
+        let openingOffset = line.indexOf("{");
+        const closingOffset = line.indexOf("}", openingOffset + 1);
+        if (closingOffset != -1) {
+          // is single line comment...
+        } else {
+          // is open of multiline comment
+          priorState = currState;
+          currState = eParseState.inMultiLineComment;
+          // start  NEW comment
+          currBlockComment = new RememberedComment(eCommentType.multiLineComment, i, line);
+          //  DO NOTHING Let Syntax highlighting do this
+        }
+        continue;
+      } else if (bBuildingSingleLineDocCmtBlock && trimmedLine.startsWith("''")) {
+        // process single line doc comment which follows one of same
+        // we no longer have a prior single line comment
+        this.priorSingleLineComment = undefined;
+        // add to existing single line doc-comment block
+        currSingleLineBlockComment?.appendLine(line);
+        continue;
+      } else if (bBuildingSingleLineCmtBlock && trimmedLine.startsWith("'")) {
+        // process single line non-doc comment which follows one of same
+        // we no longer have a prior single line comment
+        this.priorSingleLineComment = undefined;
+        // add to existing single line non-doc-comment block
+        currSingleLineBlockComment?.appendLine(line);
+        continue;
+      } else if (trimmedLine.startsWith("''")) {
+        // process single line doc comment
+        this.priorSingleLineComment = trimmedLine; // record this line
+        // create new single line doc-comment block
+        bBuildingSingleLineDocCmtBlock = true;
+        currSingleLineBlockComment = new RememberedComment(eCommentType.singleLineDocComment, i, line);
+        continue;
+      } else if (trimmedLine.startsWith("'")) {
+        // process single line non-doc comment
+        this.priorSingleLineComment = trimmedLine; // record this line
+        // create new single line non-doc-comment block
+        bBuildingSingleLineCmtBlock = true;
+        currSingleLineBlockComment = new RememberedComment(eCommentType.singleLineComment, i, line);
         continue;
       } else if (sectionStatus.isSectionStart) {
         currState = sectionStatus.inProgressStatus;
@@ -601,36 +845,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             this._getVAR_Declaration(3, i + 1, line);
           }
         }
+        // we processed the block declaration line, now wipe out prior comment
+        this.priorSingleLineComment = undefined; // clear it out...
         continue;
-      } else if (trimmedLine.startsWith("''")) {
-        // process single line doc comment
-        //  DO NOTHING Let Syntax highlighting do this
-      } else if (trimmedLine.startsWith("'")) {
-        // process single line non-doc comment
-        //  DO NOTHING Let Syntax highlighting do this
-      } else if (trimmedLine.startsWith("{{")) {
-        // process multi-line doc comment
-        let openingOffset = line.indexOf("{{");
-        const closingOffset = line.indexOf("}}", openingOffset + 2);
-        if (closingOffset != -1) {
-          // is single line comment, just ignore it Let Syntax highlighting do this
-        } else {
-          // is open of multiline comment
-          priorState = currState;
-          currState = eParseState.inMultiLineDocComment;
-          //  DO NOTHING Let Syntax highlighting do this
-        }
-      } else if (trimmedLine.startsWith("{")) {
-        // process possible multi-line non-doc comment
-        // do we have a close on this same line?
-        let openingOffset = line.indexOf("{");
-        const closingOffset = line.indexOf("}", openingOffset + 1);
-        if (closingOffset == -1) {
-          // is open of multiline comment
-          priorState = currState;
-          currState = eParseState.inMultiLineComment;
-          //  DO NOTHING Let Syntax highlighting do this
-        }
       } else if (currState == eParseState.inCon) {
         // process a constant line
         if (trimmedLine.length > 0) {
@@ -1127,12 +1344,12 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const remainingLength: number = remainingNonCommentLineStr.length;
     if (remainingLength > 0) {
       // get line parts - we only care about first one
-      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\[\:]/);
+      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t\[\]\:]/).filter(Boolean);
       this._logOBJ("  -- GLBL GetOBJDecl lineParts=[" + lineParts + "]");
       const newName = lineParts[0];
       this._logOBJ("  -- GLBL GetOBJDecl newName=[" + newName + "]");
       // remember this object name so we can annotate a call to it
-      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []), lineNbr, this._declarationComment());
+      this.semanticFindings.setGlobalToken(newName, new RememberedToken("namespace", []), lineNbr, this._declarationComment(), lineParts[1]); // pass filename, too
     }
   }
 
@@ -2277,6 +2494,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   ptTokenType: "variable",
                   ptTokenModifiers: ["modification", "defaultLibrary"],
                 });
+                /*
               } else if (cleanedVariableName.toLowerCase() == "result") {
                 this._logSPIN("  --  SPIN return Special Name=[" + cleanedVariableName + "]");
                 tokenSet.push({
@@ -2286,6 +2504,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   ptTokenType: "returnValue",
                   ptTokenModifiers: ["declaration", "local"],
                 });
+                  */
               } else {
                 // we don't have name registered so just mark it
                 if (
@@ -2396,6 +2615,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 ptTokenType: "variable",
                 ptTokenModifiers: ["readonly", "defaultLibrary"],
               });
+              /*
             } else if (namePart.toLowerCase() == "result") {
               this._logSPIN("  --  SPIN return Special Name=[" + namePart + "]");
               tokenSet.push({
@@ -2405,6 +2625,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 ptTokenType: "returnValue",
                 ptTokenModifiers: ["declaration", "local"],
               });
+              */
             } else if (
               !this.parseUtils.isSpinReservedWord(namePart) &&
               !this.parseUtils.isSpinBuiltinMethod(namePart) &&
@@ -2610,15 +2831,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
                         ptTokenType: "variable",
                         ptTokenModifiers: ["missingDeclaration"],
                       });
-                    } else if (this.parseUtils.isIllegalInlinePasmDirective(namePart)) {
-                      this._logPASM("  --  SPIN inlinePasm ERROR[CODE] illegal name=[" + namePart + "]");
-                      tokenSet.push({
-                        line: lineNbr,
-                        startCharacter: nameOffset,
-                        length: namePart.length,
-                        ptTokenType: "variable",
-                        ptTokenModifiers: ["illegalUse"],
-                      });
                     }
                   }
                 }
@@ -2648,7 +2860,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         const nameOrDirective: string = lineParts[0];
         // if this symbol is NOT a global token then it could be bad!
         if (!this.semanticFindings.isKnownToken(nameOrDirective)) {
-          if (this.parseUtils.isIllegalInlinePasmDirective(nameOrDirective) || !this.parseUtils.isPasmInstruction(nameOrDirective)) {
+          if (!this.parseUtils.isPasmInstruction(nameOrDirective)) {
             this._logPASM("  --  SPIN inline-Pasm MISSING name=[" + nameOrDirective + "]");
             const nameOffset = line.indexOf(nameOrDirective, currentOffset);
             tokenSet.push({

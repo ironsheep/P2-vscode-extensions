@@ -45,7 +45,7 @@ export const logFormatMessage = (message: string): void => {
 };
 
 var docGenerator: DocGenerator;
-const formatDocGenLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+const formatDocGenLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 var objTreeProvider: ObjectTreeProvider;
@@ -73,7 +73,7 @@ export const activate = (context: vscode.ExtensionContext) => {
   context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN2_FILE, new Spin2HoverProvider(spin2SemanticTokensProvider.docFindings())));
 
   // register our  Spin1 hover provider
-  //context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN1_FILE, new Spin1HoverProvider(spin1SemanticTokensProvider.docFindings())));
+  context.subscriptions.push(vscode.languages.registerHoverProvider(SPIN1_FILE, new Spin1HoverProvider(spin1SemanticTokensProvider.docFindings())));
 
   // register our  Spin2 signature help provider
   context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(SPIN2_FILE, new Spin2SignatureHelpProvider(spin2SemanticTokensProvider.docFindings()), "(", ","));

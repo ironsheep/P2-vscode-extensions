@@ -20,6 +20,7 @@ PUB main(bDoNothing) : ok | idx
 PRI testMethod(param1) : bStatus | index
     index := 0
     bStatus := param1 + index + 1
+    result = bStatus
 
 VAR
     LONG  simpleVar[2]
@@ -40,3 +41,7 @@ pasm_program                                        ' do a DEBUG at the start of
                 jmp     #:loop2
 
 testVariable   long  0[12]                          ' fill with some NOP's to make it easy to see the code above
+spaceAlloc      res 1
+filedata       FILE "test.txt"
+
+                fit
