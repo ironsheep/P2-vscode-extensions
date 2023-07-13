@@ -327,9 +327,12 @@ export class Spin1HoverProvider implements HoverProvider {
             for (let parmIdx = 0; parmIdx < builtInFindings.parameters.length; parmIdx++) {
               const paramDescr = builtInFindings.parameters[parmIdx];
               const lineParts: string[] = paramDescr.split(" - ");
-              const valueName: string = lineParts[0].replace("`", "").replace("`", "");
+              // special handling when we have non-param lines, too
               if (lineParts.length >= 2) {
+                const valueName: string = lineParts[0].replace("`", "").replace("`", "");
                 mdLines.push("@param `" + valueName + "` - " + paramDescr.substring(lineParts[0].length + 3) + "<br>"); // formatted parameter description
+              } else {
+                mdLines.push(paramDescr + "<br>"); // formatted parameter description
               }
             }
           }

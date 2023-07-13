@@ -24,7 +24,7 @@ enum eParseState {
 }
 
 export class DocGenerator {
-  private generatorDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private generatorDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
   private parseUtils = new ParseUtils();
 

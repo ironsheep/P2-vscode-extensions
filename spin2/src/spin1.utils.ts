@@ -537,6 +537,9 @@ export class ParseUtils {
     if (reservedStatus == false) {
       reservedStatus = nameKey in this._tableSpinPasmLangParts;
     }
+    if (reservedStatus == false) {
+      reservedStatus = nameKey in this._tableSpin1VariableNames;
+    }
     return reservedStatus;
   }
 
@@ -655,23 +658,37 @@ export class ParseUtils {
   };
 
   private _tableSpinCogControlMethods: { [Identifier: string]: TMethodTuple } = {
-    // FIXME: adjust cognew and coginit param descriptions (show spin & pasm)
     coginit: [
-      "COGINIT(CogID, SpinMethod(ParameterList), StackPointer) | COGINIT(CogID, AsmAddress, Parameter)",
+      "(run SPIN) COGINIT(CogID, SpinMethod(ParameterList), StackPointer)\r\n\t\t\t\t  (run PASM) COGINIT(CogID, AsmAddress, Parameter)",
       "Start or restart a cog by ID to run Spin code or Propeller Assembly code",
       [
+        // WARNING don't use '-' in non-parameter lines!
+        "(when SPIN):",
         "CogID - the ID (0 - 7) of the cog to start, or restart. A CogID value of 8 - 15 results in the next available cog being started, if possible",
         "SpinMethod - the Spin method that the affected cog should run. Optionally, it can be followed by a parameter list enclosed in parentheses",
         "StackPointer - a pointer to memory, such as a long array, reserved for stack space for the affected cog. The affected cog uses this space to store temporary data during further calls and expression evaluations. If insufficient space is allocated, either the application will fail to run or it will run with strange results",
+        "",
+        "(when PASM):",
+        "CogID - the ID (0 - 7) of the cog to start, or restart. A CogID value of 8 - 15 results in the next available cog being started, if possible",
+        "AsmAddress - the address of a Propeller Assembly (pasm) routine from a DAT block",
+        "Parameter - used to optionally pass a value to the new cog. This value ends up in the new cog's read-only Cog Boot Parameter (PAR) register. Parameter can be used to pass a either a single 14-bit value or the address of a block of memory to be used by the assembly routine",
       ],
     ],
     cognew: [
-      "COGNEW(SpinMethod(ParameterList), StackPointer) | COGNEW(AsmAddress, Parameter)",
+      "(run SPIN) COGNEW(SpinMethod(ParameterList), StackPointer) : CogID\r\n\t\t\t\t  (run PASM) COGNEW(AsmAddress, Parameter): CogID",
       "Start the next available cog to run Spin code or Propeller Assembly code",
       [
+        // WARNING don't use '-' in non-parameter lines!
+        "(when SPIN):",
         "SpinMethod - the Spin method that the affected cog should run. Optionally, it can be followed by a parameter list enclosed in parentheses",
         "StackPointer - a pointer to memory, such as a long array, reserved for stack space for the affected cog. The affected cog uses this space to store temporary data during further calls and expression evaluations. If insufficient space is allocated, either the application will fail to run or it will run with strange results",
+        "",
+        "(when PASM):",
+        "AsmAddress - the address of a Propeller Assembly (pasm) routine, from a DAT block",
+        "Parameter - used to optionally pass a value to the new cog. This value ends up in the new cog's read-only Cog Boot Parameter (PAR) register. Parameter can be used to pass a either a single 14-bit value or the address of a block of memory to be used by the assembly routine",
+        "", // provide separation from @returns
       ],
+      ["CogID - The ID of the newly started cog (0-7) if successful, or -1 otherwise"],
     ],
     cogstop: ["COGSTOP(CogID)", "Stop cog by its ID", ["CogID - theID(0-7) of the cog to stop"]],
     reboot: ["REBOOT", "Reset the Propeller chip", []],
@@ -984,7 +1001,6 @@ export class ParseUtils {
       "tjf",
       "tjnf",
       "tjns",
-      "",
       "tjs",
       "tjv",
       "trgint1",

@@ -1466,8 +1466,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               this._logSPIN("  ---  nameParts=[" + nameParts + "](" + nameParts.length + ")");
               //this._logOBJ("  -- GLBL GetOBJDecl newName=[" + nameParts[0] + "]");
               // remember this object name so we can annotate a call to it
-              //this.semanticFindings.setGlobalToken(nameParts[0], new RememberedToken("namespace", []), lineNbr, this._declarationComment(), lineParts[1]); // pass filename, too
-              this._logOBJ("  --- objName=[" + objName + "], objRef=[" + objRef + "]");
+              this._logSPIN("  --- objName=[" + objName + "], objRef=[" + objRef + "]");
               if (bISMethod) {
                 this.semanticFindings.setGlobalToken(objRef, new RememberedToken("method", []), lineNbr, this._declarationComment(), objName);
               } else {
@@ -1645,7 +1644,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 if (objName.charAt(0).match(/[a-zA-Z_]/) && objRef.charAt(0).match(/[a-zA-Z_]/)) {
                   this._logDAT("   -- GetDatDecl objRefParts=[" + objRefParts + "](" + objRefParts.length + ")");
                   // remember this object name so we can annotate a call to it
-                  //this.semanticFindings.setGlobalToken(nameParts[0], new RememberedToken("namespace", []), lineNbr, this._declarationComment(), lineParts[1]); // pass filename, too
                   this._logDAT("   -- GetDatDecl objName=[" + objName + "], objRef=[" + objRef + "]");
                   if (bISMethod) {
                     this.semanticFindings.setGlobalToken(objRef, new RememberedToken("method", []), lineNbr, this._declarationComment(), objName);
@@ -2648,6 +2646,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       });
       this._logSPIN("-reportPubPriSig: SPIN1 methodName=[" + methodName + "], startNameOffset=(" + startNameOffset + ")");
     }
+    this.semanticFindings.clearLocalTokens();
     // record definition of method
     // -----------------------------------
     //   Parameters

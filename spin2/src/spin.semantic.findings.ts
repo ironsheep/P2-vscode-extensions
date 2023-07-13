@@ -189,7 +189,8 @@ export class DocumentFindings {
         const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
         if (bIsMethod) {
           const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
-          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine + 1, commentType);
+          const nonBlankLineNbr: number = this.locateNonBlankLineAfter(findings.declarationLine + 1);
+          findings.declarationComment = this.blockCommentMDFromLine(nonBlankLineNbr, commentType);
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
           if (!findings.declarationComment && canUseAlternateComment) {
@@ -212,6 +213,21 @@ export class DocumentFindings {
       );
     }
     return findings;
+  }
+
+  private locateNonBlankLineAfter(lineNbr: number): number {
+    let desiredNumber: number = lineNbr;
+    const editor = vscode?.window.activeTextEditor!;
+    const document = editor.document!;
+    let currLine: string = "";
+    do {
+      currLine = document.lineAt(desiredNumber).text.trim();
+      // if line is blank, point to next
+      if (currLine.length == 0) {
+        desiredNumber++;
+      }
+    } while (currLine.length == 0);
+    return desiredNumber;
   }
 
   private _interpretToken(token: RememberedToken, scope: string, name: string, declInfo: RememberedTokenDeclarationInfo | undefined): ITokenInterpretation {
@@ -328,6 +344,10 @@ export class DocumentFindings {
       this._logTokenMessage("  -- FAILED to FND-locTOK " + tokenName);
     }
     return desiredToken;
+  }
+
+  public clearLocalTokens() {
+    this.localTokens.clear();
   }
 
   // -------------------------------------------------------------------------

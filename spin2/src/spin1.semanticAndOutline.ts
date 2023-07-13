@@ -894,6 +894,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             this._getDAT_PasmDeclaration(0, i + 1, line);
           }
         }
+      } else if (currState == eParseState.inPub || currState == eParseState.inPri) {
+        // scan SPIN2 line for object constant or method() uses
+        this._getSpinObjectConstantMethodDeclaration(0, i + 1, line);
       }
     }
     // --------------------         End of PRE-PARSE             --------------------
@@ -1190,6 +1193,44 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return tokenSet;
   }
 
+  private _getSpinObjectConstantMethodDeclaration(startingOffset: number, lineNbr: number, line: string): void {
+    let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
+    let remainingNonCommentLineStr: string = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
+    //this._logOBJ('- RptObjDecl remainingNonCommentLineStr=[' + remainingNonCommentLineStr + ']');
+    const bHasDotRefs: boolean = remainingNonCommentLineStr.includes(".");
+    if (bHasDotRefs) {
+      // if we have whitespace before paren then remove it
+      if (remainingNonCommentLineStr.includes(" (")) {
+        remainingNonCommentLineStr = remainingNonCommentLineStr.replace(" (", "(");
+      }
+      // get line parts - we only care about first one
+      const lineParts: string[] = remainingNonCommentLineStr.split(/[ \t=]/).filter(Boolean);
+      this._logSPIN("  - ln:" + lineNbr + " GetSpinObjConstMethDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
+      for (let partIdx = 0; partIdx < lineParts.length; partIdx++) {
+        const possObjRef = lineParts[partIdx];
+        if (possObjRef.includes(".")) {
+          const bISMethod: boolean = true; // FIXME: DO BETTER!  -> SPIN1 force all to methods for now possObjRef.includes("(");
+          const nameParts: string[] = possObjRef.split(/[\.\(]/).filter(Boolean);
+          if (nameParts.length > 1) {
+            const objName: string = nameParts[0];
+            const objRef: string = nameParts[1];
+            if (objName.charAt(0).match(/[a-zA-Z_]/) && objRef.charAt(0).match(/[a-zA-Z_]/)) {
+              this._logSPIN("  ---  nameParts=[" + nameParts + "](" + nameParts.length + ")");
+              //this._logOBJ("  -- GLBL GetOBJDecl newName=[" + nameParts[0] + "]");
+              // remember this object name so we can annotate a call to it
+              this._logSPIN("  --- objName=[" + objName + "], objRef=[" + objRef + "]");
+              if (bISMethod) {
+                this.semanticFindings.setGlobalToken(objRef, new RememberedToken("method", []), lineNbr, this._declarationComment(), objName);
+              } else {
+                this.semanticFindings.setGlobalToken(objRef, new RememberedToken("variable", ["readonly"]), lineNbr, this._declarationComment(), objName);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   private _getPreProcessor_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     if (this.configuration.highlightFlexspin) {
       let currentOffset: number = this.parseUtils.skipWhite(line, startingOffset);
@@ -1290,7 +1331,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (haveLabel) {
         let newName = lineParts[nameIndex];
-        if (!this.parseUtils.isSpin2ReservedWords(newName) && !this.parseUtils.isSpinReservedWord(newName) && !this.parseUtils.isBuiltinReservedWord(newName)) {
+        if (!this.parseUtils.isSpinReservedWord(newName) && !this.parseUtils.isBuiltinReservedWord(newName)) {
           const nameType: string = isDataDeclarationLine ? "variable" : "label";
           var labelModifiers: string[] = [];
           if (!isDataDeclarationLine) {
@@ -1371,7 +1412,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           currentOffset = remainingNonCommentLineStr.indexOf(" ", startNameOffset);
           if (currentOffset == -1) {
             currentOffset = remainingNonCommentLineStr.indexOf("'", startNameOffset);
-            // if nothibng found...
+            // if nothing found...
             if (currentOffset == -1) {
               currentOffset = remainingNonCommentLineStr.length;
             }
@@ -2132,12 +2173,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       ptTokenModifiers: declModifiers,
     });
     this._logSPIN("-reportPubPriSig: methodName=[" + methodName + "](" + startNameOffset + ")");
+    this.semanticFindings.clearLocalTokens();
     // -----------------------------------
     //   Parameters
     //
     // find close paren - so we can study parameters
     if (openParenOffset != -1) {
-      const closeParenOffset = line.indexOf(")", currentOffset);
+      const closeParenOffset = line.indexOf(")", openParenOffset);
       if (closeParenOffset != -1 && currentOffset + 1 != closeParenOffset) {
         // we have parameter(s)!
         const parameterStr = line.substr(currentOffset + 1, closeParenOffset - currentOffset - 1).trim();
@@ -2170,14 +2212,14 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     //   Return Variable(s)
     //
     // find return vars
-    const returnValueSep = line.indexOf(":", currentOffset);
-    const localVarsSep = line.indexOf("|", currentOffset);
-    let beginCommentOffset = line.indexOf("'", currentOffset);
+    const returnValueSep: number = line.indexOf(":", currentOffset);
+    const localVarsSep: number = line.indexOf("|", currentOffset);
+    let beginCommentOffset: number = line.indexOf("'", currentOffset);
     if (beginCommentOffset === -1) {
       beginCommentOffset = line.indexOf("{", currentOffset);
     }
-    const nonCommentEOL = beginCommentOffset != -1 ? beginCommentOffset - 1 : line.length - 1;
-    const returnVarsEnd = localVarsSep != -1 ? localVarsSep - 1 : nonCommentEOL;
+    const nonCommentEOL: number = beginCommentOffset != -1 ? beginCommentOffset - 1 : line.length - 1;
+    const returnVarsEnd: number = localVarsSep != -1 ? localVarsSep - 1 : nonCommentEOL;
     let returnValueNames: string[] = [];
     if (returnValueSep != -1) {
       // we have return var(s)!
@@ -2658,6 +2700,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
               isMethod = true;
             } else if (refChar == ".") {
               // spin1 does NOT require name() method calls!
+              // TODO: do better!!!  FLAWED   -> HUH?? really force all to methods for now???
               isMethod = true;
             }
             const constantPart: string = possibleNameSet[1];

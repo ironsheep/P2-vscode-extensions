@@ -116,11 +116,14 @@ export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
     if (paramList && paramList.length > 0) {
       for (let paramIdx = 0; paramIdx < paramList.length; paramIdx++) {
         const paramDescr = paramList[paramIdx];
-        const lineParts: string[] = paramDescr.split(/[ \t]/).filter(Boolean);
-        let paramName: string = lineParts[0];
-        this._logMessage(`+ Sig: gpartfpsa paramName=[${paramName}], paramDescr=[${paramDescr}})`);
-        const newParamInfo: ParameterInformation = new ParameterInformation(paramName, paramDescr);
-        parameterDetails.push(newParamInfo);
+        // cognew and coginit have lines without param - description hyphens, skip them
+        if (paramDescr.includes("-")) {
+          const lineParts: string[] = paramDescr.split(/[ \t]/).filter(Boolean);
+          let paramName: string = lineParts[0];
+          this._logMessage(`+ Sig: gpartfpsa paramName=[${paramName}], paramDescr=[${paramDescr}})`);
+          const newParamInfo: ParameterInformation = new ParameterInformation(paramName, paramDescr);
+          parameterDetails.push(newParamInfo);
+        }
       }
     }
     return parameterDetails;
