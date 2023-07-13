@@ -9,6 +9,7 @@ config.gypi
 
 .DS_Store
 *.REF
+*.txt
 
 TEST_GEN/
 ZIPs/
