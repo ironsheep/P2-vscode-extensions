@@ -105,6 +105,7 @@ repository:
             - include: "#comment"
             - include: "#cog_register_names"
             - include: "#constants"
+            - include: "#clock_constants"
             - include: "#storage_modifier"
             - include: "#directives_file_include"
             - include: "#spin_float_conversions"

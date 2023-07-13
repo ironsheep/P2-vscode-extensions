@@ -24,14 +24,20 @@ enum eParseState {
 }
 
 export class DocGenerator {
-  private generatorDebugLogEnabled: boolean = false;
-  private generatorLog: any = undefined;
+  private generatorDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
   private parseUtils = new ParseUtils();
 
-  constructor(outputChannel: vscode.OutputChannel | undefined, docGenDebugLogEnabled: boolean) {
-    this.generatorDebugLogEnabled = docGenDebugLogEnabled;
-    // save output channel
-    this.generatorLog = outputChannel;
+  constructor() {
+    if (this.generatorDebugLogEnabled) {
+      if (this.docGenOutputChannel === undefined) {
+        //Create output channel
+        this.docGenOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 DocGen DEBUG");
+        this.logMessage("Spin/Spin2 DocGen log started.");
+      } else {
+        this.logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+      }
+    }
   }
 
   /**
@@ -41,9 +47,9 @@ export class DocGenerator {
    * @returns nothing
    */
   logMessage(message: string): void {
-    if (this.generatorDebugLogEnabled && this.generatorLog != undefined) {
+    if (this.generatorDebugLogEnabled && this.docGenOutputChannel != undefined) {
       //Write to output window.
-      this.generatorLog.appendLine(message);
+      this.docGenOutputChannel.appendLine(message);
     }
   }
 
@@ -58,9 +64,19 @@ export class DocGenerator {
       this.logMessage(`+ (DBG) generateDocument() fsPath-(${currentlyOpenTabfilePath})`);
       this.logMessage(`+ (DBG) generateDocument() folder-(${currentlyOpenTabfolderName})`);
       this.logMessage(`+ (DBG) generateDocument() filename-(${currentlyOpenTabfileName})`);
-      if (currentlyOpenTabfileName.includes(".spin2")) {
-        const objectName: string = currentlyOpenTabfileName.replace(".spin2", "");
-        const docFilename: string = currentlyOpenTabfileName.replace(".spin2", ".txt");
+      let isSpinFile: boolean = currentlyOpenTabfileName.endsWith(".spin2");
+      let isSpin1: boolean = false;
+      let fileType: string = ".spin2";
+      if (!isSpinFile) {
+        isSpinFile = currentlyOpenTabfileName.endsWith(".spin");
+        if (isSpinFile) {
+          isSpin1 = true;
+          fileType = ".spin";
+        }
+      }
+      if (isSpinFile) {
+        const objectName: string = currentlyOpenTabfileName.replace(fileType, "");
+        const docFilename: string = currentlyOpenTabfileName.replace(fileType, ".txt");
         this.logMessage(`+ (DBG) generateDocument() outFn-(${docFilename})`);
         const outFSpec = path.join(currentlyOpenTabfolderName, docFilename);
         this.logMessage(`+ (DBG) generateDocument() outFSpec-(${outFSpec})`);
@@ -156,7 +172,7 @@ export class DocGenerator {
             }
             shouldEmitTopDocComments = false; // no more of these!
             // emit new PUB prototype (w/o any trailing comment)
-            const trimmedNonCommentLine = this.parseUtils.getNonCommentLineRemainder(0, trimmedLine);
+            const trimmedNonCommentLine = this.getNonCommentLineRemainder(0, trimmedLine);
             fs.appendFileSync(outFile, trimmedNonCommentLine + endOfLineStr);
           }
         }
@@ -235,16 +251,22 @@ export class DocGenerator {
               // emit comment without leading ''
               fs.appendFileSync(outFile, trimmedLine.substring(2) + endOfLineStr);
             }
+          } else if (sectionStatus.isSectionStart && currState == eParseState.inPri) {
+            emitPubDocComment = false;
           } else if (sectionStatus.isSectionStart && currState == eParseState.inPub) {
             emitPubDocComment = true;
             pubsSoFar++;
-            // emit new PUB prototype (w/o any trailing comment)
-            const trimmedNonCommentLine = this.parseUtils.getNonCommentLineRemainder(0, trimmedLine);
+            // emit new PUB prototype (w/o any trailing comment, and NO local variables)
+            const trailingDocComment: string | undefined = this.getTrailingDocComment(trimmedLine);
+            let trimmedNonCommentLine = this.getNonCommentLineRemainder(0, trimmedLine);
             const header: string = "_".repeat(trimmedNonCommentLine.length);
             fs.appendFileSync(outFile, "" + endOfLineStr); // blank line
             fs.appendFileSync(outFile, header + endOfLineStr); // underscore header line
             fs.appendFileSync(outFile, trimmedNonCommentLine + endOfLineStr);
             fs.appendFileSync(outFile, "" + endOfLineStr); // blank line
+            if (trailingDocComment) {
+              fs.appendFileSync(outFile, trailingDocComment + endOfLineStr); // underscore header line
+            }
             if (pubsSoFar >= pubsFound) {
               emitTrailingDocComment = true;
               emitPubDocComment = false;
@@ -259,6 +281,30 @@ export class DocGenerator {
     }
   }
 
+  private getNonCommentLineRemainder(offset: number, line: string): string {
+    // remove comment and then local variables
+    let trimmedNonCommentLine = this.parseUtils.getNonCommentLineRemainder(offset, line);
+    const localSepPosn: number = trimmedNonCommentLine.indexOf("|");
+    if (localSepPosn != -1) {
+      trimmedNonCommentLine = trimmedNonCommentLine.substring(0, localSepPosn - 1).replace(/\s+$/, "");
+    }
+    return trimmedNonCommentLine;
+  }
+
+  private getTrailingDocComment(line: string): string | undefined {
+    // return any trailing doc comment from PUB line
+    let docComment: string | undefined = undefined;
+    const startDocTicCmt: number = line.indexOf("''");
+    const startDocBraceCmt: number = line.indexOf("{{");
+    const endDocBraceCmt: number = line.indexOf("}}");
+    if (startDocTicCmt != -1) {
+      docComment = line.substring(startDocTicCmt + 2).trim();
+    } else if (startDocBraceCmt != -1 && endDocBraceCmt != -1) {
+      docComment = line.substring(startDocBraceCmt + 2, endDocBraceCmt - 1).trim();
+    }
+    return docComment;
+  }
+
   async showDocument() {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor) {
@@ -268,8 +314,18 @@ export class DocGenerator {
       //this.logMessage(`+ (DBG) generateDocument() fsPath-(${currentlyOpenTabfilePath})`);
       //this.logMessage(`+ (DBG) generateDocument() folder-(${currentlyOpenTabfolderName})`);
       //this.logMessage(`+ (DBG) generateDocument() filename-(${currentlyOpenTabfileName})`);
-      if (currentlyOpenTabfileName.includes(".spin2")) {
-        const docFilename: string = currentlyOpenTabfileName.replace(".spin2", ".txt");
+      let isSpinFile: boolean = currentlyOpenTabfileName.endsWith(".spin2");
+      let isSpin1: boolean = false;
+      let fileType: string = ".spin2";
+      if (!isSpinFile) {
+        isSpinFile = currentlyOpenTabfileName.endsWith(".spin");
+        if (isSpinFile) {
+          isSpin1 = true;
+          fileType = ".spin";
+        }
+      }
+      if (isSpinFile) {
+        const docFilename: string = currentlyOpenTabfileName.replace(fileType, ".txt");
         //this.logMessage(`+ (DBG) generateDocument() outFn-(${docFilename})`);
         const outFSpec = path.join(currentlyOpenTabfolderName, docFilename);
         //this.logMessage(`+ (DBG) generateDocument() outFSpec-(${outFSpec})`);

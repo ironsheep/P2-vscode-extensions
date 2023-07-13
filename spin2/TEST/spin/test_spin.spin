@@ -17,6 +17,10 @@
 
 OBJ
 
+    FLOAT
+    ROUND
+    TRUNC
+
     mouse   : "USB_Mouse"       ' instantiate "USB_Mouse.spin2" as "mouse"
     v[16]   : "VocalSynth"      ' instantiate an array of 16 objects
     vga     : "tv_vga"
@@ -55,13 +59,48 @@ VAR
     ROUND
     WORD
     TRUNC
-OBJ
-
-    FLOAT
-    ROUND
-    TRUNC
 
 DAT
+
+    BYTE
+    CNT
+    CTRA
+    CTRB
+    DIRA
+    DIRB
+    FALSE
+    FLOAT
+    FRQA
+    FRQB
+    INA
+    INB
+    LONG
+    NEGX
+    OUTA
+    OUTB
+    PAR
+    PHSA
+    PHSB
+    PI
+    PLL1X
+    PLL2X
+    PLL4X
+    PLL8X
+    PLL16X
+    POSX
+    RCFAST
+    RCSLOW
+    ROUND
+    SPR
+    TRUE
+    TRUNC
+    VCFG
+    VSCL
+    WORD
+    XINPUT
+    xtal1
+    xtal2
+    xtal3
 
 chkBffr     long    0[vga.MAX_BUFFER_LEN]
             long    0[vga.MAX_COG_BUFFER_SIZE_IN_LONGS]
@@ -118,6 +157,7 @@ PUB allSpinLanguageParts()
     OUTB
     PAR
     PHSA
+    PHSB
     PI
     PLL1X
     PLL2X
@@ -154,46 +194,37 @@ PUB allSpinLanguageParts()
     xtal3
 
 PUB allHubVariableNames()
-                CLKFREQ
-                CLKMODE
-                CHIPVER
-                DIRA
-                DIRB
-                INA
-                INB
-                OUTA
-                OUTB
-                CNT
-                CTRA
-                CTRB
-                FRQA
-                FRQB
-                PHSA
-                PHSB
-                VCFG
-                VSCL
-                PAR
+    CLKFREQ
+    CLKMODE
+    CHIPVER
+    DIRA
+    DIRB
+    INA
+    INB
+    OUTA
+    OUTB
+    CNT
+    CTRA
+    CTRB
+    FRQA
+    FRQB
+    PHSA
+    PHSB
+    VCFG
+    VSCL
+    PAR
 
-
-'PUB allHubsetValuesForClockSetup()
-' these are mostly numbers so we won't colorize these!
-'    00_00
-'    00_01
-'    01_10
-'    10_11
-'    1x_10
-'    1x_11
 
 PUB allClockVariabless()
 ' value can be set with HUBSET
 ' - these are the compiled values
-    ' CONSTANT SYMBOLS
-    _clkmode
-    _clkfreq
 ' set via CLKSET()
     ' SPIN2 VARIABLES
     clkfreq
     clkmode
+    CLKSET
+    CHIPVER
+    cnt
 
 PUB allSpinConstants()
     TRUE
@@ -227,13 +258,11 @@ PRI allFlowControl()
     OTHER
     QUIT
     REPEAT
+    RETURN
     STEP
     TO
     UNTIL
     WHILE
-    RETURN
-
-
 
 
 CON { license }

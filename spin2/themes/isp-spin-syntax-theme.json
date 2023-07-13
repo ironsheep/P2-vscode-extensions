@@ -218,7 +218,7 @@
       "name": "spin methods",
       "scope": ["support.function"],
       "settings": {
-        "foreground": "#6d8ad3" // 5D83AC
+        "foreground": "#c1c07d" // 5D83AC, 6d8ad3
       }
     },
     {

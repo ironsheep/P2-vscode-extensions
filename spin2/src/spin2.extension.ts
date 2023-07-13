@@ -44,10 +44,6 @@ export const logFormatMessage = (message: string): void => {
   }
 };
 
-var docGenerator: DocGenerator;
-const formatDocGenLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
-var docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
-
 var objTreeProvider: ObjectTreeProvider;
 var objDepTreeView: vscode.TreeView<Dependency>;
 const objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
@@ -79,7 +75,7 @@ export const activate = (context: vscode.ExtensionContext) => {
   context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(SPIN2_FILE, new Spin2SignatureHelpProvider(spin2SemanticTokensProvider.docFindings()), "(", ","));
 
   // register our  Spin1 signature help provider
-  //context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(SPIN1_FILE, new Spin1SignatureHelpProvider(spin1SemanticTokensProvider.docFindings()), "(", ","));
+  context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(SPIN1_FILE, new Spin1SignatureHelpProvider(spin1SemanticTokensProvider.docFindings()), "(", ","));
 
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider
@@ -89,16 +85,6 @@ export const activate = (context: vscode.ExtensionContext) => {
       //Create output channel
       formatOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
       logFormatMessage("Spin/Spin2 Format log started.");
-    } else {
-      logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
-    }
-  }
-
-  if (formatDocGenLogEnabled) {
-    if (docGenOutputChannel === undefined) {
-      //Create output channel
-      docGenOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 DocGen DEBUG");
-      logFormatMessage("Spin/Spin2 DocGen log started.");
     } else {
       logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
     }
@@ -118,13 +104,12 @@ export const activate = (context: vscode.ExtensionContext) => {
 
   objTreeProvider = new ObjectTreeProvider(objTreeOutputChannel, objTreeDebugLogEnabled);
 
-  docGenerator = new DocGenerator(docGenOutputChannel, formatDocGenLogEnabled);
-
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
+  const docGenerator: DocGenerator = new DocGenerator();
 
   context.subscriptions.push(
     vscode.commands.registerCommand(generateDocumentFileCommand, async () => {
-      logFormatMessage("* generateDocumentFileCommand");
+      docGenerator.logMessage("* generateDocumentFileCommand");
       try {
         // and test it!
         docGenerator.generateDocument();

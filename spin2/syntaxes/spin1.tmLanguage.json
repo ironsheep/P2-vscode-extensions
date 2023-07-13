@@ -207,6 +207,9 @@
           "include": "#constants"
         },
         {
+          "include": "#clock_constants"
+        },
+        {
           "include": "#storage_modifier"
         },
         {
