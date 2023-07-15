@@ -24,12 +24,17 @@ Possible next additions:
 
 ## [1.9.7] 2023-07-??
 
-Add Hover Signature Help and Hover support for P1!
+Add **Signature Help**, **Hover support** and **Documentation Generation** features for P1!
 
-- When typing user and built-in method calls "signature help" will describe parameters needed, with meaning, as they are typed
-- Now can hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item
-- Now supports hover for **Built-in Spin2** methods, variables, constants and smart-pin contstants to display pop-up documentation about the built-in item
-- Adds new Doc-Comment Generation for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line.
+This release brings our P1 support into feature parity with the P2 feature set and also includes minor fixes for the P2 side of things.
+
+- When typing user and built-in method calls **Signature Help** will describe parameters needed, with meaning, as they are typed
+- Now supports hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item
+- Now supports hover for **Built-in Spin** methods, variables, and constants to display pop-up documentation about the built-in item
+- Adds new **Doc-Comment Generation** for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line.
+- Adds new **Object Public interface documentation generation** via keystroke [Ctrl+Alt+d], doc opens on right side of editor
+- P2 Hover information is now shown for debug display window names.
+- New for P1 and P2: when user methods don't have parameter documentation the **signature help** now works and it reminds how to generate the missing documentation.
 
 ## [1.9.6] 2023-07-11
 

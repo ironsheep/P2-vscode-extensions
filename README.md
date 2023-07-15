@@ -16,10 +16,16 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 
 ## Features
 - Full support for both P1 (spin/pasm) and P2 (spin2/pasm2) languages
-- **P1: Syntax and Semantic Highlighting** for both Spin and Pasm
-- **P2: Syntax and Semantic Highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols as well as all debug() statements with parameter validation for all display types
-- **P2: Show Hovers Feature** Hovers show information about the symbol/object that's below the mouse cursor. In our case this is for both user written code and for Spin2 built-ins.
-- **P2: Signature Help Feature** As you are typing a method name show signature help for both user written methods and for Spin2 built-in methods.
+- P2 Support:
+   - **P2: Syntax and Semantic Highlighting** for both Spin2 and Pasm2 including all Streamer and Smart-pin Symbols as well as all debug() statements with parameter validation for all display types
+   - **P2: Show Hovers Feature** Hovers show information about the symbol/object that's below the mouse cursor. In our case this is for both user written code and for Spin2 built-ins.
+   - **P2: Signature Help Feature** As you are typing a method name show signature help for both user written methods and for Spin2 built-in methods.
+- P1 Support:
+   - **P1: Syntax and Semantic Highlighting** for both Spin and Pasm
+   - **P1: Show Hovers Feature** Hovers show information about the symbol/object that's below the mouse cursor. In our case this is for both user written code and for Spin built-ins.
+   - **P1: Signature Help Feature** As you are typing a method name show signature help for both user written methods and for Spin built-in methods.
+- **Object Public interface documentation generation** via keystroke [Ctrl+Alt+d], doc opens on right side of editor
+- **Doc-Comment Generation** for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line.
 - **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
 - **Tab Sets** You can choose between `Propeller Tool`, `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 - File navigation from **Outline View**
@@ -31,8 +37,6 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 We are working to routinely add features to this extension for the next month or two.  The hover support for P2 just arrived, here the next updates in the works:
 
 - Improve Hover support for P2
-- Add similar Hover support for P1
-- Add "Help With Function and Method Signatures" feature for P1
 
 These are not yet definate but I'm:
 
@@ -54,10 +58,14 @@ In VSCode search for the "spin2" extension and install it.  It's that easy!  Aft
 
 ## VSCode Environment
 
-There are two companion documents in this Repository:
+There are additional companion documents in this Repository:
 
-1. [Configuring User Tasks](TASKS-User.md) which advises on how to automate your P2 Development when using VScode
-2. [VSCode Extensions](EXTENSIONS.md) we find useful in our own P2 development
+1. [Configuring User Tasks - Windows](TASKS-User-win.md) which advises on how to automate your P2 Development when using VScode on **Windows**
+2. [Configuring User Tasks - MacOS](TASKS-User-macOS.md) which advises on how to automate your P2 Development when using VScode on **macOS**
+3. [Configuring User Tasks - Windows|MacOS|RPI](TASKS-User.md) which advises on how to automate your P2 Development when using VScode on **any of the supported platforms**
+4. [VSCode Extensions](EXTENSIONS.md) we find useful in our own P2 development
+5. [Visual Examples - Tabbing](TAB-VisualEx.md) a visual explaination of how our Tabbing feature works (*For those of us, like me, who understand more easily when we see pictures.*)
+6. [Engineering Notes - Tabbing](TAB-SPECs.md) more detailed description of how our Tabbing feature works
 
 Also, here are a couple of really useful VSCode sources:
 
