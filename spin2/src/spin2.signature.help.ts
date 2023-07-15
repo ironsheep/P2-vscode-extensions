@@ -10,11 +10,12 @@ import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Conf
 
 export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private signatureLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private signatureLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private signatureOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
   private extensionUtils = new ExtensionUtils(this.signatureLogEnabled, this.signatureOutputChannel);
+
   constructor(symbolRepository: DocumentFindings, spinConfig?: WorkspaceConfiguration) {
     this.spinConfig = spinConfig;
     this.symbolsFound = symbolRepository;
@@ -261,7 +262,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
           //}
         }
         if (
-          (tokenFindings.interpretation.includes("constant (32-bit)") && !tokenFindings.relatedObjectName) ||
+          (tokenFindings.interpretation.includes("32-bit constant") && !tokenFindings.relatedObjectName) ||
           tokenFindings.interpretation.includes("shared variable") ||
           tokenFindings.interpretation.includes("instance variable") ||
           tokenFindings.interpretation.includes("inline-pasm variable") ||

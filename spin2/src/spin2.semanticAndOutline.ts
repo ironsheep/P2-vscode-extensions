@@ -6,7 +6,7 @@ import { EndOfLine } from "vscode";
 
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
 import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
-import { ParseUtils, eDebugDisplayType, debugTypeForDisplay } from "./spin2.utils";
+import { ParseUtils, eDebugDisplayType } from "./spin2.utils";
 
 import * as vscode from "vscode";
 import { isDeepStrictEqual } from "util";
@@ -512,7 +512,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -527,8 +527,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private semanticFindings: DocumentFindings;
   private conEnumInProgress: boolean = false;
 
-  // map of display-name to etype'
-  private debugDisplays = new Map<string, eDebugDisplayType>();
   // list of directives found in file
   private fileDirectives: ISpin2Directive[] = [];
 
@@ -732,7 +730,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings.clear();
     this.conEnumInProgress = false;
     this.currentMethodName = "";
-    this.debugDisplays.clear();
+    this.semanticFindings.clearDebugDisplays();
     this.fileDirectives = [];
     if (reloadSemanticConfiguration()) {
       this.configuration = semanticConfiguration;
@@ -1048,7 +1046,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           } else {
             this._getSPIN_PasmDeclaration(0, i + 1, line);
             // scan SPIN-Inline-Pasm line for debug() display declaration
-            this._getDebugDisplay_Declaration(0, line);
+            this._getDebugDisplay_Declaration(0, i + 1, line);
           }
         }
       } else if (currState == eParseState.inDatPasm) {
@@ -1066,7 +1064,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               this._getDAT_PasmDeclaration(0, i + 1, line);
               if (isDebugLine) {
                 // scan DAT-Pasm line for debug() display declaration
-                this._getDebugDisplay_Declaration(0, line);
+                this._getDebugDisplay_Declaration(0, i + 1, line);
               }
             }
           }
@@ -1086,7 +1084,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           } else {
             if (isDebugLine) {
               // scan SPIN2 line for debug() display declaration
-              this._getDebugDisplay_Declaration(0, line);
+              this._getDebugDisplay_Declaration(0, i + 1, line);
             } else {
               // scan SPIN2 line for object constant or method() uses
               this._getSpin2ObjectConstantMethodDeclaration(0, i + 1, line);
@@ -1585,8 +1583,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const nameIndex: number = baseIndex + 0;
       const haveLabel: boolean = lineParts.length > nameIndex ? this.parseUtils.isDatOrPasmLabel(lineParts[nameIndex]) : false;
       const typeIndex: number = haveLabel ? baseIndex + 1 : baseIndex + 0;
-      const dataType: string = lineParts[typeIndex];
-      const haveStorageType: boolean = lineParts.length > typeIndex ? this.parseUtils.isDatStorageType(dataType) : false;
+      const dataType: string | undefined = lineParts.length > typeIndex ? lineParts[typeIndex] : undefined;
+      const haveStorageType: boolean = dataType ? this.parseUtils.isDatStorageType(dataType) : false;
       const isNamedDataDeclarationLine: boolean = haveLabel && haveStorageType ? true : false;
       const isDataDeclarationLine: boolean = haveStorageType ? true : false;
 
@@ -1594,10 +1592,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
       const newName = haveLabel ? lineParts[nameIndex] : "";
 
-      const dataTypeOffset: number = haveStorageType ? dataDeclNonCommentStr.indexOf(dataType) : 0;
-      const valueDeclNonCommentStr: string = isDataDeclarationLine && dataTypeOffset != -1 ? dataDeclNonCommentStr.substring(dataTypeOffset + dataType.length).trim() : "";
+      const dataTypeOffset: number = dataType && haveStorageType ? dataDeclNonCommentStr.indexOf(dataType) : 0;
+      const valueDeclNonCommentStr: string = dataType && isDataDeclarationLine && dataTypeOffset != -1 ? dataDeclNonCommentStr.substring(dataTypeOffset + dataType.length).trim() : "";
       this._logDAT("   -- GetDatDecl valueDeclNonCommentStr=[" + valueDeclNonCommentStr + "](" + valueDeclNonCommentStr.length + ")");
-      const bIsFileLine: boolean = lineParts.includes("file") || lineParts.includes("FILE");
+      const bIsFileLine: boolean = dataType && dataType.toLowerCase() == "file" ? true : false;
       this._logDAT("   -- GetDatDecl newName=[" + newName + "], label=" + lblFlag + ", daDecl=" + dataDeclFlag + ", dataType=[" + dataType + "]");
       if (
         haveLabel &&
@@ -1620,8 +1618,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
         this._logDAT("   -- GetDatDecl GLBL-newName=[" + newName + "](" + nameType + ")");
-        const reference: string | undefined = bIsFileLine ? lineParts[2] : undefined;
-        this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment(), reference);
+        const fileName: string | undefined = bIsFileLine && lineParts.length > 2 ? lineParts[2] : undefined;
+        this._logDAT("   -- GetDatDecl fileName=[" + fileName + "]");
+        this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment(), fileName);
       }
       // check for names in value declaration
       if (valueDeclNonCommentStr.length > 0) {
@@ -1667,9 +1666,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const datPasmRHSStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
     const lineParts: string[] = this.parseUtils.getNonWhiteLineParts(datPasmRHSStr);
     this._logPASM("  - ln:" + lineNbr + " GetDATPasmDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
-    const bIsFileLine: boolean = lineParts.includes("file") || lineParts.includes("FILE");
     // handle name in 1 column
     let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
+    const bIsFileLine: boolean = haveLabel && lineParts.length > 1 && lineParts[1].toLowerCase() == "file";
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
     if (haveLabel) {
       const labelName: string = lineParts[0];
@@ -1687,8 +1686,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           labelModifiers = labelName.startsWith(".") ? ["static"] : [];
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
-        const reference: string | undefined = bIsFileLine ? lineParts[2] : undefined;
-        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment(), reference);
+        const fileName: string | undefined = bIsFileLine && lineParts.length > 2 ? lineParts[2] : undefined;
+        this._logDAT("   -- DAT PASM GLBL fileName=[" + fileName + "]");
+        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment(), fileName);
       }
     }
   }
@@ -1839,7 +1839,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
   }
 
-  private _getDebugDisplay_Declaration(startingOffset: number, line: string): void {
+  private _getDebugDisplay_Declaration(startingOffset: number, lineNbr: number, line: string): void {
     // locate and collect debug() display user names and types
     //
     // HAVE    debug(`{displayType} {displayName} ......)            ' comment
@@ -1857,7 +1857,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           if (this.parseUtils.isDebugDisplayType(newDisplayType)) {
             const newDisplayName: string = lineParts[2];
             //this._logDEBUG('  --- debug(...) newDisplayType=[' + newDisplayType + '], newDisplayName=[' + newDisplayName + ']');
-            this._setUserDebugDisplay(newDisplayType, newDisplayName);
+            this.semanticFindings.setUserDebugDisplay(newDisplayType, newDisplayName, lineNbr);
           }
         }
       }
@@ -3920,7 +3920,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             });
             symbolOffset += newDisplayName.length;
             // (1) highlight parameter names
-            let eDisplayType: eDebugDisplayType = this._getDebugDisplayType(newDisplayType);
+            let eDisplayType: eDebugDisplayType = this.semanticFindings.getDebugDisplayType(newDisplayType);
             const firstParamIdx: number = 3; // [0]=debug [1]=`{type}, [2]={userName}
             for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
               const newParameter: string = lineParts[idx];
@@ -4011,7 +4011,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             //  FIXME: Chip: how do we validate types when multiple displays! (of diff types)??
             //    Chip: "only types common to all"!
             let displayName: string = newDisplayType;
-            let bHaveFeed = this._isKnownDebugDisplay(displayName);
+            let bHaveFeed = this.semanticFindings.isKnownDebugDisplay(displayName);
             if (isRuntimeNamed) {
               bHaveFeed = true;
             }
@@ -4038,14 +4038,14 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   if (firstParamIdx < lineParts.length) {
                     firstParamIdx++;
                     displayName = lineParts[firstParamIdx];
-                    bHaveFeed = this._isKnownDebugDisplay(displayName);
+                    bHaveFeed = this.semanticFindings.isKnownDebugDisplay(displayName);
                   } else {
                     bHaveFeed = false;
                   }
                 } while (bHaveFeed);
               }
               // (1) highlight parameter names (NOTE: based on first display type, only)
-              let eDisplayType: eDebugDisplayType = this._getUserDebugDisplayType(newDisplayType);
+              let eDisplayType: eDebugDisplayType = this.semanticFindings.getUserDebugDisplayType(newDisplayType);
               if (isRuntimeNamed) {
                 // override bad display type with directive if present
                 eDisplayType = this._getDisplayTypeForLine(lineNbr);
@@ -4511,7 +4511,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const newDirective: ISpin2Directive = {
       lineNumber: lineNbr,
       displayType: displayType,
-      eDisplayType: this._getDebugDisplayType(displayType),
+      eDisplayType: this.semanticFindings.getDebugDisplayType(displayType),
     };
     this._logMessage("=> Add DIRECTIVE: " + this._directiveString(newDirective));
     this.fileDirectives.push(newDirective);
@@ -4707,45 +4707,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return nonCommentLHSStr;
   }
 
-  // -------------------------------------------------------------------------
-  //  debug() display support
-
-  private _setUserDebugDisplay(typeName: string, userName: string): void {
-    //this._logTokenSet('  DBG _setUserDebugDisplay(' + typeName + ', ' + userName + ')');
-    if (!this._isKnownDebugDisplay(userName)) {
-      let eDisplayType: eDebugDisplayType = this._getDebugDisplayType(typeName);
-      this.debugDisplays.set(userName.toLowerCase(), eDisplayType);
-      this._logTokenSet("  -- NEW-DDsply " + userName.toLowerCase() + "=[" + eDisplayType + " : " + typeName.toLowerCase() + "]");
-    } else {
-      this._logMessage("ERROR: _setNewDebugDisplay() display exists [" + userName + "]");
-    }
-  }
-
-  private _getUserDebugDisplayType(possibleUserName: string): eDebugDisplayType {
-    let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
-    if (this._isKnownDebugDisplay(possibleUserName)) {
-      const possibleType: eDebugDisplayType | undefined = this.debugDisplays.get(possibleUserName.toLowerCase());
-      desiredType = possibleType || eDebugDisplayType.Unknown;
-    }
-    return desiredType;
-  }
-
-  private _getDebugDisplayType(typeName: string): eDebugDisplayType {
-    let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
-    if (debugTypeForDisplay.has(typeName.toLowerCase())) {
-      const possibleType: eDebugDisplayType | undefined = debugTypeForDisplay.get(typeName.toLowerCase());
-      desiredType = possibleType || eDebugDisplayType.Unknown;
-    }
-    // this._logTokenSet('  DBG _getDebugDisplayType(' + typeName + ') = ' + desiredType);
-    return desiredType;
-  }
-
-  private _isKnownDebugDisplay(possibleUserName: string): boolean {
-    const foundStatus: boolean = this.debugDisplays.has(possibleUserName.toLowerCase());
-    //this._logTokenSet('  DBG _isKnownDebugDisplay(' + possibleUserName + ') = ' + foundStatus);
-    return foundStatus;
-  }
-
   private _tokenString(aToken: IParsedToken, line: string): string {
     let varName: string = line.substr(aToken.startCharacter, aToken.length);
     let desiredInterp: string =
@@ -4761,11 +4722,6 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return desiredInterp;
   }
 
-  private _directiveString(aDirective: ISpin2Directive): string {
-    let desiredInterp: string = "  -- directive=[ln:" + aDirective.lineNumber + ",typ:" + aDirective.displayType + "[" + aDirective.eDisplayType + "])]";
-    return desiredInterp;
-  }
-
   private _checkTokenSet(tokenSet: IParsedToken[]): void {
     this._logMessage("\n---- Checking " + tokenSet.length + " tokens. ----");
     tokenSet.forEach((parsedToken) => {
@@ -4774,5 +4730,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       }
     });
     this._logMessage("---- Check DONE ----\n");
+  }
+
+  private _directiveString(aDirective: ISpin2Directive): string {
+    let desiredInterp: string = "  -- directive=[ln:" + aDirective.lineNumber + ",typ:" + aDirective.displayType + "[" + aDirective.eDisplayType + "])]";
+    return desiredInterp;
   }
 }

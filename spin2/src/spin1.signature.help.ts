@@ -263,7 +263,7 @@ export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
           //}
         }
         if (
-          (tokenFindings.interpretation.includes("constant (32-bit)") && !tokenFindings.relatedObjectName) ||
+          (tokenFindings.interpretation.includes("32-bit constant") && !tokenFindings.relatedObjectName) ||
           tokenFindings.interpretation.includes("shared variable") ||
           tokenFindings.interpretation.includes("instance variable") ||
           tokenFindings.interpretation.includes("inline-pasm variable") ||

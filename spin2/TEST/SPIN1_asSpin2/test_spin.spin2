@@ -14,7 +14,6 @@
 
 '' this is our full Spin P1 instruction set
 
-
 OBJ
 
     mouse   : "USB_Mouse"       ' instantiate "USB_Mouse.spin2" as "mouse"

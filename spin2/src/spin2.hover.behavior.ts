@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { CancellationToken, Hover, HoverProvider, Position, TextDocument, WorkspaceConfiguration } from "vscode";
-import { DocumentFindings } from "./spin.semantic.findings";
+import { DocumentFindings, ITokenDescription } from "./spin.semantic.findings";
 import { ParseUtils, eBuiltInType } from "./spin2.utils";
 import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Config } from "./spin2.extension.utils";
 //import { IncomingMessage } from "http";
@@ -11,7 +11,7 @@ import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Conf
 
 export class Spin2HoverProvider implements HoverProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private hoverLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private hoverLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private hoverOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
@@ -169,9 +169,18 @@ export class Spin2HoverProvider implements HoverProvider {
       } else {
         this._logMessage(`+ Hvr: token=[${input.word}], Found!`);
       }
-      if (bFoundParseToken && !builtInFindings.found) {
+      let bFoundDebugToken: boolean = false;
+      if (isDebugLine) {
+        bFoundDebugToken = this.symbolsFound.isKnownDebugToken(input.word);
+        if (!bFoundDebugToken) {
+          this._logMessage(`+ Hvr: debug token=[${input.word}], NOT found!`);
+        } else {
+          this._logMessage(`+ Hvr: debug token=[${input.word}], Found!`);
+        }
+      }
+      if ((bFoundParseToken || bFoundDebugToken) && !builtInFindings.found) {
         bFoundSomething = true;
-        const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
+        const tokenFindings: ITokenDescription = this.symbolsFound.getTokenWithDescription(input.word);
         if (tokenFindings.found) {
           this._logMessage(
             `+ Hvr: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
@@ -180,19 +189,19 @@ export class Spin2HoverProvider implements HoverProvider {
         } else {
           this._logMessage(`+ Hvr: get token failed?!!`);
         }
-        const nameString = tokenFindings.adjustedName;
-        const scopeString = tokenFindings.scope;
-        const typeString = tokenFindings.interpretation;
+        const nameString: string = tokenFindings.adjustedName;
+        const scopeString: string = tokenFindings.scope;
+        const typeString: string = tokenFindings.interpretation;
 
-        let docRootCommentMD = `(*${scopeString}* ${typeString}) **${nameString}**`; // parsedFindings
-        let typeInterpWName = `(${scopeString} ${typeString}) ${nameString}`; // better formatting of interp
-        let typeInterp = `(${scopeString} ${typeString})`; // better formatting of interp
+        let docRootCommentMD: string = `(*${scopeString}* ${typeString}) **${nameString}**`; // parsedFindings
+        let typeInterpWName: string = `(${scopeString} ${typeString}) ${nameString}`; // better formatting of interp
+        let typeInterp: string = `(${scopeString} ${typeString})`; // better formatting of interp
         if (scopeString.length == 0) {
           docRootCommentMD = `(${typeString}) **${nameString}**`;
           typeInterpWName = `(${typeString}) ${nameString}`; // better formatting of interp
           typeInterp = `(${typeString})`;
         }
-        const declLine = input.document.lineAt(tokenFindings.declarationLine).text.trim(); // declaration line
+        const declLine: string = input.document.lineAt(tokenFindings.declarationLine).text.trim(); // declaration line
         const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();
 
         // -------------------------------
@@ -228,7 +237,7 @@ export class Spin2HoverProvider implements HoverProvider {
           //}
         }
         if (
-          (tokenFindings.interpretation.includes("constant (32-bit)") && !tokenFindings.relatedObjectName) ||
+          (tokenFindings.interpretation.includes("32-bit constant") && !tokenFindings.relatedObjectName) ||
           tokenFindings.interpretation.includes("shared variable") ||
           tokenFindings.interpretation.includes("instance variable") ||
           tokenFindings.interpretation.includes("inline-pasm variable") ||

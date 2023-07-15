@@ -400,7 +400,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin1DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin1DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -1282,6 +1282,25 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             // remember this object name so we can annotate a call to it
             this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["readonly"]), lineNbr, this._declarationComment());
           }
+          const containsObjectReferences: boolean = nonCommentConstantLine.indexOf(".") != -1;
+          if (containsObjectReferences) {
+            const assignmentRHS = nonCommentConstantLine.substring(assignmentOffset + 1).trim();
+            this._logCON("  -- GLBL GetCONDecl assignmentRHS=[" + assignmentRHS + "]");
+            const lineParts: string[] = assignmentRHS.split(/[ \t]/);
+            this._logCON("  -- GLBL GetCONDecl lineParts=[" + lineParts + "]");
+            for (let partIdx = 0; partIdx < lineParts.length; partIdx++) {
+              const nameForEval: string = lineParts[partIdx];
+              if (nameForEval.includes(".")) {
+                // SPIN1 have object.constant reference
+                const refParts: string[] = nameForEval.split(".");
+                if (refParts.length == 2) {
+                  const objName = refParts[0];
+                  const childConstantName = refParts[1];
+                  this.semanticFindings.setGlobalToken(childConstantName, new RememberedToken("variable", ["readonly"]), lineNbr, this._declarationComment(), objName);
+                }
+              }
+            }
+          }
         } else {
           // recognize enum values getting initialized
           const lineParts: string[] = conDeclarationLine.split(/[ \t,]/);
@@ -1325,7 +1344,10 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         maxParts = 3;
       }
       let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[nameIndex]);
-      const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[typeIndex]) ? true : false;
+      const dataType: string = lineParts[typeIndex];
+      const haveStorageType: boolean = lineParts.length > typeIndex ? this.parseUtils.isDatStorageType(dataType) : false;
+      const isNamedDataDeclarationLine: boolean = haveLabel && haveStorageType ? true : false;
+      const isDataDeclarationLine: boolean = haveStorageType ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
       this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
@@ -1342,7 +1364,46 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
           }
           this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-          this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment());
+          const bIsFileLine: boolean = lineParts.length > 1 && lineParts[typeIndex].toLowerCase().includes("file") ? true : false;
+          const fileName: string | undefined = lineParts.length > 2 && bIsFileLine ? lineParts[2] : undefined;
+          this._logDAT("  -- GLBL gddcl fileName=[" + fileName + "]");
+          this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment(), fileName);
+        }
+      }
+      // check for names in value declaration
+      const dataTypeOffset: number = haveStorageType ? dataDeclNonCommentStr.indexOf(dataType) : 0;
+      const valueDeclNonCommentStr: string = isDataDeclarationLine && dataTypeOffset != -1 ? dataDeclNonCommentStr.substring(dataTypeOffset + dataType.length).trim() : "";
+      this._logDAT("   -- GetDatDecl valueDeclNonCommentStr=[" + valueDeclNonCommentStr + "]");
+      if (valueDeclNonCommentStr.length > 0) {
+        //let possObjRef: string | undefined = haveObjectRef ? lineParts[firstValueIndex] : undefined;
+        const bISMethod: boolean = false; // SPIN1 we can't tell if method or constant (so force constant in DAT for now)
+        const valueParts: string[] = valueDeclNonCommentStr.split(/[ \t\(\[\]\+\-\*\/]/).filter(Boolean);
+        this._logDAT("   -- GetDatDecl valueParts=[" + valueParts + "](" + valueParts.length + ")");
+        if (valueParts.length > 1) {
+          // for all name parts see if we want to report any to global tables...
+          for (let index = 0; index < valueParts.length; index++) {
+            const currNamePart = valueParts[index];
+            // do we have name not number?
+            if (currNamePart.charAt(0).match(/[a-zA-Z_]/)) {
+              const haveObjectRef: boolean = currNamePart.indexOf(".") != -1;
+              if (haveObjectRef) {
+                const objRefParts: string[] = currNamePart.split(".");
+                const objName: string = objRefParts[0];
+                const objRef: string = objRefParts[1];
+                // if both parts are names...
+                if (objName.charAt(0).match(/[a-zA-Z_]/) && objRef.charAt(0).match(/[a-zA-Z_]/)) {
+                  this._logDAT("   -- GetDatDecl objRefParts=[" + objRefParts + "](" + objRefParts.length + ")");
+                  // remember this object name so we can annotate a call to it
+                  this._logDAT("   -- GetDatDecl objName=[" + objName + "], objRef=[" + objRef + "]");
+                  if (bISMethod) {
+                    this.semanticFindings.setGlobalToken(objRef, new RememberedToken("method", []), lineNbr, this._declarationComment(), objName);
+                  } else {
+                    this.semanticFindings.setGlobalToken(objRef, new RememberedToken("variable", ["readonly"]), lineNbr, this._declarationComment(), objName);
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -1359,6 +1420,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // handle name in 1 column
     let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
+    const isFileDeclarationLine: boolean = lineParts.length > 1 && haveLabel && lineParts[1].toLowerCase() == "file" ? true : false;
     if (haveLabel) {
       const labelName: string = lineParts[0];
       if (!this.parseUtils.isReservedPasmSymbols(labelName) && !labelName.toUpperCase().startsWith("IF_")) {
@@ -1369,7 +1431,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           labelModifiers = labelName.startsWith(":") ? ["static"] : [];
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
-        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment());
+        const fileName: string | undefined = isFileDeclarationLine ? lineParts[2] : undefined;
+        this._logPASM("  -- DAT PASM label-ref fileName=[" + fileName + "]");
+        this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment(), fileName);
       }
     }
   }
@@ -3372,7 +3436,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     }
     return nonCommentLHSStr;
   }
-
   private _tokenString(aToken: IParsedToken, line: string): string {
     let varName: string = line.substr(aToken.startCharacter, aToken.length);
     let desiredInterp: string =

@@ -3,6 +3,7 @@ import { IncomingMessage } from "http";
 // src/spin2.semantic.findings.ts
 
 import * as vscode from "vscode";
+import { eDebugDisplayType, debugTypeForDisplay } from "./spin2.utils";
 
 // ============================================================================
 //  this file contains objects we use in tracking symbol use and declaration
@@ -28,6 +29,13 @@ export interface ITokenInterpretation {
   interpretation: string;
   name: string;
   isGoodInterp: boolean;
+}
+
+export interface IDebugDisplayInfo {
+  displayTypeString: string;
+  userName: string;
+  lineNbr: number;
+  eDisplayType: eDebugDisplayType;
 }
 
 // search comment type: non-doc only, doc-only, or mixed
@@ -114,7 +122,12 @@ export class DocumentFindings {
   }
 
   public isKnownToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) ? true : false;
+    const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) || this.isKnownDebugDisplay(tokenName) ? true : false;
+    return foundStatus;
+  }
+
+  public isKnownDebugToken(tokenName: string): boolean {
+    const foundStatus: boolean = this.isKnownDebugDisplay(tokenName) ? true : false;
     return foundStatus;
   }
 
@@ -137,6 +150,7 @@ export class DocumentFindings {
     let declInfo: RememberedTokenDeclarationInfo | undefined = undefined;
     if (this.isKnownToken(tokenName)) {
       findings.found = true;
+      // Check for Global-tokens?
       findings.token = this.getGlobalToken(tokenName);
       if (findings.token) {
         // we have a GLOBAL token!
@@ -145,6 +159,7 @@ export class DocumentFindings {
         // and get additional info for token
         declInfo = this.globalTokensDeclarationInfo.get(tokenName);
       } else {
+        // Check for Local-tokens?
         findings.token = this.getLocalToken(tokenName);
         if (findings.token) {
           // we have a LOCAL token!
@@ -153,7 +168,7 @@ export class DocumentFindings {
           // and get additional info for token
           declInfo = this.localTokensDeclarationInfo.get(tokenName);
         } else {
-          // Handle Method-Local-tokens?
+          // Check for Method-Local-tokens?
           findings.token = this.localPasmTokensByMethodName.getToken(tokenName);
           findings.relatedMethodName = this.localPasmTokensByMethodName.getMethodNameForToken(tokenName);
           if (findings.relatedMethodName) {
@@ -165,6 +180,17 @@ export class DocumentFindings {
             findings.scope = "Local";
             // and get additional info for token
             declInfo = this.localTokensDeclarationInfo.get(tokenName);
+          } else {
+            // Check for debug display type?
+            const dispType: eDebugDisplayType = this.getDebugDisplayType(tokenName);
+            if (dispType != eDebugDisplayType.Unknown) {
+              // we have a debug display type!
+              const displayInfo: IDebugDisplayInfo = this.getUserDebugDisplayInfo(tokenName);
+              findings.token = new RememberedToken("debugDisplay", [displayInfo.displayTypeString]);
+              findings.scope = "Global";
+              findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
+              declInfo = new RememberedTokenDeclarationInfo(displayInfo.lineNbr, undefined);
+            }
           }
         }
       }
@@ -231,16 +257,20 @@ export class DocumentFindings {
   }
 
   private _interpretToken(token: RememberedToken, scope: string, name: string, declInfo: RememberedTokenDeclarationInfo | undefined): ITokenInterpretation {
+    this._logTokenMessage(`  -- _interpretToken() scope=[${scope}], name=[${name}], line#=[${declInfo?.lineIndex}]` + this._rememberdTokenString(name, token));
     let desiredInterp: ITokenInterpretation = { interpretation: "", scope: scope.toLowerCase(), name: name, isGoodInterp: true };
     desiredInterp.interpretation = "--type??";
     if (token?.type == "variable" && token?.modifiers.includes("readonly") && !declInfo?.isObjectReference) {
       // have non object reference
       desiredInterp.scope = "object public"; // not just global
-      desiredInterp.interpretation = "constant (32-bit)";
+      desiredInterp.interpretation = "32-bit constant";
     } else if (token?.type == "variable" && token?.modifiers.includes("readonly") && declInfo?.isObjectReference) {
       // have object interface constant
       desiredInterp.scope = "object interface"; // not just global
-      desiredInterp.interpretation = "constant (32-bit)";
+      desiredInterp.interpretation = "32-bit constant";
+    } else if (token?.type == "debugDisplay") {
+      desiredInterp.scope = "object"; // ignore for this (or move `object` here?)
+      desiredInterp.interpretation = "debug display";
     } else if (token?.type == "namespace") {
       desiredInterp.scope = "object"; // ignore for this (or move `object` here?)
       desiredInterp.interpretation = "named instance";
@@ -347,6 +377,7 @@ export class DocumentFindings {
   }
 
   public clearLocalTokens() {
+    // forget all local tokens
     this.localTokens.clear();
   }
 
@@ -411,6 +442,79 @@ export class DocumentFindings {
       desiredInterp = " -- token=[len:" + tokenName.length + " [" + tokenName + "](" + aToken.type + "[" + aToken.modifiers + "])]";
     }
     return desiredInterp;
+  }
+
+  // ----------------------------------------------------------------------------
+  //  P2 Special handling for Debug() Displays
+  //
+  // map of display-name to etype'
+  private debugDisplays = new Map<string, IDebugDisplayInfo>();
+
+  public getDebugDisplayType(typeName: string): eDebugDisplayType {
+    let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
+    if (debugTypeForDisplay.has(typeName.toLowerCase())) {
+      const possibleType: eDebugDisplayType | undefined = debugTypeForDisplay.get(typeName.toLowerCase());
+      desiredType = possibleType || eDebugDisplayType.Unknown;
+    }
+    this._logTokenMessage("  DDsply _getDebugDisplayType(" + typeName + ") = " + this.getNameForDebugDisplayType(desiredType));
+    return desiredType;
+  }
+
+  public setUserDebugDisplay(typeName: string, userName: string, lineNbr: number): void {
+    const nameKey: string = userName.toLowerCase();
+    //this._logTokenMessage('  DBG _setUserDebugDisplay(' + typeName + ', ' + userName + ')');
+    if (!this.isKnownDebugDisplay(userName)) {
+      let eType: eDebugDisplayType = this.getDebugDisplayType(typeName);
+      let displayInfo: IDebugDisplayInfo = { displayTypeString: typeName, userName: userName, lineNbr: lineNbr, eDisplayType: eType };
+      this.debugDisplays.set(nameKey, displayInfo);
+      //this._logTokenMessage("  -- DDsply " + userName.toLowerCase() + "=[" + eDisplayType + " : " + typeName.toLowerCase() + "]");
+    } else {
+      this._logTokenMessage("ERROR: DDsply _setNewDebugDisplay() display exists [" + userName + "]");
+    }
+  }
+
+  public getUserDebugDisplayType(possibleUserName: string): eDebugDisplayType {
+    const nameKey: string = possibleUserName.toLowerCase();
+    let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
+    if (this.isKnownDebugDisplay(possibleUserName)) {
+      const possibleInfo: IDebugDisplayInfo | undefined = this.debugDisplays.get(nameKey);
+      desiredType = possibleInfo?.eDisplayType || eDebugDisplayType.Unknown;
+    }
+    return desiredType;
+  }
+
+  public getUserDebugDisplayInfo(possibleUserName: string): IDebugDisplayInfo {
+    const nameKey: string = possibleUserName.toLowerCase();
+    let possibleInfo: IDebugDisplayInfo = { displayTypeString: "", userName: "", lineNbr: 0, eDisplayType: eDebugDisplayType.Unknown };
+    if (this.isKnownDebugDisplay(possibleUserName)) {
+      const infoFound: IDebugDisplayInfo | undefined = this.debugDisplays.get(nameKey);
+      if (infoFound) {
+        possibleInfo = infoFound;
+      }
+    }
+    return possibleInfo;
+  }
+
+  public getNameForDebugDisplayType(eDisplayType: eDebugDisplayType): string {
+    let desiredName: string = "?no-value-in-map?";
+    for (let [key, value] of debugTypeForDisplay.entries()) {
+      if (value === eDisplayType) desiredName = key;
+      break;
+    }
+    // this._logTokenMessage('  DDsply _getDebugDisplayType(' + typeName + ') = ' + desiredType);
+    return desiredName;
+  }
+
+  public isKnownDebugDisplay(possibleUserName: string): boolean {
+    const nameKey: string = possibleUserName.toLowerCase();
+    const foundStatus: boolean = this.debugDisplays.has(nameKey);
+    //this._logTokenMessage('  DDsply _isKnownDebugDisplay(' + possibleUserName + ') = ' + foundStatus);
+    return foundStatus;
+  }
+
+  public clearDebugDisplays() {
+    // clear our map of displays found
+    this.debugDisplays.clear();
   }
 }
 
@@ -717,6 +821,7 @@ export class RememberedTokenDeclarationInfo {
   private _declLineIndex: number;
   private _declcomment: string | undefined = undefined;
   private _reference: string | undefined = undefined;
+
   constructor(declarationLinIndex: number, declarationComment: string | undefined, reference?: string | undefined) {
     this._declLineIndex = declarationLinIndex;
     if (declarationComment) {
