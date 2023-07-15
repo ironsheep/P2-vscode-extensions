@@ -12,44 +12,57 @@ import { overtypeBeforePaste, overtypeBeforeType } from "./spin.editMode.behavio
 import { configuration, reloadConfiguration } from "./spin.editMode.configuration";
 import { getMode, resetModes, toggleMode, toggleMode2State, eEditMode, modeName } from "./spin.editMode.mode";
 import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.editMode.statusBarItem";
-import { Spin2ConfigDocumentSymbolProvider, Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semanticAndOutline";
-import { Spin1ConfigDocumentSymbolProvider, Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semanticAndOutline";
 import { DocGenerator } from "./spin.document.generate";
 import { ObjectTreeProvider, Dependency } from "./spin.object.dependencies";
-import { Spin1HoverProvider } from "./spin1.hover.behavior";
+
+import { Spin2ConfigDocumentSymbolProvider } from "./spin2.outline";
+import { Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semantic";
 import { Spin2HoverProvider } from "./spin2.hover.behavior";
-import { Spin1SignatureHelpProvider } from "./spin1.signature.help";
 import { Spin2SignatureHelpProvider } from "./spin2.signature.help";
+
+import { Spin1ConfigDocumentSymbolProvider } from "./spin1.outline";
+import { Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semantic";
+import { Spin1HoverProvider } from "./spin1.hover.behavior";
+import { Spin1SignatureHelpProvider } from "./spin1.signature.help";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
 //    and our semantic highlighting provider
 //
 
-var formatter: Formatter;
-const formatDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
-var formatOutputChannel: vscode.OutputChannel | undefined = undefined;
-
 interface Filter extends vscode.DocumentFilter {
   language: string;
   scheme: string;
 }
-export const SPIN1_FILE: Filter = { language: "spin", scheme: "file" };
-export const SPIN2_FILE: Filter = { language: "spin2", scheme: "file" };
+const SPIN1_FILE: Filter = { language: "spin", scheme: "file" };
+const SPIN2_FILE: Filter = { language: "spin2", scheme: "file" };
 
-export const logFormatMessage = (message: string): void => {
-  if (formatDebugLogEnabled && formatOutputChannel != undefined) {
-    //Write to output window.
-    formatOutputChannel.appendLine(message);
-  }
-};
+var objTreeProvider: ObjectTreeProvider = new ObjectTreeProvider();
+var tabFormatter: Formatter = new Formatter();
 
-var objTreeProvider: ObjectTreeProvider;
-var objDepTreeView: vscode.TreeView<Dependency>;
-const objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
-var objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider();
 const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider();
+
+const extensionDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+var extensionOutputChannel: vscode.OutputChannel | undefined = undefined;
+
+const logExtensionMessage = (message: string): void => {
+  // simple utility to write to TABBING  output window.
+  if (extensionDebugLogEnabled) {
+    if (extensionOutputChannel === undefined) {
+      //Create output channel
+      extensionOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Extension DEBUG");
+      logExtensionMessage("Spin/Spin2 Extension log started.");
+    } else {
+      logExtensionMessage("\n\n------------------   NEW FILE ----------------\n\n");
+    }
+  } else {
+    if (extensionOutputChannel != undefined) {
+      //Write to output window.
+      extensionOutputChannel.appendLine(message);
+    }
+  }
+};
 
 // register services provided by this file
 export const activate = (context: vscode.ExtensionContext) => {
@@ -80,29 +93,6 @@ export const activate = (context: vscode.ExtensionContext) => {
   // ----------------------------------------------------------------------------
   //   TAB Formatter Provider
   //
-  if (formatDebugLogEnabled) {
-    if (formatOutputChannel === undefined) {
-      //Create output channel
-      formatOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
-      logFormatMessage("Spin/Spin2 Format log started.");
-    } else {
-      logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
-    }
-  }
-
-  if (objTreeDebugLogEnabled) {
-    if (objTreeOutputChannel === undefined) {
-      //Create output channel
-      objTreeOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 ObjTree DEBUG");
-      logFormatMessage("Spin/Spin2 ObjTree log started.");
-    } else {
-      logFormatMessage("\n\n------------------   NEW FILE ----------------\n\n");
-    }
-  }
-
-  formatter = new Formatter(formatOutputChannel, formatDebugLogEnabled);
-
-  objTreeProvider = new ObjectTreeProvider(objTreeOutputChannel, objTreeDebugLogEnabled);
 
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
   const docGenerator: DocGenerator = new DocGenerator();
@@ -125,7 +115,7 @@ export const activate = (context: vscode.ExtensionContext) => {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(generateDocCommentCommand, async () => {
-      logFormatMessage("* generateDocumentCommentCommand");
+      logExtensionMessage("* generateDocumentCommentCommand");
       try {
         // and test it!
         const editor = vscode?.window.activeTextEditor!;
@@ -139,18 +129,18 @@ export const activate = (context: vscode.ExtensionContext) => {
     })
   );
 
-  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", formatter.isEnbled());
+  vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", tabFormatter.isEnbled());
 
-  if (formatter.isEnbled()) {
+  if (tabFormatter.isEnbled()) {
     const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
 
     context.subscriptions.push(
       vscode.commands.registerCommand(insertTabStopsCommentCommand, async () => {
-        logFormatMessage("* insertTabStopsCommentCommand");
+        logExtensionMessage("* insertTabStopsCommentCommand");
         try {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
-          var textEdits = await formatter.insertTabStopsComment(document, editor.selections);
+          var textEdits = await tabFormatter.insertTabStopsComment(document, editor.selections);
           applyTextEdits(document, textEdits!);
         } catch (error) {
           await vscode.window.showErrorMessage("Formatter Add Comment Problem");
@@ -163,15 +153,15 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     context.subscriptions.push(
       vscode.commands.registerCommand(indentTabStopCommand, async () => {
-        logFormatMessage("* indentTabStopCommand");
+        logExtensionMessage("* indentTabStopCommand");
         try {
           const editor = vscode?.window.activeTextEditor!;
           const document = editor.document!;
-          var textEdits = await formatter.indentTabStop(document, editor);
-          let [cursorSelect, bShouldSelect] = formatter.indentEndingSelection();
+          var textEdits = await tabFormatter.indentTabStop(document, editor);
+          let [cursorSelect, bShouldSelect] = tabFormatter.indentEndingSelection();
           applyTextEdits(document, textEdits!);
           if (bShouldSelect) {
-            formatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
+            tabFormatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
             editor.selection = cursorSelect;
           }
         } catch (error) {
@@ -184,15 +174,15 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     context.subscriptions.push(
       vscode.commands.registerCommand(outdentTabStopCommand, async () => {
-        logFormatMessage("* outdentTabStopCommand");
+        logExtensionMessage("* outdentTabStopCommand");
         try {
           const editor = vscode.window.activeTextEditor!;
           const document = editor.document!;
-          var textEdits = await formatter.outdentTabStop(document, editor);
-          let [cursorSelect, bShouldSelect] = formatter.outdentEndingSelection();
+          var textEdits = await tabFormatter.outdentTabStop(document, editor);
+          let [cursorSelect, bShouldSelect] = tabFormatter.outdentEndingSelection();
           applyTextEdits(document, textEdits!);
           if (bShouldSelect) {
-            formatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
+            tabFormatter.logMessage(`* SET CURSOR sel=[${cursorSelect.anchor.line}:${cursorSelect.anchor.character}, ${cursorSelect.active.line}:${cursorSelect.active.character}]`);
             editor.selection = cursorSelect;
           }
           console.log();
@@ -241,6 +231,8 @@ export const activate = (context: vscode.ExtensionContext) => {
   //   Object Tree View Provider
   //
   //vscode.window.registerTreeDataProvider("objectDependencies", objTreeProvider);
+  var objDepTreeView: vscode.TreeView<Dependency>;
+
   objDepTreeView = vscode.window.createTreeView("objectDependencies", {
     canSelectMany: false,
     showCollapseAll: true,
@@ -269,7 +261,7 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
   } else {
     const mode = getMode(textEditor);
     updateStatusBarItem(mode);
-    logFormatMessage("* activeTextEditorChanged");
+    logExtensionMessage("* activeTextEditorChanged");
     vscode.commands.executeCommand("setContext", "spin2.insert.mode", modeName(mode));
 
     // if in overtype mode, set the cursor to secondary style; otherwise, reset to default
@@ -291,7 +283,7 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
 
 function toggleCommand() {
   const textEditor = vscode.window.activeTextEditor;
-  logFormatMessage("* toggle");
+  logExtensionMessage("* toggle");
   if (textEditor == null) {
     return;
   }
@@ -302,7 +294,7 @@ function toggleCommand() {
 
 function toggleCommand2State() {
   const textEditor = vscode.window.activeTextEditor;
-  logFormatMessage("* toggle2State");
+  logExtensionMessage("* toggle2State");
   if (textEditor == null) {
     return;
   }
@@ -322,8 +314,8 @@ const onDidChangeConfiguration = () => {
   const previousPerEditor = configuration.perEditor;
   const previousShowInStatusBar = getShowInStatusBar();
 
-  // tell formatter that is might have changed, too
-  formatter.updateTabConfiguration();
+  // tell tabFormatter that is might have changed, too
+  tabFormatter.updateTabConfiguration();
 
   const updated = reloadConfiguration();
   if (!updated) {
@@ -355,36 +347,36 @@ function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;
   var editMode: eEditMode = eEditMode.INSERT;
   if (editor == undefined) {
-    //logFormatMessage("* VSCode type (early)");
+    //logExtensionMessage("* VSCode type (early)");
     vscode.commands.executeCommand("default:type", args);
     return;
   }
-  if (formatDebugLogEnabled) {
+  if (extensionDebugLogEnabled) {
     const firstChar: number = args.text.charCodeAt(0);
     if (args.text.length == 1 && firstChar < 0x20) {
-      logFormatMessage("* type [0x" + firstChar.toString(16) + "](" + args.text.length + ")");
+      logExtensionMessage("* type [0x" + firstChar.toString(16) + "](" + args.text.length + ")");
     } else {
-      logFormatMessage("* type [" + args.text + "](" + args.text.length + ")");
+      logExtensionMessage("* type [" + args.text + "](" + args.text.length + ")");
     }
   }
   if (editor != undefined) {
     editMode = getMode(editor);
   }
-  if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.OVERTYPE) {
-    logFormatMessage("* OVERTYPE type");
+  if (editor != undefined && tabFormatter.isEnbled() && editMode == eEditMode.OVERTYPE) {
+    logExtensionMessage("* OVERTYPE type");
     overtypeBeforeType(editor, args.text, false);
-  } else if (editor != undefined && formatter.isEnbled() && editMode == eEditMode.ALIGN) {
-    formatter.alignBeforeType(editor, args.text, false);
+  } else if (editor != undefined && tabFormatter.isEnbled() && editMode == eEditMode.ALIGN) {
+    tabFormatter.alignBeforeType(editor, args.text, false);
   } else {
-    //logFormatMessage("* VSCode type");
+    //logExtensionMessage("* VSCode type");
     vscode.commands.executeCommand("default:type", args);
   }
 }
 
 function deleteLeftCommand() {
   const editor = vscode.window.activeTextEditor;
-  logFormatMessage("* deleteLeft");
-  var bAlignEdit: boolean = editor != undefined && formatter.isEnbled();
+  logExtensionMessage("* deleteLeft");
+  var bAlignEdit: boolean = editor != undefined && tabFormatter.isEnbled();
   if (editor != undefined) {
     const editMode = getMode(editor);
     if (editMode != eEditMode.ALIGN) {
@@ -392,22 +384,22 @@ function deleteLeftCommand() {
     }
   }
   if (bAlignEdit && editor != undefined) {
-    formatter.alignDelete(editor, false);
+    tabFormatter.alignDelete(editor, false);
     return null;
   } else {
-    //logFormatMessage("* VSCode deleteLeft");
+    //logExtensionMessage("* VSCode deleteLeft");
     return vscode.commands.executeCommand("deleteLeft");
   }
 }
 
 function deleteRightCommand() {
   const editor = vscode.window.activeTextEditor;
-  logFormatMessage("* deleteRight");
-  if (formatter.isEnbled() && editor && getMode(editor) == eEditMode.ALIGN) {
-    formatter.alignDelete(editor, true);
+  logExtensionMessage("* deleteRight");
+  if (tabFormatter.isEnbled() && editor && getMode(editor) == eEditMode.ALIGN) {
+    tabFormatter.alignDelete(editor, true);
     return null;
   } else {
-    //logFormatMessage("* VSCode deleteRight");
+    //logExtensionMessage("* VSCode deleteRight");
     return vscode.commands.executeCommand("deleteRight");
   }
 }
@@ -415,17 +407,17 @@ function deleteRightCommand() {
 function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
   const editor = vscode.window.activeTextEditor;
   if (editor != undefined) {
-    logFormatMessage("* paste");
+    logExtensionMessage("* paste");
     if (getMode(editor) == eEditMode.OVERTYPE && configuration.overtypePaste) {
       // TODO: Make paste work with align
-      logFormatMessage("* OVERTYPE paste");
+      logExtensionMessage("* OVERTYPE paste");
       overtypeBeforePaste(editor, args.text, args.pasteOnNewLine);
       return vscode.commands.executeCommand("default:paste", args);
-    } else if (formatter.isEnbled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
-      formatter.alignBeforeType(editor, args.text, true);
+    } else if (tabFormatter.isEnbled() && getMode(editor) == eEditMode.ALIGN && !args.pasteOnNewLine) {
+      tabFormatter.alignBeforeType(editor, args.text, true);
       return null;
     } else {
-      //logFormatMessage("* VSCode paste");
+      //logExtensionMessage("* VSCode paste");
       return vscode.commands.executeCommand("default:paste", args);
     }
   }

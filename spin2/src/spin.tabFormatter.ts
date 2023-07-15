@@ -63,8 +63,8 @@ export class Formatter {
   readonly endIdentifierREgEx1 = /^(?<end>\s*(end|endasm))\s+/;
   readonly endIdentifierREgEx2 = /^(?<end>\s*(end|endasm))$/;
 
-  private tabbingDebugLogEnabled: boolean = false;
-  private tabbinglog: any = undefined;
+  private tabbingDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private tabbingOutputChannel: vscode.OutputChannel | undefined = undefined;
 
   private finalTabSelection: vscode.Selection;
   private bFinalTabSelectionValid: boolean = false;
@@ -73,10 +73,17 @@ export class Formatter {
 
   //export const configuration = loadConfiguration();
 
-  constructor(outputChannel: vscode.OutputChannel | undefined, formatDebugLogEnabled: boolean) {
-    this.tabbingDebugLogEnabled = formatDebugLogEnabled;
-    // save output channel
-    this.tabbinglog = outputChannel;
+  constructor() {
+    if (this.tabbingDebugLogEnabled) {
+      if (this.tabbingOutputChannel === undefined) {
+        //Create output channel
+        this.tabbingOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 Format DEBUG");
+        this.logMessage("Spin/Spin2 Format log started.");
+      } else {
+        this.logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+      }
+    }
+
     //const jsonConfig: string = JSON.stringify(this.config, null, 4);
     //this.logMessage(`+ (DBG) config=(${jsonConfig})`);
     //const jsonBlocks: string = JSON.stringify(this.blocks, null, 4);
@@ -99,10 +106,10 @@ export class Formatter {
    * @param the message to be written
    * @returns nothing
    */
-  logMessage(message: string): void {
-    if (this.tabbingDebugLogEnabled && this.tabbinglog != undefined) {
+  public logMessage(message: string): void {
+    if (this.tabbingDebugLogEnabled && this.tabbingOutputChannel != undefined) {
       //Write to output window.
-      this.tabbinglog.appendLine(message);
+      this.tabbingOutputChannel.appendLine(message);
     }
   }
 

@@ -1,6 +1,20 @@
 "use strict";
 // src/spin1.utils.ts
 
+export enum eParseState {
+  Unknown = 0,
+  inCon,
+  inDat,
+  inObj,
+  inPub,
+  inPri,
+  inVar,
+  inDatPasm,
+  inMultiLineComment,
+  inMultiLineDocComment,
+  inNothing,
+}
+
 export enum eBuiltInType {
   Unknown = 0,
   BIT_VARIABLE,

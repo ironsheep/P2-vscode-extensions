@@ -1,6 +1,21 @@
 "use strict";
 // src/spin2.utils.ts
 
+export enum eParseState {
+  Unknown = 0,
+  inCon,
+  inDat,
+  inObj,
+  inPub,
+  inPri,
+  inVar,
+  inPasmInline,
+  inDatPasm,
+  inMultiLineComment,
+  inMultiLineDocComment,
+  inNothing,
+}
+
 export enum eDebugDisplayType {
   Unknown = 0,
   ddtLogic,

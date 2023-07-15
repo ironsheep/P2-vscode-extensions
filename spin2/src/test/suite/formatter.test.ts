@@ -14,7 +14,7 @@ suite("Indent Test Suite", async function () {
 
   var outputChannel: vscode.OutputChannel | undefined = undefined;
 
-  const formatter = new formatter_1.Formatter(outputChannel, false);
+  const formatter = new formatter_1.Formatter();
 
   function tab(character: number): string {
     return " ".repeat(character);

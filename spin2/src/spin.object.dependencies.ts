@@ -31,8 +31,8 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   private topLevelFSpec: string = "";
   private topLevelFName: string = "";
 
-  private objTreeDebugLogEnabled: boolean = false;
-  private objTreeLog: any = undefined;
+  private objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 
   private isDocument: boolean = false;
 
@@ -40,10 +40,16 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   private _onDidChangeTreeData: vscode.EventEmitter<Dependency | undefined | null | void> = new vscode.EventEmitter<Dependency | undefined | null | void>();
   readonly onDidChangeTreeData: vscode.Event<Dependency | undefined | null | void> = this._onDidChangeTreeData.event;
 
-  constructor(outputChannel: vscode.OutputChannel | undefined, formatDebugLogEnabled: boolean) {
-    this.objTreeDebugLogEnabled = formatDebugLogEnabled;
-    // save output channel
-    this.objTreeLog = outputChannel;
+  constructor() {
+    if (this.objTreeDebugLogEnabled) {
+      if (this.objTreeOutputChannel === undefined) {
+        //Create output channel
+        this.objTreeOutputChannel = vscode.window.createOutputChannel("Spin/Spin2 ObjTree DEBUG");
+        this.logMessage("Spin/Spin2 ObjTree log started.");
+      } else {
+        this.logMessage("\n\n------------------   NEW FILE ----------------\n\n");
+      }
+    }
     // add subscriptions
     vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
     //vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
@@ -89,9 +95,9 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
    * @returns nothing
    */
   logMessage(message: string): void {
-    if (this.objTreeDebugLogEnabled && this.objTreeLog != undefined) {
+    if (this.objTreeDebugLogEnabled && this.objTreeOutputChannel != undefined) {
       //Write to output window.
-      this.objTreeLog.appendLine(message);
+      this.objTreeOutputChannel.appendLine(message);
     }
   }
 

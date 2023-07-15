@@ -6,22 +6,7 @@ import { EndOfLine } from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
-import { ParseUtils } from "./spin2.utils";
-
-enum eParseState {
-  Unknown = 0,
-  inCon,
-  inDat,
-  inObj,
-  inPub,
-  inPri,
-  inVar,
-  inPasmInline,
-  inDatPasm,
-  inMultiLineComment,
-  inMultiLineDocComment,
-  inNothing,
-}
+import { ParseUtils, eParseState } from "./spin2.utils";
 
 export class DocGenerator {
   private generatorDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
