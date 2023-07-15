@@ -115,12 +115,12 @@ export const activate = (context: vscode.ExtensionContext) => {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(generateDocCommentCommand, async () => {
-      logExtensionMessage("* generateDocumentCommentCommand");
+      docGenerator.logMessage("* generateDocumentCommentCommand");
       try {
         // and test it!
         const editor = vscode?.window.activeTextEditor!;
         const document = editor.document!;
-        var textEdits = await spin2SemanticTokensProvider.insertDocComment(document, editor.selections);
+        var textEdits = await docGenerator.insertDocComment(document, editor.selections);
         applyTextEdits(document, textEdits!);
       } catch (error) {
         await vscode.window.showErrorMessage("Document Comment Generation Problem");

@@ -137,85 +137,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return this.semanticFindings;
   }
 
-  public insertDocComment(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
-    return selections
-      .map((selection) => {
-        let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
-        let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
-        this._logMessage(
-          `* iDc selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
-        );
-        const { firstLine, lastLine, lineCount } = this._lineNumbersFromSelection(document, selection);
-        const cursorPos: vscode.Position = new vscode.Position(firstLine + 1, 0);
-        let linesToInsert: string[] = [];
-        let currLine: string = document.lineAt(firstLine).text.trim();
-        const linePrefix = currLine.length > 3 ? currLine.substring(0, 3).toLowerCase() : "";
-        const isSignature: boolean = linePrefix.startsWith("pub") || linePrefix.startsWith("pri");
-        const isPRI: boolean = linePrefix.startsWith("pri");
-        if (isSignature) {
-          const commentPrefix = isPRI ? "'" : "''";
-          linesToInsert.push(commentPrefix + " ..." + endOfLineStr); // for description
-          linesToInsert.push(commentPrefix + " " + endOfLineStr); // blank line
-          const posOpenParen = currLine.indexOf("(");
-          const posCloseParen = currLine.indexOf(")");
-          if (posOpenParen != -1 && posCloseParen != -1) {
-            const bHasParameters: boolean = posCloseParen - posOpenParen > 1 ? true : false;
-            if (bHasParameters) {
-              const paramString: string = currLine.substring(posOpenParen + 1, posCloseParen);
-              const numberParameters: number = (paramString.match(/,/g) || []).length + 1;
-              const paramNames = paramString.split(/[ \t,]/).filter(Boolean);
-              this._logMessage(`* iDc paramString=[${paramString}], paramNames=[${paramNames}]`);
-              for (let paramIdx = 0; paramIdx < numberParameters; paramIdx++) {
-                linesToInsert.push(commentPrefix + ` @param ${paramNames[paramIdx]} - ` + endOfLineStr); // blank line
-              }
-            }
-            const bHasReturnValues: boolean = currLine.includes(":") ? true : false;
-            const bHasLocalVariables: boolean = currLine.includes("|") ? true : false;
-            if (bHasReturnValues) {
-              const posStartReturn = currLine.indexOf(":") + 1;
-              const posEndReturn = bHasLocalVariables ? currLine.indexOf("|") - 1 : currLine.length;
-              const returnsString: string = currLine.substring(posStartReturn, posEndReturn);
-              const numberReturns: number = (returnsString.match(/,/g) || []).length + 1;
-              const returnNames = returnsString.split(/[ \t,]/).filter(Boolean);
-              this._logMessage(`* iDc returnsString=[${returnsString}], returnNames=[${returnNames}]`);
-              for (let retValIdx = 0; retValIdx < numberReturns; retValIdx++) {
-                linesToInsert.push(commentPrefix + ` @returns ${returnNames[retValIdx]} - ` + endOfLineStr); // blank line
-              }
-            }
-            let posTrailingComment = currLine.indexOf("'");
-            if (posTrailingComment == -1) {
-              posTrailingComment = currLine.indexOf("{");
-            }
-            if (bHasLocalVariables) {
-              // locals are always non-doc single-line comments
-              const posStartLocal = currLine.indexOf("|") + 1;
-              const posEndLocal = posTrailingComment != -1 ? posTrailingComment : currLine.length;
-              const localsString: string = currLine.substring(posStartLocal, posEndLocal);
-              const numberLocals: number = (localsString.match(/,/g) || []).length + 1;
-              const localsNames = localsString.split(/[ \t,]/).filter(Boolean);
-              this._logMessage(`* iDc localsString=[${localsString}], localsNames=[${localsNames}]`);
-              linesToInsert.push("" + endOfLineStr); // empty line so following is not shown in comments for method
-              linesToInsert.push("' Local Variables:" + endOfLineStr); // blank line
-              for (let localIdx = 0; localIdx < numberLocals; localIdx++) {
-                linesToInsert.push("'" + ` @local ${localsNames[localIdx]} - ` + endOfLineStr); // blank line
-              }
-            }
-          }
-        } else {
-          this._logMessage(`* iDc SKIP - NOT on signature line`);
-        }
-
-        // insert the lines, if any
-        if (linesToInsert.length > 0) {
-          for (let line of linesToInsert) {
-            results.push(vscode.TextEdit.insert(cursorPos, `${line}`));
-          }
-        }
-        return results;
-      })
-      .reduce((selections, selection) => selections.concat(selection), []);
-  }
-
   async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
     // SEE https://www.codota.com/code/javascript/functions/vscode/CancellationToken/isCancellationRequested
     if (cancelToken) {
@@ -229,44 +150,6 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       builder.push(token.line, token.startCharacter, token.length, this._encodeTokenType(token.ptTokenType), this._encodeTokenModifiers(token.ptTokenModifiers));
     });
     return builder.build();
-  }
-
-  private _lineNumbersFromSelection(document: vscode.TextDocument, selection: vscode.Selection): { firstLine: number; lastLine: number; lineCount: number } {
-    let lineCount: number = 0;
-    let firstLine: number = 0;
-    let lastLine: number = 0;
-    // what kind of section do we have?
-    if (selection.isEmpty) {
-      // empty, just a cursor location
-      firstLine = selection.start.line;
-      lastLine = selection.end.line;
-      lineCount = lastLine - firstLine + 1;
-    } else {
-      // non-empty then let's figure out which lines could change
-      const allSelectedText: string = document.getText(selection);
-      const lines: string[] = allSelectedText.split(/\r?\n/);
-      lineCount = lines.length;
-      firstLine = selection.start.line;
-      lastLine = selection.end.line;
-      //this._logMessage(` - (DBG) ${lineCount} lines: fm,to=[${firstLine}, ${lastLine}], allSelectedText=[${allSelectedText}](${allSelectedText.length}), lines=[${lines}](${lines.length})`);
-      for (var currLineIdx: number = 0; currLineIdx < lines.length; currLineIdx++) {
-        if (lines[currLineIdx].length == 0) {
-          if (currLineIdx == lines.length - 1) {
-            lastLine--;
-            lineCount--;
-          }
-        }
-      }
-      if (firstLine > lastLine && lineCount == 0) {
-        // have odd selection case, let's override it!
-        // (selection contained just a newline!)
-        firstLine--;
-        lastLine = firstLine;
-        lineCount = 1;
-      }
-    }
-
-    return { firstLine, lastLine, lineCount };
   }
 
   private _encodeTokenType(tokenType: string): number {
