@@ -7,6 +7,8 @@ import { EndOfLine } from "vscode";
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
 import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
 import { ParseUtils, eDebugDisplayType, eParseState } from "./spin2.utils";
+import { DocGenerator } from "./spin.document.generate";
+import { start } from "repl";
 
 // ----------------------------------------------------------------------------
 //   Semantic Highlighting Provider
@@ -107,6 +109,7 @@ interface ISpin2Directive {
 // map of display-type to etype'
 export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
   private parseUtils = new ParseUtils();
+  private docGenerator = new DocGenerator();
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
@@ -418,6 +421,13 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           // process PUB/PRI method signature
           if (trimmedNonCommentLine.length > 3) {
             this._getPUB_PRI_Name(3, i + 1, line);
+            // and record our fake signature for later use by signature help
+            const docComment: RememberedComment = this._generateFakeCommentForSignature(0, i + 1, line);
+            if (docComment._type != eCommentType.Unknown) {
+              this.semanticFindings.recordFakeComment(docComment);
+            } else {
+              this._logState("- scan ln:" + (i + 1) + " no FAKE doc comment for this signature");
+            }
           }
         } else if (currState == eParseState.inCon) {
           // process a constant line
@@ -869,6 +879,40 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     return tokenSet;
   }
 
+  private _generateFakeCommentForSignature(startingOffset: number, lineNbr: number, line: string): RememberedComment {
+    if (startingOffset) {
+    } // kill warning
+    let desiredComment: RememberedComment = new RememberedComment(eCommentType.Unknown, -1, "");
+    const linePrefix: string = line.substring(0, 3).toLowerCase();
+    const isSignature: boolean = linePrefix == "pub" || linePrefix == "pri" ? true : false;
+    const isPri: boolean = linePrefix == "pri" ? true : false;
+    this._logSPIN(" -- gfcfs linePrefix=[" + linePrefix + "](" + linePrefix.length + ")" + `, isSignature=${isSignature},  isPri=${isPri}`);
+    if (isSignature) {
+      const cmtType: eCommentType = isPri ? eCommentType.multiLineComment : eCommentType.multiLineDocComment;
+      let tmpDesiredComment: RememberedComment = new RememberedComment(cmtType, lineNbr, "NOTE: insert comment template by pressing Ctrl+Alt+C on PRI signature line, then fill it in.");
+      const bIsSpin1: boolean = this.docGenerator.isCurrentDocumentSpin1();
+      const signatureComment: string[] = this.docGenerator.generateDocCommentForSignature(line, bIsSpin1);
+      if (signatureComment && signatureComment.length > 0) {
+        let lineCount: number = 1; // count our comment line on creation
+        for (let cmtIdx = 0; cmtIdx < signatureComment.length; cmtIdx++) {
+          const currCmtLine: string = signatureComment[cmtIdx];
+          if (currCmtLine.includes("@param")) {
+            tmpDesiredComment.appendLine(currCmtLine + "no parameter comment found");
+            lineCount++; // count this line, too
+          }
+        }
+        tmpDesiredComment.closeAsSingleLineBlock(lineNbr + lineCount - 1);
+        if (lineCount > 1) {
+          desiredComment = tmpDesiredComment; // only return this if we have params!
+          this._logSPIN("=> SPIN: generated signature comment: sig=[" + line + "]");
+        } else {
+          this._logSPIN("=> SPIN: SKIPped generation of signature comment: sig=[" + line + "]");
+        }
+      }
+    }
+    return desiredComment;
+  }
+
   private _getSpin2_Directive(startingOffset: number, lineNbr: number, line: string): void {
     // HAVE {-* VSCode-Spin2: nextline debug()-display: bitmap  *-}
     // (only this one so far)
@@ -1219,6 +1263,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings.setGlobalToken(methodName, new RememberedToken("method", refModifiers), lineNbr, this._declarationComment());
     // reset our list of local variables
     this.semanticFindings.clearLocalPasmTokensForMethod(methodName);
+    this._logSPIN("  -- _getPUB_PRI_Name() exit");
   }
 
   private _getSPIN_PasmDeclaration(startingOffset: number, lineNbr: number, line: string): void {
@@ -3369,7 +3414,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             });
             symbolOffset += newDisplayName.length;
             // (1) highlight parameter names
-            let eDisplayType: eDebugDisplayType = this.semanticFindings.getDebugDisplayType(newDisplayType);
+            let eDisplayType: eDebugDisplayType = this.semanticFindings.getDebugDisplayEnumForType(newDisplayType);
             const firstParamIdx: number = 3; // [0]=debug [1]=`{type}, [2]={userName}
             for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
               const newParameter: string = lineParts[idx];
@@ -3494,7 +3539,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 } while (bHaveFeed);
               }
               // (1) highlight parameter names (NOTE: based on first display type, only)
-              let eDisplayType: eDebugDisplayType = this.semanticFindings.getUserDebugDisplayType(newDisplayType);
+              let eDisplayType: eDebugDisplayType = this.semanticFindings.getDebugDisplayEnumForUserName(newDisplayType);
               if (isRuntimeNamed) {
                 // override bad display type with directive if present
                 eDisplayType = this._getDisplayTypeForLine(lineNbr);
@@ -3960,7 +4005,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     const newDirective: ISpin2Directive = {
       lineNumber: lineNbr,
       displayType: displayType,
-      eDisplayType: this.semanticFindings.getDebugDisplayType(displayType),
+      eDisplayType: this.semanticFindings.getDebugDisplayEnumForType(displayType),
     };
     this._logMessage("=> Add DIRECTIVE: " + this._directiveString(newDirective));
     this.fileDirectives.push(newDirective);

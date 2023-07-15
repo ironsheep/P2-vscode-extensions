@@ -9,7 +9,7 @@ import * as path from "path";
 import { ParseUtils, eParseState } from "./spin2.utils";
 
 export class DocGenerator {
-  private generatorDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private generatorDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
   private parseUtils = new ParseUtils();
 
@@ -38,6 +38,13 @@ export class DocGenerator {
     }
   }
 
+  public isCurrentDocumentSpin1(): boolean {
+    const editor = vscode?.window.activeTextEditor!;
+    const document = editor.document!;
+    const isSpin1Doc: boolean = document.fileName.toLowerCase().endsWith(".spin");
+    return isSpin1Doc;
+  }
+
   public insertDocComment(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
     return selections
       .map((selection) => {
@@ -54,7 +61,7 @@ export class DocGenerator {
         const linePrefix = signatureLine.length > 3 ? signatureLine.substring(0, 3).toLowerCase() : "";
         const isSignature: boolean = linePrefix.startsWith("pub") || linePrefix.startsWith("pri");
         if (isSignature) {
-          linesToInsert = this._generateDocCommentForSignature(signatureLine, isSpin1Doc);
+          linesToInsert = this.generateDocCommentForSignature(signatureLine, isSpin1Doc);
         } else {
           this.logMessage(`* iDc SKIP - NOT on signature line`);
         }
@@ -108,8 +115,9 @@ export class DocGenerator {
     return { firstLine, lastLine, lineCount };
   }
 
-  private _generateDocCommentForSignature(signatureLine: string, isSpin1Method: boolean): string[] {
+  public generateDocCommentForSignature(signatureLine: string, isSpin1Method: boolean): string[] {
     let desiredDocComment: string[] = [];
+    this.logMessage(`* iDc SKIP - generateDocCommentForSignature([${signatureLine}], isSpin1=${isSpin1Method})`);
     const linePrefix = signatureLine.length > 3 ? signatureLine.substring(0, 3).toLowerCase() : "";
     const isSignature: boolean = linePrefix.startsWith("pub") || linePrefix.startsWith("pri");
     const isPRI: boolean = linePrefix.startsWith("pri");

@@ -180,7 +180,10 @@ export class Spin2HoverProvider implements HoverProvider {
       }
       if ((bFoundParseToken || bFoundDebugToken) && !builtInFindings.found) {
         bFoundSomething = true;
-        const tokenFindings: ITokenDescription = this.symbolsFound.getTokenWithDescription(input.word);
+        let tokenFindings: ITokenDescription = this.symbolsFound.getTokenWithDescription(input.word);
+        if (bFoundDebugToken) {
+          tokenFindings = this.symbolsFound.getDebugTokenWithDescription(input.word);
+        }
         if (tokenFindings.found) {
           this._logMessage(
             `+ Hvr: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`

@@ -52,7 +52,7 @@ export interface IBuiltinDescription {
   returns?: string[];
 }
 
-export const debugTypeForDisplay = new Map<string, eDebugDisplayType>([
+export const displayEnumByTypeName = new Map<string, eDebugDisplayType>([
   ["logic", eDebugDisplayType.ddtLogic],
   ["scope", eDebugDisplayType.ddtScope],
   ["scope_xy", eDebugDisplayType.ddtScopeXY],

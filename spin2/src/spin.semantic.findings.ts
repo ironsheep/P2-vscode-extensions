@@ -3,7 +3,7 @@ import { IncomingMessage } from "http";
 // src/spin2.semantic.findings.ts
 
 import * as vscode from "vscode";
-import { eDebugDisplayType, debugTypeForDisplay } from "./spin2.utils";
+import { eDebugDisplayType, displayEnumByTypeName } from "./spin2.utils";
 
 // ============================================================================
 //  this file contains objects we use in tracking symbol use and declaration
@@ -56,6 +56,7 @@ export class DocumentFindings {
   private localTokensDeclarationInfo;
   private localPasmTokensByMethodName;
   private blockComments: RememberedComment[] = [];
+  private fakeComments: RememberedComment[] = [];
 
   private outputChannel: vscode.OutputChannel | undefined = undefined;
   private bLogEnabled: boolean = false;
@@ -81,10 +82,15 @@ export class DocumentFindings {
     this.localTokens.clear();
     this.localPasmTokensByMethodName.clear();
     this.blockComments = [];
+    this.fakeComments = [];
   }
 
   public recordComment(comment: RememberedComment) {
     this.blockComments.push(comment);
+  }
+
+  public recordFakeComment(comment: RememberedComment) {
+    this.fakeComments.push(comment);
   }
 
   public isLineInBlockComment(lineNumber: number): boolean {
@@ -92,6 +98,19 @@ export class DocumentFindings {
     if (this.blockComments.length > 0) {
       for (let docComment of this.blockComments) {
         if (docComment.includesLine(lineNumber)) {
+          inCommentStatus = true;
+          break;
+        }
+      }
+    }
+    return inCommentStatus;
+  }
+
+  public isLineInFakeComment(lineNumber: number): boolean {
+    let inCommentStatus: boolean = false;
+    if (this.fakeComments.length > 0) {
+      for (let fakeComment of this.fakeComments) {
+        if (fakeComment.includesLine(lineNumber)) {
           inCommentStatus = true;
           break;
         }
@@ -121,14 +140,119 @@ export class DocumentFindings {
     return desiredComment;
   }
 
+  public fakeCommentMDFromLine(lineNumber: number, filter: eCommentFilter): string | undefined {
+    let desiredComment: string | undefined = undefined;
+    if (this.fakeComments.length > 0) {
+      for (let fakeComment of this.fakeComments) {
+        if (fakeComment.includesLine(lineNumber)) {
+          if (fakeComment.isDocComment) {
+            if (filter == eCommentFilter.allComments || filter == eCommentFilter.docCommentOnly) {
+              desiredComment = fakeComment.commentAsMarkDown();
+            }
+          } else {
+            if (filter == eCommentFilter.allComments || filter == eCommentFilter.nondocCommentOnly) {
+              desiredComment = fakeComment.commentAsMarkDown();
+            }
+          }
+          break;
+        }
+      }
+    }
+    return desiredComment;
+  }
+
   public isKnownToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) || this.isKnownDebugDisplay(tokenName) ? true : false;
+    const foundStatus: boolean = this.isGlobalToken(tokenName) || this.isLocalToken(tokenName) || this.hasLocalPasmToken(tokenName) ? true : false;
     return foundStatus;
   }
 
   public isKnownDebugToken(tokenName: string): boolean {
     const foundStatus: boolean = this.isKnownDebugDisplay(tokenName) ? true : false;
     return foundStatus;
+  }
+
+  public getDebugTokenWithDescription(tokenName: string): ITokenDescription {
+    let findings: ITokenDescription = {
+      found: false,
+      tokenRawInterp: "",
+      isGoodInterp: false,
+      token: undefined,
+      scope: "",
+      interpretation: "",
+      adjustedName: tokenName,
+      declarationLine: 0,
+      declarationComment: undefined,
+      relatedFilename: undefined,
+      relatedObjectName: undefined,
+      relatedMethodName: undefined,
+    };
+    // do we have a token??
+    let declInfo: RememberedTokenDeclarationInfo | undefined = undefined;
+    if (this.isKnownDebugDisplay(tokenName)) {
+      findings.found = true;
+      // Check for debug display type?
+      const displayInfo: IDebugDisplayInfo = this.getDebugDisplayInfoForUserName(tokenName);
+      if (displayInfo.eDisplayType != eDebugDisplayType.Unknown) {
+        // we have a debug display type!
+        findings.token = new RememberedToken("debugDisplay", [displayInfo.displayTypeString]);
+        findings.scope = "Global";
+        findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
+        const termType: string = displayInfo.displayTypeString.toUpperCase();
+        declInfo = new RememberedTokenDeclarationInfo(displayInfo.lineNbr, `Debug Output: User name for an instance of ${termType}<br>- Write output to the \`${tokenName}\` window`);
+      }
+    }
+    if (findings.token) {
+      let details: ITokenInterpretation = this._interpretToken(findings.token, findings.scope, tokenName, declInfo);
+      findings.isGoodInterp = details.isGoodInterp;
+      findings.interpretation = details.interpretation;
+      findings.scope = details.scope;
+      findings.adjustedName = details.name;
+      if (declInfo) {
+        // and decorate with declaration line number
+        findings.declarationLine = declInfo.lineIndex;
+        if (declInfo.reference) {
+          if (declInfo.isFilenameReference) {
+            findings.relatedFilename = declInfo.reference;
+          } else {
+            findings.relatedObjectName = declInfo.reference;
+          }
+        }
+        const bIsMethod: boolean = findings.token.type == "method";
+        const bIsDebugDisplay: boolean = findings.token.type == "debugDisplay";
+        const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
+        if (bIsMethod) {
+          const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
+          const nonBlankLineNbr: number = this.locateNonBlankLineAfter(findings.declarationLine + 1);
+          findings.declarationComment = this.blockCommentMDFromLine(nonBlankLineNbr, commentType);
+          // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
+          const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
+          if (!findings.declarationComment && canUseAlternateComment) {
+            // if we have single line doc comment and can use it, then do so!
+            // NOTE: use fake signature comment instead when there Are params and declInfo doesn't describe them
+            const haveParams: boolean = declInfo.comment && declInfo.comment?.includes("@params") ? true : false;
+            let fakeComment: string | undefined = this.fakeCommentMDFromLine(nonBlankLineNbr, commentType);
+            if (!haveParams && fakeComment) {
+              findings.declarationComment = fakeComment;
+            } else {
+              findings.declarationComment = declInfo.comment;
+            }
+          }
+        } else {
+          //  (this is in else so non-methods can get non-doc multiline preceeding blocks!)
+          findings.declarationComment = this.blockCommentMDFromLine(findings.declarationLine - 1, eCommentFilter.nondocCommentOnly);
+          // if no multi-line comment then ...(but don't use trailing comment when method!)
+          if (!findings.declarationComment && declInfo.comment) {
+            // if we have single line comment then use it!
+            findings.declarationComment = declInfo.comment;
+          }
+        }
+      }
+      this._logTokenMessage(
+        `  -- FND-DBGxxxTOK line(${findings.declarationLine}) cmt=[${findings.declarationComment}], file=[${findings.relatedFilename}], obj=[${findings.relatedObjectName}]` +
+          this._rememberdTokenString(tokenName, findings.token)
+      );
+    }
+    return findings;
   }
 
   public getTokenWithDescription(tokenName: string): ITokenDescription {
@@ -180,17 +304,6 @@ export class DocumentFindings {
             findings.scope = "Local";
             // and get additional info for token
             declInfo = this.localTokensDeclarationInfo.get(tokenName);
-          } else {
-            // Check for debug display type?
-            const dispType: eDebugDisplayType = this.getDebugDisplayType(tokenName);
-            if (dispType != eDebugDisplayType.Unknown) {
-              // we have a debug display type!
-              const displayInfo: IDebugDisplayInfo = this.getUserDebugDisplayInfo(tokenName);
-              findings.token = new RememberedToken("debugDisplay", [displayInfo.displayTypeString]);
-              findings.scope = "Global";
-              findings.tokenRawInterp = "Global: " + this._rememberdTokenString(tokenName, findings.token);
-              declInfo = new RememberedTokenDeclarationInfo(displayInfo.lineNbr, undefined);
-            }
           }
         }
       }
@@ -221,7 +334,14 @@ export class DocumentFindings {
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
           if (!findings.declarationComment && canUseAlternateComment) {
             // if we have single line doc comment and can use it, then do so!
-            findings.declarationComment = declInfo.comment;
+            // NOTE: use fake signature comment instead when there Are params and declInfo doesn't describe them
+            const haveParams: boolean = declInfo.comment && declInfo.comment?.includes("@params") ? true : false;
+            let fakeComment: string | undefined = this.fakeCommentMDFromLine(nonBlankLineNbr, commentType);
+            if (!haveParams && fakeComment) {
+              findings.declarationComment = fakeComment;
+            } else {
+              findings.declarationComment = declInfo.comment;
+            }
           }
         } else {
           //  (this is in else so non-methods can get non-doc multiline preceeding blocks!)
@@ -270,7 +390,7 @@ export class DocumentFindings {
       desiredInterp.interpretation = "32-bit constant";
     } else if (token?.type == "debugDisplay") {
       desiredInterp.scope = "object"; // ignore for this (or move `object` here?)
-      desiredInterp.interpretation = "debug display";
+      desiredInterp.interpretation = "user debug display";
     } else if (token?.type == "namespace") {
       desiredInterp.scope = "object"; // ignore for this (or move `object` here?)
       desiredInterp.interpretation = "named instance";
@@ -447,43 +567,52 @@ export class DocumentFindings {
   // ----------------------------------------------------------------------------
   //  P2 Special handling for Debug() Displays
   //
-  // map of display-name to etype'
+  // map of debug-display-user-name to:
+  //  export interface IDebugDisplayInfo {
+  //    displayTypeString: string;
+  //    userName: string;
+  //    lineNbr: number;
+  //    eDisplayType: eDebugDisplayType;
+  //  }
+
   private debugDisplays = new Map<string, IDebugDisplayInfo>();
 
-  public getDebugDisplayType(typeName: string): eDebugDisplayType {
+  public getDebugDisplayEnumForType(typeName: string): eDebugDisplayType {
     let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
-    if (debugTypeForDisplay.has(typeName.toLowerCase())) {
-      const possibleType: eDebugDisplayType | undefined = debugTypeForDisplay.get(typeName.toLowerCase());
+    if (displayEnumByTypeName.has(typeName.toLowerCase())) {
+      const possibleType: eDebugDisplayType | undefined = displayEnumByTypeName.get(typeName.toLowerCase());
       desiredType = possibleType || eDebugDisplayType.Unknown;
     }
-    this._logTokenMessage("  DDsply _getDebugDisplayType(" + typeName + ") = " + this.getNameForDebugDisplayType(desiredType));
+    this._logTokenMessage("  DDsply getDebugDisplayEnumForType(" + typeName + ") = enum(" + desiredType + "), " + this.getNameForDebugDisplayEnum(desiredType));
     return desiredType;
   }
 
   public setUserDebugDisplay(typeName: string, userName: string, lineNbr: number): void {
     const nameKey: string = userName.toLowerCase();
-    //this._logTokenMessage('  DBG _setUserDebugDisplay(' + typeName + ', ' + userName + ')');
+    this._logTokenMessage("  DDsply _setUserDebugDisplay(" + typeName + ", " + userName + ", li#" + lineNbr + ")");
     if (!this.isKnownDebugDisplay(userName)) {
-      let eType: eDebugDisplayType = this.getDebugDisplayType(typeName);
+      let eType: eDebugDisplayType = this.getDebugDisplayEnumForType(typeName);
       let displayInfo: IDebugDisplayInfo = { displayTypeString: typeName, userName: userName, lineNbr: lineNbr, eDisplayType: eType };
       this.debugDisplays.set(nameKey, displayInfo);
       //this._logTokenMessage("  -- DDsply " + userName.toLowerCase() + "=[" + eDisplayType + " : " + typeName.toLowerCase() + "]");
     } else {
-      this._logTokenMessage("ERROR: DDsply _setNewDebugDisplay() display exists [" + userName + "]");
+      this._logTokenMessage("ERROR: DDsply setUserDebugDisplay() display exists [" + userName + "]");
     }
   }
 
-  public getUserDebugDisplayType(possibleUserName: string): eDebugDisplayType {
+  public getDebugDisplayEnumForUserName(possibleUserName: string): eDebugDisplayType {
     const nameKey: string = possibleUserName.toLowerCase();
-    let desiredType: eDebugDisplayType = eDebugDisplayType.Unknown;
+    let desiredEnumValue: eDebugDisplayType = eDebugDisplayType.Unknown;
     if (this.isKnownDebugDisplay(possibleUserName)) {
       const possibleInfo: IDebugDisplayInfo | undefined = this.debugDisplays.get(nameKey);
-      desiredType = possibleInfo?.eDisplayType || eDebugDisplayType.Unknown;
+      if (possibleInfo) {
+        desiredEnumValue = possibleInfo.eDisplayType;
+      }
     }
-    return desiredType;
+    return desiredEnumValue;
   }
 
-  public getUserDebugDisplayInfo(possibleUserName: string): IDebugDisplayInfo {
+  public getDebugDisplayInfoForUserName(possibleUserName: string): IDebugDisplayInfo {
     const nameKey: string = possibleUserName.toLowerCase();
     let possibleInfo: IDebugDisplayInfo = { displayTypeString: "", userName: "", lineNbr: 0, eDisplayType: eDebugDisplayType.Unknown };
     if (this.isKnownDebugDisplay(possibleUserName)) {
@@ -495,20 +624,22 @@ export class DocumentFindings {
     return possibleInfo;
   }
 
-  public getNameForDebugDisplayType(eDisplayType: eDebugDisplayType): string {
+  public getNameForDebugDisplayEnum(eDisplayType: eDebugDisplayType): string {
     let desiredName: string = "?no-value-in-map?";
-    for (let [key, value] of debugTypeForDisplay.entries()) {
-      if (value === eDisplayType) desiredName = key;
-      break;
+    for (let [idString, eValue] of displayEnumByTypeName.entries()) {
+      if (eValue === eDisplayType) {
+        desiredName = idString;
+        break;
+      }
     }
-    // this._logTokenMessage('  DDsply _getDebugDisplayType(' + typeName + ') = ' + desiredType);
+    this._logTokenMessage("  DDsply getNameForDebugDisplayEnum(enum: " + eDisplayType + ") = " + desiredName);
     return desiredName;
   }
 
   public isKnownDebugDisplay(possibleUserName: string): boolean {
     const nameKey: string = possibleUserName.toLowerCase();
     const foundStatus: boolean = this.debugDisplays.has(nameKey);
-    //this._logTokenMessage('  DDsply _isKnownDebugDisplay(' + possibleUserName + ') = ' + foundStatus);
+    this._logTokenMessage("  DDsply _isKnownDebugDisplay(" + possibleUserName + ") = " + foundStatus);
     return foundStatus;
   }
 
