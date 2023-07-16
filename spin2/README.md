@@ -51,7 +51,14 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 Hovers show information about the symbol/object that's below the mouse cursor. This is usually the type of the symbol and a description. 
 
 - Hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item.
-- Hover for **Built-in Spin2** method names, variables, constants and smart-pin constants to display pop-up documentation about the built-in item.
+- Hover for **Built-in Spin/Spin2** method names, variables, constants and smart-pin constants to display pop-up documentation about the built-in item.
+
+## Feature: Help With Method Signatures
+
+Help With Method Signatures displays information about the method that is being called as you are typing the code that is invoking the method. This works for **Spin/Spin2 built-in methods** as well as **your own PUB and PRI methods** in the same file.
+
+- Documentation is shown for each parameter as you are entering the parameter value being passed to the method.
+- If your own methods are not yet documented, the this signature help still supports entry of the parameter values as well as reminds you how to add your own documentation for your PUB and PRI methods.
 
 ## Feature: Generate "Object public interface" documentation
 
