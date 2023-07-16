@@ -22,7 +22,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.9.7] 2023-07-??
+## [1.9.7] 2023-07-15
 
 Add **Signature Help**, **Hover support** and **Documentation Generation** features for P1!
 
