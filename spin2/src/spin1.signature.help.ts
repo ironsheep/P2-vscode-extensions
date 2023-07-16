@@ -10,7 +10,7 @@ import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Conf
 
 export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private signatureLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private signatureLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private signatureOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();

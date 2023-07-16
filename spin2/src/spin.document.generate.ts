@@ -9,7 +9,7 @@ import * as path from "path";
 import { ParseUtils, eParseState } from "./spin2.utils";
 
 export class DocGenerator {
-  private generatorDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private generatorDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private docGenOutputChannel: vscode.OutputChannel | undefined = undefined;
   private parseUtils = new ParseUtils();
 

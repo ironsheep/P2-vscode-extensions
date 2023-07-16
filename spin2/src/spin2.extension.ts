@@ -40,8 +40,10 @@ const SPIN2_FILE: Filter = { language: "spin2", scheme: "file" };
 var objTreeProvider: ObjectTreeProvider = new ObjectTreeProvider();
 var tabFormatter: Formatter = new Formatter();
 
-const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider();
-const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider();
+const docGenerator: DocGenerator = new DocGenerator();
+
+const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider(docGenerator);
+const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider(docGenerator);
 
 const extensionDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var extensionOutputChannel: vscode.OutputChannel | undefined = undefined;
@@ -95,7 +97,6 @@ export const activate = (context: vscode.ExtensionContext) => {
   //
 
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
-  const docGenerator: DocGenerator = new DocGenerator();
 
   context.subscriptions.push(
     vscode.commands.registerCommand(generateDocumentFileCommand, async () => {

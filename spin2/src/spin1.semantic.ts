@@ -96,7 +96,7 @@ interface IFilteredStrings {
 
 export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
   private parseUtils = new ParseUtils();
-  private docGenerator = new DocGenerator();
+  private docGenerator: DocGenerator;
 
   private spin1log: any = undefined;
   // adjust following true/false to show specific parsing debug
@@ -121,7 +121,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
 
-  public constructor() {
+  public constructor(sharedDocGenerator: DocGenerator) {
+    this.docGenerator = sharedDocGenerator;
     if (this.spin1DebugLogEnabled) {
       if (this.spin1log === undefined) {
         //Create output channel
@@ -921,43 +922,47 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // get line parts - we only care about first one
     const dataDeclNonCommentStr = this.parseUtils.getNonCommentLineRemainder(currentOffset, line);
     let lineParts: string[] = this.parseUtils.getNonWhiteLineParts(dataDeclNonCommentStr);
-    this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
-    let haveMoreThanDat: boolean = lineParts.length > 1 && lineParts[0].toUpperCase() == "DAT";
-    if (haveMoreThanDat || lineParts[0].toUpperCase() != "DAT") {
+    this._logDAT("- GetDatDecl() lineParts=[" + lineParts + "](" + lineParts.length + ")");
+    let isDatDeclLine: boolean = lineParts.length >= 1 && lineParts[0].toUpperCase() == "DAT" ? true : false;
+    if ((isDatDeclLine && lineParts.length >= 2) || (!isDatDeclLine && lineParts.length > 0)) {
       // remember this object name so we can annotate a call to it
-      let nameIndex: number = 0;
-      let typeIndex: number = 1;
-      let maxParts: number = 2;
-      if (lineParts[0].toUpperCase() == "DAT") {
-        nameIndex = 1;
-        typeIndex = 2;
-        maxParts = 3;
-      }
-      let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[nameIndex]);
-      const dataType: string = lineParts[typeIndex];
-      const haveStorageType: boolean = lineParts.length > typeIndex ? this.parseUtils.isDatStorageType(dataType) : false;
-      const isNamedDataDeclarationLine: boolean = haveLabel && haveStorageType ? true : false;
+      const nameIndex: number = isDatDeclLine ? 1 : 0;
+      const typeIndex: number = isDatDeclLine ? 2 : 1;
+      const maxParts: number = isDatDeclLine ? 3 : 2;
+      const possLabel: string | undefined = lineParts.length > nameIndex ? lineParts[nameIndex] : undefined;
+      const haveLabel: boolean = possLabel && possLabel.length > 0 ? this.parseUtils.isDatOrPasmLabel(possLabel) : false;
+      //this._logDAT(` -- GetDatDecl point 1: nameIndex=(${nameIndex}), typeIndex=(${typeIndex}), maxParts=(${maxParts})`);
+      const dataType: string = lineParts.length > typeIndex ? lineParts[typeIndex] : "";
+      //this._logDAT(` -- GetDatDecl point 2: dataType=[${dataType}](${dataType.length})`);
+      const haveDataType: boolean = dataType.length > 0 ? true : false; // is RES, BYTE, WORD, LONG
+      const haveStorageType: boolean = haveDataType ? this.parseUtils.isDatStorageType(dataType) : false; // is RES, BYTE, WORD, LONG
+      //this._logDAT("- GetDatDecl possLabel=[" + possLabel + "], haveLabel=(" + haveLabel + "), dataType=[" + dataType + "], haveStorageType=" + haveStorageType);
+      const isNamedDataDeclarationLine: boolean = haveLabel && haveDataType ? true : false;
+      //this._logDAT(" -- GetDatDecl point 3");
       const isDataDeclarationLine: boolean = haveStorageType ? true : false;
-      let lblFlag: string = haveLabel ? "T" : "F";
-      let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
-      this._logDAT("- GetDatDecl lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
+      const lblFlag: string = haveLabel ? "T" : "F";
+      const dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
+      this._logDAT("- GetDatDecl prcss lineParts=[" + lineParts + "](" + lineParts.length + ") label=" + lblFlag + ", daDecl=" + dataDeclFlag);
       if (haveLabel) {
-        let newName = lineParts[nameIndex];
-        if (!this.parseUtils.isSpinReservedWord(newName) && !this.parseUtils.isBuiltinReservedWord(newName)) {
-          const nameType: string = isDataDeclarationLine ? "variable" : "label";
-          var labelModifiers: string[] = [];
-          if (!isDataDeclarationLine) {
-            if (newName.startsWith(".")) {
-              labelModifiers = ["illegalUse", "static"];
-            } else {
-              labelModifiers = newName.startsWith(":") ? ["static"] : [];
+        const newName: string = lineParts.length > nameIndex ? lineParts[nameIndex] : "";
+        if (newName.length > 0) {
+          const notOKSpin2Word: boolean = this.parseUtils.isSpin2ReservedWords(newName) && !this.parseUtils.isSpin2ButOKReservedWords(newName);
+          if (!this.parseUtils.isSpinReservedWord(newName) && !this.parseUtils.isBuiltinReservedWord(newName) && !notOKSpin2Word) {
+            const nameType: string = isDataDeclarationLine ? "variable" : "label";
+            var labelModifiers: string[] = [];
+            if (!isDataDeclarationLine) {
+              if (newName.startsWith(".")) {
+                labelModifiers = ["illegalUse", "static"];
+              } else {
+                labelModifiers = newName.startsWith(":") ? ["static"] : [];
+              }
             }
+            this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
+            const bIsFileLine: boolean = dataType.length > 0 && dataType.toLowerCase() == "file" ? true : false;
+            const fileName: string | undefined = isNamedDataDeclarationLine && bIsFileLine && lineParts.length > maxParts ? lineParts[maxParts] : undefined;
+            this._logDAT("  -- GLBL gddcl fileName=[" + fileName + "]");
+            this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment(), fileName);
           }
-          this._logDAT("  -- GLBL gddcl newName=[" + newName + "](" + nameType + ")");
-          const bIsFileLine: boolean = lineParts.length > 1 && lineParts[typeIndex].toLowerCase().includes("file") ? true : false;
-          const fileName: string | undefined = lineParts.length > 2 && bIsFileLine ? lineParts[2] : undefined;
-          this._logDAT("  -- GLBL gddcl fileName=[" + fileName + "]");
-          this.semanticFindings.setGlobalToken(newName, new RememberedToken(nameType, labelModifiers), lineNbr, this._declarationComment(), fileName);
         }
       }
       // check for names in value declaration
@@ -996,6 +1001,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           }
         }
       }
+    } else {
+      this._logDAT("- GetDatDecl SKIP dataDeclNonCommentStr=[" + dataDeclNonCommentStr + "]");
     }
   }
 
@@ -1021,7 +1028,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           labelModifiers = labelName.startsWith(":") ? ["static"] : [];
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
-        const fileName: string | undefined = isFileDeclarationLine ? lineParts[2] : undefined;
+        const fileName: string | undefined = isFileDeclarationLine && lineParts.length > 2 ? lineParts[2] : undefined;
         this._logPASM("  -- DAT PASM label-ref fileName=[" + fileName + "]");
         this.semanticFindings.setGlobalToken(labelName, new RememberedToken(labelType, labelModifiers), lineNbr, this._declarationComment(), fileName);
       }

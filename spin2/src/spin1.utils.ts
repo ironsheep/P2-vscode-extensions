@@ -733,6 +733,12 @@ export class ParseUtils {
     return reservedStatus;
   }
 
+  public isSpin2ButOKReservedWords(name: string): boolean {
+    const spin2OKInstructionsOfNote: string[] = ["crcbit", "getbyte", "getword", "pop", "push", "setbyte", "skip", "zerox"];
+    const reservedStatus: boolean = spin2OKInstructionsOfNote.indexOf(name.toLowerCase()) != -1;
+    return reservedStatus;
+  }
+
   public isSpin2ReservedWords(name: string): boolean {
     const spin2InstructionsOfNote: string[] = [
       "alignl",
@@ -836,7 +842,6 @@ export class ParseUtils {
       "fltz",
       "getbrk",
       "getbyte",
-      "getbyte",
       "getct",
       "getnib",
       "getptr",
@@ -845,7 +850,6 @@ export class ParseUtils {
       "getrnd",
       "getrnd",
       "getscp",
-      "getword",
       "getword",
       "getxacc",
       "hubset",
@@ -895,7 +899,9 @@ export class ParseUtils {
       "modcz",
       "modz",
       "movbyts",
+      "mul",
       "mulpix",
+      "muls",
       "muxnibs",
       "muxnits",
       "muxq",

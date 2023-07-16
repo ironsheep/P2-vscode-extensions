@@ -167,7 +167,6 @@ name            BYTE    0[23]
                 FLTZ
                 GETBRK
                 GETBYTE
-                GETBYTE
                 GETCT
                 GETNIB
                 GETPTR
@@ -176,7 +175,6 @@ name            BYTE    0[23]
                 GETRND
                 GETRND
                 GETSCP
-                GETWORD
                 GETWORD
                 GETXACC
                 HUBSET

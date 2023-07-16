@@ -109,11 +109,11 @@ interface ISpin2Directive {
 // map of display-type to etype'
 export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
   private parseUtils = new ParseUtils();
-  private docGenerator = new DocGenerator();
+  private docGenerator: DocGenerator;
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -137,7 +137,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
 
-  public constructor() {
+  public constructor(sharedDocGenerator: DocGenerator) {
+    this.docGenerator = sharedDocGenerator;
     if (this.spin2DebugLogEnabled) {
       if (this.spin2log === undefined) {
         //Create output channel
