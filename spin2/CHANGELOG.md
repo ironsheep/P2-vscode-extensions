@@ -22,6 +22,12 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.8] 2023-07-17
+
+General repairs to Hover Support and Signature Help (P1 and P2)
+
+- Repair generation of internal comments used for user method signature help when no comments present
+
 ## [1.9.7] 2023-07-15
 
 Add **Signature Help**, **Hover support** and **Documentation Generation** features for P1!
@@ -32,7 +38,7 @@ This release brings our P1 support into feature parity with the P2 feature set a
 - Now supports hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item
 - Now supports hover for **Built-in Spin** methods, variables, and constants to display pop-up documentation about the built-in item
 - Adds new **Doc-Comment Generation** for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line.
-- Adds new **Object Public interface documentation generation** via keystroke [Ctrl+Alt+d], Ctrl+Alt+( d )ocument. Doc opens on the right side of the editor  
+- Adds new **Object Public interface documentation generation** via keystroke [Ctrl+Alt+d], Ctrl+Alt+( d )ocument. Doc opens on the right side of the editor
 - P2 Hover information is now shown for debug display window names.
 - New for P1 and P2: when user methods don't have parameter documentation the **signature help** now works and it reminds us how to generate the missing documentation.
 

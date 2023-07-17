@@ -119,19 +119,31 @@ export class DocumentFindings {
     return inCommentStatus;
   }
 
-  public blockCommentMDFromLine(lineNumber: number, filter: eCommentFilter): string | undefined {
+  public blockCommentMDFromLine(lineNumber: number, eFilter: eCommentFilter): string | undefined {
     let desiredComment: string | undefined = undefined;
     if (this.blockComments.length > 0) {
       for (let blockComment of this.blockComments) {
+        // only one will match...
         if (blockComment.includesLine(lineNumber)) {
-          if (blockComment.isDocComment) {
-            if (filter == eCommentFilter.allComments || filter == eCommentFilter.docCommentOnly) {
-              desiredComment = blockComment.commentAsMarkDown();
-            }
-          } else {
-            if (filter == eCommentFilter.allComments || filter == eCommentFilter.nondocCommentOnly) {
-              desiredComment = blockComment.commentAsMarkDown();
-            }
+          const canUseThisComment: boolean = this.isUsableComment(blockComment.isDocComment, eFilter);
+          if (canUseThisComment) {
+            desiredComment = blockComment.commentAsMarkDown();
+          }
+          break; // we found the single match, so stop seraching...
+        }
+      }
+    }
+    return desiredComment;
+  }
+
+  public fakeCommentMDFromLine(lineNumber: number, eFilter: eCommentFilter): string | undefined {
+    let desiredComment: string | undefined = undefined;
+    if (this.fakeComments.length > 0) {
+      for (let fakeComment of this.fakeComments) {
+        if (fakeComment.includesLine(lineNumber)) {
+          const canUseThisComment: boolean = this.isUsableComment(fakeComment.isDocComment, eFilter);
+          if (canUseThisComment) {
+            desiredComment = fakeComment.commentAsMarkDown();
           }
           break;
         }
@@ -139,26 +151,13 @@ export class DocumentFindings {
     }
     return desiredComment;
   }
-
-  public fakeCommentMDFromLine(lineNumber: number, filter: eCommentFilter): string | undefined {
-    let desiredComment: string | undefined = undefined;
-    if (this.fakeComments.length > 0) {
-      for (let fakeComment of this.fakeComments) {
-        if (fakeComment.includesLine(lineNumber)) {
-          if (fakeComment.isDocComment) {
-            if (filter == eCommentFilter.allComments || filter == eCommentFilter.docCommentOnly) {
-              desiredComment = fakeComment.commentAsMarkDown();
-            }
-          } else {
-            if (filter == eCommentFilter.allComments || filter == eCommentFilter.nondocCommentOnly) {
-              desiredComment = fakeComment.commentAsMarkDown();
-            }
-          }
-          break;
-        }
-      }
-    }
-    return desiredComment;
+  private isUsableComment(bHaveDocComment: boolean, efilter: eCommentFilter): boolean {
+    const canUsestatus: boolean =
+      (bHaveDocComment && (efilter == eCommentFilter.allComments || efilter == eCommentFilter.docCommentOnly)) ||
+      (!bHaveDocComment && (efilter == eCommentFilter.allComments || efilter == eCommentFilter.nondocCommentOnly))
+        ? true
+        : false;
+    return canUsestatus;
   }
 
   public isKnownToken(tokenName: string): boolean {
@@ -224,17 +223,24 @@ export class DocumentFindings {
           const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
           const nonBlankLineNbr: number = this.locateNonBlankLineAfter(findings.declarationLine + 1);
           findings.declarationComment = this.blockCommentMDFromLine(nonBlankLineNbr, commentType);
+          this._logTokenMessage(`  -- FND-DBGxxxTOK findings.declarationComment=[${findings.declarationComment}], declInfo.comment=[${findings.relatedFilename}]`);
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
-          if (!findings.declarationComment && canUseAlternateComment) {
+          if (!findings.declarationComment && canUseAlternateComment && declInfo.comment && declInfo.comment.length > 0) {
             // if we have single line doc comment and can use it, then do so!
-            // NOTE: use fake signature comment instead when there Are params and declInfo doesn't describe them
-            const haveParams: boolean = declInfo.comment && declInfo.comment?.includes("@params") ? true : false;
+            findings.declarationComment = declInfo.comment;
+          }
+          // NOTE: use fake signature comment instead when there Are params and declInfo doesn't describe them
+          const haveDeclParams: boolean = findings.declarationComment && findings.declarationComment?.includes("@param") ? true : false;
+          this._logTokenMessage(`  -- FND-DBGxxxTOK haveDeclParams=(${haveDeclParams})`);
+          if (!haveDeclParams) {
             let fakeComment: string | undefined = this.fakeCommentMDFromLine(nonBlankLineNbr, commentType);
-            if (!haveParams && fakeComment) {
-              findings.declarationComment = fakeComment;
-            } else {
-              findings.declarationComment = declInfo.comment;
+            if (fakeComment) {
+              if (findings.declarationComment) {
+                findings.declarationComment = findings.declarationComment + "<br><br>" + fakeComment;
+              } else {
+                findings.declarationComment = fakeComment;
+              }
             }
           }
         } else {
@@ -330,17 +336,24 @@ export class DocumentFindings {
           const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
           const nonBlankLineNbr: number = this.locateNonBlankLineAfter(findings.declarationLine + 1);
           findings.declarationComment = this.blockCommentMDFromLine(nonBlankLineNbr, commentType);
+          this._logTokenMessage(`  -- FND-xxxTOK findings.declarationComment=[${findings.declarationComment}], declInfo.comment=[${findings.relatedFilename}]`);
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
-          if (!findings.declarationComment && canUseAlternateComment) {
+          if (!findings.declarationComment && canUseAlternateComment && declInfo.comment && declInfo.comment.length > 0) {
             // if we have single line doc comment and can use it, then do so!
-            // NOTE: use fake signature comment instead when there Are params and declInfo doesn't describe them
-            const haveParams: boolean = declInfo.comment && declInfo.comment?.includes("@params") ? true : false;
+            findings.declarationComment = declInfo.comment;
+          }
+          // NOTE: use fake signature comment instead when there Are params and declInfo doesn't describe them
+          const haveDeclParams: boolean = findings.declarationComment && findings.declarationComment?.includes("@param") ? true : false;
+          this._logTokenMessage(`  -- FND-DBGxxxTOK haveDeclParams=(${haveDeclParams})`);
+          if (!haveDeclParams) {
             let fakeComment: string | undefined = this.fakeCommentMDFromLine(nonBlankLineNbr, commentType);
-            if (!haveParams && fakeComment) {
-              findings.declarationComment = fakeComment;
-            } else {
-              findings.declarationComment = declInfo.comment;
+            if (fakeComment) {
+              if (findings.declarationComment) {
+                findings.declarationComment = findings.declarationComment + "<br><br>" + fakeComment;
+              } else {
+                findings.declarationComment = fakeComment;
+              }
             }
           }
         } else {
@@ -1061,37 +1074,43 @@ export class RememberedComment {
     return this._lines.length == 0 || (this.lines.length == 1 && this._lines[0].length == 0);
   }
 
-  public commentAsMarkDown(): string {
+  public commentAsMarkDown(): string | undefined {
     // Return the markdown for this block comment
-    let tempLines: string[] = this._lines;
+    let linesAsComment: string | undefined = undefined;
+    let tempLines: string[] = [];
     // if keywords are found in comment then specially wrap the word following each keyword
-    for (let idx = 0; idx < this._lines.length; idx++) {
-      let workline = tempLines[idx];
-      let lineParts = workline.split(" ");
-      let findIndex = lineParts.indexOf("@param");
-      let nameItem: string | undefined = undefined;
-      if (findIndex != -1 && findIndex < lineParts.length - 1) {
-        nameItem = lineParts[findIndex + 1];
-      } else {
-        findIndex = lineParts.indexOf("@returns");
+    if (this.lineCount > 0) {
+      for (let idx = 0; idx < this.lines.length; idx++) {
+        const currLine = this.lines[idx];
+        const lineParts = currLine.split(" ");
+        let findIndex = lineParts.indexOf("@param");
+        let nameItem: string | undefined = undefined;
         if (findIndex != -1 && findIndex < lineParts.length - 1) {
           nameItem = lineParts[findIndex + 1];
         } else {
-          findIndex = lineParts.indexOf("@local");
+          findIndex = lineParts.indexOf("@returns");
           if (findIndex != -1 && findIndex < lineParts.length - 1) {
             nameItem = lineParts[findIndex + 1];
+          } else {
+            findIndex = lineParts.indexOf("@local");
+            if (findIndex != -1 && findIndex < lineParts.length - 1) {
+              nameItem = lineParts[findIndex + 1];
+            }
           }
         }
+        if (nameItem) {
+          // now wrap the name in single back ticks
+          const originameItem: string = nameItem;
+          nameItem = nameItem.replace("`", "").replace("`", "");
+          const finishedLine: string = currLine.replace(originameItem, "`" + nameItem + "`");
+          tempLines[idx] = finishedLine;
+        } else {
+          tempLines[idx] = currLine;
+        }
       }
-      if (nameItem) {
-        // now wrap the name in single back ticks
-        const originameItem: string = nameItem;
-        nameItem = nameItem.replace("`", "").replace("`", "");
-        workline = workline.replace(originameItem, "`" + nameItem + "`");
-        tempLines[idx] = workline;
-      }
+      linesAsComment = tempLines.join("<br>");
     }
-    return tempLines.join("<br>");
+    return linesAsComment;
   }
 
   public span(): vscode.Range {
@@ -1142,6 +1161,7 @@ export class RememberedComment {
       }
       this._lines[idx] = trimmedLine;
     }
+    this.clearLinesIfAllBlank();
   }
 
   public closeAsSingleLineBlock(lineNumber: number) {
@@ -1156,6 +1176,7 @@ export class RememberedComment {
       }
       this._lines[idx] = trimmedLine;
     }
+    this.clearLinesIfAllBlank();
   }
 
   public closeAsSingleLine() {
@@ -1214,5 +1235,20 @@ export class RememberedComment {
     }
     const interpString: string = `[${typeString}] lines ${startLine}-${endLine}`;
     return interpString;
+  }
+
+  private clearLinesIfAllBlank() {
+    // emtpy our line aray if it's really nothing worthwhile
+    let bHaveNonBlank: boolean = false;
+    for (let idx = 0; idx < this._lines.length; idx++) {
+      let currLine = this._lines[idx];
+      if (currLine.length > 0) {
+        bHaveNonBlank = true;
+        break;
+      }
+    }
+    if (!bHaveNonBlank) {
+      this._lines = [];
+    }
   }
 }
