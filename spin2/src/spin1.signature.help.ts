@@ -426,6 +426,7 @@ export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
     // skipping first line, and @param, @returns lines
     if (docMD) {
       const lines = docMD.split("<br>");
+      this._logMessage(`+ Sig: gmdfd lines=[${lines}]({${lines.length}})`);
       let descrLines: string[] = [];
       if (lines.length > 0) {
         for (let lnIdx = 1; lnIdx < lines.length; lnIdx++) {
@@ -434,6 +435,10 @@ export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
             continue;
           }
           if (sglLine.includes("@returns")) {
+            continue;
+          }
+          if (sglLine.includes("NOTE: insert comment template")) {
+            // specific so we don't filter users comments
             continue;
           }
           descrLines.push(sglLine);

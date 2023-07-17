@@ -33,6 +33,7 @@ export enum eBuiltInType {
   Unknown = 0,
   BIT_VARIABLE,
   BIT_METHOD,
+  BIT_METHOD_POINTER,
   BIT_SYMBOL,
   BIT_CONSTANT,
   BIT_LANG_PART,
@@ -598,7 +599,11 @@ export class ParseUtils {
       } else {
         desiredDocText = this._docTextForCogAndNumericSymbols(name);
         if (desiredDocText.found) {
-          desiredDocText.type = eBuiltInType.BIT_SYMBOL;
+          if (desiredDocText.category.includes("Method Pointer")) {
+            desiredDocText.type = eBuiltInType.BIT_METHOD_POINTER;
+          } else {
+            desiredDocText.type = eBuiltInType.BIT_SYMBOL;
+          }
         } else {
           desiredDocText = this._docTextForSpinBuiltInLanguagePart(name);
           if (desiredDocText.found) {
@@ -1356,9 +1361,18 @@ export class ParseUtils {
     newcog: "%01_0000, Starts an available cog",
   };
 
-  private _tableSpinMethodPointerSymbols: { [Identifier: string]: string } = {
-    send: "SEND is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods",
-    recv: "RECV, like SEND, is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods",
+  private _tableSpinMethodPointerSymbols: { [Identifier: string]: TMethodTuple } = {
+    send: [
+      "SEND(userParam)",
+      "SEND() is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods. Must point to a method which takes one parameter and has no return values",
+      ["userParam - single value or list of values passed to pointed to method"],
+    ],
+    recv: [
+      "RECV(): returnValue",
+      "RECV(), like SEND(), is a special method pointer which is inherited from the calling method and, in turn, conveyed to all called methods. Must point to a method which takes no parameters and returns a single value",
+      [],
+      ["returnValue - single value returned from pointed to method"],
+    ],
   };
 
   public isSpinSpecialMethod(name: string): boolean {
@@ -1369,7 +1383,7 @@ export class ParseUtils {
 
   public isSpinNoparenMethod(name: string): boolean {
     const nameKey: string = name.toLowerCase();
-    let reservedStatus: boolean = nameKey in this._tableSpinMethodPointerSymbols; // send, recv
+    let reservedStatus: boolean = nameKey in this._tableSpinMethodPointerSymbols && nameKey == "recv"; // recv of [send, recv]
     if (!reservedStatus) {
       reservedStatus = nameKey in this._tableSpinControlFlowMethods; // abort, return
     }
@@ -1379,6 +1393,7 @@ export class ParseUtils {
   private _docTextForCogAndNumericSymbols(name: string): IBuiltinDescription {
     const nameKey: string = name.toLowerCase();
     let desiredDocText: IBuiltinDescription = { found: false, type: eBuiltInType.Unknown, category: "", description: "", signature: "" };
+    let methodDescr: TMethodTuple = ["", "", []];
     if (this.isCoginitReservedSymbol(name)) {
       if (nameKey in this._tableSpinCoginitSymbols) {
         desiredDocText.category = "Coginit";
@@ -1392,7 +1407,17 @@ export class ParseUtils {
       desiredDocText.description = this._tableSpinNumericSymbols[nameKey];
     } else if (nameKey in this._tableSpinMethodPointerSymbols) {
       desiredDocText.category = "Method Pointer";
-      desiredDocText.description = this._tableSpinMethodPointerSymbols[nameKey];
+      methodDescr = this._tableSpinMethodPointerSymbols[nameKey];
+    }
+    if (methodDescr[0].length != 0) {
+      desiredDocText.signature = methodDescr[0];
+      desiredDocText.description = methodDescr[1];
+      if (methodDescr[2] && methodDescr[2].length > 0) {
+        desiredDocText.parameters = methodDescr[2];
+      }
+      if (methodDescr[3] && methodDescr[3].length > 0) {
+        desiredDocText.returns = methodDescr[3];
+      }
     }
     if (desiredDocText.category.length > 0) {
       desiredDocText.found = true;

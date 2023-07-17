@@ -17,6 +17,11 @@ PUB main() : ok
     pyth
     perth
 
+
+    bytefill
+    strcomp
+    polxy
+
 PUB peth(parm1, parm2) : bRan
 '' not telling what this does!
 

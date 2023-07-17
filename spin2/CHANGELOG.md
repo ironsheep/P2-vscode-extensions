@@ -26,7 +26,8 @@ Possible next additions:
 
 General repairs to Hover Support and Signature Help (P1 and P2)
 
-- Repair generation of internal comments used for user method signature help when no comments present
+- Repair generation of internal comments used for user method signature help when no comments present, P1 and P2
+- P2 Improve hover pop-up content for SEND(), RECV() method pointers
 
 ## [1.9.7] 2023-07-15
 

@@ -18,6 +18,8 @@ PUB go()
 
     SEND(4, $004040, 5, $00FFFF)
 
+    char := recv()
+
     time := GETCT()
 
     i := @text

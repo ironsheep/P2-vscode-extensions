@@ -308,6 +308,9 @@ export class Spin2HoverProvider implements HoverProvider {
           } else if (builtInFindings.type == eBuiltInType.BIT_CONSTANT) {
             defInfo.declarationlines = ["(constant 32-bit) " + input.word];
             subTitleText = ` constant: *Spin2 built-in*`;
+          } else if (builtInFindings.type == eBuiltInType.BIT_METHOD_POINTER) {
+            defInfo.declarationlines = ["(built-in method pointer) " + builtInFindings.signature];
+            subTitleText = `: *Spin2 built-in*`;
           } else if (builtInFindings.type == eBuiltInType.BIT_METHOD) {
             defInfo.declarationlines = ["(built-in method) " + builtInFindings.signature];
             subTitleText = `: *Spin2 built-in*`;

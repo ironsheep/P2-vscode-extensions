@@ -439,6 +439,10 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
           if (sglLine.includes("@returns")) {
             continue;
           }
+          if (sglLine.includes("NOTE: insert comment template")) {
+            // specific so we don't filter users comments
+            continue;
+          }
           descrLines.push(sglLine);
         }
         if (descrLines.length > 0) {
