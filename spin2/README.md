@@ -155,13 +155,20 @@ PRI pullUpValueForEnum(ePullupRqst) : pullup
 
 We are working on fixes to the following issues we've seen during our testing. However, they are not major enough to prevent this release.
 
+- The spin2 line-continuation syntax is not yet supported
+- The spin2 object-instance override of constants is not yet fully highlighted correctly
 - We are still working through validating the P1 support against the full P1 obex - this is a work in progress
 - Some line comments are not properly colored
 - Occasionally [byte|word|long] storage types are not properly colored
 - Occasionally some pasm code escapes coloring. We're trying to understand this.
 - Ocassionally the syntax highlighting will just stop working for the final lines in a file. This appears to be a VSCode issue. But we are monitoring it.
 
-_These appear to be mostly syntax recognizer issues_
+_The above appear to be mostly syntax recognizer issues_
+
+There are some things that currently are limitations which we may or may not address in the future:
+
+- P2 Signature help is not available for send() method pointer - as it has variant forms of paramaters
+- P1 and P2 Signature help is not available for lookup(), lookupz(), lookdown(), lookupdownz() - as these have non-standard signature patterns not supported.  Within the parens are found a ':' followed by one or more ','s.
 
 ## Reporting Issues
 
