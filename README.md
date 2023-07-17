@@ -56,6 +56,8 @@ These are not yet definate but I'm:
 
 In VSCode search for the "spin2" extension and install it.  It's that easy!  After installation you will be notified to download and install a new version as new versions are released.
 
+**Note:** This extension replaces the [Spin by Entomy](https://marketplace.visualstudio.com/items?itemName=Entomy.spin) vscode extension. While either can be used, our version provides more comprehensive Syntax highlighting (as the former has not been maintained) and this extension adds full Semantic Highlighting, Outlining, and Tab support with InsertModes, Document generation, etc. The older Spin extension can now be uninstalled with no loss of functionality.
+
 ## VSCode Environment
 
 There are additional companion documents in this Repository:
@@ -73,6 +75,12 @@ Also, here are a couple of really useful VSCode sources:
 - YouTube Channel: [Code 2020](https://www.youtube.com/channel/UCyYh-eAr74avLwOyPa1dDNg) - A large list of short videos presenting all manner of useful VSCode tips.
 
 *Please go look at each of these once so you can know what's here when you need them!*
+
+## Known Conflicts with other VSCode Extensions
+We know the three extension so far which might interfere with our Spin2 extension. Here's what we've seem:
+
+1. If I haven't already, I'll be submitting pull requests to the Overtype extension maintainers to add code for avoiding interference with our .spin/.spin2 InsertMode feature but in the meantime please ensure that the [Overtype by Adma Maras](https://marketplace.visualstudio.com/items?itemName=adammaras.overtype) and/or [Overtype by DrMerfy](https://marketplace.visualstudio.com/items?itemName=DrMerfy.overtype) extensions are disabled or uninstalled as they can interfere with our extensions' behavior.
+2. The Extension [Document This](https://marketplace.visualstudio.com/items?itemName=oouo-diogo-perdigao.docthis) v0.8.2 currently also occasionally intercepts the Ctrl+Alt+D keystroke which we use to generate documentation and our extension then doesn't get the request. I've filed an issue with that extensions' maintainer so maybe this will be fixed in the future.  Meanwhile, you can either disable the **Document This** extension or when you see the warning pop up from the document this extension you can usually just click in your editor window again and then press Ctrl+Alt+d again and it will work after one or more tries.
 
 ## Repository Notes
 

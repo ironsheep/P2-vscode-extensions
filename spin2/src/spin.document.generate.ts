@@ -52,7 +52,7 @@ export class DocGenerator {
         let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
         const isSpin1Doc: boolean = document.fileName.toLowerCase().endsWith(".spin");
         this.logMessage(
-          `* iDc selection(isSingle-[${selection.isSingleLine}] isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
+          `* iDc selection(isSingle-[${selection.isSingleLine}] isSpin1Doc-(${isSpin1Doc}) isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
         );
         const { firstLine, lastLine, lineCount } = this._lineNumbersFromSelection(document, selection);
         const cursorPos: vscode.Position = new vscode.Position(firstLine + 1, 0);
@@ -430,7 +430,11 @@ export class DocGenerator {
           }
         }
         fs.closeSync(outFile);
+      } else {
+        this.logMessage(`+ (DBG) generateDocument() NOT a spin file! can't generate doc.`);
       }
+    } else {
+      this.logMessage(`+ (DBG) generateDocument() NO active editor.`);
     }
   }
 
