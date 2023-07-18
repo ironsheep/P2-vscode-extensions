@@ -44,6 +44,9 @@ Additional pages:
 
 ```
 Latest Updates:
+18 Jul 2023
+- Adopting formal intstall locations
+- Made FlexProp and PNut setup the same steps for each
 10 Apr 2023
 - Awakened this Windows-specific setup page
 ```
@@ -134,9 +137,11 @@ Next we move this new version into place.
 
 Get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases).  
 
-Create a directory called "flexprop" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
+We are making a new programs install location in these steps. We can't use `C:\Program Files (x86)` as FlexProp expects to be able to write to its own directory.
 
-Finish up by then [add a new PATH element](#os-windows) and make sure to also create the new Environment Variable `FlexPropDir`.  *The User Tasks expect this environment variable to exist. They use it to locate the flash utility binary file.*
+So, Create a directory a program files directory called `C:\Programs\TotalSpectrum\FlexProp` and unpack the .zip file into that directory. Make sure that this directory you created is writable.
+
+Finish up by then [add a new PATH element](#os-windows) and make sure to also create the new Environment Variable `FlexPropPath`.  *The User Tasks expect this environment variable to exist. They use it to locate the flash utility binary file.*
 
 #### Update flexprop
 
@@ -163,7 +168,7 @@ Propeller Tool installs into `C:\Program Files (x86)\Parallax Inc\Propeller Tool
 
 I right-mouse on the PNut_{version}.exe file and select "**Pin to taskbar**".
 
-I then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. In my case I added a path segment pointing to `C:\Program Files (x86)\Parallax Inc\PNut\`.
+I then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. In my case I added a path segment pointing to `C:\Program Files (x86)\Parallax Inc\PNut\`. Lastly, make sure to also create the new Environment Variable `PNutPath`.  Our automations in the future will use this to determine where things are installed.
 
 #### Update PNut
 
@@ -184,11 +189,13 @@ I haven't found the need to keep any prior version. I simply:
 
 On windows the search path for programs is maintained by the **Windows Settings App.**  Open Window Settings and search for "environment" and you should see two choices: "**Edit the system environement variables**" and "**Edit enviroment variables for your account**".  If you want the tools to work for all users on this Windows machine then adjust the PATH values by editing the system environment variables.  If, instead, you only need the tools to work for your account then edit the enviroment variables for your account.
 
-You will do this for each of FlexProp and PNut (which ever ones you use.)
+You will do this for each of FlexProp and PNut (which ever ones you use, either or both.)
 
-If you are using FlexProp, in addition to modifying the PATH variable, you will also need to add a new Environment Variable which points to the FlexProp install folder. 
+If you are using FlexProp and/or PNut, in addition to modifying the PATH variable, you will also need to add a new Environment Variable which points to the FlexProp and PNut install folders. 
 
-In the same section you modified for path (system environment or your account environment) using [New...] add a new environment variable `FlexPropPath` which you will set to your install folder using the [Browse Directory...] button after pressing [New...] and typing in the `FlexPropPath` name. The tasks we define will use this environment variable to locate the binary file it needs when downloading to FLASH.
+In the same section you modified for path (system environment or your account environment) using [New...] add a new environment variable `FlexPropPath` (and/or `PNutPath`) which you will set to your install folder using the [Browse Directory...] button after pressing [New...] and typing in the `FlexPropPath` (or `PNutPath`) name. The tasks we define will use this environment variable to locate the binary file it needs when downloading to FLASH.
+
+If you are setting up do the same for PNut if you are using PNut. 
 
 **NOTE** *the above is referring to **Windows 10** settings names. On earlier versions of Windows the concept is the same. Locate the environment values and make the appropriate changes.*
 
