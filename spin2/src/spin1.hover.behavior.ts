@@ -127,6 +127,15 @@ export class Spin1HoverProvider implements HoverProvider {
     return this.getSymbolDetails(searchDetails, token, false);
   }
 
+  private getSignatureWithoutLocals(line: string): string {
+    let desiredLinePortion: string = line;
+    const localOffset: number = line.indexOf("|");
+    if (localOffset != -1) {
+      desiredLinePortion = line.substring(0, localOffset).trim();
+    }
+    return desiredLinePortion;
+  }
+
   private getSymbolDetails(input: IDefinitionInput, token: vscode.CancellationToken, useTags: boolean): Promise<IDefinitionInfo | null> {
     if (token) {
     } // kill compiler warns for now...
@@ -175,7 +184,7 @@ export class Spin1HoverProvider implements HoverProvider {
           this._logMessage(
             `+ Hvr: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
           );
-          this._logMessage(`+ Hvr:    file=[${tokenFindings.relatedFilename}], declCmt=(${tokenFindings.declarationComment})]`);
+          this._logMessage(`+ Hvr:    file=[${tokenFindings.relatedFilename}], declCmt=(${tokenFindings.declarationComment})], sig=(${tokenFindings.signature})]`);
         } else {
           this._logMessage(`+ Hvr: get token failed?!!`);
         }
@@ -198,9 +207,16 @@ export class Spin1HoverProvider implements HoverProvider {
         // load CODE section of hover
         //
         const isMethod: boolean = typeString.includes("method");
+        if (isMethod && !isSignatureLine) {
+          tokenFindings.signature = this.getSignatureWithoutLocals(nonCommentDecl);
+        }
         if (isMethod) {
           if (tokenFindings.scope.includes("object")) {
-            defInfo.declarationlines = [`(${scopeString} ${typeString}) ${nameString}`];
+            if (typeString.includes("method")) {
+              defInfo.declarationlines = [`(${scopeString} ${typeString}) ${tokenFindings.signature}`];
+            } else {
+              defInfo.declarationlines = [`(${scopeString} ${typeString}) ${nameString}`];
+            }
           } else if (isSignatureLine) {
             // for method declaration use declaration line
             defInfo.declarationlines = [sourceLine];

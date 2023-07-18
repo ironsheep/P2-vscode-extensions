@@ -81,7 +81,10 @@ export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
       let si: SignatureInformation | undefined;
       if (defInfo.doc?.includes("Custom Method")) {
         // use this for user(custom) methods
-        sig = nonCommentDecl;
+        const methodType: string = nonCommentDecl.substring(0, 3).toUpperCase();
+        const isPrivate: boolean = methodType == "PRI";
+        const sigScope: string = isPrivate ? "private" : "public";
+        sig = this.signatureWithOutLocals(`(object ${sigScope} method) ` + nonCommentDecl);
         const methDescr: string = this.getMethodDescriptionFromDoc(defInfo.doc);
         si = new SignatureInformation(sig, methDescr);
         if (si) {
@@ -108,6 +111,15 @@ export class Spin1SignatureHelpProvider implements SignatureHelpProvider {
     } catch (e) {
       return null;
     }
+  }
+
+  private signatureWithOutLocals(signature: string): string {
+    let trimmedSignature: string = signature;
+    const localIndicaPosn: number = trimmedSignature.indexOf("|");
+    if (localIndicaPosn != -1) {
+      trimmedSignature = trimmedSignature.substring(0, localIndicaPosn).replace(/\s+$/, "");
+    }
+    return trimmedSignature;
   }
 
   private getParametersAndReturnTypeFromParameterStringAr(paramList: string[] | undefined): vscode.ParameterInformation[] {

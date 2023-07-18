@@ -19,6 +19,7 @@ export interface ITokenDescription {
   token: RememberedToken | undefined;
   declarationLine: number;
   declarationComment: string | undefined;
+  signature: string | undefined;
   relatedFilename: string | undefined;
   relatedObjectName: string | undefined;
   relatedMethodName: string | undefined;
@@ -125,7 +126,7 @@ export class DocumentFindings {
       for (let blockComment of this.blockComments) {
         // only one will match...
         if (blockComment.includesLine(lineNumber)) {
-          const canUseThisComment: boolean = this.isUsableComment(blockComment.isDocComment, eFilter);
+          const canUseThisComment: boolean = this._isUsableComment(blockComment.isDocComment, eFilter);
           if (canUseThisComment) {
             desiredComment = blockComment.commentAsMarkDown();
           }
@@ -141,7 +142,7 @@ export class DocumentFindings {
     if (this.fakeComments.length > 0) {
       for (let fakeComment of this.fakeComments) {
         if (fakeComment.includesLine(lineNumber)) {
-          const canUseThisComment: boolean = this.isUsableComment(fakeComment.isDocComment, eFilter);
+          const canUseThisComment: boolean = this._isUsableComment(fakeComment.isDocComment, eFilter);
           if (canUseThisComment) {
             desiredComment = fakeComment.commentAsMarkDown();
           }
@@ -151,7 +152,7 @@ export class DocumentFindings {
     }
     return desiredComment;
   }
-  private isUsableComment(bHaveDocComment: boolean, efilter: eCommentFilter): boolean {
+  private _isUsableComment(bHaveDocComment: boolean, efilter: eCommentFilter): boolean {
     const canUsestatus: boolean =
       (bHaveDocComment && (efilter == eCommentFilter.allComments || efilter == eCommentFilter.docCommentOnly)) ||
       (!bHaveDocComment && (efilter == eCommentFilter.allComments || efilter == eCommentFilter.nondocCommentOnly))
@@ -181,6 +182,7 @@ export class DocumentFindings {
       adjustedName: tokenName,
       declarationLine: 0,
       declarationComment: undefined,
+      signature: undefined,
       relatedFilename: undefined,
       relatedObjectName: undefined,
       relatedMethodName: undefined,
@@ -206,6 +208,7 @@ export class DocumentFindings {
       findings.interpretation = details.interpretation;
       findings.scope = details.scope;
       findings.adjustedName = details.name;
+      const bIsMethod: boolean = findings.token.type == "method";
       if (declInfo) {
         // and decorate with declaration line number
         findings.declarationLine = declInfo.lineIndex;
@@ -216,14 +219,14 @@ export class DocumentFindings {
             findings.relatedObjectName = declInfo.reference;
           }
         }
-        const bIsMethod: boolean = findings.token.type == "method";
-        const bIsDebugDisplay: boolean = findings.token.type == "debugDisplay";
         const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
         if (bIsMethod) {
           const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
-          const nonBlankLineNbr: number = this.locateNonBlankLineAfter(findings.declarationLine + 1);
+          const nonBlankLineNbr: number = this._locateNonBlankLineAfter(findings.declarationLine + 1);
           findings.declarationComment = this.blockCommentMDFromLine(nonBlankLineNbr, commentType);
-          this._logTokenMessage(`  -- FND-DBGxxxTOK findings.declarationComment=[${findings.declarationComment}], declInfo.comment=[${findings.relatedFilename}]`);
+          this._logTokenMessage(
+            `  -- FND-DBGxxxTOK findings.signature=[${findings.signature}], findings.declarationComment=[${findings.declarationComment}], declInfo.comment=[${findings.relatedFilename}]`
+          );
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
           if (!findings.declarationComment && canUseAlternateComment && declInfo.comment && declInfo.comment.length > 0) {
@@ -272,6 +275,7 @@ export class DocumentFindings {
       adjustedName: tokenName,
       declarationLine: 0,
       declarationComment: undefined,
+      signature: undefined,
       relatedFilename: undefined,
       relatedObjectName: undefined,
       relatedMethodName: undefined,
@@ -320,6 +324,7 @@ export class DocumentFindings {
       findings.interpretation = details.interpretation;
       findings.scope = details.scope;
       findings.adjustedName = details.name;
+      const bIsMethod: boolean = findings.token.type == "method";
       if (declInfo) {
         // and decorate with declaration line number
         findings.declarationLine = declInfo.lineIndex;
@@ -330,13 +335,14 @@ export class DocumentFindings {
             findings.relatedObjectName = declInfo.reference;
           }
         }
-        const bIsMethod: boolean = findings.token.type == "method";
         const bIsPublic: boolean = findings.token.modifiers.includes("static") ? false : true;
         if (bIsMethod) {
           const commentType: eCommentFilter = bIsPublic ? eCommentFilter.docCommentOnly : eCommentFilter.nondocCommentOnly;
-          const nonBlankLineNbr: number = this.locateNonBlankLineAfter(findings.declarationLine + 1);
+          const nonBlankLineNbr: number = this._locateNonBlankLineAfter(findings.declarationLine + 1);
           findings.declarationComment = this.blockCommentMDFromLine(nonBlankLineNbr, commentType);
-          this._logTokenMessage(`  -- FND-xxxTOK findings.declarationComment=[${findings.declarationComment}], declInfo.comment=[${findings.relatedFilename}]`);
+          this._logTokenMessage(
+            `  -- FND-xxxTOK findings.signature=[${findings.signature}], findings.declarationComment=[${findings.declarationComment}], declInfo.comment=[${findings.relatedFilename}]`
+          );
           // if no block doc comment then we can substitute a preceeding or trailing doc comment for method
           const canUseAlternateComment: boolean = bIsPublic == false || (bIsPublic == true && declInfo.isDocComment) ? true : false;
           if (!findings.declarationComment && canUseAlternateComment && declInfo.comment && declInfo.comment.length > 0) {
@@ -374,7 +380,7 @@ export class DocumentFindings {
     return findings;
   }
 
-  private locateNonBlankLineAfter(lineNbr: number): number {
+  private _locateNonBlankLineAfter(lineNbr: number): number {
     let desiredNumber: number = lineNbr;
     const editor = vscode?.window.activeTextEditor!;
     const document = editor.document!;
@@ -1161,7 +1167,7 @@ export class RememberedComment {
       }
       this._lines[idx] = trimmedLine;
     }
-    this.clearLinesIfAllBlank();
+    this._clearLinesIfAllBlank();
   }
 
   public closeAsSingleLineBlock(lineNumber: number) {
@@ -1176,7 +1182,7 @@ export class RememberedComment {
       }
       this._lines[idx] = trimmedLine;
     }
-    this.clearLinesIfAllBlank();
+    this._clearLinesIfAllBlank();
   }
 
   public closeAsSingleLine() {
@@ -1237,7 +1243,7 @@ export class RememberedComment {
     return interpString;
   }
 
-  private clearLinesIfAllBlank() {
+  private _clearLinesIfAllBlank() {
     // emtpy our line aray if it's really nothing worthwhile
     let bHaveNonBlank: boolean = false;
     for (let idx = 0; idx < this._lines.length; idx++) {

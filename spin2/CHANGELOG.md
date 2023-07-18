@@ -13,14 +13,18 @@ Work to appear in upcoming releases:
 
 Possible next additions:
 
-- Add Signature popups for `PUB`, `PRI` and Spin2 method signatures (help text)
-- Add Hover popups for pasm instructions (help text for each instruction)
 - Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
 - Add light theme
 - Investigate and possibly add unique coloring for method pointers
 - Add spin2 instruction templates as Snippets (_for instructions with two or more parameters_)
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
+
+## [1.9.9] 2023-07-17
+
+General repairs to Signature Help (P1 and P2)
+
+- P1 & P2: Repair signature help - signatures shown for users PUB/PRI methods (ensure hover pop-ups and signature pop-ups show same for PRI/PUB signatures)
 
 ## [1.9.8] 2023-07-17
 
