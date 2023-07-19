@@ -248,6 +248,8 @@ In between the [] you can place your new task definitions. You should end up wit
 
 ```json
 {
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [
     {
