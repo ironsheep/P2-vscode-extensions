@@ -43,6 +43,8 @@ Additional pages:
 
 ```
 Latest Updates:
+18 Jul 2023
+- Misc updates to keep these pages in sync
 15 Mar 2023
 - Created this file from TASKS-User.md
 ```
