@@ -1,4 +1,12 @@
-# VSCode - Local Project defined Tasks
+# VSCode - Local Project defined Tasks (OLD PAGE)
+
+### Please refer to the following pages, instead:
+
+- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes
+- [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes 
+- [Setup focused on RPi only](TASKS-User-RPi.md) - All **Raspberry Pi** notes 
+
+# VSCode - Local Project defined Tasks (OLD PAGE)
 
 
 ![Project Maintenance][maintenance-shield]
