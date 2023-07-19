@@ -279,8 +279,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -312,8 +314,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -337,8 +341,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "problemMatcher": [],
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -363,8 +369,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "problemMatcher": [],
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -393,8 +401,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -422,8 +432,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -451,8 +463,41 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "downloadDebugPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-rd"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -480,15 +525,17 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
         "isDefault": true
       }
     }
-    ]
+  ]
 }
 ```
 

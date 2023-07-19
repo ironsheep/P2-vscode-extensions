@@ -190,13 +190,13 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       "label": "compileP2",
       "type": "shell",
       "osx": {
-        "command": "/Applications/flexprop/bin/flexpspin.mac"
+        "command": "/Applications/flexprop/bin/flexspin.mac"
       },
       "windows": {
         "command": "flexspin.exe"
       },
       "linux": {
-        "command": "/opt/flexprop/bin/flexprop"
+        "command": "/opt/flexprop/bin/flexspin"
       },
       "args": ["-2", "-Wabs-paths", "-Wmax-errors=99", "${fileBasename}"],
       "problemMatcher": {
@@ -211,8 +211,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -229,7 +231,7 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         "command": "flexspin.exe"
       },
       "linux": {
-        "command": "/opt/flexprop/bin/flexprop"
+        "command": "/opt/flexprop/bin/flexspin"
       },
       "args": ["-2", "-Wabs-paths", "-Wmax-errors=99", "${config:topLevel}.spin2"],
       "problemMatcher": {
@@ -244,8 +246,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -269,8 +273,10 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "problemMatcher": [],
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -295,16 +301,173 @@ To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the 
       },
       "problemMatcher": [],
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
         "isDefault": true
       },
       "dependsOn": ["compileTopP2"]
+    },
+    {
+      "label": "compilePNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${fileBasename}", "-c"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s*(warning|error):\\s*(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "compileTopPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-c"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "downloadPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-r"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "downloadDebugPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-rd"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "flashPNut2",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Avail on  windows only!"],
+      "windows": {
+        "command": "pnut_shell.bat",
+        "args": ["${config:topLevel}.spin2", "-f"]
+      },
+      "problemMatcher": {
+        "owner": "Spin2",
+        "fileLocation": ["autoDetect", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
     }
-    ]
+  ]
 }
 ```
 

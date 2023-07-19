@@ -275,8 +275,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -308,8 +310,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -333,8 +337,10 @@ In between the [] you can place your new task definitions. You should end up wit
       },
       "problemMatcher": [],
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -359,8 +365,10 @@ In between the [] you can place your new task definitions. You should end up wit
       },
       "problemMatcher": [],
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -389,8 +397,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -418,8 +428,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -447,8 +459,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -476,8 +490,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
@@ -505,8 +521,10 @@ In between the [] you can place your new task definitions. You should end up wit
         }
       },
       "presentation": {
-        "panel": "shared",
-        "focus": true
+        "panel": "dedicated",
+        "focus": false,
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "test",
