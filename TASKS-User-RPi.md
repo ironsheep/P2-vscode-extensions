@@ -106,8 +106,6 @@ On the Raspberry Pi platform we'll use `git(1)` to download the FlexProp souce, 
 
 **NOTE**: *The flexprop toolset does not have a standard install location. So we will likely have many locations amongst all of us P2 users.  You have to take note of where you installed it and then adjust the following examples to point to where your binaries ended up on your file system.  Alternatively, it should be safe to just follow what I do in these instructions explictly.  This has the benefit that more of us will be able to help each other out with tools problems as more of us will be set up the same.*
 
-Next we move this new version into place.
-
 #### Setup and Configure for P2 development: RaspiOS
 
 ##### The Rasperry Pi OS (RaspiOS)
@@ -159,7 +157,7 @@ In my case, I used Eric's suggestion to instruct the build/install process to in
  
  (**NOTE** *We use `sudo` because the normal user is not able to write in the /opt tree.*)
 
-Additionally, I [added a new PATH element](https://github.com/ironsheep/P2-vscode-extensions/blob/main/TASKS.md#os-raspios) in my ~/.profile file to point to the flexprop bin directory.  Now if you are running interactively on this RPi you can reference the flexprop or loadp2 executables by name and they will run.
+Additionally, I [added a new PATH element](#setting-paths-for-your-p2-compilerstools) in my ~/.profile file to point to the flexprop bin directory.  Now if you are running interactively on this RPi you can reference the flexprop or loadp2 executables by name and they will run.
 
 
 ##### Update flexprop: RaspiOS
