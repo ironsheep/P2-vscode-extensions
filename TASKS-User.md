@@ -1,6 +1,6 @@
 # VSCode - User-wide defined Tasks (OLD PAGE)
 
-###Please refer to the following pages, instead:
+### Please refer to the following pages, instead:
 
 - [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes from within this page
 - [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes from within this page
