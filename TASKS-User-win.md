@@ -133,9 +133,9 @@ Next we move this new version into place.
 
 Get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases).
 
-We are making a new program install location in these steps. We can't use `C:\Program Files (x86)` as FlexProp expects to be able to write to its own directory. So, Create a directory a new program files directory called `C:\Programs\TotalSpectrum\FlexProp` and unpack the .zip file into that directory. Make sure that this directory you created is writable.
+We are making a new program install location in these steps. We can't use `C:\Program Files (x86)` as FlexProp expects to be able to write to its own directory. So, Create a new program files directory called `C:\Programs\TotalSpectrum\FlexProp` and unpack the .zip file into that directory. Make sure that this directory you create is writable.
 
-Finish up by then [add a new PATH element](#os-windows) and make sure to also create the new Environment Variable `FlexPropPath`. _The User Tasks expect this environment variable to exist. They use it to locate the flash utility binary file._
+Finish up by then [add a new PATH element](#os-windows) and make sure to also create the new Environment Variable `FlexPropPath=C:\Programs\TotalSpectrum\FlexProp`. _The User Tasks expect this environment variable to exist. They use it to locate the flash utility binary file._
 
 #### Update FlexProp
 
@@ -145,7 +145,7 @@ Like we do on the other platforms here's the suggested update strategy:
 - Remove any `C:\Programs\TotalSpectrum\FlexProp-prior` (the prior version of FlexProp)
 - Rename your existing `C:\Programs\TotalSpectrum\FlexProp` folder to `C:\Programs\TotalSpectrum\FlexProp-prior`
 - Create a new empty directory `C:\Programs\TotalSpectrum\FlexProp` and make it writeable
-- Unpack the .zip into a newly re-created `C:\Programs\TotalSpectrum\FlexProp`
+- Unpack the latest downloaded .zip into the newly re-created `C:\Programs\TotalSpectrum\FlexProp` folder
 
 **NOTE:** We use this move-aside technique for updating the FlexProp compiler. When a language compiler is updated more frequently it is not uncommon to one or twice a year experience a breaking change in how the new compiler handles your existing code. Assuming the version you are moving aside works well against all your projects, we move it aside and install the new version. Should you find that the new version doesn't work well against one of your projects you will still have the prior version so you can build the project with the older version that would fail with the new version. _You can always skip this move-aside step if you don't care about this issue._
 
@@ -157,13 +157,13 @@ The PNut compiler/debug tool does not have a standard install location. So we wi
 
 Download the latest .zip file from [PNut/Spin2 Latest Version](https://forums.parallax.com/discussion/171196/.../p1?_ga=2.41234594.1818840425.1671330006-1649768518.1600891894) Forum thread into my **Downloads** folder. Unpack the .zip into its own folder.
 
-Propeller Tool installs into `C:\Program Files (x86)\Parallax Inc\Propeller Tool\`. So I just created a sibling directory: `C:\Program Files (x86)\Parallax Inc\PNut\` and copy all of the unpacked files into that directory.
+Propeller Tool installs into `C:\Program Files (x86)\Parallax Inc\Propeller Tool\`. But we are going to install PNut along side our FlexSpin compiler. So I just created a sibling directory: `C:\Programs\Parallax Inc\PNut\` and copied all of the unpacked files into that directory.
 
 **NOTE:** _if you experience problems with the tasks running PNut it is generally that the .bat files are not identifying the PNut executable by the correct name. At each install check the content of `\PNut\pnut_shell.bat` and `\PNut\pnut_report.bat` and make sure the PNut versioned name is correct with what's in the folder. Occasionally Chip forgets to modify these .bat files before release._
 
 I right-mouse on the PNut\_{version}.exe file and select "**Pin to taskbar**".
 
-I then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. In my case I added a path segment pointing to `C:\Program Files (x86)\Parallax Inc\PNut\`. Lastly, make sure to also create the new Environment Variable `PNutPath`. Our task automated processes, in the future, will use this to determine where things are installed.
+I then [add a new PATH element](#os-windows) using the windows settings app. to point to where your binaries ended up on your file system. In my case I added a path segment pointing to `C:\Programs\Parallax Inc\PNut\`. Lastly, make sure to also create the new Environment Variable `PNutPath=C:\Programs\Parallax Inc\PNut`. Our task automated processes, in the future, will use this to determine where things are installed.
 
 #### Update PNut
 
@@ -172,8 +172,8 @@ I haven't found the need to keep any prior version. I simply:
 - Download the latest version of PNut from [PNut/Spin2 Latest Version](https://forums.parallax.com/discussion/171196/.../p1?_ga=2.41234594.1818840425.1671330006-1649768518.1600891894) into my **Downloads** folder
 - Unpack the .zip file
 - In my taskbar I right-mouse on the PNut icon and select "**Unpin from taskbar**"
-- Select all content within `C:\Program Files (x86)\Parallax Inc\PNut\` and Delete it
-- Move all of unpacked content into the now empty folder `C:\Program Files (x86)\Parallax Inc\PNut\`
+- Select all content within `C:\Programs\Parallax Inc\PNut\` and Delete it
+- Move all of unpacked content into the now empty folder `C:\Programs\Parallax Inc\PNut\`
 - I right-mouse on the newly copied PNut\_{version}.exe file and select "**Pin to taskbar**".
 
 **NOTE:** _if you experience problems with the tasks running PNut it is generally that the .bat files are not identifying the PNut executable by the correct name. At each install check the content of `\PNut\pnut_shell.bat` and `\PNut\pnut_report.bat` and make sure the PNut versioned name is correct with what's in the folder. Occasionally Chip forgets to modify these .bat files before release._
@@ -182,7 +182,7 @@ I haven't found the need to keep any prior version. I simply:
 
 #### OS: Windows
 
-On windows the search path for programs is maintained by the **Windows Settings App.** Open Window Settings and search for "environment" and you should see two choices: "**Edit the system environment variables**" and "**Edit environment variables for your account**". If you want the tools to work for all users on this Windows machine then adjust the PATH values by editing the system environment variables. If, instead, you only need the tools to work for your account then edit the environment variables for your account.
+On windows the search path for programs is maintained by the **Windows Settings App.** Open Window Settings and search for "environment" and you should see two choices: "**Edit the system environment variables**" and "**Edit environment variables for your account**". If you want the tools to work for all users on this Windows machine (Preferred) then adjust the PATH values by editing the system environment variables. If, instead, you only need the tools to work for your account then edit the environment variables for your account.
 
 You will do this for each of FlexProp and PNut (which ever ones you use, either or both.)
 
@@ -190,11 +190,11 @@ If you are using FlexProp and/or PNut, in addition to modifying the PATH variabl
 
 In the same section you modified for path (system environment or your account environment) using [New...] add a new environment variable `FlexPropPath` (and/or `PNutPath`) which you will set to your install folder using the [Browse Directory...] button after pressing [New...] and typing in the `FlexPropPath` (or `PNutPath`) name. The tasks we define will use this environment variable to locate the binary file it needs when downloading to FLASH.
 
-If you are setting up do the same for PNut if you are using PNut.
+If you are setting up PNut too, then add a new environment variable for `PNutPath` as well.
 
 **NOTE** _the above is referring to **Windows 10** settings names. On earlier versions of Windows the concept is the same. Locate the environment values and make the appropriate changes._
 
-From here on when we start new terminal windows we can invoke the FlexProp binaries by name without using the path to them.
+From here on, when we run in terminal windows, we can invoke the FlexProp and PNut binaries by name without using the path to them.
 
 ## Tasks in VScode
 
