@@ -51,7 +51,7 @@ Additional pages:
 - [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes from within this page
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
-*The "P2 Code Development..." sections provide step-by-step setup instructions *
+**NOTE:** _The "P2 Code Development..." sections below provide step-by-step setup instructions_
 
 ### Latest Updates
 

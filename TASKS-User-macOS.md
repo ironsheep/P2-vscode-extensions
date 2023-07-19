@@ -33,10 +33,11 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
-- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes from within this page
+- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes 
+- [Setup focused on RPi only](TASKS-User-RPi.md) - All **Raspberry Pi** notes 
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
-*The "P2 Code Development..." sections provide step-by-step setup instructions *
+**NOTE:** _The "P2 Code Development..." sections below provide step-by-step setup instructions_
 
 ### Latest Updates
 

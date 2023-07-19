@@ -34,7 +34,8 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
-- [Setup focused on macOS only](TASKS-User-macOS.md) - All macOS notes from within this page
+- [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes 
+- [Setup focused on RPi only](TASKS-User-RPi.md) - All **Raspberry Pi** notes 
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
 **NOTE:** _The "P2 Code Development..." sections below provide step-by-step setup instructions_

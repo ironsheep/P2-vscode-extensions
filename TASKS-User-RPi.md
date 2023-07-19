@@ -33,18 +33,18 @@ On this Page:
 Additional pages:
 
 - [TOP Level README](README.md) - Back to the top page of this repo
-- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes from within this page
-- [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes from within this page
+- [Setup focused on Windows only](TASKS-User-win.md) - All **Windows** notes 
+- [Setup focused on macOS only](TASKS-User-macOS.md) - All **macOS** notes 
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
-*The "P2 Code Development..." sections provide step-by-step setup instructions *
+**NOTE:** _The "P2 Code Development..." sections below provide step-by-step setup instructions_
 
 ### Latest Updates
 
 ```
 Latest Updates:
 18 Jul 2023
-- Created this Raspberry Pi specific setup page
+- Created this file from TASKS-User.md
 20 Dec 2022
 - (PNut tasks are now merged into our task list. They just don't do anyting on non-windows platforms)
 ```
