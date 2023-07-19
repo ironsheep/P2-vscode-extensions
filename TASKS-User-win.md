@@ -233,7 +233,7 @@ We'll add a flashP2 task and assign command-shift-F to it. It will depend upon t
 
 To define the tasks we are going to use with our P2 development in most of our projects we place the task definitions in a central "User Tasks" .json file.
 
-To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the command search dialog. Then type in "tasks". Lower down in the resulting filtered list you should now see "**Tasks: Open User Tasks**". Select it and you should now have a file open in the editor which should contain at least:
+To get to this file type in **Ctrl+Shift+P** (Cmd+Shift+P on mac) to get to the command search dialog. Then type in "tasks". Lower down in the resulting filtered list you should now see "**Tasks: Open User Tasks**". If prompted for a **Task Template**, select **Others**. Select it and you should now have a file open in the editor which should contain at least:
 
 ```json
 {
