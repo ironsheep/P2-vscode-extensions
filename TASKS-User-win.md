@@ -9,9 +9,9 @@
 
 This document is being developed over time as we prove-out a working environment for Windows.
 
-To date, we have installations, compilation and downloading from **Windows**, [**MacOS**](TASKS-User-macOS.md), and [**RaspiOS**](TASKS-User.md) (the Raspberry Pi OS - a Debian derived distribution).
+To date, we have installations, compilation and downloading from **Windows** (_this page_), [**MacOS**](TASKS-User-macOS.md), and [**RaspiOS**](TASKS-User.md) (the Raspberry Pi OS - a Debian derived distribution).
 
-Also, to date, we have building and download for **FlexProp** and **PNut** with USB direct-attached boards.
+Also, to date, we have building and download for **flexprop** and **PNut** (*PNut is windows or windows emulator only.*) with direct USB-attached boards.
 
 In the future, we are also expecting to document building and download with via Wifi with the Wx boards attached to our development board, and with more compilers as they come ready for multi-platform use, etc.
 
@@ -20,8 +20,8 @@ In the future, we are also expecting to document building and download with via 
 On this Page:
 
 - [VSCode development of P2 Projects](#vscode-development-of-p2-projects) - basic development life-cycle
-- [P2 Code Development with FlexProp](#enabling-p2-code-development-with-flexprop)- setting up
-- [P2 Code Development with PNut](#enabling-p2-code-development-with-pnut)- setting up
+- [P2 Code Development with FlexProp](#enabling-p2-code-development-with-flexprop) - setting up
+- [P2 Code Development with PNut](#enabling-p2-code-development-with-pnut) - setting up
 - [Being consistent in your machine configuration](#being-consistent-in-your-machine-configuration) - why we are doing things this way
 - [Installation and Setup](#development-machine-setup-and-configuration) - preparing your machine for P2 development using tools from within vscode
   - [Installing FlexProp](#installing-flexprop)
@@ -37,7 +37,7 @@ Additional pages:
 - [Setup focused on macOS only](TASKS-User-macOS.md) - All macOS notes from within this page
 - [VSCode REF: Tasks](https://code.visualstudio.com/docs/editor/tasks) - Offsite: VSCode Documentation for reference
 
-_The "P2 Code Development..." sections provide step-by-step setup instructions _
+**NOTE:** _The "P2 Code Development..." sections below provide step-by-step setup instructions_
 
 ### Latest Updates
 
@@ -133,7 +133,7 @@ Next we move this new version into place.
 
 Get the latest binaries by downloading a `flexprop-{version}.zip` file from the [FlexProp Releases Page](https://github.com/totalspectrum/flexprop/releases).
 
-We are making a new program install location in these steps. We can't use `C:\Program Files (x86)` as FlexProp expects to be able to write to its own directory. So, Create a new program files directory called `C:\Programs\TotalSpectrum\FlexProp` and unpack the .zip file into that directory. Make sure that this directory you create is writable.
+We are making a new program install location in these steps. We can't use `C:\Program Files (x86)` as FlexProp expects to be able to write to its own directory. So, Create a new program files directory called `C:\Programs\TotalSpectrum\FlexProp` and unpack the .zip file into that directory. Make sure that this directory is writable.
 
 Finish up by then [add a new PATH element](#os-windows) and make sure to also create the new Environment Variable `FlexPropPath=C:\Programs\TotalSpectrum\FlexProp`. _The User Tasks expect this environment variable to exist. They use it to locate the flash utility binary file._
 
