@@ -39,6 +39,11 @@ export interface IDebugDisplayInfo {
   eDisplayType: eDebugDisplayType;
 }
 
+export interface IMethodSpan {
+  startLineNbr: number;
+  endLineNbr: number;
+}
+
 // search comment type: non-doc only, doc-only, or mixed
 enum eCommentFilter {
   Unknown = 0,
@@ -52,12 +57,15 @@ enum eCommentFilter {
 //   CLASS DocumentFindings
 export class DocumentFindings {
   private globalTokens;
-  private localTokens;
+  private localTokensByMethod;
   private globalTokensDeclarationInfo;
   private localTokensDeclarationInfo;
   private localPasmTokensByMethodName;
   private blockComments: RememberedComment[] = [];
   private fakeComments: RememberedComment[] = [];
+  private methodSpanInfo = new Map<string, IMethodSpan>();
+  private currMethodName: string | undefined = undefined;
+  private currMethodStartLineNbr: number = 0;
 
   private outputChannel: vscode.OutputChannel | undefined = undefined;
   private bLogEnabled: boolean = false;
@@ -67,7 +75,7 @@ export class DocumentFindings {
     this.outputChannel = logHandle;
     this._logTokenMessage("* Global, Local, MethodScoped Token repo's ready");
     this.globalTokens = new TokenSet("gloTOK", isLogging, logHandle);
-    this.localTokens = new TokenSet("locTOK", isLogging, logHandle);
+    this.localTokensByMethod = new NameScopedTokenSet("locTOK", isLogging, logHandle);
     this.globalTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
     this.localTokensDeclarationInfo = new Map<string, RememberedTokenDeclarationInfo>();
     // and for P2
@@ -80,10 +88,14 @@ export class DocumentFindings {
   public clear() {
     // we're studying a new document forget everything!
     this.globalTokens.clear();
-    this.localTokens.clear();
+    this.localTokensByMethod.clear();
     this.localPasmTokensByMethodName.clear();
     this.blockComments = [];
     this.fakeComments = [];
+    // clear our method-span pieces
+    this.methodSpanInfo.clear();
+    this.currMethodName = undefined;
+    this.currMethodStartLineNbr = 0;
   }
 
   public recordComment(comment: RememberedComment) {
@@ -264,7 +276,7 @@ export class DocumentFindings {
     return findings;
   }
 
-  public getTokenWithDescription(tokenName: string): ITokenDescription {
+  public getTokenWithDescription(tokenName: string, lineNbr: number): ITokenDescription {
     let findings: ITokenDescription = {
       found: false,
       tokenRawInterp: "",
@@ -294,7 +306,7 @@ export class DocumentFindings {
         declInfo = this.globalTokensDeclarationInfo.get(tokenName);
       } else {
         // Check for Local-tokens?
-        findings.token = this.getLocalToken(tokenName);
+        findings.token = this.getLocalTokenForLine(tokenName, lineNbr);
         if (findings.token) {
           // we have a LOCAL token!
           findings.tokenRawInterp = "Local: " + this._rememberdTokenString(tokenName, findings.token);
@@ -492,32 +504,72 @@ export class DocumentFindings {
   }
 
   public isLocalToken(tokenName: string): boolean {
-    const foundStatus: boolean = this.localTokens.hasToken(tokenName);
+    const foundStatus: boolean = this.localTokensByMethod.hasToken(tokenName);
     return foundStatus;
   }
 
-  public setLocalToken(tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
-    if (!this.isLocalToken(tokenName)) {
-      this._logTokenMessage("  -- NEW-locTOK " + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
-      this.localTokens.setToken(tokenName, token);
+  public isLocalTokenForMethod(methodName: string, tokenName: string): boolean {
+    const foundStatus: boolean = this.localTokensByMethod.hasTokenForMethod(methodName, tokenName);
+    return foundStatus;
+  }
+
+  public setLocalTokenForMethod(methodName: string, tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
+    if (!this.isLocalTokenForMethod(methodName, tokenName)) {
+      this._logTokenMessage(`  -- NEW-locTOK method=[${methodName}], ` + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
+      this.localTokensByMethod.setTokenForMethod(methodName, tokenName, token);
       // and remember declataion line# for this token
       this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
     }
   }
 
-  public getLocalToken(tokenName: string): RememberedToken | undefined {
-    const desiredToken: RememberedToken | undefined = this.localTokens.getToken(tokenName);
-    if (desiredToken != undefined) {
-      this._logTokenMessage("  -- FND-locTOK " + this._rememberdTokenString(tokenName, desiredToken));
+  public getLocalTokenForLine(tokenName: string, lineNbr: number): RememberedToken | undefined {
+    let desiredToken: RememberedToken | undefined = undefined;
+    const methodName: string | undefined = this._getMethodNameForLine(lineNbr);
+    if (methodName) {
+      desiredToken = this.localTokensByMethod.getTokenForMethod(methodName, tokenName);
+      if (desiredToken != undefined) {
+        this._logTokenMessage(`  -- FND-locTOK method=[${methodName}], ` + this._rememberdTokenString(tokenName, desiredToken));
+      } else {
+        this._logTokenMessage(`  -- FAILED to FND-locTOK method=[${methodName}], ` + tokenName);
+      }
     } else {
-      this._logTokenMessage("  -- FAILED to FND-locTOK " + tokenName);
+      this._logTokenMessage(`  -- FAILED to FND-locTOK for lineNbr=(${lineNbr}), token=[${tokenName}]`);
     }
     return desiredToken;
   }
 
-  public clearLocalTokens() {
-    // forget all local tokens
-    this.localTokens.clear();
+  public startMethod(methodName: string, lineNbr: number): void {
+    // starting a new method remember the name and assoc the line number
+    if (this.currMethodName) {
+      this._logTokenMessage(`  -- FAILED close prior SPAN method=[${methodName}], line#=(${this.currMethodStartLineNbr})`);
+    }
+    this.currMethodName = methodName;
+    this.currMethodStartLineNbr = lineNbr;
+  }
+
+  public endPossibleMethod(lineNbr: number): void {
+    // possibly ending a method if one was started, end it, else ignore this
+    if (this.currMethodName) {
+      const spanInfo: IMethodSpan = { startLineNbr: this.currMethodStartLineNbr, endLineNbr: lineNbr };
+      this.methodSpanInfo.set(this.currMethodName, spanInfo);
+      this._logTokenMessage(`  -- NEW-locTOK method=[${this.currMethodName}], span=[${spanInfo.startLineNbr}, ${spanInfo.endLineNbr}]`);
+    }
+    // now clear in progress
+    this.currMethodName = undefined;
+    this.currMethodStartLineNbr = 0;
+  }
+
+  private _getMethodNameForLine(lineNbr: number): string | undefined {
+    let desiredMethodName: string | undefined = undefined;
+    if (this.methodSpanInfo.size > 0) {
+      for (const [currMethodName, currSpan] of this.methodSpanInfo) {
+        if (lineNbr >= currSpan.startLineNbr && lineNbr <= currSpan.endLineNbr) {
+          desiredMethodName = currMethodName;
+          break;
+        }
+      }
+    }
+    return desiredMethodName;
   }
 
   // -------------------------------------------------------------------------
@@ -897,7 +949,11 @@ export class NameScopedTokenSet {
         if (desiredToken) {
           this._logTokenMessage("  -- FND-lpTOK " + this._rememberdTokenString(tokenName, desiredToken));
         }
+      } else {
+        this._logTokenMessage(`  -- FND - lpTOK gtfm() no such nethodName = [${methodName}]`);
       }
+    } else {
+      this._logTokenMessage(`  -- FND - lpTOK gtfm() no TokenSet for methodName = [${methodName}]`);
     }
     return desiredToken;
   }
@@ -1026,8 +1082,8 @@ export class RememberedTokenDeclarationInfo {
 }
 
 // ----------------------------------------------------------------------------
-//  This is the structure we use for tracking multiline ocmments
-//   CLASS RememberedToken
+//  This is the structure we use for tracking multiline comments
+//   CLASS RememberedComment
 export enum eCommentType {
   Unknown = 0,
   singleLineComment,

@@ -217,7 +217,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
       }
       if (bFoundParseToken && !builtInFindings.found) {
         bFoundSomething = true;
-        const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
+        const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word, input.position.line + 1);
         if (tokenFindings.found) {
           this._logMessage(
             `+ Sig: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
@@ -366,7 +366,7 @@ export class Spin2SignatureHelpProvider implements SignatureHelpProvider {
           }
           if (titleText && subTitleText) {
             if (builtInFindings.type == eBuiltInType.BIT_CONSTANT && bFoundParseToken) {
-              const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
+              const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word, input.position.line + 1);
               if (tokenFindings.found) {
                 const declLine = input.document.lineAt(tokenFindings.declarationLine).text.trim(); // declaration line
                 const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();

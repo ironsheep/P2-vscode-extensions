@@ -11,7 +11,7 @@ import { IPairs, IDefinitionInfo, IDefinitionInput, ExtensionUtils, getSpin2Conf
 
 export class Spin1HoverProvider implements HoverProvider {
   private spinConfig: WorkspaceConfiguration | undefined;
-  private hoverLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private hoverLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private hoverOutputChannel: vscode.OutputChannel | undefined = undefined;
   private symbolsFound: DocumentFindings;
   private parseUtils = new ParseUtils();
@@ -179,7 +179,7 @@ export class Spin1HoverProvider implements HoverProvider {
       }
       if (bFoundParseToken && !builtInFindings.found) {
         bFoundSomething = true;
-        const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
+        const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word, input.position.line + 1);
         if (tokenFindings.found) {
           this._logMessage(
             `+ Hvr: token=[${input.word}], interpRaw=(${tokenFindings.tokenRawInterp}), scope=[${tokenFindings.scope}], interp=[${tokenFindings.interpretation}], adjName=[${tokenFindings.adjustedName}]`
@@ -326,7 +326,7 @@ export class Spin1HoverProvider implements HoverProvider {
           }
           if (titleText && subTitleText) {
             if (builtInFindings.type == eBuiltInType.BIT_CONSTANT && bFoundParseToken) {
-              const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word);
+              const tokenFindings = this.symbolsFound.getTokenWithDescription(input.word, input.position.line + 1);
               if (tokenFindings.found) {
                 const declLine = input.document.lineAt(tokenFindings.declarationLine).text.trim(); // declaration line
                 const nonCommentDecl: string = this.parseUtils.getNonCommentLineRemainder(0, declLine).trim();
