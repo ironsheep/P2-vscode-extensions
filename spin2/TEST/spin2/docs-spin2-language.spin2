@@ -199,7 +199,7 @@ pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divi
 
 pub built_in_Methods6(HubAddr, CogAddr, Dest, Source, count, value)
     '' Memory Methods
-    GETREGS(HubAddr, CogAddr, Count)
+    GETREGS(HubAddr, CogAddr, Count)    ' <--- why RED???  (caused by duplicate method name!)
     SETREGS(HubAddr, CogAddr, Count)
     BYTEMOVE(Dest, Source, Count)
     WORDMOVE(Dest, Source, Count)
@@ -217,7 +217,7 @@ pub built_in_Methods7(Addr, AddrA, AddrB) | Size, Match, StringAddress
 Con {test}
 #0,v2,v3
 
-pub built_in_Methods6(v1,  etc) | Value, Index
+pub built_in_Methods8(v1,  etc) | Value, Index
     '' Index ↔ Value Methods
     Value := LOOKUP(Index: v1, v2..v3, etc)
     Value := LOOKUPZ(Index: v1, v2..v3, etc)

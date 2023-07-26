@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.10",
+  "version": "1.9.11",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -26,7 +26,8 @@
     "propeller",
     "propeller 2",
     "propeller v2",
-    "parallax"
+    "parallax",
+    "parallax.com"
   ],
   "license": "MIT",
   "main": "out/spin2.extension.js",
@@ -44,7 +45,12 @@
       {
         "label": "Spin2 Ironsheep Dark",
         "uiTheme": "vs-dark",
-        "path": "./themes/isp-spin-theme.json"
+        "path": "./themes/isp-spin-dark-theme.json"
+      },
+      {
+        "label": "Spin2 Ironsheep Light",
+        "uiTheme": "vs",
+        "path": "./themes/isp-spin-light-theme.json"
       },
       {
         "label": "Spin2 Ironsheep Syntax",

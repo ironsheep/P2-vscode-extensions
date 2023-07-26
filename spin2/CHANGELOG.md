@@ -20,6 +20,12 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.11] 2023-07-24
+
+General Updates (P1 and P2)
+
+- P1 & P2: Adds light theme supporting semantic highlighting
+
 ## [1.9.10] 2023-07-22
 
 General repairs to Hover Help (P1 and P2)

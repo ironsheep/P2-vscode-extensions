@@ -14,7 +14,7 @@ PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
 '
 ' Local Variables:
 ' @local localVar -
-  case ePullupRqst
+  case ePullupRqst    ' <--- why RED??? (causeed by mthod names collision)
     serIO.PU_NONE : pullup := P_HIGH_FLOAT                            ' use external pull-up
     serIO.PU_1K5  : pullup := P_HIGH_1K5                              ' 1.5k
     serIO.PU_3K3  : pullup := P_HIGH_1MA                              ' acts like ~3.3k
@@ -22,7 +22,7 @@ PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
 
 ' --------------------------------------------------------------------------------------------------
 ' REF: https://github.com/ironsheep/P2-vscode-extensions/issues/18
-PRI pullUpValueForEnum(ePullupRqst) : pullup
+PRI pullUpValueForEnum2(ePullupRqst) : pullup
     if ePullupRqst == serIO.PU_NONE
       pullup := P_HIGH_FLOAT
     elseif ePullupRqst == serIO.PU_1K5

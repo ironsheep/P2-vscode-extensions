@@ -515,7 +515,7 @@ export class DocumentFindings {
 
   public setLocalTokenForMethod(methodName: string, tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
     if (!this.isLocalTokenForMethod(methodName, tokenName)) {
-      this._logTokenMessage(`  -- NEW-locTOK method=[${methodName}], ` + this._rememberdTokenString(tokenName, token) + `, ln#${declarationLineNumber}, cmt=[${declarationComment}]`);
+      this._logTokenMessage(`  -- NEW-locTOK ln#${declarationLineNumber} method=[${methodName}], ` + this._rememberdTokenString(tokenName, token) + `, cmt=[${declarationComment}]`);
       this.localTokensByMethod.setTokenForMethod(methodName, tokenName, token);
       // and remember declataion line# for this token
       this.localTokensDeclarationInfo.set(tokenName, new RememberedTokenDeclarationInfo(declarationLineNumber - 1, declarationComment));
@@ -528,12 +528,12 @@ export class DocumentFindings {
     if (methodName) {
       desiredToken = this.localTokensByMethod.getTokenForMethod(methodName, tokenName);
       if (desiredToken != undefined) {
-        this._logTokenMessage(`  -- FND-locTOK method=[${methodName}], ` + this._rememberdTokenString(tokenName, desiredToken));
+        this._logTokenMessage(`  -- FND-locTOK ln#${lineNbr} method=[${methodName}], ` + this._rememberdTokenString(tokenName, desiredToken));
       } else {
-        this._logTokenMessage(`  -- FAILED to FND-locTOK method=[${methodName}], ` + tokenName);
+        this._logTokenMessage(`  -- FAILED to FND-locTOK ln#${lineNbr} method=[${methodName}], ` + tokenName);
       }
     } else {
-      this._logTokenMessage(`  -- FAILED to FND-locTOK for lineNbr=(${lineNbr}), token=[${tokenName}]`);
+      this._logTokenMessage(`  -- FAILED to FND-locTOK no method found for ln#${lineNbr} token=[${tokenName}]`);
     }
     return desiredToken;
   }
@@ -551,6 +551,7 @@ export class DocumentFindings {
     // possibly ending a method if one was started, end it, else ignore this
     if (this.currMethodName) {
       const spanInfo: IMethodSpan = { startLineNbr: this.currMethodStartLineNbr, endLineNbr: lineNbr };
+      // FIXME: add check for collision in method name!!!
       this.methodSpanInfo.set(this.currMethodName, spanInfo);
       this._logTokenMessage(`  -- NEW-locTOK method=[${this.currMethodName}], span=[${spanInfo.startLineNbr}, ${spanInfo.endLineNbr}]`);
     }
@@ -563,12 +564,14 @@ export class DocumentFindings {
     let desiredMethodName: string | undefined = undefined;
     if (this.methodSpanInfo.size > 0) {
       for (const [currMethodName, currSpan] of this.methodSpanInfo) {
+        //this._logTokenMessage(`  -- locTOK CHK method=[${currMethodName}], span=[${currSpan.startLineNbr}, ${currSpan.endLineNbr}]`);
         if (lineNbr >= currSpan.startLineNbr && lineNbr <= currSpan.endLineNbr) {
           desiredMethodName = currMethodName;
           break;
         }
       }
     }
+    //this._logTokenMessage(`  -- locTOK _getMethodNameForLine(${lineNbr}) = method=[${desiredMethodName}]`);
     return desiredMethodName;
   }
 

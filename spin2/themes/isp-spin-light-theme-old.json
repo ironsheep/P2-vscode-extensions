@@ -1,8 +1,8 @@
 {
   "$schema": "vscode://schemas/color-theme",
-  "name": "Spin2 Ironsheep",
+  "name": "Spin2 Ironsheep Light",
   "semanticHighlighting": true,
-  "type": "dark",
+  "type": "light",
   "colors": {
     "activityBar.background": "#444444",
     "activityBar.border": "#2F8FBF",

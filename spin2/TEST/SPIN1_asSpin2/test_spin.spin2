@@ -74,18 +74,18 @@ PUB allSpinLanguageParts()
 ' core spin verbs
     ABORT
     BYTE
-    BYTEFILL
-    BYTEMOVE
+    BYTEFILL() ' <-- should be legal!
+    BYTEMOVE() ' <-- should be legal!
     CASE
-    CHIPVER
+    CHIPVER()
     CLKFREQ
     CLKMODE
-    CLKSET
+    CLKSET() ' <-- should be legal!
     CNT
-    COGID
-    COGINIT
-    COGNEW
-    COGSTOP
+    COGID()
+    COGINIT()  ' <-- should be legal!
+    COGNEW()
+    COGSTOP() ' <-- should be legal!
     CONSTANT
     CTRA
     CTRB
@@ -100,17 +100,17 @@ PUB allSpinLanguageParts()
     IFNOT
     INA
     INB
-    LOCKCLR
-    LOCKNEW
-    LOCKRET
-    LOCKSET
+    LOCKCLR()
+    LOCKNEW() ' <-- should be legal!
+    LOCKRET() ' <-- should be legal!
+    LOCKSET()
     LONG
-    LONGFILL
-    LONGMOVE
-    LOOKDOWN
-    LOOKDOWNZ
-    LOOKUP
-    LOOKUPZ
+    LONGFILL()
+    LONGMOVE()
+    LOOKDOWN()
+    LOOKDOWNZ()
+    LOOKUP()
+    LOOKUPZ()
     NEGX
     NEXT
     OUTA
@@ -133,20 +133,20 @@ PUB allSpinLanguageParts()
     RETURN
     ROUND
     SPR
-    STRCOMP
-    STRING
-    STRSIZE
+    STRCOMP()
+    STRING()
+    STRSIZE()
     TRUE
     TRUNC
     VCFG
     VSCL
-    WAITCNT
-    WAITPEQ
-    WAITPNE
-    WAITVID
+    WAITCNT()
+    WAITPEQ()
+    WAITPNE()
+    WAITVID()
     WORD
-    WORDFILL
-    WORDMOVE
+    WORDFILL()
+    WORDMOVE()
     XINPUT
     xtal1
     xtal2
