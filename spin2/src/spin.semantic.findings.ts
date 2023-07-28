@@ -127,7 +127,9 @@ export class DocumentFindings {
 
   public recordBlockStart(eCurrBlockType: eBLockType, currLineIdx: number) {
     this._logTokenMessage(`  -- FND-RCD-BLOCK iblockType=[${eCurrBlockType}], span=[${currLineIdx} - ???]`);
-    if (this.priorBlockType == eBLockType.Unknown) {
+    if (currLineIdx == 0 && this.priorBlockType == eCurrBlockType && this.priorBlockStartLineIdx == currLineIdx) {
+      // do nothing...  we're getting CON on first line a 2nd time...
+    } else if (this.priorBlockType == eBLockType.Unknown) {
       // we are starting the first block
       this.priorBlockType = eCurrBlockType;
       this.priorBlockStartLineIdx = currLineIdx;

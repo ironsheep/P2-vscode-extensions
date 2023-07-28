@@ -521,8 +521,10 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings.finishFinalBlock(lines.length - 1); // mark end of final block in file
 
     // now update editor colors
-    const editor = vscode.window.activeTextEditor!;
-    this.codeBlockColorizer.updateRegionColors(editor, this.semanticFindings);
+    if (this.codeBlockColorizer.isColoringBackground()) {
+      const editor = vscode.window.activeTextEditor!;
+      this.codeBlockColorizer.updateRegionColors(editor, this.semanticFindings, "Spin1-end1stpass");
+    }
 
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("---> Actual SCAN");

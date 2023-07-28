@@ -26,6 +26,7 @@ import { Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semant
 import { Spin1HoverProvider } from "./spin1.hover.behavior";
 import { Spin1SignatureHelpProvider } from "./spin1.signature.help";
 import { isSpinOrPasmDocument, isSpin1Document } from "./spin.vscode.utils";
+import { listeners } from "cluster";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -48,11 +49,20 @@ const codeBlockColorizer: RegionColorizer = new RegionColorizer();
 const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider(docGenerator, codeBlockColorizer);
 const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider(docGenerator, codeBlockColorizer);
 
-const extensionDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+const extensionDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var extensionOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 const logExtensionMessage = (message: string): void => {
   // simple utility to write to TABBING  output window.
+  if (extensionDebugLogEnabled && extensionOutputChannel != undefined) {
+    //Write to output window.
+    extensionOutputChannel.appendLine(message);
+  }
+};
+
+// register services provided by this file
+export const activate = (context: vscode.ExtensionContext) => {
+  // do one time logging init
   if (extensionDebugLogEnabled) {
     if (extensionOutputChannel === undefined) {
       //Create output channel
@@ -61,16 +71,7 @@ const logExtensionMessage = (message: string): void => {
     } else {
       logExtensionMessage("\n\n------------------   NEW FILE ----------------\n\n");
     }
-  } else {
-    if (extensionOutputChannel != undefined) {
-      //Write to output window.
-      extensionOutputChannel.appendLine(message);
-    }
   }
-};
-
-// register services provided by this file
-export const activate = (context: vscode.ExtensionContext) => {
   // register our Spin2 outline provider
   context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(SPIN2_FILE, new Spin2ConfigDocumentSymbolProvider()));
 
@@ -230,11 +231,12 @@ export const activate = (context: vscode.ExtensionContext) => {
   vscode.workspace.onDidChangeTextDocument(
     (event) => {
       vscode.window.visibleTextEditors.map((editor) => {
-        if (editor.document === event.document) {
+        if (editor.document === event.document && codeBlockColorizer.isColoringBackground()) {
           if (isSpinOrPasmDocument(editor.document)) {
+            logExtensionMessage(`* onDidChangeTextDocument(${editor.document.fileName})`);
             const isSpin1Doc: boolean = isSpin1Document(editor.document);
             const docFindings = isSpin1Doc ? spin1SemanticTokensProvider.docFindings() : spin2SemanticTokensProvider.docFindings();
-            codeBlockColorizer.updateRegionColors(editor, docFindings);
+            codeBlockColorizer.updateRegionColors(editor, docFindings, "Ext-docDidChg");
           }
         }
       });
@@ -268,24 +270,34 @@ export const deactivate = () => {
 //   InsertMode command handlers   ////////////////////////////////////////////
 
 function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
-  if (textEditor !== undefined) {
-    const document = textEditor.document!;
-    if (isSpinOrPasmDocument(document)) {
-      const isSpin1Doc: boolean = isSpin1Document(document);
-      const docFindings = isSpin1Doc ? spin1SemanticTokensProvider.docFindings() : spin2SemanticTokensProvider.docFindings();
-      codeBlockColorizer.updateRegionColors(textEditor, docFindings);
+  let argumentInterp: string = "undefined";
+  if (textEditor != null && textEditor !== undefined) {
+    if (isSpinOrPasmDocument(textEditor.document)) {
+      argumentInterp = textEditor.document.fileName;
+    } else {
+      argumentInterp = "-- NOT-SPIN-WINDOW --";
     }
   }
-  if (textEditor === undefined) {
+  logExtensionMessage(`* activeTextEditorChanged(${argumentInterp}) ENTRY`);
+
+  if (textEditor !== undefined && codeBlockColorizer.isColoringBackground()) {
+    const document = textEditor.document!;
+    if (isSpinOrPasmDocument(document)) {
+      logExtensionMessage(`-- colorizing [${document.fileName}]`);
+      const isSpin1Doc: boolean = isSpin1Document(document);
+      const docFindings = isSpin1Doc ? spin1SemanticTokensProvider.docFindings() : spin2SemanticTokensProvider.docFindings();
+      codeBlockColorizer.updateRegionColors(textEditor, docFindings, "Ext-actvEditorChg");
+    }
+  }
+
+  if (textEditor == null || textEditor === undefined) {
+    updateStatusBarItem(null);
     textEditor = vscode.window.activeTextEditor;
   }
 
-  if (textEditor == null) {
-    updateStatusBarItem(null);
-  } else {
+  if (textEditor) {
     const mode = getMode(textEditor);
     updateStatusBarItem(mode);
-    logExtensionMessage("* activeTextEditorChanged");
 
     // post information to out-side world via our CONTEXT
     vscode.commands.executeCommand("setContext", "spin2.insert.mode", modeName(mode));
@@ -306,6 +318,45 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
     textEditor.options.cursorStyle = cursorStyle;
   }
 }
+
+const configurationChanged = () => {
+  const previousPerEditor = configuration.perEditor;
+  const previousShowInStatusBar = getShowInStatusBar();
+  logExtensionMessage("* configurationChanged");
+
+  // tell tabFormatter that is might have changed, too
+  tabFormatter.updateTabConfiguration();
+
+  codeBlockColorizer.updateColorizerConfiguration();
+
+  const updated = reloadConfiguration();
+  if (!updated) {
+    return;
+  }
+
+  const showInStatusBar = getShowInStatusBar();
+
+  // post create / destroy when changed
+  if (showInStatusBar !== previousShowInStatusBar) {
+    if (showInStatusBar) {
+      createStatusBarItem();
+    } else {
+      destroyStatusBarItem();
+    }
+  }
+
+  // update state if the per-editor/global configuration option changes
+  if (configuration.perEditor !== previousPerEditor) {
+    const textEditor = vscode.window.activeTextEditor;
+    const mode = textEditor != null ? getMode(textEditor) : null;
+    resetModes(mode, configuration.perEditor);
+    if (textEditor != null) {
+      activeTextEditorChanged(textEditor);
+    }
+  } else {
+    activeTextEditorChanged();
+  }
+};
 
 function toggleCommand() {
   const textEditor = vscode.window.activeTextEditor;
@@ -335,39 +386,6 @@ function getShowInStatusBar(): boolean {
   }
   return false;
 }
-
-const configurationChanged = () => {
-  const previousPerEditor = configuration.perEditor;
-  const previousShowInStatusBar = getShowInStatusBar();
-
-  // tell tabFormatter that is might have changed, too
-  tabFormatter.updateTabConfiguration();
-
-  const updated = reloadConfiguration();
-  if (!updated) {
-    return;
-  }
-
-  const showInStatusBar = getShowInStatusBar();
-
-  // post create / destroy when changed
-  if (showInStatusBar !== previousShowInStatusBar) {
-    if (showInStatusBar) {
-      createStatusBarItem();
-    } else {
-      destroyStatusBarItem();
-    }
-  }
-
-  // update state if the per-editor/global configuration option changes
-  if (configuration.perEditor !== previousPerEditor) {
-    const textEditor = vscode.window.activeTextEditor;
-    const mode = textEditor != null ? getMode(textEditor) : null;
-    resetModes(mode, configuration.perEditor);
-  }
-
-  activeTextEditorChanged();
-};
 
 function typeCommand(args: { text: string }) {
   const editor = vscode.window.activeTextEditor;

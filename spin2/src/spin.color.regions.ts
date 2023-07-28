@@ -4,7 +4,7 @@
 import * as vscode from "vscode";
 import { Position } from "vscode";
 import { DocumentFindings, eBLockType, IBlockSpan } from "./spin.semantic.findings";
-import { semanticConfiguration } from "./spin2.extension.configuration";
+import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.extension.configuration";
 
 interface DecoratorMap {
   [key: string]: DecoratorDescription;
@@ -39,6 +39,8 @@ export class RegionColorizer {
     priLt: "#BFF8FFff",
     priDk: "#A7F3FEff",
   };
+  private namedColorsAlpha: number = 100;
+
   private decoratorInstances: DecoratorInstances = {};
 
   private configuration = semanticConfiguration;
@@ -54,21 +56,57 @@ export class RegionColorizer {
       }
     }
     this.logMessage("* Config: spinExtensionBehavior.colorBackground: [" + this.configuration.colorBackground + "]");
+    this.logMessage("* Config: spinExtensionBehavior.backgroundApha: [" + this.configuration.backgroundApha + "]");
+
+    this.updateColorizerConfiguration(); // ensure we match the current setting value
   }
 
   public isColoringBackground(): boolean {
     return this.configuration.colorBackground ? this.configuration.colorBackground : false;
   }
 
-  public updateRegionColors(activeEditor: vscode.TextEditor, symbolRepository: DocumentFindings) {
-    if (this.isColoringBackground()) {
-      {
-        // Clear decorations
-        const keys = Object.keys(this.decoratorInstances);
-        for (const key of keys) {
-          activeEditor.setDecorations(this.decoratorInstances[key], []);
-        }
+  public backgroundAlpha(): number {
+    let interpretedAlpha: number = this.configuration.backgroundApha ? this.configuration.backgroundApha : 100;
+    if (this.isColoringBackground() == false) {
+      interpretedAlpha = 0;
+    }
+    return interpretedAlpha;
+  }
+
+  public updateColorizerConfiguration() {
+    const updated = reloadSemanticConfiguration();
+    if (updated) {
+      const settingsAlpha: number = this.backgroundAlpha();
+      if (this.namedColorsAlpha != settingsAlpha) {
+        this.logMessage("* Config: spinExtensionBehavior.backgroundApha: [" + settingsAlpha + "]");
+        this.namedColorsAlpha = this.backgroundAlpha();
+        this.updateColorTable();
       }
+      if (this.isColoringBackground() == false) {
+        this.removeBackgroundColors("updateCfg");
+      }
+    }
+  }
+
+  private removeBackgroundColors(caller: string) {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor) {
+      this.logMessage(`- removeBackgroundColors() fm=(${caller}) [${activeEditor.document.fileName}]`);
+      // Clear decorations
+      const keys = Object.keys(this.decoratorInstances);
+      for (const key of keys) {
+        // If rangesOrOptions is empty, the existing decorations with the given decoration type will be removed
+        activeEditor.setDecorations(this.decoratorInstances[key], []);
+      }
+    }
+  }
+
+  public updateRegionColors(activeEditor: vscode.TextEditor, symbolRepository: DocumentFindings, caller: string) {
+    // remove any prior colors
+    this.removeBackgroundColors("updRgnCo():" + caller);
+
+    if (this.isColoringBackground()) {
+      this.logMessage(`- updateRegionColors() fm=(${caller}) [${activeEditor.document.fileName}]`);
 
       const codeBlockSpans: IBlockSpan[] = symbolRepository.blockSpans();
       const decorationsByColor: DecoratorMap = {};
@@ -122,8 +160,32 @@ export class RegionColorizer {
             activeEditor.setDecorations(currDecoration.decorator, currDecoration.regions);
           }
         }
+      } else {
+        this.logMessage(`- updateRegionColors(): ${codeBlockSpans.length} region(s) to color`);
+      }
+    } else {
+      this.logMessage(`- updateRegionColors(): coloring disabled`);
+    }
+  }
+
+  private updateColorTable(): void {
+    // alpha is specified in percent [10-100]
+    if (this.namedColorsAlpha > 0) {
+      const bgAlphaHex: string = this.twoDigitHexForByteValue(255 * (this.namedColorsAlpha / 100));
+      for (let colorKey in this.namedColors) {
+        const colorRGBA: string = this.namedColors[colorKey];
+        const updatedRGBA: string = colorRGBA.substring(0, 7) + bgAlphaHex;
+        this.namedColors[colorKey] = updatedRGBA;
+        this.logMessage(`- updateColorTable(): ${colorKey} [${colorRGBA}] => [${updatedRGBA}]`);
       }
     }
+  }
+
+  private twoDigitHexForByteValue(value: number): string {
+    const limitedValue: number = value & 255; // limit to 0-255
+    const interp: string = limitedValue.toString(16);
+    const hexString = interp.length > 1 ? interp : `0${interp}`;
+    return hexString;
   }
 
   /**

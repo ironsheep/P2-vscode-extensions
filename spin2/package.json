@@ -192,6 +192,13 @@
             "type": "boolean",
             "default": false,
             "description": "Enable \"Propeller Tool\" like coloring of editor backgound."
+          },
+          "spinExtensionBehavior.editorBackgroundAlpha": {
+            "type": "number",
+            "default": 100,
+            "minimum": 10,
+            "maximum": 100,
+            "description": "Alpha component of the editor backgound color [10-100] in percent (default is 100, Uncheck \"Color Editor Background\" to turn off)."
           }
         }
       },
@@ -677,17 +684,17 @@
       {
         "command": "spin2.insertMode.deleteLeft",
         "key": "backspace",
-        "when": "editorTextFocus && !editorReadonly&& editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && (editorLangId == spin2 || editorLangId == p2asm) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.deleteLeft",
         "key": "backspace",
-        "when": "editorTextFocus && !editorReadonly&& editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && editorLangId == spin && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.deleteRight",
         "key": "delete",
-        "when": "editorTextFocus && !editorReadonly && editorLangId == spin2 && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && (editorLangId == spin2 || editorLangId == p2asm) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.deleteRight",
