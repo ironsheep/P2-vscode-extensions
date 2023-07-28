@@ -2,12 +2,14 @@
 // src/spin1.semantic.ts
 
 import * as vscode from "vscode";
-import { EndOfLine } from "vscode";
+//import { EndOfLine } from "vscode";
 
-import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
-import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
+import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.extension.configuration";
+import { DocumentFindings, RememberedComment, eCommentType, RememberedToken, eBLockType } from "./spin.semantic.findings";
 import { ParseUtils, eParseState } from "./spin1.utils";
 import { DocGenerator } from "./spin.document.generate";
+import { RegionColorizer } from "./spin.color.regions";
+import { isCurrentDocumentSpin1 } from "./spin.vscode.utils";
 
 // ----------------------------------------------------------------------------
 //   Semantic Highlighting Provider
@@ -113,6 +115,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private logTokenDiscover: boolean = true;
 
   private semanticFindings: DocumentFindings;
+  private codeBlockColorizer: RegionColorizer;
+
   private conEnumInProgress: boolean = false;
 
   private configuration = semanticConfiguration;
@@ -121,8 +125,9 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
 
-  public constructor(sharedDocGenerator: DocGenerator) {
+  public constructor(sharedDocGenerator: DocGenerator, blockColorizer: RegionColorizer) {
     this.docGenerator = sharedDocGenerator;
+    this.codeBlockColorizer = blockColorizer;
     if (this.spin1DebugLogEnabled) {
       if (this.spin1log === undefined) {
         //Create output channel
@@ -222,6 +227,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this._logMessage("---> Pre SCAN");
     let bBuildingSingleLineCmtBlock: boolean = false;
     let bBuildingSingleLineDocCmtBlock: boolean = false;
+    this.semanticFindings.recordBlockStart(eBLockType.isCon, 0); // spin file defaults to CON at 1st line
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
@@ -394,6 +400,25 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
         // mark end of method, if we were in a method
         this.semanticFindings.endPossibleMethod(i); // pass prior line number!
         currState = sectionStatus.inProgressStatus;
+
+        // record start of next block in code
+        //  NOTE: this causes end of prior block to be recorded
+        let newBlockType: eBLockType = eBLockType.Unknown;
+        if (currState == eParseState.inCon) {
+          newBlockType = eBLockType.isCon;
+        } else if (currState == eParseState.inDat) {
+          newBlockType = eBLockType.isDat;
+        } else if (currState == eParseState.inVar) {
+          newBlockType = eBLockType.isVar;
+        } else if (currState == eParseState.inObj) {
+          newBlockType = eBLockType.isObj;
+        } else if (currState == eParseState.inPub) {
+          newBlockType = eBLockType.isPub;
+        } else if (currState == eParseState.inPri) {
+          newBlockType = eBLockType.isPri;
+        }
+        this.semanticFindings.recordBlockStart(newBlockType, i); // start new one which ends prior
+
         this._logState("- scan ln:" + (i + 1) + " currState=[" + currState + "]");
         // ID the remainder of the line
         if (currState == eParseState.inPub || currState == eParseState.inPri) {
@@ -493,6 +518,12 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       }
     }
     this.semanticFindings.endPossibleMethod(lines.length - 1); // report end if last line of file
+    this.semanticFindings.finishFinalBlock(lines.length - 1); // mark end of final block in file
+
+    // now update editor colors
+    const editor = vscode.window.activeTextEditor!;
+    this.codeBlockColorizer.updateRegionColors(editor, this.semanticFindings);
+
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("---> Actual SCAN");
 
@@ -2883,7 +2914,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     if (isSignature) {
       const cmtType: eCommentType = isPri ? eCommentType.multiLineComment : eCommentType.multiLineDocComment;
       let tmpDesiredComment: RememberedComment = new RememberedComment(cmtType, lineNbr, "NOTE: insert comment template by pressing Ctrl+Alt+C on PRI signature line, then fill it in.");
-      const bIsSpin1: boolean = this.docGenerator.isCurrentDocumentSpin1();
+      const bIsSpin1: boolean = isCurrentDocumentSpin1();
       const signatureComment: string[] = this.docGenerator.generateDocCommentForSignature(line, bIsSpin1);
       if (signatureComment && signatureComment.length > 0) {
         let lineCount: number = 1; // count our comment line on creation

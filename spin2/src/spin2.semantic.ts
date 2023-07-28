@@ -2,13 +2,15 @@
 // src/spin2.semantic.ts
 
 import * as vscode from "vscode";
-import { EndOfLine } from "vscode";
+//import { EndOfLine } from "vscode";
 
-import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.semantic.configuration";
-import { DocumentFindings, RememberedComment, eCommentType, RememberedToken } from "./spin.semantic.findings";
+import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.extension.configuration";
+import { DocumentFindings, RememberedComment, eCommentType, RememberedToken, eBLockType } from "./spin.semantic.findings";
 import { ParseUtils, eDebugDisplayType, eParseState } from "./spin2.utils";
 import { DocGenerator } from "./spin.document.generate";
-import { start } from "repl";
+import { RegionColorizer } from "./spin.color.regions";
+import { isCurrentDocumentSpin1 } from "./spin.vscode.utils";
+//import { start } from "repl";
 
 // ----------------------------------------------------------------------------
 //   Semantic Highlighting Provider
@@ -113,7 +115,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
   private spin2log: any = undefined;
   // adjust following true/false to show specific parsing debug
-  private spin2DebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private spin2DebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private showSpinCode: boolean = true;
   private showPreProc: boolean = true;
   private showCON: boolean = true;
@@ -134,11 +136,13 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private configuration = semanticConfiguration;
 
   private currentMethodName: string = "";
+  private codeBlockColorizer: RegionColorizer;
 
   private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
 
-  public constructor(sharedDocGenerator: DocGenerator) {
+  public constructor(sharedDocGenerator: DocGenerator, blockColorizer: RegionColorizer) {
     this.docGenerator = sharedDocGenerator;
+    this.codeBlockColorizer = blockColorizer;
     if (this.spin2DebugLogEnabled) {
       if (this.spin2log === undefined) {
         //Create output channel
@@ -239,6 +243,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this._logMessage("---> Pre SCAN");
     let bBuildingSingleLineCmtBlock: boolean = false;
     let bBuildingSingleLineDocCmtBlock: boolean = false;
+    this.semanticFindings.recordBlockStart(eBLockType.isCon, 0); // spin file defaults to CON at 1st line
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
@@ -417,7 +422,26 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       } else if (sectionStatus.isSectionStart) {
         // mark end of method, if we were in a method
         this.semanticFindings.endPossibleMethod(i); // pass prior line number!
+
         currState = sectionStatus.inProgressStatus;
+        // record start of next block in code
+        //  NOTE: this causes end of prior block to be recorded
+        let newBlockType: eBLockType = eBLockType.Unknown;
+        if (currState == eParseState.inCon) {
+          newBlockType = eBLockType.isCon;
+        } else if (currState == eParseState.inDat) {
+          newBlockType = eBLockType.isDat;
+        } else if (currState == eParseState.inVar) {
+          newBlockType = eBLockType.isVar;
+        } else if (currState == eParseState.inObj) {
+          newBlockType = eBLockType.isObj;
+        } else if (currState == eParseState.inPub) {
+          newBlockType = eBLockType.isPub;
+        } else if (currState == eParseState.inPri) {
+          newBlockType = eBLockType.isPri;
+        }
+        this.semanticFindings.recordBlockStart(newBlockType, i); // start new one which ends prior
+
         this._logState("- scan ln:" + (i + 1) + " currState=[" + currState + "]");
         // ID the remainder of the line
         if (currState == eParseState.inPub || currState == eParseState.inPri) {
@@ -558,6 +582,12 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       this.priorSingleLineComment = undefined; // clear it out...
     }
     this.semanticFindings.endPossibleMethod(lines.length - 1); // report end if last line of file
+    this.semanticFindings.finishFinalBlock(lines.length - 1); // mark end of final block in file
+
+    // now update editor colors
+    const editor = vscode.window.activeTextEditor!;
+    this.codeBlockColorizer.updateRegionColors(editor, this.semanticFindings);
+
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("--->             <---");
     this._logMessage("---> Actual SCAN");
@@ -894,7 +924,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     if (isSignature) {
       const cmtType: eCommentType = isPri ? eCommentType.multiLineComment : eCommentType.multiLineDocComment;
       let tmpDesiredComment: RememberedComment = new RememberedComment(cmtType, lineNbr, "NOTE: insert comment template by pressing Ctrl+Alt+C on PRI signature line, then fill it in.");
-      const bIsSpin1: boolean = this.docGenerator.isCurrentDocumentSpin1();
+      const bIsSpin1: boolean = isCurrentDocumentSpin1();
       const signatureComment: string[] = this.docGenerator.generateDocCommentForSignature(line, bIsSpin1);
       if (signatureComment && signatureComment.length > 0) {
         let lineCount: number = 1; // count our comment line on creation
@@ -1028,7 +1058,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             .filter(Boolean);
           this._logCON("  -- GetCONDecl assign lineParts=[" + lineParts + "](" + lineParts.length + ")");
           const newName = lineParts[0];
-          if (newName.charAt(0).match(/[a-zA-Z_]/) && !this.parseUtils.isPasm1Variable(newName)) {
+          if (newName.charAt(0).match(/[a-zA-Z_]/) && !this.parseUtils.isP1asmVariable(newName)) {
             this._logCON("  -- GLBL GetCONDecl newName=[" + newName + "]");
             // remember this object name so we can annotate a call to it
             this.semanticFindings.setGlobalToken(newName, new RememberedToken("variable", ["readonly"]), lineNbr, this._declarationComment());
@@ -1043,7 +1073,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             // use parseUtils.isDebugInvocation to filter out use of debug invocation command from constant def'
             if (this.parseUtils.isDebugInvocation(enumConstant)) {
               continue; // yep this is not a constant
-            } else if (this.parseUtils.isPasm1Variable(enumConstant)) {
+            } else if (this.parseUtils.isP1asmVariable(enumConstant)) {
               this._logCON("  -- GLBL PASM1 skipped=[" + enumConstant + "]");
               continue; // yep this is not a constant
             } else {
@@ -1100,10 +1130,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         !this.parseUtils.isSpinBuiltInVariable(newName) &&
         !this.parseUtils.isSpinReservedWord(newName) &&
         !this.parseUtils.isBuiltinReservedWord(newName) &&
-        // add pasm1 detect
-        !this.parseUtils.isPasm1Instruction(newName) &&
-        !this.parseUtils.isPasm1Variable(newName) &&
-        !this.parseUtils.isPasm1Conditional(newName)
+        // add p1asm detect
+        !this.parseUtils.isP1asmInstruction(newName) &&
+        !this.parseUtils.isP1asmVariable(newName) &&
+        !this.parseUtils.isP1asmConditional(newName)
       ) {
         const nameType: string = isNamedDataDeclarationLine ? "variable" : "label"; // XYZZY
         var labelModifiers: string[] = [];
@@ -1618,7 +1648,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 });
               }
             }
-            if (enumConstant.charAt(0).match(/[a-zA-Z_]/) && !this.parseUtils.isDebugInvocation(enumConstant) && !this.parseUtils.isPasm1Variable(enumConstant)) {
+            if (enumConstant.charAt(0).match(/[a-zA-Z_]/) && !this.parseUtils.isDebugInvocation(enumConstant) && !this.parseUtils.isP1asmVariable(enumConstant)) {
               this._logCON("  -- B GLBL enumConstant=[" + enumConstant + "]");
               // our enum name can have a step offset
               const nameOffset = line.indexOf(enumConstant, currentOffset);
@@ -1629,7 +1659,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                 ptTokenType: "enumMember",
                 ptTokenModifiers: ["declaration", "readonly"],
               });
-            } else if (this.parseUtils.isPasm1Variable(enumConstant)) {
+            } else if (this.parseUtils.isP1asmVariable(enumConstant)) {
               // our SPIN1 name
               this._logCON("  -- B GLBL bad SPIN1=[" + enumConstant + "]");
               const nameOffset = line.indexOf(enumConstant, currentOffset);
@@ -1723,8 +1753,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             ptTokenType: referenceDetails.type,
             ptTokenModifiers: referenceDetails.modifiers,
           });
-        } else if (this.parseUtils.isPasm1Instruction(newName) || this.parseUtils.isPasm1Conditional(newName) || this.parseUtils.isPasm1Variable(newName)) {
-          this._logMessage("  --  ERROR pasm1 name=[" + newName + "]");
+        } else if (this.parseUtils.isP1asmInstruction(newName) || this.parseUtils.isP1asmConditional(newName) || this.parseUtils.isP1asmVariable(newName)) {
+          this._logMessage("  --  ERROR p1asm name=[" + newName + "]");
           tokenSet.push({
             line: lineIdx,
             startCharacter: currentOffset,
@@ -1923,9 +1953,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           ptTokenModifiers: ["illegalUse"],
         });
         haveLabel = true;
-      } else if (this.parseUtils.isPasm1Instruction(labelName)) {
+      } else if (this.parseUtils.isP1asmInstruction(labelName)) {
         // hrmf... no global type???? this should be a label?
-        this._logPASM("  --  DAT Pasm1 BAD label=[" + labelName + "](" + (0 + 1) + ")");
+        this._logPASM("  --  DAT P1asm BAD label=[" + labelName + "](" + (0 + 1) + ")");
         const nameOffset = line.indexOf(labelName, currentOffset);
         tokenSet.push({
           line: lineIdx,
@@ -2048,9 +2078,9 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             }
             currentOffset += currArgumentLen + 1;
           }
-          if (this.parseUtils.isPasm1Instruction(likelyInstructionName)) {
+          if (this.parseUtils.isP1asmInstruction(likelyInstructionName)) {
             const nameOffset: number = line.indexOf(likelyInstructionName, 0);
-            this._logPASM("  --  DAT A Pasm1 BAD instru=[" + likelyInstructionName + "](" + (nameOffset + 1) + ")");
+            this._logPASM("  --  DAT A P1asm BAD instru=[" + likelyInstructionName + "](" + (nameOffset + 1) + ")");
             tokenSet.push({
               line: lineIdx,
               startCharacter: nameOffset,
@@ -2060,10 +2090,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
             });
           }
         }
-      } else if (lineParts.length == 1 && this.parseUtils.isPasm1Instruction(lineParts[0])) {
+      } else if (lineParts.length == 1 && this.parseUtils.isP1asmInstruction(lineParts[0])) {
         const likelyInstructionName: string = lineParts[0];
         const nameOffset: number = line.indexOf(likelyInstructionName, 0);
-        this._logPASM("  --  DAT B Pasm1 BAD instru=[" + likelyInstructionName + "](" + (nameOffset + 1) + ")");
+        this._logPASM("  --  DAT B P1asm BAD instru=[" + likelyInstructionName + "](" + (nameOffset + 1) + ")");
         tokenSet.push({
           line: lineIdx,
           startCharacter: nameOffset,

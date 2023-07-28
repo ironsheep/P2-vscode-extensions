@@ -1494,7 +1494,7 @@ export class ParseUtils {
     coginit: [
       "COGINIT(CogNum, PASMaddr, PTRAvalue)[ : CogId]",
       "Start PASM code in a cog, returns cog's ID if used as an expression element, -1 = no cog free",
-      ["CogNum - COG id of cog to be started and/or COGINIT Symbol (e.g., COGEXEC_NEW)", "PASMaddr - Address of pasm2 code to be run in COG", "PTRAvalue - value to be passed to new COG a startup"],
+      ["CogNum - COG id of cog to be started and/or COGINIT Symbol (e.g., COGEXEC_NEW)", "PASMaddr - Address of p2asm code to be run in COG", "PTRAvalue - value to be passed to new COG a startup"],
       ["CogId - cog's ID if used as an expression element, -1 = no cog free"],
     ],
     cogstop: ["COGSTOP(CogNum)", "Stop cog CogNum", ["CogNum - id of COG to be stopped"]],
@@ -2360,9 +2360,9 @@ export class ParseUtils {
     return instructionStatus;
   }
 
-  public isPasm1Instruction(name: string): boolean {
+  public isP1asmInstruction(name: string): boolean {
     // mark these RED if seen in P2 code
-    const pasm1Instructions: string[] = [
+    const p1asmInstructions: string[] = [
       "absneg",
       "addabs",
       "clkset",
@@ -2383,13 +2383,13 @@ export class ParseUtils {
       "waitpne",
       "waitvid",
     ];
-    const instructionStatus: boolean = pasm1Instructions.indexOf(name.toLowerCase()) != -1;
+    const instructionStatus: boolean = p1asmInstructions.indexOf(name.toLowerCase()) != -1;
     return instructionStatus;
   }
 
-  public isPasm1Variable(name: string): boolean {
+  public isP1asmVariable(name: string): boolean {
     // mark these RED if seen in P2 code
-    const pasm1Variables: string[] = [
+    const p1asmVariables: string[] = [
       "_clkmode",
       "_free",
       "_stack",
@@ -2415,7 +2415,7 @@ export class ParseUtils {
       "par",
       "spr",
     ];
-    const instructionStatus: boolean = pasm1Variables.indexOf(name.toLowerCase()) != -1;
+    const instructionStatus: boolean = p1asmVariables.indexOf(name.toLowerCase()) != -1;
     return instructionStatus;
   }
 
@@ -2484,7 +2484,7 @@ export class ParseUtils {
     return illegalStatus;
   }
 
-  public isPasm1Conditional(name: string): boolean {
+  public isP1asmConditional(name: string): boolean {
     let returnStatus: boolean = false;
     if (name.length >= 2) {
       const checkType: string = name.toUpperCase();
@@ -2533,9 +2533,9 @@ export class ParseUtils {
         haveLabelStatus = false;
       } else if (this.isPasmInstruction(name)) {
         haveLabelStatus = false;
-      } else if (this.isPasm1Conditional(name)) {
+      } else if (this.isP1asmConditional(name)) {
         haveLabelStatus = false;
-      } else if (this.isPasm1Instruction(name)) {
+      } else if (this.isP1asmInstruction(name)) {
         haveLabelStatus = false;
       } else if (this.isPasmNonArgumentInstruction(name)) {
         haveLabelStatus = false;

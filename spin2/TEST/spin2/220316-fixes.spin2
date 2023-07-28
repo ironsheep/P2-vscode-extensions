@@ -41,6 +41,7 @@ CON
     kFPS_IN_MMPS    = 0.00328084    ' 1 mm/sec = 0.00328084 ft/sec
 
 '  float() and trunc() not colored correctly!
+
 PUB mmps2fps(nDistInMMPS) : nDistInFps | fValue
 '' Convert distance in mm/s to fps
     ' RULE: 1 mm/sec = 0.00328084 ft/sec

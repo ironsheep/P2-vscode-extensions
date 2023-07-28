@@ -321,10 +321,10 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
           !this.parseUtils.isSpinBuiltInVariable(newName) &&
           !this.parseUtils.isSpinReservedWord(newName) &&
           !this.parseUtils.isBuiltinReservedWord(newName) &&
-          // add pasm1 detect
-          !this.parseUtils.isPasm1Instruction(newName) &&
-          !this.parseUtils.isPasm1Variable(newName) &&
-          !this.parseUtils.isPasm1Conditional(newName)
+          // add p1asm detect
+          !this.parseUtils.isP1asmInstruction(newName) &&
+          !this.parseUtils.isP1asmVariable(newName) &&
+          !this.parseUtils.isP1asmConditional(newName)
         ) {
           if (!isDataDeclarationLine && !newName.startsWith(".") && !newName.startsWith(":") && !newName.includes("#")) {
             newGlobalLabel = newName;

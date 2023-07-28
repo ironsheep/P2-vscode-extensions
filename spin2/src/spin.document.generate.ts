@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { ParseUtils, eParseState } from "./spin2.utils";
+import { isSpin1Document, isSpin2File, isSpin1File } from "./spin.vscode.utils";
 
 export class DocGenerator {
   private generatorDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
@@ -38,19 +39,12 @@ export class DocGenerator {
     }
   }
 
-  public isCurrentDocumentSpin1(): boolean {
-    const editor = vscode?.window.activeTextEditor!;
-    const document = editor.document!;
-    const isSpin1Doc: boolean = document.fileName.toLowerCase().endsWith(".spin");
-    return isSpin1Doc;
-  }
-
   public insertDocComment(document: vscode.TextDocument, selections: readonly vscode.Selection[]): vscode.ProviderResult<vscode.TextEdit[]> {
     return selections
       .map((selection) => {
         let results: vscode.ProviderResult<vscode.TextEdit[]> = [];
         let endOfLineStr: string = document.eol == EndOfLine.CRLF ? "\r\n" : "\n";
-        const isSpin1Doc: boolean = document.fileName.toLowerCase().endsWith(".spin");
+        const isSpin1Doc: boolean = isSpin1Document(document);
         this.logMessage(
           `* iDc selection(isSingle-[${selection.isSingleLine}] isSpin1Doc-(${isSpin1Doc}) isEmpty-[${selection.isEmpty}] s,e-[${selection.start.line}:${selection.start.character} - ${selection.end.line}:${selection.end.character}] activ-[${selection.active.character}] anchor-[${selection.anchor.character}])`
         );
@@ -217,11 +211,11 @@ export class DocGenerator {
       this.logMessage(`+ (DBG) generateDocument() fsPath-(${currentlyOpenTabfilePath})`);
       this.logMessage(`+ (DBG) generateDocument() folder-(${currentlyOpenTabfolderName})`);
       this.logMessage(`+ (DBG) generateDocument() filename-(${currentlyOpenTabfileName})`);
-      let isSpinFile: boolean = currentlyOpenTabfileName.endsWith(".spin2");
+      let isSpinFile: boolean = isSpin2File(currentlyOpenTabfileName);
       let isSpin1: boolean = false;
       let fileType: string = ".spin2";
       if (!isSpinFile) {
-        isSpinFile = currentlyOpenTabfileName.endsWith(".spin");
+        isSpinFile = isSpin1File(currentlyOpenTabfileName);
         if (isSpinFile) {
           isSpin1 = true;
           fileType = ".spin";
@@ -471,11 +465,11 @@ export class DocGenerator {
       //this.logMessage(`+ (DBG) generateDocument() fsPath-(${currentlyOpenTabfilePath})`);
       //this.logMessage(`+ (DBG) generateDocument() folder-(${currentlyOpenTabfolderName})`);
       //this.logMessage(`+ (DBG) generateDocument() filename-(${currentlyOpenTabfileName})`);
-      let isSpinFile: boolean = currentlyOpenTabfileName.endsWith(".spin2");
+      let isSpinFile: boolean = isSpin2File(currentlyOpenTabfileName);
       let isSpin1: boolean = false;
       let fileType: string = ".spin2";
       if (!isSpinFile) {
-        isSpinFile = currentlyOpenTabfileName.endsWith(".spin");
+        isSpinFile = isSpin1File(currentlyOpenTabfileName);
         if (isSpinFile) {
           isSpin1 = true;
           fileType = ".spin";

@@ -14,6 +14,7 @@ import { getMode, resetModes, toggleMode, toggleMode2State, eEditMode, modeName 
 import { createStatusBarItem, destroyStatusBarItem, updateStatusBarItem } from "./spin.editMode.statusBarItem";
 import { DocGenerator } from "./spin.document.generate";
 import { ObjectTreeProvider, Dependency } from "./spin.object.dependencies";
+import { RegionColorizer } from "./spin.color.regions";
 
 import { Spin2ConfigDocumentSymbolProvider } from "./spin2.outline";
 import { Spin2DocumentSemanticTokensProvider, Spin2Legend } from "./spin2.semantic";
@@ -24,6 +25,7 @@ import { Spin1ConfigDocumentSymbolProvider } from "./spin1.outline";
 import { Spin1DocumentSemanticTokensProvider, Spin1Legend } from "./spin1.semantic";
 import { Spin1HoverProvider } from "./spin1.hover.behavior";
 import { Spin1SignatureHelpProvider } from "./spin1.signature.help";
+import { isSpinOrPasmDocument, isSpin1Document } from "./spin.vscode.utils";
 
 // ----------------------------------------------------------------------------
 //  this file contains both an outline provider
@@ -41,9 +43,10 @@ var objTreeProvider: ObjectTreeProvider = new ObjectTreeProvider();
 var tabFormatter: Formatter = new Formatter();
 
 const docGenerator: DocGenerator = new DocGenerator();
+const codeBlockColorizer: RegionColorizer = new RegionColorizer();
 
-const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider(docGenerator);
-const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider(docGenerator);
+const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider(docGenerator, codeBlockColorizer);
+const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider(docGenerator, codeBlockColorizer);
 
 const extensionDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var extensionOutputChannel: vscode.OutputChannel | undefined = undefined;
@@ -93,9 +96,8 @@ export const activate = (context: vscode.ExtensionContext) => {
   context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(SPIN1_FILE, new Spin1SignatureHelpProvider(spin1SemanticTokensProvider.docFindings()), "(", ","));
 
   // ----------------------------------------------------------------------------
-  //   TAB Formatter Provider
+  //   Hook GENERATE Object Public Interface Document
   //
-
   const generateDocumentFileCommand: string = "spin2.generate.documentation.file";
 
   context.subscriptions.push(
@@ -112,6 +114,9 @@ export const activate = (context: vscode.ExtensionContext) => {
     })
   );
 
+  // ----------------------------------------------------------------------------
+  //   Hook GENERATE PUB/PRI Comment Block
+  //
   const generateDocCommentCommand: string = "spin2.generate.doc.comment";
 
   context.subscriptions.push(
@@ -130,8 +135,13 @@ export const activate = (context: vscode.ExtensionContext) => {
     })
   );
 
+  // ----------------------------------------------------------------------------
+  //   Set Up our TAB Formatting
+  //
+  // post information to out-side world via our CONTEXT
   vscode.commands.executeCommand("setContext", "spin2.tabStops.enabled", tabFormatter.isEnbled());
 
+  //   Hook TAB Formatting
   if (tabFormatter.isEnbled()) {
     const insertTabStopsCommentCommand = "spin2.insertTabStopsComment";
 
@@ -195,19 +205,6 @@ export const activate = (context: vscode.ExtensionContext) => {
     );
   }
 
-  function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
-    if (!textEdits) {
-      return;
-    }
-    const workEdits = new vscode.WorkspaceEdit();
-    workEdits.set(document.uri, textEdits); // give the edits
-    vscode.workspace.applyEdit(workEdits); // apply the edits
-  }
-
-  // ----------------------------------------------------------------------------
-  //   InserMode  Provider
-  //
-
   const statusBarItem = createStatusBarItem();
   activeTextEditorChanged();
 
@@ -223,9 +220,27 @@ export const activate = (context: vscode.ExtensionContext) => {
 
     vscode.window.onDidChangeActiveTextEditor(activeTextEditorChanged),
 
-    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration),
+    //vscode.workspace.onDidChangeTextDocument(textDocumentChanged),
+
+    vscode.workspace.onDidChangeConfiguration(configurationChanged),
 
     statusBarItem
+  );
+
+  vscode.workspace.onDidChangeTextDocument(
+    (event) => {
+      vscode.window.visibleTextEditors.map((editor) => {
+        if (editor.document === event.document) {
+          if (isSpinOrPasmDocument(editor.document)) {
+            const isSpin1Doc: boolean = isSpin1Document(editor.document);
+            const docFindings = isSpin1Doc ? spin1SemanticTokensProvider.docFindings() : spin2SemanticTokensProvider.docFindings();
+            codeBlockColorizer.updateRegionColors(editor, docFindings);
+          }
+        }
+      });
+    },
+    null,
+    context.subscriptions
   );
 
   // ----------------------------------------------------------------------------
@@ -253,6 +268,14 @@ export const deactivate = () => {
 //   InsertMode command handlers   ////////////////////////////////////////////
 
 function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
+  if (textEditor !== undefined) {
+    const document = textEditor.document!;
+    if (isSpinOrPasmDocument(document)) {
+      const isSpin1Doc: boolean = isSpin1Document(document);
+      const docFindings = isSpin1Doc ? spin1SemanticTokensProvider.docFindings() : spin2SemanticTokensProvider.docFindings();
+      codeBlockColorizer.updateRegionColors(textEditor, docFindings);
+    }
+  }
   if (textEditor === undefined) {
     textEditor = vscode.window.activeTextEditor;
   }
@@ -263,6 +286,8 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
     const mode = getMode(textEditor);
     updateStatusBarItem(mode);
     logExtensionMessage("* activeTextEditorChanged");
+
+    // post information to out-side world via our CONTEXT
     vscode.commands.executeCommand("setContext", "spin2.insert.mode", modeName(mode));
 
     // if in overtype mode, set the cursor to secondary style; otherwise, reset to default
@@ -311,7 +336,7 @@ function getShowInStatusBar(): boolean {
   return false;
 }
 
-const onDidChangeConfiguration = () => {
+const configurationChanged = () => {
   const previousPerEditor = configuration.perEditor;
   const previousShowInStatusBar = getShowInStatusBar();
 
@@ -423,4 +448,13 @@ function pasteCommand(args: { text: string; pasteOnNewLine: boolean }) {
     }
   }
   return null;
+}
+
+function applyTextEdits(document: vscode.TextDocument, textEdits: vscode.TextEdit[]) {
+  if (!textEdits) {
+    return;
+  }
+  const workEdits = new vscode.WorkspaceEdit();
+  workEdits.set(document.uri, textEdits); // give the edits
+  vscode.workspace.applyEdit(workEdits); // apply the edits
 }

@@ -20,6 +20,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.12] 2023-07-??
+
+Feature Updates (P1 and P2)
+
+- P1 & P2: Adds editor background coloring per section à la **Parallax Propeller Tool** (disabled by default, enable in settings)
+- Adds two new color themes which are better suited to colorized backgrounds
+
 ## [1.9.11] 2023-07-25
 
 General Updates (P1 and P2)
@@ -213,7 +220,7 @@ Minor tabbing update
 Minor highlighting update
 
 - Add offset color for local vs. global pasm labels
-- Detect and Flag invalid local pasm label syntax version: pasm1 vs. pasm2
+- Detect and Flag invalid local pasm label syntax version: p1asm vs. p2asm
 - Correct backspace behavior (no longer removes more than one character)
 
 ## [1.7.4] 2022-12-13
@@ -243,9 +250,9 @@ Update Spin2 highlighting (syntax and/or semantic parser fixes)
 - Spin2: Recognize label or data declaration on DAT line
 - Spin2: Recognize non-float decimal numbers with exponents
 - Spin2: Recognize `debug_main` and `debug_coginit` compile time directives
-- Spin2: Recognize event names in pasm2 correctly
+- Spin2: Recognize event names in p2asm correctly
 - Spin2: Fix cases where `debug` used without parenthesis causes extension crash
-- Spin2: Recognize coginit constants (some pasm2 cases were being missed)
+- Spin2: Recognize coginit constants (some p2asm cases were being missed)
 - Spin2: Add recognition of LutColors directive in debug statements with run-time terminal assignment
 - Spin2: Recognize `modcz` operand constants
 
@@ -584,7 +591,7 @@ Syntax/Semantic Adjustments:
 
 - NEW: add new Spin2/Pasm2/Debug methods & constants which were added since our last release
 - NEW: directives that shouldn't be used in inline-pasm are now highlighted with bright red color
-- BUGFIX: parser no longer expects pasm2 labels to be in the 1st column
+- BUGFIX: parser no longer expects p2asm labels to be in the 1st column
 - BUGFIX: added missing: four pasm if\_ conditionals, one spin2 method name
 - BUGFIX: parser now parses multiplying of constant values correctly
 - BUGFIX: previously seen files no longer affect the semantic highlighting of the current file
@@ -891,7 +898,7 @@ Preview Release of Semantic Highlighting
 - Nearly all of spin2 language core is in place (less operators)
 - Nearly all of debug() related methods are place (less "if(condition)" as the "if" is not unique in this case)
 - Symbols for Events and Interrupt sources in place
-- Most of pasm2 (lots still to verify)
+- Most of p2asm (lots still to verify)
 - Two draft themes are in place
 
 ## [0.1.1] 2020-11-04 (internal only)

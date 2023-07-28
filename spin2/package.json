@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.11",
+  "version": "1.9.12",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "spin",
     "spin2",
     "pasm",
-    "pasm2",
+    "p2asm",
     "propeller",
     "propeller 2",
     "propeller v2",
@@ -53,6 +53,16 @@
         "path": "./themes/isp-spin-light-theme.json"
       },
       {
+        "label": "Spin2 Ironsheep Dark for backgound Color",
+        "uiTheme": "vs-dark",
+        "path": "./themes/isp-spin-dark-bg-theme.json"
+      },
+      {
+        "label": "Spin2 Ironsheep Light for backgound Color",
+        "uiTheme": "vs",
+        "path": "./themes/isp-spin-light-bg-theme.json"
+      },
+      {
         "label": "Spin2 Ironsheep Syntax",
         "uiTheme": "vs-dark",
         "path": "./themes/isp-spin-syntax-theme.json"
@@ -79,7 +89,8 @@
           "SPIN2"
         ],
         "extensions": [
-          ".spin2"
+          ".spin2",
+          ".p2asm"
         ],
         "configuration": "./spin2.language-configuration.json"
       },
@@ -91,7 +102,8 @@
           "SPIN"
         ],
         "extensions": [
-          ".spin"
+          ".spin",
+          ".pasm"
         ],
         "configuration": "./spin1.language-configuration.json"
       }
@@ -175,6 +187,11 @@
             "type": "boolean",
             "default": false,
             "description": "Enable recognition/validation of flexspin preprocessor directives."
+          },
+          "spinExtensionBehavior.colorEditorBackground": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable \"Propeller Tool\" like coloring of editor backgound."
           }
         }
       },

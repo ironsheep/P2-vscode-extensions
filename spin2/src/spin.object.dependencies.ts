@@ -9,6 +9,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+import { isSpinFile } from "./spin.vscode.utils";
 
 enum eParseState {
   Unknown = 0,
@@ -72,7 +73,7 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
 
     if (!this.bFixHierToTopLevel) {
       this.logMessage(`+ (DBG) ObjDep: failed to ID top file for workspace`);
-      this.topLevelFSpec = this._getActiveFile();
+      this.topLevelFSpec = this._getActiveSpinFile();
       this.logMessage(`+ (DBG) ObjDep: NO TOP/curr, using activeFile=[${this.topLevelFSpec}]`);
       if (this.topLevelFSpec.length == 0) {
         // ERROR failed to ID open file (or file not open)
@@ -200,7 +201,7 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   }
 
   private _filenameWithSpinFileType(filename: string): string {
-    const bHasFileType: boolean = filename.includes(".spin") ? true : false; // matches .spin and .spin2
+    const bHasFileType: boolean = isSpinFile(filename) ? true : false; // matches .spin and .spin2! (not .spin3, etc.)
     let desiredName: string = filename;
     if (!bHasFileType) {
       desiredName = filename + ".spin";
@@ -211,33 +212,12 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
     return desiredName;
   }
 
-  private _getActiveFile(): string {
-    const textEditor = vscode.window.activeTextEditor;
-    let foundFSpec: string = "";
-    if (textEditor) {
-      if (textEditor.document.uri.scheme === "file") {
-        this.isDocument = true; // we're loading initial deps from current tab, not file!
-        var currentlyOpenTabFSpec = textEditor.document.uri.fsPath;
-        var currentlyOpenTabfolderName = path.dirname(currentlyOpenTabFSpec);
-        var currentlyOpenTabfileName = path.basename(currentlyOpenTabFSpec);
-        this.logMessage(`+ (DBG) ObjDep: fsPath-(${currentlyOpenTabFSpec})`);
-        this.logMessage(`+ (DBG) ObjDep: folder-(${currentlyOpenTabfolderName})`);
-        this.logMessage(`+ (DBG) ObjDep: filename-(${currentlyOpenTabfileName})`);
-        if (currentlyOpenTabfileName.includes(".spin")) {
-          // matches .spin and .spin2
-          foundFSpec = currentlyOpenTabFSpec;
-        }
-      }
-    }
-    return foundFSpec;
-  }
-
   private onActiveEditorChanged(): void {
     // if we are not fixes
     if (vscode.window.activeTextEditor) {
       if (!this.bFixHierToTopLevel) {
-        const fileFSpec: string = this._getActiveFile();
-        const enabled: boolean = fileFSpec.includes(".spin") ? true : false; // matches .spin and .spin2
+        const fileFSpec: string = this._getActiveSpinFile();
+        const enabled: boolean = isSpinFile(fileFSpec) ? true : false; // matches .spin and .spin2
         vscode.commands.executeCommand("setContext", "spin2.objectDeps.enabled", enabled);
         if (enabled) {
           // set new file top
@@ -254,6 +234,27 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
     } else {
       vscode.commands.executeCommand("setContext", "spin2.objectDeps.enabled", false);
     }
+  }
+
+  private _getActiveSpinFile(): string {
+    const textEditor = vscode.window.activeTextEditor;
+    let foundFSpec: string = "";
+    if (textEditor) {
+      if (textEditor.document.uri.scheme === "file") {
+        this.isDocument = true; // we're loading initial deps from current tab, not file!
+        var currentlyOpenTabFSpec = textEditor.document.uri.fsPath;
+        //var currentlyOpenTabfolderName = path.dirname(currentlyOpenTabFSpec);
+        var currentlyOpenTabfileName = path.basename(currentlyOpenTabFSpec);
+        //this.logMessage(`+ (DBG) ObjDep: fsPath-(${currentlyOpenTabFSpec})`);
+        //this.logMessage(`+ (DBG) ObjDep: folder-(${currentlyOpenTabfolderName})`);
+        this.logMessage(`+ (DBG) ObjDep: filename-(${currentlyOpenTabfileName})`);
+        if (isSpinFile(currentlyOpenTabfileName)) {
+          // matches .spin and .spin2
+          foundFSpec = currentlyOpenTabFSpec;
+        }
+      }
+    }
+    return foundFSpec;
   }
 
   /*

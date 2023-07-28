@@ -37,6 +37,15 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 - Supports the InsertMode operations à la Propeller Tool (_INSERT / OVERTYPE / ALIGN modes_) see [Insert Mode for Spin/Spin2](https://github.com/ironsheep/P2-vscode-extensions/blob/main/InsertMode.md) for more detailed info on this InsertMode feature.
 - **Tab Sets** You can choose between `Propeller Tool`(_Default_), `IronSheep`, and `User1` (_adjust in settings to make your favorite set_)
 
+## Feature: Screen Coloring à la Propeller Tool
+
+The background coloring is now capable of looking like our familiar Propeller Tool colors.
+
+- Same colors per code Block as displayed by Propeller Tool
+- Light and Dark colors alternate with each same section
+- Coloring is **off by default** but is easily enbaled in settings
+- Two new themes (*Light and Dark for bavckground color*) alter the theme colors for better visiblity when using colored backgrounds
+
 ## Feature: Object Hierarchy view à la Propeller Tool
 
 - Supports the settings `topLevel` value - when present, tree view is locked to top-level and included files
@@ -48,7 +57,7 @@ _Hint:_ Configure the OUTLINE panel to `"Sort by Position"` to reflect the order
 
 ## Feature: Show Hovers
 
-Hovers show information about the symbol/object that's below the mouse cursor. This is usually the type of the symbol and a description. 
+Hovers show information about the symbol/object that's below the mouse cursor. This is usually the type of the symbol and a description.
 
 - Hover over **User** variables, constants, methods, pasm labels and objects to display pop-up information about the item including comments within the code for the item.
 - Hover for **Built-in Spin/Spin2** method names, variables, constants and smart-pin constants to display pop-up documentation about the built-in item.
@@ -75,7 +84,7 @@ _The above information in not present in the VSCode generated documentation file
 
 ## Feature: Generate PUB and PRI comment blocks
 
-Place your cursor over a PUB or PRI method signature and press Ctrl+Alt+c (control alt comment) and a comment block will be inserted immediately below the signature line. Then simply fill in the description. In the case of PUB methods the comment block will use single line doc-comments for public information so these comments will be included in "Object public interface" documentat when it is generated. 
+Place your cursor over a PUB or PRI method signature and press Ctrl+Alt+c (control alt comment) and a comment block will be inserted immediately below the signature line. Then simply fill in the description. In the case of PUB methods the comment block will use single line doc-comments for public information so these comments will be included in "Object public interface" documentat when it is generated.
 
 ### Sample PUB doc-comment:
 
@@ -90,12 +99,12 @@ PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
 ```spin2
 PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
 '' ...
-'' 
-'' @param ePullupRqst - 
-'' @returns pullup - 
+''
+'' @param ePullupRqst -
+'' @returns pullup -
 '
 ' Local Variables:
-' @local localVar - 
+' @local localVar -
 ```
 
 Fill it in like this:
@@ -104,15 +113,15 @@ Fill it in like this:
 PUB pullUpValueForEnum(ePullupRqst) : pullup | localVar
 '' Translate a serial I/O pullup constant into a pin constant
 ''  NOTE: defaults to P_HIGH_15K for any unknown enum value
-'' 
+''
 '' @param ePullupRqst - a serial IO enum value indicating desired pull up
-'' @returns pullup - the selected pin constant 
+'' @returns pullup - the selected pin constant
 '
 ' Local Variables:
 ' @local localVar - this is here for demonstration
 ```
 
-**Note**: *for PUB methods this generates a mixed block of comments using single line doc-comments for the public information and single line non-doc comments for the private parts (local vaariables).  This is so that the doc comments of public methods will be included in generated documentaion for this object.*
+**Note**: _for PUB methods this generates a mixed block of comments using single line doc-comments for the public information and single line non-doc comments for the private parts (local vaariables). This is so that the doc comments of public methods will be included in generated documentaion for this object._
 
 ### Sample PRI doc-comment:
 
@@ -127,9 +136,9 @@ PRI pullUpValueForEnum(ePullupRqst) : pullup | localVar
 ```spin2
 PRI pullUpValueForEnum(ePullupRqst) : pullup
 ' ...
-' 
-' @param ePullupRqst - 
-' @returns pullup - 
+'
+' @param ePullupRqst -
+' @returns pullup -
 ```
 
 Fill it in like this:
@@ -138,12 +147,12 @@ Fill it in like this:
 PRI pullUpValueForEnum(ePullupRqst) : pullup
 ' Translate a serial I/O pullup constant into a pin constant
 '  NOTE: defaults to P_HIGH_15K for any unknown enum value
-' 
+'
 ' @param pullupRqst - a serial IO enum value indicating desired pull up
-' @returns pullup - the selected pin constant 
+' @returns pullup - the selected pin constant
 ```
 
-**Note**: *for PRI methods this generates a block of single line non-doc comments.  This is so the comment for private methods are not included in generated documentaion for this object.*
+**Note**: _for PRI methods this generates a block of single line non-doc comments. This is so the comment for private methods are not included in generated documentaion for this object._
 
 ## Possible Conflicts with other VSCode Extensions
 
@@ -168,7 +177,7 @@ _The above appear to be mostly syntax recognizer issues_
 There are some things that currently are limitations which we may or may not address in the future:
 
 - P2 Signature help is not available for send() method pointer - as it has variant forms of paramaters
-- P1 and P2 Signature help is not available for lookup(), lookupz(), lookdown(), lookupdownz() - as these have non-standard signature patterns not supported.  Within the parens are found a ':' followed by one or more ','s.
+- P1 and P2 Signature help is not available for lookup(), lookupz(), lookdown(), lookupdownz() - as these have non-standard signature patterns not supported. Within the parens are found a ':' followed by one or more ','s.
 
 ## Reporting Issues
 

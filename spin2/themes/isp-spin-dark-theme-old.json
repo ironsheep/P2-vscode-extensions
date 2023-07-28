@@ -140,7 +140,7 @@
       }
     },
     {
-      "name": "Operator",
+      "name": "Pasm Operator",
       "scope": ["keyword.pasm.operators"],
       "settings": {
         "foreground": "#b567ae" // aaaa66

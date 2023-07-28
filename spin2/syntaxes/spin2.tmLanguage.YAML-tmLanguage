@@ -196,88 +196,88 @@ repository:
             - include: '#coginit_constants'
             - include: '#modcz_constants'
             -
-                name: storage.modifier.pasm2
+                name: storage.modifier.p2asm
                 match: '(?i)\b(ORG(F|H)?|FIT)\b'
             -
-                name: storage.type.pasm2
+                name: storage.type.p2asm
                 match: '(?i)\b(BYTE|WORD|LONG|RES)\b'
             -
-                name: keyword.pasm.instruction.branch.pasm2
+                name: keyword.pasm.instruction.branch.p2asm
                 match: '(?i)\b((CALL|RET)(A|B)?|CALL(D|PA|PB)|DJ(N?F|N?Z)|SKIP|(SKIP|EXEC)F|IJN?Z|JMP(REL)?|REP|RESI(0|1|2|3)|RETI(0|1|2|3)|TJ(N?F|N?S|N?Z|V))\b'
             -
-                name: keyword.pasm.instruction.colorspace.pasm2
+                name: keyword.pasm.instruction.colorspace.p2asm
                 match: '(?i)\b(SETC(FRQ|I|MOD|Q|Y))\b'
             -
-                name: keyword.pasm.instruction.chordic-solver.pasm2
+                name: keyword.pasm.instruction.chordic-solver.p2asm
                 match: '(?i)\b(GETQ(X|Y)|Q(DIV|EXP|FRAC|LOG|MUL|ROTATE|SQRT|VECTOR))\b'
             -
-                name: keyword.pasm.instruction.hub-fifo.pasm2
+                name: keyword.pasm.instruction.hub-fifo.p2asm
                 match: '(?i)\b((RD|WR)FAST|FBLOCK|GETPTR|RFVARS?|RF(BYTE|WORD|LONG)|WF(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG|POP(A|B)|PUSH(A|B))\b'
             -
-                name: keyword.pasm.control.instruction-conditionals.pasm2
+                name: keyword.pasm.control.instruction-conditionals.p2asm
                 match: '(?i)\b(_RET_|IF_(0|1)(0|1|X)|IF_(A|B)E?|IF_(DIFF|SAME)|IF_(G|L)(E|T)|IF_C_(AND|OR)_N?Z|IF_C_(EQ|NE)_Z|IF_N?(C|Z|E)|IF_NC_(AND|OR)_N?Z|IF_NOT_(0|1)(0|1)|IF_NZ_(AND|OR)_N?C|IF_X(0|1)|IF_Z_(AND|OR)_N?C|IF_Z_(EQ|NE)_C)\b'
             -
-                name: keyword.pasm.control.instruction-effects.pasm2
+                name: keyword.pasm.control.instruction-effects.p2asm
                 match: '(?i)\b(W(C|Z|CZ)|(AND|OR|XOR)(C|Z))\b'
             -
                 name: constant.language.clock-register-names.spin2
                 match: '(?i)\b(_rc(fast|slow)|_clkfreq|(clkfreq|clkmode)_|(_x(in|tl)freq))\b'
             -
-                name: keyword.pasm.instruction.hub-ram.pasm2
+                name: keyword.pasm.instruction.hub-ram.p2asm
                 match: '(?i)\b(POP(A|B)|PUSH(A|B)|WR(BYTE|WORD|LONG)|(RD|WR)BYTE|(RD|WR)WORD|(WR|WM|RD)LONG)\b'
             -
-                name: keyword.pasm.instruction.hub-control.pasm2
+                name: keyword.pasm.instruction.hub-control.p2asm
                 match: '(?i)\b(COG(ID|INIT|STOP)|HUBSET|LOCK(NEW|REL|RET|TRY))\b'
             -
-                name: keyword.pasm.instruction.interrupts.pasm2
+                name: keyword.pasm.instruction.interrupts.p2asm
                 match: '(?i)\b((STALL|ALLOW)I|(TRG|NIX|SET)INT(1|2|3)|(GET|COG)BRK|BRK)\b'
             -
-                name: keyword.pasm.instruction.lut.pasm2
+                name: keyword.pasm.instruction.lut.p2asm
                 match: '(?i)\b(SETLUTS|(RD|WR)LUT)\b'
             -
-                name: keyword.pasm.instruction.pins.pasm2
+                name: keyword.pasm.instruction.pins.p2asm
                 match: '(?i)\b((DIR|DRV|OUT|FLT)(L|H|C|NC|Z|NZ|RND|NOT)|TESTPN?)\b'
             -
-                name: keyword.pasm.instruction.miscellaneous.pasm2
+                name: keyword.pasm.instruction.miscellaneous.p2asm
                 match: '(?i)\b(AUG(S|D)|GET(CT|RND)|NOP|POP|PUSH|SETQ2?|WAITX|FVARS?)\b'
             -
-                name: keyword.pasm.instruction.pixel-mixer.pasm2
+                name: keyword.pasm.instruction.pixel-mixer.p2asm
                 match: '(?i)\b((ADD|BLN|MIX|MUL|SET)PIX|SETPIV)\b'
             -
-                name: keyword.pasm.instruction.register-indirect.pasm2
+                name: keyword.pasm.instruction.register-indirect.p2asm
                 match: '(?i)\bALT(SN?|GN|S?B|GB|SW|GW|R|D|I)\b'
             -
-                name: keyword.pasm.instruction.streamer.io.pasm2
+                name: keyword.pasm.instruction.streamer.io.p2asm
                 match: '(?i)\b(X(CONT|INIT|STOP|ZERO)|GETXACC|SETXFRQ)\b'
             -
-                name: keyword.pasm.instruction.smartpins.io.pasm2
+                name: keyword.pasm.instruction.smartpins.io.p2asm
                 match: '(?i)\b((AK|RD|RQ|WR|WX|WY)PIN|(SET|GET)SCP|SETDACS)\b'
             -
-                name: keyword.pasm.instruction.events.pasm2
+                name: keyword.pasm.instruction.events.p2asm
                 match: '(?i)\b(ADDCT(1|2|3)|(COG|J)ATN|JCT(1|2|3)|JN?(FBW|INT)|JNATN|JN?(PAT|QMT|SE1|SE2|SE3|SE4|XFI|XMT|XRL|XRO)|JNCT(1|2|3)|(SETSE|POLLSE|WAITSE)(1|2|3|4))\b'
             -
-                name: keyword.pasm.instruction.events.pasm2
+                name: keyword.pasm.instruction.events.p2asm
                 match: '(?i)\b(SETPAT|POLLQMT|(POLLCT|WAITCT)(1|2|3)|(POLL|WAIT)(ATN|FBW|INT|PAT|XFI|XMT|XRL|XRO))\b'
             -
-                name: keyword.pasm.instruction.math-logic.pasm2
+                name: keyword.pasm.instruction.math-logic.p2asm
                 match: '(?i)\b(ABS|BMASK|LOC|NOT|ONES|OR|REV|SIGNX|ZEROX|ADD(S|SX|X)?|ANDN?|BIT(RND|NOT|H|L|N?Z|N?C)|CMP(M|R|SUB|X|S|SX)?|CRC(BIT|NIB)|(DEC|INC)MOD|(DE|EN)COD|(FG|FL)ES?)\b'
             -
-                name: keyword.pasm.instruction.math-logic.pasm2
+                name: keyword.pasm.instruction.math-logic.p2asm
                 match: '(?i)\b(GET(BYTE|NIB|WORD)|MERGE(B|W)|MOD(C|CZ|Z)|MOV(BYTS)?|MUL(S|NIBS|NITS|Q|N?C|N?Z|)?|MUX(N?C|N?Z|Q|NIBS|NITS)|NEG(N?C|N?Z)?|RC(L|R|ZL|ZR)|RGB(EXP|SQZ)|ROL(BYTE|NIB|WORD))\b'
             -
-                name: keyword.pasm.instruction.math-logic.pasm2
+                name: keyword.pasm.instruction.math-logic.p2asm
                 match: '(?i)\b(RO(L|R)|SA(L|R)|SCAS?|SET(R|S|D|BYTE|NIB|WORD)?|SEUSS(F|R)|SH(L|R)|SPLIT(B|W)|SUB(R|S|SX|X)?|SUM(N?C|N?Z)|TESTN?|TESTBN?|WR(N?C|N?Z)|XOR(O32)?)\b'
             -
-                name: keyword.pasm.operators.binary.pasm2
+                name: keyword.pasm.operators.binary.p2asm
                 match: '(?i)\b(SAR|ROR|ROL|REV|ZEROX|SIGNX|SCAS?|FRAC|ADD(BINTS|PINS|AND|OR|XOR))\b'
             -
-                name: keyword.pasm.operators.unary.pasm2
+                name: keyword.pasm.operators.unary.p2asm
                 match: '(?i)\b(!!|NOT|F?ABS|ENCOD|DECOD|BMASK|ONES|F?SQRT|Q(LOG|EXP))\b'
     pasm_only_instructions:
         name: meta.block.pasm.elements.spin2
         patterns:
              -
-                name: keyword.pasm.instruction.pasm-only.pasm2
+                name: keyword.pasm.instruction.pasm-only.p2asm
                 match: '(?i)\b(ASMCLK)\b'
     pasm_language_inline:
         name: meta.block.pasm.language.inline.spin2

@@ -8,6 +8,22 @@ import { eDebugDisplayType, displayEnumByTypeName } from "./spin2.utils";
 // ============================================================================
 //  this file contains objects we use in tracking symbol use and declaration
 //
+export enum eBLockType {
+  Unknown = 0,
+  isCon,
+  isDat,
+  isVar,
+  isObj,
+  isPub,
+  isPri,
+}
+
+export interface IBlockSpan {
+  startLineNbr: number;
+  endLineNbr: number;
+  blockType: eBLockType;
+  sequenceNbr: number;
+}
 
 export interface ITokenDescription {
   found: boolean;
@@ -67,6 +83,12 @@ export class DocumentFindings {
   private currMethodName: string | undefined = undefined;
   private currMethodStartLineNbr: number = 0;
 
+  // tracking of Spin Code Blocks
+  private priorBlockType: eBLockType = eBLockType.Unknown;
+  private priorBlockStartLineIdx: number = -1;
+  private priorInstanceCount: number = 0;
+  private codeBlockSpans: IBlockSpan[] = [];
+
   private outputChannel: vscode.OutputChannel | undefined = undefined;
   private bLogEnabled: boolean = false;
 
@@ -96,6 +118,54 @@ export class DocumentFindings {
     this.methodSpanInfo.clear();
     this.currMethodName = undefined;
     this.currMethodStartLineNbr = 0;
+    // clear spin-code-block tracking
+    this.priorBlockType = eBLockType.Unknown;
+    this.priorBlockStartLineIdx = -1;
+    this.priorInstanceCount = 0;
+    this.codeBlockSpans = [];
+  }
+
+  public recordBlockStart(eCurrBlockType: eBLockType, currLineIdx: number) {
+    this._logTokenMessage(`  -- FND-RCD-BLOCK iblockType=[${eCurrBlockType}], span=[${currLineIdx} - ???]`);
+    if (this.priorBlockType == eBLockType.Unknown) {
+      // we are starting the first block
+      this.priorBlockType = eCurrBlockType;
+      this.priorBlockStartLineIdx = currLineIdx;
+      this.priorInstanceCount = 1;
+    } else {
+      // we are starting a later block, lets finish prior then start the new
+      const isFirstOfThisType: boolean = this.priorBlockType != eCurrBlockType ? false : true;
+      const newBlockSpan: IBlockSpan = {
+        blockType: this.priorBlockType,
+        sequenceNbr: this.priorInstanceCount,
+        startLineNbr: this.priorBlockStartLineIdx,
+        endLineNbr: currLineIdx - 1, // ends at prior line
+      };
+      this.codeBlockSpans.push(newBlockSpan);
+      this._logTokenMessage(`  -- FND-RCD-ADD sequenceNbr=[${newBlockSpan.sequenceNbr}], blockType=[${newBlockSpan.blockType}], span=[${newBlockSpan.startLineNbr} - ${newBlockSpan.endLineNbr}]`);
+      this.priorInstanceCount = this.priorBlockType == eCurrBlockType ? this.priorInstanceCount + 1 : 1;
+      this.priorBlockStartLineIdx = currLineIdx;
+      this.priorBlockType = eCurrBlockType;
+    }
+  }
+
+  public finishFinalBlock(finalLineIdx: number) {
+    this._logTokenMessage(`  -- FND-RCD-BLOCK LAST span=[??? - ${finalLineIdx}]`);
+    if (this.priorBlockType != eBLockType.Unknown) {
+      // we are ending the last block
+      const newBlockSpan: IBlockSpan = {
+        blockType: this.priorBlockType,
+        sequenceNbr: this.priorInstanceCount,
+        startLineNbr: this.priorBlockStartLineIdx,
+        endLineNbr: finalLineIdx, // ends at the last line of the file
+      };
+      this._logTokenMessage(`  -- FND-RCD-ADD LAST sequenceNbr=[${newBlockSpan.sequenceNbr}], blockType=[${newBlockSpan.blockType}], span=[${newBlockSpan.startLineNbr} - ${newBlockSpan.endLineNbr}]`);
+      this.codeBlockSpans.push(newBlockSpan);
+    }
+  }
+
+  public blockSpans(): IBlockSpan[] {
+    return this.codeBlockSpans;
   }
 
   public recordComment(comment: RememberedComment) {

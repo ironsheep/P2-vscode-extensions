@@ -185,7 +185,8 @@ if opt_read_theme:
     print_line("* Processing Theme {}".format(themeFspec), info=True)
     # open a theme file
     theme_fp = open(theme_filename)
-    print_line("* Log {} - Opened".format(theme_filename), log=True)
+    if(opt_logging):
+        print_line("* Theme {} - Opened".format(theme_filename), log=True)
 else:
     theme_fp = None
 
@@ -195,7 +196,8 @@ dummy = 0
 scopesDict = {}  # scopeName:valueDict
 tmpValuesDict = {}  # colorName:entryType
 
-def registerColorForScope(entryType, scopeName, colorName):
+def registerColorForScopeXXX(entryType, scopeName, colorName):
+    # older version
     global scopesDict
     global tmpValuesDict
     if not scopeName in scopesDict.keys():
@@ -208,7 +210,7 @@ def registerColorForScope(entryType, scopeName, colorName):
             tmpValuesDict[colorName] = entryType
             scopesDict[scopeName] = tmpValuesDict
 
-def displayColorForScopeInfo():
+def displayColorForScopeInfoXXX():
     global scopesDict
     print_line("- Checking all scopes:", info=True)
     sortedScopesKeys = list(scopesDict.keys())
@@ -230,6 +232,80 @@ def displayColorForScopeInfo():
             print_line("  -- scope: {} [{}] {}".format(scopeName, colorValue, entryType), verbose=True)
     if warningCount == 0:
         print_line("  -- No scope warnings found: no duplicate color values", info=True)
+
+
+masterColorDict = {}  # colorName:entryDict
+#entryDict = {}  # entryName:scopesList
+#scopesList = []  # [scopeName, scopeName, ...]
+
+def registerColorForScope(entryType, scopeName, colorName):
+    #new version
+    global masterColorDict
+    if not colorName in masterColorDict.keys():
+        scopesList = [scopeName]
+        entryDict = {}
+        entryDict[entryType] = scopesList
+        masterColorDict[colorName] = entryDict
+    else:
+        # get current dictionary for color
+        entryDict = masterColorDict[colorName]
+        if not entryType in entryDict.keys():
+            # add new entry type for this color
+            scopesList = [scopeName]
+            entryDict[entryType] = scopesList
+        else:
+            # add scope name to existing list for entry
+            scopesList = entryDict[entryType]
+            scopesList.append(scopeName)
+
+def displayColorForScopeInfo():
+    global masterColorDict
+    colorCheckDict = {}
+    print_line("- Checking all colors:", verbose=True)
+    sortedColorKeys = list(masterColorDict.keys())
+    sortedColorKeys.sort()
+    for colorName in sortedColorKeys:
+        print_line("", verbose=True)    # blank line
+        print_line("- color: {}".format(colorName), verbose=True)
+        entryDict = masterColorDict[colorName]
+        sortedEntryKeys = list(entryDict.keys())
+        sortedEntryKeys.sort()
+        for entryType in sortedEntryKeys:
+            scopesList = entryDict[entryType]
+            scopesList.sort()
+            for scopeName in scopesList:
+                entryScopeKey = "{} [{}]".format(entryType, scopeName)
+                print_line("  -- entry: {} [{}]".format(entryType, scopeName), verbose=True)
+                #print_line("    --- scope: [{}]".format(scopeName), verbose=True)
+                if not entryScopeKey in colorCheckDict.keys():
+                    # add color list for new entry scope
+                    colorCheckDict[entryScopeKey] = [colorName]
+                else:
+                    # add additional color for existing entry scope
+                    colorList = colorCheckDict[entryScopeKey]
+                    if not colorName in colorList:
+                        colorList.append(colorName)
+                        colorCheckDict[entryScopeKey] = colorList
+    # report entries where more than one color for a single entryScope
+    foundError = False
+    firstError = True
+    for entryScope in colorCheckDict.keys():
+        colorList = colorCheckDict[entryScope]
+        if len(colorList) > 1:
+            colorList.sort()
+            foundError = True
+            print_line("", info=True)    # blank line
+            if (firstError):
+                print_line("----", info=True)    # blank line
+                print_line("---- Error Report ---- file:{}".format(theme_filename), info=True)    # blank line
+                print_line("----", info=True)    # blank line
+                print_line("", info=True)    # blank line
+                firstError = False
+            print_line("- DUPE color entryScope: {}".format(entryScope), info=True)
+            for colorName in colorList:
+                print_line("  -- color: {}".format(colorName), info=True)
+    if(foundError == False):
+        print_line("* NO DUPE color entries", info=True)
 
 if theme_fp is not None:
     themeData = jstyleson.load(theme_fp)
