@@ -1,6 +1,8 @@
 {
   "$schema": "vscode://schemas/color-theme",
   "name": "Spin2 Ironsheep Light",
+  "semanticHighlighting": true,
+  "type": "light",
   "colors": {
     "checkbox.border": "#919191",
     "editor.background": "#FFFFFF",
@@ -11,7 +13,8 @@
     "editor.selectionHighlightBackground": "#ADD6FF80",
     "editorSuggestWidget.background": "#F3F3F3",
     "activityBarBadge.background": "#007ACC",
-    "sideBarTitle.foreground": "#6F6F6F",
+    "activityBar.activeBorder": "#0078d4",
+    "activityBar.border": "#2F8FBF",
     "list.hoverBackground": "#E8E8E8",
     "menu.border": "#D4D4D4",
     "input.placeholderForeground": "#767676",
@@ -20,9 +23,17 @@
     "settings.numberInputBorder": "#CECECE",
     "statusBarItem.remoteForeground": "#FFF",
     "statusBarItem.remoteBackground": "#16825D",
+    "panel.border": "#2F8FBF",
+    "panelTitle.activeBorder": "#2F8FBF",
+    "panelTitle.activeForeground": "#2F8FBF",
+    "panelTitle.inactiveForeground": "#444444",
     "ports.iconRunningProcessForeground": "#369432",
-    "sideBarSectionHeader.background": "#0000",
-    "sideBarSectionHeader.border": "#61616130",
+    "sideBar.foreground": "#686868",
+    "sideBar.background": "#ebebeb",
+    "sideBarTitle.foreground": "#6F6F6F",
+    "sideBarSectionHeader.background": "#e0e0e0",
+    "sideBarSectionHeader.border": "#818181",
+    "sideBarSectionHeader.foreground": "#616161",
     "tab.lastPinnedBorder": "#61616130",
     "notebook.cellBorderColor": "#E8E8E8",
     "notebook.selectedCellBackground": "#c8ddf150",
@@ -542,7 +553,6 @@
       }
     }
   ],
-  "semanticHighlighting": true,
   "semanticTokenColors": {
     "newOperator": "#0000ff",
     "stringLiteral": "#a31515",
