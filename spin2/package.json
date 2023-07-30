@@ -200,10 +200,10 @@
           },
           "spinExtensionBehavior.editorBackgroundAlpha": {
             "type": "number",
-            "default": 100,
-            "minimum": 10,
-            "maximum": 100,
-            "description": "Alpha component of the editor backgound color [10-100] in percent (default is 100, Uncheck \"Color Editor Background\" to turn off)."
+            "default": 80,
+            "minimum": 20,
+            "maximum": 80,
+            "description": "Alpha component of the editor backgound color [20%-80%] (default is 80%, Uncheck \"Color Editor Background\" to turn off)."
           }
         }
       },

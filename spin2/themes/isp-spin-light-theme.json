@@ -397,6 +397,13 @@
       }
     },
     {
+      "name": "Constant Property TS",
+      "scope": ["variable.other.constant.property.ts"],
+      "settings": {
+        "foreground": "#4fc1ff"
+      }
+    },
+    {
       "name": "Numeric",
       "scope": ["constant.numeric"],
       "settings": {
@@ -498,7 +505,7 @@
     },
     {
       "name": "String",
-      "scope": ["string.quoted.double"],
+      "scope": ["string.quoted.double", "string.quoted.single.python"],
       "settings": {
         "foreground": "#ba4343"
       }

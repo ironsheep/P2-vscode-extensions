@@ -5,6 +5,8 @@ import * as vscode from "vscode";
 import { Position } from "vscode";
 import { DocumentFindings, eBLockType, IBlockSpan } from "./spin.semantic.findings";
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.extension.configuration";
+import { runInThisContext } from "vm";
+import { isSpinOrPasmDocument } from "./spin.vscode.utils";
 
 interface DecoratorMap {
   [key: string]: DecoratorDescription;
@@ -26,20 +28,51 @@ export class RegionColorizer {
 
   private namedColors: { [Identifier: string]: string } = {
     //  key: "rgba hex value"
-    conLt: "#FEF7C0ff",
-    conDk: "#FDF3A9ff",
-    objLt: "#FFBFBFff",
+    /*  MINE
+    objLt: "#FFBFBFff", // red
     objDk: "#FDA7A6ff",
-    varLt: "#FFDFBFff",
+    varLt: "#FFDFBFff", // orange
     varDk: "#FDD2A7ff",
-    datLt: "#BFFDC8ff",
+    conLt: "#FEF7C0ff", // yellow
+    conDk: "#FDF3A9ff",
+    datLt: "#BFFDC8ff", // green
     datDk: "#A7FCB3ff",
-    pubLt: "#BEDFFFff",
-    pubDk: "#A7D2FDff",
-    priLt: "#BFF8FFff",
+    priLt: "#BFF8FFff", // blue
     priDk: "#A7F3FEff",
+    pubLt: "#BEDFFFff", // purple
+    pubDk: "#A7D2FDff",
+   */
+    /* Mine Cleaned up
+    objLt: "#FFBFBFff", // HSB:   0,25,100 - OBJ red
+    objDk: "#FFB0B0ff", // HSB:   0,31,100  (33 was too dark/rich)
+    varLt: "#FFDFBFff", // HSB:  30,25,100 - VAR orange
+    varDk: "#FFD5ABff", // HSB:  30,33,100
+    conLt: "#FFFFBFff", // HSB:  60,25,100 - CON yellow
+    conDk: "#FFFFA1ff", // HSB:  60,37,100 (33 was too light)
+    datLt: "#D5FFBFff", // HSB: 100,25,100 - DAT green
+    datDk: "#C0FFA1ff", // HSB: 100,37,100 (33 was too light)
+    priLt: "#BFFFFFff", // HSB: 180,25,100 - PRI blue
+    priDk: "#A1FFFFff", // HSB: 180,37,100 (33 was too light)
+    pubLt: "#BFD5FFff", // HSB: 220,25,100 - PUB purple
+    pubDk: "#B0CAFFff", // HSB: 220,31,100  (33 was too dark/rich)
+    */
+    //  Jeff's
+    objLt: "#FFD9D9ff", // HSB:   0,15,100 - OBJ red
+    objDk: "#FFC7C7ff", // HSB:   0,22,100  (25 was too dark/rich)
+    varLt: "#FFECD9ff", // HSB:  30,15,100 - VAR orange
+    varDk: "#FFDFBFff", // HSB:  30,25,100
+    conLt: "#FFFFD9ff", // HSB:  60,15,100 - CON yellow
+    conDk: "#FFFFBFff", // HSB:  60,25,100
+    datLt: "#E0FFE4ff", // HSB: 128,12,100 - DAT green
+    datDk: "#C4FFCCff", // HSB: 128,23,100  (25 was too dark/rich)
+    priLt: "#D9FAFFff", // HSB: 188,15,100 - PRI blue
+    priDk: "#BFF7FFff", // HSB: 188,25,100
+    pubLt: "#D9EBFFff", // HSB: 211,15,100 - PUB purple
+    pubDk: "#C4E1FFff", // HSB: 211,23,100  (25 was too dark/rich)
   };
-  private namedColorsAlpha: number = 100;
+  private namedColorsAlpha: number = -1;
+  private settingsChanged: boolean = false;
+  private coloredFilename: string = "";
 
   private decoratorInstances: DecoratorInstances = {};
 
@@ -66,16 +99,15 @@ export class RegionColorizer {
   }
 
   public backgroundAlpha(): number {
-    let interpretedAlpha: number = this.configuration.backgroundApha ? this.configuration.backgroundApha : 100;
-    if (this.isColoringBackground() == false) {
-      interpretedAlpha = 0;
-    }
+    let interpretedAlpha: number = this.configuration.backgroundApha ? this.configuration.backgroundApha : 80;
     return interpretedAlpha;
   }
 
   public updateColorizerConfiguration() {
+    this.logMessage("* updateColorizerConfiguration() settings changed");
+    this.settingsChanged = true;
     const updated = reloadSemanticConfiguration();
-    if (updated) {
+    if (updated || this.namedColorsAlpha == -1) {
       const settingsAlpha: number = this.backgroundAlpha();
       if (this.namedColorsAlpha != settingsAlpha) {
         this.logMessage("* Config: spinExtensionBehavior.backgroundApha: [" + settingsAlpha + "]");
@@ -103,11 +135,41 @@ export class RegionColorizer {
 
   public updateRegionColors(activeEditor: vscode.TextEditor, symbolRepository: DocumentFindings, caller: string) {
     // remove any prior colors
-    this.removeBackgroundColors("updRgnCo():" + caller);
+    const isWindowChange: boolean = caller.includes("actvEditorChg") && !this.settingsChanged;
+    const isColoring: boolean = this.isColoringBackground() == true;
+    if (isWindowChange) {
+      this.logMessage(`- updateRegionColors() changing windows`);
+    }
+    const isSpinFile = isSpinOrPasmDocument(activeEditor.document);
 
-    if (this.isColoringBackground()) {
-      this.logMessage(`- updateRegionColors() fm=(${caller}) [${activeEditor.document.fileName}]`);
+    // don't show following message if coloring is turned off
+    if (!isSpinFile && isColoring) {
+      this.logMessage(`- updateRegionColors() SKIPping non-spin file`);
+      return;
+    }
 
+    const isDifferentFile: boolean = this.coloredFilename == activeEditor.document.fileName ? false : true;
+    // don't show following message if coloring is turned off or if changing windows
+    if (isDifferentFile && isColoring && !isWindowChange) {
+      this.logMessage(`- updateRegionColors() diff file than last colored: was:[${this.coloredFilename}]now:[${activeEditor.document.fileName}]`);
+    }
+
+    // only clear if coloring is OFF   -OR-
+    //   if text changed, or if syntax pass requested update
+    if (isWindowChange == false || !isColoring) {
+      this.removeBackgroundColors("updRgnCo():" + caller);
+    }
+
+    // only color if
+    //  (1) coloring is turned on
+    //  (2) if NOT doing a window change (if changing a follow-up color request will be done from syntax pass)
+    //
+    //  NOTE: the window-change clause prevents us from coloring with wrong color-spans for this file
+    //
+    if (isColoring && !isWindowChange) {
+      this.settingsChanged = false;
+      this.coloredFilename = activeEditor.document.fileName; // show that we colored this file
+      this.logMessage(`  -- fm=(${caller}) [${this.coloredFilename}]`);
       const codeBlockSpans: IBlockSpan[] = symbolRepository.blockSpans();
       const decorationsByColor: DecoratorMap = {};
       //this.logMessage(`- updateRegionColors(): FOUND ${codeBlockSpans.length} codeBlockSpan(s)`);
@@ -150,7 +212,7 @@ export class RegionColorizer {
 
         // for all decorations add to editor
         const keys = Object.keys(decorationsByColor);
-        this.logMessage(`- updateRegionColors(): coloring ${codeBlockSpans.length} region(s) with ${keys.length} color(s)`);
+        this.logMessage(`  -- coloring ${codeBlockSpans.length} region(s) with ${keys.length} color(s)`);
         for (const key of keys) {
           const currDecoration = decorationsByColor[key];
           //this.logMessage(` -- color=[${key}] name=[${currDecoration.name}], regionCt=(${currDecoration.regions.length}), optionsBGColor=[${currDecoration.decorator}]`);
@@ -161,10 +223,14 @@ export class RegionColorizer {
           }
         }
       } else {
-        this.logMessage(`- updateRegionColors(): ${codeBlockSpans.length} region(s) to color`);
+        this.logMessage(`  -- ${codeBlockSpans.length} region(s) to color BYPASS`);
       }
     } else {
-      this.logMessage(`- updateRegionColors(): coloring disabled`);
+      if (isWindowChange) {
+        this.logMessage(`  -- skip re-coloring changing windows BYPASS`);
+      } else {
+        this.logMessage(`  -- coloring disabled BYPASS`);
+      }
     }
   }
 

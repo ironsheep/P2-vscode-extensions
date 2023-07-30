@@ -4,17 +4,25 @@
   "semanticHighlighting": true,
   "type": "light",
   "colors": {
-    "checkbox.border": "#919191",
-    "editor.background": "#FFFFFF",
-    "editor.foreground": "#000000",
-    "editor.inactiveSelectionBackground": "#E5EBF1",
-    "editorIndentGuide.background": "#D3D3D3",
-    "editorIndentGuide.activeBackground": "#939393",
-    "editor.selectionHighlightBackground": "#ADD6FF80",
-    "editorSuggestWidget.background": "#F3F3F3",
     "activityBarBadge.background": "#007ACC",
     "activityBar.activeBorder": "#0078d4",
     "activityBar.border": "#2F8FBF",
+    "checkbox.border": "#919191",
+    "editor.background": "#FFFFFF",
+    "editor.foreground": "#000000", // AUGH affects panel output view too!
+    "editorIndentGuide.background": "#D3D3D3",
+    "editorIndentGuide.activeBackground": "#939393",
+    //"editor.findMatchBackground": "#9e6a03",
+    //"editor.lineHighlightBackground": "#0055ffe0",   both are visually noisy
+    //"editor.lineHighlightBorder": "#888888",
+    "editor.inactiveSelectionBackground": "#666666e0", // hold IS orig value: E5EBF1
+    //"editor.inactiveSelectionBackground": "#FF0000",
+    //"editor.selectionHighlightBorder": "#FF0000", // regions with same content as selection (double-click)
+    "editor.selectionHighlightBackground": "#d59880", // regions with same content as selection (double-click)
+    //"editor.selectionBackground": "#0000ffF0", // the selection
+    "editor.selectionBackground": "#222222e0", // the selection
+    //"editor.selectionForeground": "#FFFFFFC0",
+    "editorSuggestWidget.background": "#F3F3F3",
     "list.hoverBackground": "#E8E8E8",
     "menu.border": "#D4D4D4",
     "input.placeholderForeground": "#767676",
@@ -41,6 +49,7 @@
     "list.activeSelectionIconForeground": "#FFF",
     "list.focusAndSelectionOutline": "#90C2F9",
     "terminal.inactiveSelectionBackground": "#E5EBF1",
+    "terminal.foreground": "#cccccc",
     "widget.border": "#d4d4d4"
   },
   "tokenColors": [

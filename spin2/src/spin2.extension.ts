@@ -231,7 +231,7 @@ export const activate = (context: vscode.ExtensionContext) => {
   vscode.workspace.onDidChangeTextDocument(
     (event) => {
       vscode.window.visibleTextEditors.map((editor) => {
-        if (editor.document === event.document && codeBlockColorizer.isColoringBackground()) {
+        if (editor.document === event.document) {
           if (isSpinOrPasmDocument(editor.document)) {
             logExtensionMessage(`* onDidChangeTextDocument(${editor.document.fileName})`);
             const isSpin1Doc: boolean = isSpin1Document(editor.document);
@@ -280,7 +280,7 @@ function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
   }
   logExtensionMessage(`* activeTextEditorChanged(${argumentInterp}) ENTRY`);
 
-  if (textEditor !== undefined && codeBlockColorizer.isColoringBackground()) {
+  if (textEditor !== undefined) {
     const document = textEditor.document!;
     if (isSpinOrPasmDocument(document)) {
       logExtensionMessage(`-- colorizing [${document.fileName}]`);
