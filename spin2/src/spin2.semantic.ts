@@ -11,6 +11,7 @@ import { DocGenerator } from "./spin.document.generate";
 import { RegionColorizer } from "./spin.color.regions";
 import { isCurrentDocumentSpin1 } from "./spin.vscode.utils";
 //import { start } from "repl";
+import { editorForFilespec } from "./spin.vscode.utils";
 
 // ----------------------------------------------------------------------------
 //   Semantic Highlighting Provider
@@ -136,6 +137,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private configuration = semanticConfiguration;
 
   private currentMethodName: string = "";
+  private currentFilespec: string = "";
   private codeBlockColorizer: RegionColorizer;
 
   private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
@@ -165,6 +167,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     } // silence our compiler for now... TODO: we should adjust loop so it can break on cancelToken.isCancellationRequested
     this._resetForNewDocument();
     this._logMessage("* Config: spinExtensionBehavior.highlightFlexspinDirectives: [" + this.configuration.highlightFlexspin + "]");
+    this.currentFilespec = document.fileName;
+    this._logMessage(`* provideDocumentSemanticTokens(${this.currentFilespec})`);
 
     const allTokens = this._parseText(document.getText());
     const builder = new vscode.SemanticTokensBuilder();
@@ -240,7 +244,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     // -------------------- PRE-PARSE just locating symbol names --------------------
     // also track and record block comments (both braces and tic's!)
     // let's also track prior single line and trailing comment on same line
-    this._logMessage("---> Pre SCAN");
+    this._logMessage(`---> Pre SCAN -- `);
     let bBuildingSingleLineCmtBlock: boolean = false;
     let bBuildingSingleLineDocCmtBlock: boolean = false;
     this.semanticFindings.recordBlockStart(eBLockType.isCon, 0); // spin file defaults to CON at 1st line
@@ -585,8 +589,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings.finishFinalBlock(lines.length - 1); // mark end of final block in file
 
     // now update editor colors
-    const editor = vscode.window.activeTextEditor!;
-    this.codeBlockColorizer.updateRegionColors(editor, this.semanticFindings, "Spin2-end1stpass");
+    const editorForFile: vscode.TextEditor = editorForFilespec(this.currentFilespec);
+    this.codeBlockColorizer.updateRegionColors(editorForFile, this.semanticFindings, "Spin2-end1stpass");
 
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("--->             <---");

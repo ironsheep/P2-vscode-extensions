@@ -5,11 +5,11 @@ import * as vscode from "vscode";
 import { Position } from "vscode";
 import { DocumentFindings, eBLockType, IBlockSpan } from "./spin.semantic.findings";
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.extension.configuration";
-import { runInThisContext } from "vm";
-import { isSpinOrPasmDocument } from "./spin.vscode.utils";
+// import { runInThisContext } from "vm";
+import { activeFilespec, isSpinOrPasmFile } from "./spin.vscode.utils";
 
 interface DecoratorMap {
-  [key: string]: DecoratorDescription;
+  [Identifier: string]: DecoratorDescription;
 }
 
 interface DecoratorDescription {
@@ -18,8 +18,8 @@ interface DecoratorDescription {
   decorator: undefined | vscode.TextEditorDecorationType;
 }
 
-interface DecoratorInstances {
-  [key: string]: vscode.TextEditorDecorationType;
+interface DecoratorInstanceMap {
+  [Identifier: string]: vscode.TextEditorDecorationType;
 }
 
 export class RegionColorizer {
@@ -72,9 +72,10 @@ export class RegionColorizer {
   };
   private namedColorsAlpha: number = -1;
   private settingsChanged: boolean = false;
-  private coloredFilename: string = "";
 
-  private decoratorInstances: DecoratorInstances = {};
+  //private decoratorInstances = new Map<string, vscode.TextEditorDecorationType>();
+  private colorInfoByFilespec = new Map<string, DecoratorMap>();
+  private decoratorInstancesByFilespec = new Map<string, DecoratorInstanceMap>();
 
   private configuration = semanticConfiguration;
 
@@ -120,116 +121,227 @@ export class RegionColorizer {
     }
   }
 
-  private removeBackgroundColors(caller: string) {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (activeEditor) {
-      this.logMessage(`- removeBackgroundColors() fm=(${caller}) [${activeEditor.document.fileName}]`);
-      // Clear decorations
-      const keys = Object.keys(this.decoratorInstances);
-      for (const key of keys) {
-        // If rangesOrOptions is empty, the existing decorations with the given decoration type will be removed
-        activeEditor.setDecorations(this.decoratorInstances[key], []);
-      }
+  public closedAllFiles() {
+    // empty all caches for files
+    this.logMessage(`- closedAllFiles() removed all cached entries`);
+    this.decoratorInstancesByFilespec.clear();
+    this.colorInfoByFilespec.clear();
+  }
+
+  public closedFilespec(filespec: string) {
+    // remove caches for files that are closed
+    this.logMessage(`- closedFilespec() removing cached entries for [${filespec}]`);
+    if (this.decoratorInstancesByFilespec.has(filespec)) {
+      this.decoratorInstancesByFilespec.delete(filespec);
+    }
+    if (this.colorInfoByFilespec.has(filespec)) {
+      this.colorInfoByFilespec.delete(filespec);
     }
   }
 
   public updateRegionColors(activeEditor: vscode.TextEditor, symbolRepository: DocumentFindings, caller: string) {
-    // remove any prior colors
+    // remove any prior colors, then recolor
     const isWindowChange: boolean = caller.includes("actvEditorChg") && !this.settingsChanged;
-    const isColoring: boolean = this.isColoringBackground() == true;
     if (isWindowChange) {
       this.logMessage(`- updateRegionColors() changing windows`);
     }
-    const isSpinFile = isSpinOrPasmDocument(activeEditor.document);
+    const filespec: string = activeFilespec(activeEditor);
+    const isSpinFile = isSpinOrPasmFile(filespec);
+    let instancesByColor: DecoratorInstanceMap = {};
+    let foundInstancesByColor: DecoratorInstanceMap | undefined = this.decoratorInstancesByFilespec.has(filespec) ? this.decoratorInstancesByFilespec.get(filespec) : undefined;
+    if (foundInstancesByColor) {
+      instancesByColor = foundInstancesByColor;
+    } else {
+      this.decoratorInstancesByFilespec.set(filespec, instancesByColor);
+    }
 
     // don't show following message if coloring is turned off
-    if (!isSpinFile && isColoring) {
-      this.logMessage(`- updateRegionColors() SKIPping non-spin file`);
-      return;
-    }
-
-    const isDifferentFile: boolean = this.coloredFilename == activeEditor.document.fileName ? false : true;
-    // don't show following message if coloring is turned off or if changing windows
-    if (isDifferentFile && isColoring && !isWindowChange) {
-      this.logMessage(`- updateRegionColors() diff file than last colored: was:[${this.coloredFilename}]now:[${activeEditor.document.fileName}]`);
-    }
-
-    // only clear if coloring is OFF   -OR-
-    //   if text changed, or if syntax pass requested update
-    if (isWindowChange == false || !isColoring) {
-      this.removeBackgroundColors("updRgnCo():" + caller);
-    }
-
-    // only color if
-    //  (1) coloring is turned on
-    //  (2) if NOT doing a window change (if changing a follow-up color request will be done from syntax pass)
-    //
-    //  NOTE: the window-change clause prevents us from coloring with wrong color-spans for this file
-    //
-    if (isColoring && !isWindowChange) {
-      this.settingsChanged = false;
-      this.coloredFilename = activeEditor.document.fileName; // show that we colored this file
-      this.logMessage(`  -- fm=(${caller}) [${this.coloredFilename}]`);
-      const codeBlockSpans: IBlockSpan[] = symbolRepository.blockSpans();
-      const decorationsByColor: DecoratorMap = {};
-      //this.logMessage(`- updateRegionColors(): FOUND ${codeBlockSpans.length} codeBlockSpan(s)`);
-      if (codeBlockSpans.length > 0) {
-        // for each colorized region
-        for (let blkIdx = 0; blkIdx < codeBlockSpans.length; blkIdx++) {
-          const codeBlockSpan: IBlockSpan = codeBlockSpans[blkIdx];
-          // lookup color
-          const color: string | undefined = this.colorForBlock(codeBlockSpan.blockType, codeBlockSpan.sequenceNbr);
-          if (color) {
-            //this.logMessage(`- updateRegionColors(): color=[${color}], span=[${codeBlockSpan.startLineNbr} - ${codeBlockSpan.endLineNbr}]`);
-            // grab and instance for this color
-            const colorDecorator: vscode.TextEditorDecorationType = this.instanceForColor(color);
-            // create the next/first span for this color
-            const startPos = new Position(codeBlockSpan.startLineNbr, 0);
-            const endPos = new Position(codeBlockSpan.endLineNbr, 0);
-            //this.logMessage(`  -- color=[${color}], start=[${startPos.line}, ${startPos.character}], end=[${endPos.line}, ${endPos.character}]`);
-
-            const decorationRange = {
-              range: new vscode.Range(startPos, endPos),
-            };
-
-            // if decoration for this color doesn't exist
-            if (decorationsByColor[color] === undefined) {
-              // record empty decoration
-              decorationsByColor[color] = {
-                name: color,
-                regions: [],
-                decorator: undefined,
-              };
-            }
-
-            // add range to new or existing decoration
-            decorationsByColor[color].regions.push(decorationRange);
-            if (decorationsByColor[color].decorator == undefined) {
-              decorationsByColor[color].decorator = colorDecorator;
-            }
-          }
-        }
-
-        // for all decorations add to editor
-        const keys = Object.keys(decorationsByColor);
-        this.logMessage(`  -- coloring ${codeBlockSpans.length} region(s) with ${keys.length} color(s)`);
-        for (const key of keys) {
-          const currDecoration = decorationsByColor[key];
-          //this.logMessage(` -- color=[${key}] name=[${currDecoration.name}], regionCt=(${currDecoration.regions.length}), optionsBGColor=[${currDecoration.decorator}]`);
-
-          if (currDecoration.decorator !== undefined) {
-            activeEditor.setDecorations(currDecoration.decorator, []);
-            activeEditor.setDecorations(currDecoration.decorator, currDecoration.regions);
-          }
-        }
-      } else {
-        this.logMessage(`  -- ${codeBlockSpans.length} region(s) to color BYPASS`);
+    if (isSpinFile) {
+      const isColoring: boolean = this.isColoringBackground() == true;
+      // only clear if coloring is OFF   -OR-
+      //   if text changed, or if syntax pass requested update
+      if (!isColoring) {
+        this.removeBackgroundColors("NOT COLORING updRgnCo():" + caller, activeEditor);
       }
-    } else {
-      if (isWindowChange) {
-        this.logMessage(`  -- skip re-coloring changing windows BYPASS`);
+
+      // only color if
+      //  (1) coloring is turned on
+      //
+      //  NOTE: the window-change clause prevents us from coloring with wrong color-spans for this file
+      //
+      if (isColoring) {
+        this.settingsChanged = false;
+        this.logMessage(`  -- fm=(${caller}) [${filespec}]`);
+        let decorationsByColor: DecoratorMap | undefined = this.colorInfoByFilespec.has(filespec) ? this.colorInfoByFilespec.get(filespec) : undefined;
+        if (isWindowChange) {
+          // use existing color set
+        } else {
+          // build new updated color set
+          const newDecorationsByColor: DecoratorMap = this.buildColorSet(symbolRepository, instancesByColor);
+          this.decoratorInstancesByFilespec.set(filespec, instancesByColor); // save latest colorInstances
+          // determine if same (color and color ranges)
+          if (this.colorSetsAreDifferent(newDecorationsByColor, decorationsByColor)) {
+            decorationsByColor = newDecorationsByColor;
+            // remember the latest color-set for this file (for reuse later)
+            this.colorInfoByFilespec.set(filespec, decorationsByColor); // save latest colorSet
+          } else {
+            decorationsByColor = undefined; // don't re-color causing creen blank
+          }
+        }
+        //this.logMessage(`- updateRegionColors(): FOUND ${codeBlockSpans.length} codeBlockSpan(s)`);
+        if (decorationsByColor) {
+          if (!isWindowChange) {
+            this.removeBackgroundColors("updRgnCo():" + caller, activeEditor);
+          }
+          // for all decorations add to editor
+          const keys = Object.keys(decorationsByColor);
+          this.logMessage(`  -- coloring region(s) with ${keys.length} color(s)`);
+          for (const key of keys) {
+            const currDecoration = decorationsByColor[key];
+            //this.logMessage(` -- color=[${key}] name=[${currDecoration.name}], regionCt=(${currDecoration.regions.length}), optionsBGColor=[${currDecoration.decorator}]`);
+
+            if (currDecoration.decorator !== undefined) {
+              activeEditor.setDecorations(currDecoration.decorator, []);
+              activeEditor.setDecorations(currDecoration.decorator, currDecoration.regions);
+            }
+          }
+        } else {
+          this.logMessage(`  -- No colored regions found!`);
+        }
       } else {
         this.logMessage(`  -- coloring disabled BYPASS`);
+      }
+    } else {
+      this.logMessage(`  -- SKIPping non-spin file`);
+    }
+  }
+
+  private buildColorSet(symbolRepository: DocumentFindings, decoratorInstances: DecoratorInstanceMap): DecoratorMap {
+    const decorationsByColor: DecoratorMap = {};
+    const codeBlockSpans: IBlockSpan[] = symbolRepository.blockSpans();
+    if (codeBlockSpans.length > 0) {
+      // for each colorized region
+      for (let blkIdx = 0; blkIdx < codeBlockSpans.length; blkIdx++) {
+        const codeBlockSpan: IBlockSpan = codeBlockSpans[blkIdx];
+        // lookup color
+        const color: string | undefined = this.colorForBlock(codeBlockSpan.blockType, codeBlockSpan.sequenceNbr);
+        if (color) {
+          //this.logMessage(`- updateRegionColors(): color=[${color}], span=[${codeBlockSpan.startLineNbr} - ${codeBlockSpan.endLineNbr}]`);
+          // grab and instance for this color
+          const colorDecorator: vscode.TextEditorDecorationType = this.instanceForColor(color, decoratorInstances);
+          // create the next/first span for this color
+          const startPos = new Position(codeBlockSpan.startLineNbr, 0);
+          const endPos = new Position(codeBlockSpan.endLineNbr, 0);
+          //this.logMessage(`  -- color=[${color}], start=[${startPos.line}, ${startPos.character}], end=[${endPos.line}, ${endPos.character}]`);
+
+          const decorationRange = {
+            range: new vscode.Range(startPos, endPos),
+          };
+
+          // if decoration for this color doesn't exist
+          if (decorationsByColor[color] === undefined) {
+            // record empty decoration
+            decorationsByColor[color] = {
+              name: color,
+              regions: [],
+              decorator: undefined,
+            };
+          }
+
+          // add range to new or existing decoration
+          decorationsByColor[color].regions.push(decorationRange);
+          if (decorationsByColor[color].decorator == undefined) {
+            decorationsByColor[color].decorator = colorDecorator;
+          }
+        }
+      }
+    }
+    return decorationsByColor;
+  }
+
+  private instanceForColor(color: string, decoratorInstances: DecoratorInstanceMap): vscode.TextEditorDecorationType {
+    const foundInstance = decoratorInstances[color];
+    if (foundInstance !== undefined) {
+      return foundInstance;
+    }
+
+    const newInstance = vscode.window.createTextEditorDecorationType({
+      isWholeLine: true,
+      backgroundColor: color,
+    });
+
+    decoratorInstances[color] = newInstance;
+    return newInstance;
+  }
+
+  private colorSetsAreDifferent(lhsMap: DecoratorMap, rhsMap: DecoratorMap | undefined): boolean {
+    let mapsDiffStatus = false;
+    if (rhsMap) {
+      const lhsColors = Object.keys(lhsMap);
+      const rhsColors = Object.keys(rhsMap);
+      if (lhsColors.length != rhsColors.length) {
+        mapsDiffStatus = true;
+      } else {
+        for (let color in lhsColors) {
+          const lhsDescription: DecoratorDescription = lhsMap[color];
+          if (color in rhsColors) {
+            /// both have same color
+            const rhsDescription: DecoratorDescription = rhsMap[color];
+            // CHK: name
+            if (lhsDescription.name != rhsDescription.name) {
+              // color not in rhs so are diff.
+              mapsDiffStatus = true;
+              break;
+            } else {
+              // CHK: regions
+              if (lhsDescription.regions.length != rhsDescription.regions.length) {
+                // colored regions count is diff.
+                mapsDiffStatus = true;
+                break;
+              }
+              for (let rgnIdx = 0; rgnIdx < lhsDescription.regions.length; rgnIdx++) {
+                const lhsRange: vscode.Range = lhsDescription.regions[rgnIdx]["range"];
+                const rhsRange: vscode.Range = rhsDescription.regions[rgnIdx]["range"];
+                if (lhsRange.start != rhsRange.start || lhsRange.end != rhsRange.end) {
+                  // colored region linenumber range is diff.
+                  mapsDiffStatus = true;
+                  break;
+                }
+              }
+            }
+          } else {
+            // color not in rhs so are diff.
+            mapsDiffStatus = true;
+            break;
+          }
+        }
+      }
+    } else {
+      // only one map to compare, yes it is different
+      mapsDiffStatus = true;
+    }
+    this.logMessage(`  -- colorSetsAreDifferent() = ${mapsDiffStatus}`);
+    return mapsDiffStatus;
+  }
+
+  private removeBackgroundColors(caller: string, activeEditor?: vscode.TextEditor) {
+    if (!activeEditor) {
+      activeEditor = vscode.window.activeTextEditor;
+    }
+    if (activeEditor) {
+      const filespec: string = activeFilespec(activeEditor);
+      this.logMessage(`- removeBackgroundColors() fm=(${caller}) [${filespec}]`);
+      const instancesByColor: DecoratorInstanceMap | undefined = this.decoratorInstancesByFilespec.get(filespec);
+      if (instancesByColor) {
+        // Clear decorations
+        const keys = Object.keys(instancesByColor);
+        for (const key of keys) {
+          const foundInstance = instancesByColor[key];
+          if (foundInstance) {
+            // If rangesOrOptions is empty, the existing decorations with the given decoration type will be removed
+            activeEditor.setDecorations(foundInstance, []);
+          }
+        }
       }
     }
   }
@@ -292,19 +404,5 @@ export class RegionColorizer {
     }
     //this.logMessage(`- colorForBlock(${currblockType}, ${sequenceNbr}) -> hash[${colorKey}] = [${desiredColor}]`);
     return desiredColor;
-  }
-
-  private instanceForColor(color: string): vscode.TextEditorDecorationType {
-    if (this.decoratorInstances[color] !== undefined) {
-      return this.decoratorInstances[color];
-    }
-
-    const newInstance = vscode.window.createTextEditorDecorationType({
-      isWholeLine: true,
-      backgroundColor: color,
-    });
-
-    this.decoratorInstances[color] = newInstance;
-    return newInstance;
   }
 }

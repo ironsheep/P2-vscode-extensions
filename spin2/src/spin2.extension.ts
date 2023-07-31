@@ -220,6 +220,8 @@ export const activate = (context: vscode.ExtensionContext) => {
     vscode.commands.registerCommand("spin2.insertMode.deleteRight", deleteRightCommand),
 
     vscode.window.onDidChangeActiveTextEditor(activeTextEditorChanged),
+    vscode.window.onDidChangeVisibleTextEditors(visibleTextEditorChanged),
+    vscode.workspace.onDidCloseTextDocument(textDocumentClosed),
 
     //vscode.workspace.onDidChangeTextDocument(textDocumentChanged),
 
@@ -268,6 +270,30 @@ export const deactivate = () => {
 
 // ----------------------------------------------------------------------------
 //   InsertMode command handlers   ////////////////////////////////////////////
+function textDocumentClosed(textDocument: vscode.TextDocument) {
+  logExtensionMessage(`* textDocumentClosed(${textDocument.fileName}) `);
+  if (isSpinOrPasmDocument(textDocument)) {
+    codeBlockColorizer.closedFilespec(textDocument.fileName);
+  }
+}
+
+function visibleTextEditorChanged(textEditors: vscode.TextEditor[]) {
+  logExtensionMessage(`* visibleTextEditorChanged() given ${textEditors.length}) editors`);
+  let spinFilesInActiveEditors: number = 0;
+  if (textEditors.length > 0) {
+    for (let index = 0; index < textEditors.length; index++) {
+      const editor = textEditors[index];
+      const editorNbr: number = index + 1;
+      logExtensionMessage(`  -- doc #${editorNbr} is ${editor.document.fileName}) editors`);
+      if (isSpinOrPasmDocument(editor.document)) {
+        spinFilesInActiveEditors++;
+      }
+    }
+    if (spinFilesInActiveEditors == 0) {
+      codeBlockColorizer.closedAllFiles();
+    }
+  }
+}
 
 function activeTextEditorChanged(textEditor?: vscode.TextEditor) {
   let argumentInterp: string = "undefined";

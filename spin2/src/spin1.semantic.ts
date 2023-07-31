@@ -9,7 +9,7 @@ import { DocumentFindings, RememberedComment, eCommentType, RememberedToken, eBL
 import { ParseUtils, eParseState } from "./spin1.utils";
 import { DocGenerator } from "./spin.document.generate";
 import { RegionColorizer } from "./spin.color.regions";
-import { isCurrentDocumentSpin1 } from "./spin.vscode.utils";
+import { isCurrentDocumentSpin1, editorForFilespec } from "./spin.vscode.utils";
 
 // ----------------------------------------------------------------------------
 //   Semantic Highlighting Provider
@@ -122,6 +122,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
   private configuration = semanticConfiguration;
 
   private currentMethodName: string = "";
+  private currentFilespec: string = "";
 
   private bRecordTrailingComments: boolean = false; // initially, we don't generate tokens for trailing comments on lines
 
@@ -151,6 +152,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     } // silence our compiler for now... TODO: we should adjust loop so it can break on cancelToken.isCancellationRequested
     this._resetForNewDocument();
     this._logMessage("* Config: spinExtensionBehavior.highlightFlexspinDirectives: [" + this.configuration.highlightFlexspin + "]");
+    this.currentFilespec = document.fileName;
+    this._logMessage(`* provideDocumentSemanticTokens(${this.currentFilespec})`);
 
     const allTokens = this._parseText(document.getText());
     const builder = new vscode.SemanticTokensBuilder();
@@ -521,8 +524,8 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.semanticFindings.finishFinalBlock(lines.length - 1); // mark end of final block in file
 
     // now update editor colors
-    const editor = vscode.window.activeTextEditor!;
-    this.codeBlockColorizer.updateRegionColors(editor, this.semanticFindings, "Spin1-end1stpass");
+    const editorForFile: vscode.TextEditor = editorForFilespec(this.currentFilespec);
+    this.codeBlockColorizer.updateRegionColors(editorForFile, this.semanticFindings, "Spin1-end1stpass");
 
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("---> Actual SCAN");
