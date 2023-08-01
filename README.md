@@ -26,6 +26,7 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
    - **P1: Signature Help Feature** As you are typing a method name show signature help for both user written methods and for Spin built-in methods.
 - **Object Public interface documentation generation** via keystroke [Ctrl+Alt+d], doc opens on right side of editor
 - **Doc-Comment Generation** for PUB and PRI methods via keystroke [Ctrl+Alt+c] - Ctrl+Alt+( c )omment. <br>- Comment is inserted immediately below the PUB or PRI line.
+- Editor **Screen Coloring** support per section à la Parallax **Propeller Tool**
 - **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
 - **Tab Sets** You can choose between `Propeller Tool`, `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 - File navigation from **Outline View**
