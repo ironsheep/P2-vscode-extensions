@@ -3691,6 +3691,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
           let newParameter: string = "";
           for (let idx = firstParamIdx; idx < lineParts.length; idx++) {
             newParameter = lineParts[idx];
+            const paramIsSymbolName: boolean = newParameter.substring(0, 1).match(/[a-zA-Z_]/) ? true : false;
+            if (!paramIsSymbolName) {
+              continue;
+            }
             if (newParameter.toLowerCase() == "debug" || this.parseUtils.isStorageType(newParameter)) {
               continue;
             }

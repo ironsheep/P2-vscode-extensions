@@ -57,6 +57,7 @@ export class RegionColorizer {
     pubDk: "#B0CAFFff", // HSB: 220,31,100  (33 was too dark/rich)
     */
     //  Jeff's
+    /*
     objLt: "#FFD9D9ff", // HSB:   0,15,100 - OBJ red
     objDk: "#FFC7C7ff", // HSB:   0,22,100  (25 was too dark/rich)
     varLt: "#FFECD9ff", // HSB:  30,15,100 - VAR orange
@@ -69,6 +70,20 @@ export class RegionColorizer {
     priDk: "#BFF7FFff", // HSB: 188,25,100
     pubLt: "#D9EBFFff", // HSB: 211,15,100 - PUB purple
     pubDk: "#C4E1FFff", // HSB: 211,23,100  (25 was too dark/rich)
+    */
+    //  Mine (Jeff's recolored)
+    objLt: "#ffd9d9FF", // HSB:   0,15,100 - OBJ red
+    objDk: "#ffbfbfFF", // HSB:   0,25,100
+    varLt: "#ffecd9FF", // HSB:  30,15,100 - VAR orange
+    varDk: "#ffdfbfFF", // HSB:  30,25,100
+    conLt: "#ffffd9FF", // HSB:  60,15,100 - CON yellow
+    conDk: "#ffffbfFF", // HSB:  60,25,100
+    datLt: "#d9ffd9FF", // HSB: 120,15,100 - DAT green
+    datDk: "#bfffbfFF", // HSB: 120,25,100
+    priLt: "#d9ffffFF", // HSB: 180,15,100 - PRI blue
+    priDk: "#bfffffFF", // HSB: 180,25,100
+    pubLt: "#d9d9ffFF", // HSB: 240,15,100 - PUB purple
+    pubDk: "#bfbfffFF", // HSB: 240,23,100
   };
   private namedColorsAlpha: number = -1;
 

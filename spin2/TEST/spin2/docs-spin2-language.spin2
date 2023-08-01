@@ -34,12 +34,15 @@ CON
 '' Permanent Variables Spin2 Pg 6
 ' -----------------------------------------------------------------------------
 
+   CON_NAME = CLKMODE
+   CON_NAME = CLKFREQ
+
 CON
 
    CON_NAME = CLKMODE
    CON_NAME = CLKFREQ
 
-pub something()
+PUB something()
 
    CON_NAME = VARBASE
    CON_NAME = PR0
@@ -90,11 +93,14 @@ a8   res    1
 '' Pin Fields - Spin2 Pg 7
 ' -----------------------------------------------------------------------------
 
+DAT
+
+
 CON PinfieldCon = 50 ADDPINS 3
 BasePin = 5
 ExtraPins = 3
 
-pub something() | PinfieldVar
+PUB something() | PinfieldVar
     PinfieldVar := BasePin ADDPINS ExtraPins
     PINLOW(%00000_000000)
     PINLOW(%00000_111111)
@@ -110,7 +116,10 @@ pub something() | PinfieldVar
 '' Expressions - Spin2 Pg 7
 ' -----------------------------------------------------------------------------
 
-pub another(place, i) : digit | value
+VAR
+    long    testVar
+
+PUB another(place, i) : digit | value
 
     value := BYTE[i++]
     (digit := value / place // 10) OR place == 1
@@ -118,10 +127,7 @@ pub another(place, i) : digit | value
     "0" + digit
     PINREAD(17..12)
 
-VAR
-    long    testVar
-
-pub built_in_Methods1(NewCLKMODE, NewCLKFREQ, CogMask, value) : CogNum | lockNum, Running, LockState, AtnFlag
+PUB built_in_Methods1(NewCLKMODE, NewCLKFREQ, CogMask, value) : CogNum | lockNum, Running, LockState, AtnFlag
 
     HUBSET(Value)
     CLKSET(NewCLKMODE, NewCLKFREQ)
@@ -145,6 +151,8 @@ PRI supportMethod()
 
 DAT
 
+DAT
+
     org
      ' called routine by COGINIT
 driver_entry   mov  ref,#PTRA
@@ -154,7 +162,7 @@ ref     res     1
 stack   byte    0[40]
 
 
-pub built_in_Methods2(MOde, XVal, Yval) | PinStates
+PUB built_in_Methods2(MOde, XVal, Yval) | PinStates
     '' Pin Methods
     PINW(PinfieldCon, 0)
     PINWRITE(PinfieldCon, $22)
@@ -171,7 +179,7 @@ pub built_in_Methods2(MOde, XVal, Yval) | PinStates
     PINSTART(PinfieldCon, Mode, Xval, Yval)
     PINCLEAR(PinfieldCon)
 
-pub built_in_Methods3(Tick, Microseconds, milliseconds) | Count, Past, Seconds
+PUB built_in_Methods3(Tick, Microseconds, milliseconds) | Count, Past, Seconds
     '' Timing Methods
     Count := GETCT()
     Past := POLLCT(Tick)
@@ -181,13 +189,13 @@ pub built_in_Methods3(Tick, Microseconds, milliseconds) | Count, Past, Seconds
     Seconds := GETSEC()
     Milliseconds := GETMS()
 
-pub built_in_Methods4(RegOrHubAddr, HubAddr)
+PUB built_in_Methods4(RegOrHubAddr, HubAddr)
     '' PASM interfacing
     CALL(RegOrHubAddr)
     REGEXEC(HubAddr)
     REGLOAD(HubAddr)
 
-pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divisor) | x, y, rotx, roty, quotient, Rnd
+PUB built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divisor) | x, y, rotx, roty, quotient, Rnd
     '' Math Methods
     rotx, roty := ROTXY(x, y, angle32bit)
     x, y := POLXY(length, angle32bit)
@@ -197,7 +205,7 @@ pub built_in_Methods5(x, y, angle32bit, length, angle, twopi, mult1, mult2, divi
     quotient := MULDIV64(mult1,mult2,divisor)
     Rnd := GETRND()
 
-pub built_in_Methods6(HubAddr, CogAddr, Dest, Source, count, value)
+PUB built_in_Methods6(HubAddr, CogAddr, Dest, Source, count, value)
     '' Memory Methods
     GETREGS(HubAddr, CogAddr, Count)    ' <--- why RED???  (caused by duplicate method name!)
     SETREGS(HubAddr, CogAddr, Count)
@@ -208,7 +216,7 @@ pub built_in_Methods6(HubAddr, CogAddr, Dest, Source, count, value)
     WORDFILL(Dest, Value, Count)
     LONGFILL(Dest, Value, Count)
 
-pub built_in_Methods7(Addr, AddrA, AddrB) | Size, Match, StringAddress
+PUB built_in_Methods7(Addr, AddrA, AddrB) | Size, Match, StringAddress
     '' String Methods
     Size := STRSIZE(Addr)
     Match := STRCOMP(AddrA,AddrB)
@@ -217,7 +225,7 @@ pub built_in_Methods7(Addr, AddrA, AddrB) | Size, Match, StringAddress
 Con {test}
 #0,v2,v3
 
-pub built_in_Methods8(v1,  etc) | Value, Index
+PUB built_in_Methods8(v1,  etc) | Value, Index
     '' Index ↔ Value Methods
     Value := LOOKUP(Index: v1, v2..v3, etc)
     Value := LOOKUPZ(Index: v1, v2..v3, etc)
@@ -230,12 +238,12 @@ pub built_in_Methods8(v1,  etc) | Value, Index
 '' Using Methods - Spin2 Pg 7
 ' -----------------------------------------------------------------------------
 
-pub using_methods1(ToStr, FromStr) | x
+PUB using_methods1(ToStr, FromStr) | x
     '' Methods that return single results
     x := GETRND() +// 100 'Get a random number between 0 and 99
     BYTEMOVE(ToStr, FromStr, STRSIZE(FromStr) + 1)
 
-pub using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) | x, y
+PUB using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) | x, y
     '' Methods that return single results
     x,y := SumPoints(POLXY(rho1,theta1), POLXY(rho2,theta2))
 
@@ -247,7 +255,7 @@ pub using_methods2(ToStr, FromStr, rho1, rho2, theta1, theta2, xin, yin, theta) 
 DAT
     mywords   byte 0[4]
 
-pub mySillySpecialCase()
+PUB mySillySpecialCase()
 
     BYTE[@mywords][1], BYTE[@mywords][1] := myfuncRet2()
 
@@ -278,7 +286,7 @@ PRI Sub3() | ErrorCode          ' Sub3 ABORTs, returning to Sub1 with ErrorCode
 ' -----------------------------------------------------------------------------
 '' Using Methods - Spin2 Pg 7
 ' -----------------------------------------------------------------------------
-pub using_methods3(register, index, address, bitfield) | AnyVar
+PUB using_methods3(register, index, address, bitfield) | AnyVar
 
     AnyVar                              ' Hub or permanent register variable
     HubVar.WORD                         ' Hub variable with BYTE/WORD/LONG size override

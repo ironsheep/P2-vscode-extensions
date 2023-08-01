@@ -652,7 +652,7 @@
     },
     {
       "name": "Constant",
-      "scope": ["constant.language"],
+      "scope": ["constant.language", "keyword.operator.float.spin2", "keyword.operator.unary.spin2", "keyword.operator.binary.spin2", "keyword.operator.field.spin2"],
       "settings": {
         "foreground": "#8a358a"
       }

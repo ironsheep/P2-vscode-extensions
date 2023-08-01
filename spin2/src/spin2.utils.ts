@@ -122,7 +122,7 @@ export class ParseUtils {
     //this.logMessage("  -- gdnwlp nonDblStringLine=[" + nonDblStringLine + "]");
     const nonSglStringLine: string = this.removeDebugSingleQuotedStrings(nonDblStringLine, false);
     //this.logMessage("  -- gdnwlp nonSglStringLine=[" + nonSglStringLine + "]");
-    let lineParts: string[] | null = nonSglStringLine.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)\!\?\~]+/g);
+    let lineParts: string[] | null = nonSglStringLine.match(/[^ ,@\[\]\=\.\+\-\*\/\:\#\<\>\|\^\&\t\(\)\!\?\~]+/g);
     //let lineParts: string[] | null = line.match(/[^ ,@\[\]\+\-\*\/\<\>\t\(\)]+/g);
     if (lineParts === null) {
       lineParts = [];
