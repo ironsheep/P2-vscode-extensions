@@ -28,7 +28,7 @@ export function activeSpinEditors(): vscode.TextEditor[] {
 
 export function editorForFilespec(filespec: string): vscode.TextEditor {
   let editorForFile: vscode.TextEditor = vscode.window.activeTextEditor!;
-  if (editorForFile.document && editorForFile.document.fileName != filespec) {
+  if (editorForFile && editorForFile.document && editorForFile.document.fileName != filespec) {
     const editors = vscode.window.visibleTextEditors!;
     for (let index = 0; index < editors.length; index++) {
       const currEditor = editors[index];
