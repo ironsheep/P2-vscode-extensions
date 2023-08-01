@@ -29,9 +29,9 @@ The **P2 Forum Thread** containing discussion of [this VSCode support](https://f
 - **Custom tabbing** Tab-stop support per section à la Parallax **Propeller Tool**
 - **Tab Sets** You can choose between `Propeller Tool`, `IronSheep`, and `User1` (*adjust in settings to make your favorite set*)
 - File navigation from **Outline View**
+- File navigation from **Object Hierarchy View**
 - **Edit Mode** support à la Parallax **Propeller Tool** [Insert, Overtype and Align]
-- Works with your favorite VSCode themes
-- Offers companion Theme (Two themes: Syntax+Semantic, and Syntax only - mostly used during semantic highlighting development)
+- Provides rich companion themes for use with non-color backgrounds or with colored backgrounds as well as Syntax only theme (mostly used during semantic highlighting development
 
 ### Up next
 We are working to routinely add features to this extension for the next month or two.  The hover support for P2 just arrived, here the next updates in the works:

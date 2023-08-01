@@ -20,12 +20,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.9.12] 2023-07-??
+## [1.9.12] 2023-08-??
 
 Feature Updates (P1 and P2)
 
-- P1 & P2: Adds editor background coloring per section à la **Parallax Propeller Tool** (disabled by default, enable in settings)
+- P1 & P2: Adds editor background coloring per section à la **Parallax Propeller Tool** (disabled by default, enable in settings, requires the use of the new background color-supporting themes)
 - Adds two new color themes which are better suited to colorized backgrounds
+- Adds new Light theme for non-colored background use which compliments the Dark theme already present
 
 ## [1.9.11] 2023-07-25
 
