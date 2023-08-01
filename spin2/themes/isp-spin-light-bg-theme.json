@@ -587,9 +587,9 @@
     "enumMember.declaration": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
-    "variable.local": "#82c0af", // constants a0c1b8
-    "variable.modification.local": "#82c0af", // constants a0c1b8
-    "variable.declaration.local": "#82c0af", // constants a0c1b8
+    "variable.local": "#7dad8f", // constants 82c0af a0c1b8
+    "variable.modification.local": "#7dad8f", // constants 82c0af a0c1b8
+    "variable.declaration.local": "#7dad8f", // constants 82cx0af a0c1b8
     "returnValue.local": "#508b93", // constants
     "returnValue.declaration.local": "#438e98", // constants
     "method": "#7b9be4", // constants

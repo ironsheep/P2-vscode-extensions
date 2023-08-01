@@ -142,6 +142,7 @@ export class RegionColorizer {
   public updateRegionColors(activeEditor: vscode.TextEditor, symbolRepository: DocumentFindings, caller: string) {
     // remove any prior colors, then recolor
     const isWindowChange: boolean = caller.includes("actvEditorChg") && !this.settingsChanged;
+    const isFromRescan: boolean = caller.includes("end1stpass");
     if (isWindowChange) {
       this.logMessage(`- updateRegionColors() changing windows`);
     }
@@ -151,8 +152,10 @@ export class RegionColorizer {
     let foundInstancesByColor: DecoratorInstanceMap | undefined = this.decoratorInstancesByFilespec.has(filespec) ? this.decoratorInstancesByFilespec.get(filespec) : undefined;
     if (foundInstancesByColor) {
       instancesByColor = foundInstancesByColor;
+      this.logMessage(`  -- using existing instance cache`);
     } else {
       this.decoratorInstancesByFilespec.set(filespec, instancesByColor);
+      this.logMessage(`  -- new instance cache created`);
     }
 
     // don't show following message if coloring is turned off
@@ -171,21 +174,26 @@ export class RegionColorizer {
       //
       if (isColoring) {
         this.settingsChanged = false;
-        this.logMessage(`  -- fm=(${caller}) [${filespec}]`);
+        this.logMessage(`- updateRegionColors() fm=(${caller}) [${filespec}]`);
         let decorationsByColor: DecoratorMap | undefined = this.colorInfoByFilespec.has(filespec) ? this.colorInfoByFilespec.get(filespec) : undefined;
         if (isWindowChange) {
           // use existing color set
         } else {
+          // NOT a window change... build new color set
+          this.decoratorInstancesByFilespec.set(filespec, instancesByColor); // save latest colorInstances
           // build new updated color set
           const newDecorationsByColor: DecoratorMap = this.buildColorSet(symbolRepository, instancesByColor);
-          this.decoratorInstancesByFilespec.set(filespec, instancesByColor); // save latest colorInstances
           // determine if same (color and color ranges)
-          if (this.colorSetsAreDifferent(newDecorationsByColor, decorationsByColor)) {
+          if (isFromRescan || this.colorSetsAreDifferent(newDecorationsByColor, decorationsByColor)) {
+            // newly built color set is different... adopt it
             decorationsByColor = newDecorationsByColor;
-            // remember the latest color-set for this file (for reuse later)
+            // replace cache with this latest color-set for file
             this.colorInfoByFilespec.set(filespec, decorationsByColor); // save latest colorSet
+            this.logMessage(`  -- new decoration cache created`);
           } else {
-            decorationsByColor = undefined; // don't re-color causing creen blank
+            if (decorationsByColor) {
+              this.logMessage(`  -- using existing decoration cache`);
+            }
           }
         }
         //this.logMessage(`- updateRegionColors(): FOUND ${codeBlockSpans.length} codeBlockSpan(s)`);
