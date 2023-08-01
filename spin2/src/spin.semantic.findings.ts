@@ -127,8 +127,11 @@ export class DocumentFindings {
 
   public recordBlockStart(eCurrBlockType: eBLockType, currLineIdx: number) {
     this._logTokenMessage(`  -- FND-RCD-BLOCK iblockType=[${eCurrBlockType}], span=[${currLineIdx} - ???]`);
-    if (currLineIdx == 0 && this.priorBlockType == eCurrBlockType && this.priorBlockStartLineIdx == currLineIdx) {
-      // do nothing...  we're getting CON on first line a 2nd time...
+    if (currLineIdx == 0 && this.priorBlockType != eBLockType.Unknown) {
+      // we are getting a replacement for the default CON start section, use it!
+      this.priorBlockType = eCurrBlockType; // override the default with possibly NEW block type
+      this.priorBlockStartLineIdx = currLineIdx;
+      this.priorInstanceCount = 1;
     } else if (this.priorBlockType == eBLockType.Unknown) {
       // we are starting the first block
       this.priorBlockType = eCurrBlockType;

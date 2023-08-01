@@ -6,7 +6,7 @@ import { Position } from "vscode";
 import { DocumentFindings, eBLockType, IBlockSpan } from "./spin.semantic.findings";
 import { semanticConfiguration, reloadSemanticConfiguration } from "./spin2.extension.configuration";
 // import { runInThisContext } from "vm";
-import { activeFilespec, isSpinOrPasmFile } from "./spin.vscode.utils";
+import { activeFilespec, isSpinOrPasmFile, activeSpinEditors } from "./spin.vscode.utils";
 
 interface DecoratorMap {
   [Identifier: string]: DecoratorDescription;
@@ -71,11 +71,11 @@ export class RegionColorizer {
     pubDk: "#C4E1FFff", // HSB: 211,23,100  (25 was too dark/rich)
   };
   private namedColorsAlpha: number = -1;
-  private settingsChanged: boolean = false;
 
   //private decoratorInstances = new Map<string, vscode.TextEditorDecorationType>();
   private colorInfoByFilespec = new Map<string, DecoratorMap>();
   private decoratorInstancesByFilespec = new Map<string, DecoratorInstanceMap>();
+  private findingsByFilespec = new Map<string, DocumentFindings>();
 
   private configuration = semanticConfiguration;
 
@@ -106,7 +106,6 @@ export class RegionColorizer {
 
   public updateColorizerConfiguration() {
     this.logMessage("* updateColorizerConfiguration() settings changed");
-    this.settingsChanged = true;
     const updated = reloadSemanticConfiguration();
     if (updated || this.namedColorsAlpha == -1) {
       const settingsAlpha: number = this.backgroundAlpha();
@@ -118,6 +117,25 @@ export class RegionColorizer {
       if (this.isColoringBackground() == false) {
         this.removeBackgroundColors("updateCfg");
       }
+
+      // we need to force redraw of open editor when config changes!
+      // FIXME: the rec-olor happens out of sequence!!! (after the doc updates)
+      const activeEdtors: vscode.TextEditor[] = activeSpinEditors();
+      if (activeEdtors.length > 0) {
+        for (let index = 0; index < activeEdtors.length; index++) {
+          const currEditor = activeEdtors[index];
+          const filespec: string = currEditor.document.fileName;
+          this.logMessage(`* config: re-coloring [${filespec}]`);
+          const docFindings: DocumentFindings | undefined = this.findingsByFilespec.has(filespec) ? this.findingsByFilespec.get(filespec) : undefined;
+          if (docFindings) {
+            this.updateRegionColors(currEditor, docFindings, "cfgChg");
+          } else {
+            this.logMessage(`  -- config: NO cached DocumentFindings for [${filespec}]`);
+          }
+        }
+      } else {
+        this.logMessage(`* config: NO spin editors to update`);
+      }
     }
   }
 
@@ -126,6 +144,7 @@ export class RegionColorizer {
     this.logMessage(`- closedAllFiles() removed all cached entries`);
     this.decoratorInstancesByFilespec.clear();
     this.colorInfoByFilespec.clear();
+    this.findingsByFilespec.clear();
   }
 
   public closedFilespec(filespec: string) {
@@ -137,16 +156,27 @@ export class RegionColorizer {
     if (this.colorInfoByFilespec.has(filespec)) {
       this.colorInfoByFilespec.delete(filespec);
     }
+    if (this.findingsByFilespec.has(filespec)) {
+      this.findingsByFilespec.delete(filespec);
+    }
   }
 
   public updateRegionColors(activeEditor: vscode.TextEditor, symbolRepository: DocumentFindings, caller: string) {
     // remove any prior colors, then recolor
-    const isWindowChange: boolean = caller.includes("actvEditorChg") && !this.settingsChanged;
-    const isFromRescan: boolean = caller.includes("end1stpass");
+    const isConfigChange: boolean = caller.includes("cfgChg");
+    const isWindowChange: boolean = caller.includes("actvEditorChg");
+    const isFromRescan: boolean = caller.includes("end1stPass");
     if (isWindowChange) {
       this.logMessage(`- updateRegionColors() changing windows`);
     }
+    if (isConfigChange) {
+      this.logMessage(`- updateRegionColors() color config changed`);
+    }
     const filespec: string = activeFilespec(activeEditor);
+    if (isFromRescan || isWindowChange) {
+      // when we get real dta save it for config change use
+      this.findingsByFilespec.set(filespec, symbolRepository);
+    }
     const isSpinFile = isSpinOrPasmFile(filespec);
     let instancesByColor: DecoratorInstanceMap = {};
     let foundInstancesByColor: DecoratorInstanceMap | undefined = this.decoratorInstancesByFilespec.has(filespec) ? this.decoratorInstancesByFilespec.get(filespec) : undefined;
@@ -160,31 +190,28 @@ export class RegionColorizer {
 
     // don't show following message if coloring is turned off
     if (isSpinFile) {
-      const isColoring: boolean = this.isColoringBackground() == true;
+      const isColoringEnabled: boolean = this.isColoringBackground() == true;
       // only clear if coloring is OFF   -OR-
       //   if text changed, or if syntax pass requested update
-      if (!isColoring) {
+      if (!isColoringEnabled) {
         this.removeBackgroundColors("NOT COLORING updRgnCo():" + caller, activeEditor);
-      }
-
-      // only color if
-      //  (1) coloring is turned on
-      //
-      //  NOTE: the window-change clause prevents us from coloring with wrong color-spans for this file
-      //
-      if (isColoring) {
-        this.settingsChanged = false;
+      } else {
+        // only color if
+        //  (1) coloring is turned on
         this.logMessage(`- updateRegionColors() fm=(${caller}) [${filespec}]`);
         let decorationsByColor: DecoratorMap | undefined = this.colorInfoByFilespec.has(filespec) ? this.colorInfoByFilespec.get(filespec) : undefined;
         if (isWindowChange) {
           // use existing color set
         } else {
+          this.logMessage(`  -- build new decoration map`);
           // NOT a window change... build new color set
           this.decoratorInstancesByFilespec.set(filespec, instancesByColor); // save latest colorInstances
           // build new updated color set
           const newDecorationsByColor: DecoratorMap = this.buildColorSet(symbolRepository, instancesByColor);
           // determine if same (color and color ranges)
-          if (isFromRescan || this.colorSetsAreDifferent(newDecorationsByColor, decorationsByColor)) {
+          // if called from semantic pass then always adopt new!
+          //   otherwise only adopt new only if changed
+          if (isFromRescan || isConfigChange || this.colorSetsAreDifferent(newDecorationsByColor, decorationsByColor)) {
             // newly built color set is different... adopt it
             decorationsByColor = newDecorationsByColor;
             // replace cache with this latest color-set for file
@@ -193,6 +220,10 @@ export class RegionColorizer {
           } else {
             if (decorationsByColor) {
               this.logMessage(`  -- using existing decoration cache`);
+            } else {
+              this.logMessage(`  -- NO existing,  forcing use of NEW decoration cache`);
+              decorationsByColor = newDecorationsByColor;
+              this.colorInfoByFilespec.set(filespec, decorationsByColor); // save latest colorSet
             }
           }
         }
@@ -216,8 +247,6 @@ export class RegionColorizer {
         } else {
           this.logMessage(`  -- No colored regions found!`);
         }
-      } else {
-        this.logMessage(`  -- coloring disabled BYPASS`);
       }
     } else {
       this.logMessage(`  -- SKIPping non-spin file`);
@@ -238,9 +267,9 @@ export class RegionColorizer {
           // grab and instance for this color
           const colorDecorator: vscode.TextEditorDecorationType = this.instanceForColor(color, decoratorInstances);
           // create the next/first span for this color
+          this.logMessage(`  -- color=[${color}], start=[${codeBlockSpan.startLineNbr}, 0], end=[${codeBlockSpan.endLineNbr}, 0]`);
           const startPos = new Position(codeBlockSpan.startLineNbr, 0);
           const endPos = new Position(codeBlockSpan.endLineNbr, 0);
-          //this.logMessage(`  -- color=[${color}], start=[${startPos.line}, ${startPos.character}], end=[${endPos.line}, ${endPos.character}]`);
 
           const decorationRange = {
             range: new vscode.Range(startPos, endPos),
@@ -293,8 +322,13 @@ export class RegionColorizer {
         for (let color in lhsColors) {
           const lhsDescription: DecoratorDescription = lhsMap[color];
           if (color in rhsColors) {
-            /// both have same color
+            /// both have same color?
             const rhsDescription: DecoratorDescription = rhsMap[color];
+            if (!lhsDescription || !rhsDescription) {
+              // left or righ hand side is missing...
+              mapsDiffStatus = true;
+              break;
+            }
             // CHK: name
             if (lhsDescription.name != rhsDescription.name) {
               // color not in rhs so are diff.

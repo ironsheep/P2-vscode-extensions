@@ -525,7 +525,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
 
     // now update editor colors
     const editorForFile: vscode.TextEditor = editorForFilespec(this.currentFilespec);
-    this.codeBlockColorizer.updateRegionColors(editorForFile, this.semanticFindings, "Spin1-end1stpass");
+    this.codeBlockColorizer.updateRegionColors(editorForFile, this.semanticFindings, "Spin1-end1stPass");
 
     // --------------------         End of PRE-PARSE             --------------------
     this._logMessage("---> Actual SCAN");

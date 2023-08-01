@@ -173,7 +173,7 @@
         "entity.name.operator.custom-literal" // See https://en.cppreference.com/w/cpp/language/user_literal
       ],
       "settings": {
-        "foreground": "#c1c07d" // match spin2 colors
+        "foreground": "#a3a24e" // match spin2 colors
       }
     },
     {
@@ -227,7 +227,7 @@
       "name": "Control flow / Special keywords",
       "scope": ["source.cpp keyword.operator.new", "keyword.operator.delete", "keyword.other.using", "keyword.other.operator", "entity.name.operator"],
       "settings": {
-        "foreground": "#b57bb0" // match spin2
+        "foreground": "#996895" // match spin2
       }
     },
     {
@@ -245,7 +245,7 @@
     },
     {
       "name": "Constants and enums",
-      "scope": ["variable.other.constant", "variable.other.enummember"],
+      "scope": ["variable.other.constant", "variable.other.enummember", "keyword.operator.float.spin2"],
       "settings": {
         "foreground": "#8a358a"
       }
@@ -628,17 +628,10 @@
       }
     },
     {
-      "name": "Documentation Block",
-      "scope": ["comment.block.documentation"],
+      "name": "Documentation comment Line/Block",
+      "scope": ["comment.block.documentation", "comment.line.documentation"],
       "settings": {
-        "foreground": "#5db55d"
-      }
-    },
-    {
-      "name": "Documentation Line",
-      "scope": ["comment.line.documentation"],
-      "settings": {
-        "foreground": "#5db55d"
+        "foreground": "#329432" // doc comments 5db55d
       }
     },
     {
@@ -698,7 +691,7 @@
       "name": "Control",
       "scope": ["keyword.control"],
       "settings": {
-        "foreground": "#b57bb0" // c586c0, cccc44
+        "foreground": "#996895" // b57bb0, c586c0, cccc44
       }
     },
     {
@@ -803,7 +796,7 @@
       "name": "spin methods",
       "scope": ["support.function"],
       "settings": {
-        "foreground": "#c1c07d" // 6d8ad3, 5D83AC
+        "foreground": "#a3a24e" // spin methodss c1c07d, 6d8ad3, 5D83AC
       }
     },
     {
@@ -844,26 +837,26 @@
     "label.declaration.static": "#99605C", // pasm local labels
     "label.static.illegalUse": "#ff0000", // pasm local labels
     "label.declaration.static.illegalUse": "#ff0000", // pasm local labels
-    "variable": "#8bc4e3", // class global variable
-    "variable.modification": "#8bc4e3", // class global variable
-    "variable.instance": "#64bfb9", // instance global varable
-    "variable.modification.instance": "#64bfb9", // instance global varable
-    "variable.declaration.instance": "#64bfb9", // instance global varable
+    "variable": "#4483a6", // class global variable 8bc4e3
+    "variable.modification": "#4483a6", // class global variable 8bc4e3
+    "variable.instance": "#57a6a1", // INSTANCE global variable 64bfb9
+    "variable.modification.instance": "#57a6a1", // INSTANCE global variable 64bfb9
+    "variable.declaration.instance": "#57a6a1", // INSTANCE global variable 64bfb9
     "enumMember": "#a051a0", // constants
     "enumMember.declaration": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
-    "variable.local": "#7dad8f", // constants 82c0af a0c1b8
-    "variable.modification.local": "#7dad8f", // constants 82c0af a0c1b8
-    "variable.declaration.local": "#7dad8f", // constants 82c0af a0c1b8
+    "variable.local": "#628c72", // constants 82c0af a0c1b8
+    "variable.modification.local": "#628c72", // constants 82c0af a0c1b8
+    "variable.declaration.local": "#628c72", // constants 82c0af a0c1b8
     "returnValue.local": "#508b93", // constants
     "returnValue.declaration.local": "#438e98", // constants
     "method": "#7b9be4", // constants
     "method.declaration": "#7b9be4", // constants
     "method.static": "#9178da", // private methods
     "method.declaration.static": "#9178da", // private method declarations
-    "parameter.readonly": "#b68ce3", // constants
-    "parameter.declaration.readonly": "#b68ce3", // constants
+    "parameter.readonly": "#8f6eb3", // spin parameters b68ce3
+    "parameter.declaration.readonly": "#8f6eb3", // spin parameters b68ce3
     "namespace": "#6a66b3", // objects (old: 7A81FF) (new:5d60a0)
     "namespace.declaration": "#6a66b3", // objects
     "colorName": "#8a5ea3", // debug() display userName
@@ -877,7 +870,7 @@
     "meta.type.annotation.ts": "#3b7585", // TypeScript: data types
     // things from python
     "string.quoted.single.python": "#ba4343", // Python: quoted strings
-    "support.function.builtin.python": "#c1c07d", // Python: built-in methods
+    "support.function.builtin.python": "#a3a24e", // Python: built-in methods
     // style overrides
     "*.static": { "fontStyle": "italic" }, // all static names are italic
     "*.declaration": { "fontStyle": "bold" }, // all declarations are bold

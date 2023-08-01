@@ -53,7 +53,6 @@ PRI showbmp1(parameter) : returnValue | localVar
     showbmp3()
     showbmp2()
 
-
 PRI showbmp2(parameter) : returnValue | localVar
 ' non-doc comment
 '' doc comment too
@@ -61,12 +60,9 @@ PRI showbmp2(parameter) : returnValue | localVar
     pageNbr := 5
     localVar := 10
     returnValue := 5
+    noVar := 10
     showbmp3()
     showbmp2()
-
-PRI
-
-
 
 PUB showbmp3(parameter) : returnValue | localVar
 ' non-doc comment
@@ -75,6 +71,7 @@ PUB showbmp3(parameter) : returnValue | localVar
     pageNbr := 5
     localVar := 10
     returnValue := 5
+    noVar := 10
     showbmp3()
     showbmp2()
 
@@ -85,10 +82,11 @@ PUB showbmp4(parameter) : returnValue | localVar
     pageNbr := 5
     localVar := 10
     returnValue := 5
+    noVar := 10
     showbmp3()
     showbmp2()
 
-PUB
+PUB ----
 
 
 
@@ -102,7 +100,7 @@ DAT
 ' non-doc comment
 '' doc comment too
 
-pageCount       LONG  0
+pageCount2       LONG  0
 
 DAT
 

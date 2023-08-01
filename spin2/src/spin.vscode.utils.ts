@@ -12,13 +12,27 @@ export function activeFilespec(activeEditor?: vscode.TextEditor) {
   return desiredFilespec;
 }
 
+export function activeSpinEditors(): vscode.TextEditor[] {
+  let desiredEditors: vscode.TextEditor[] = [];
+  const editors = vscode.window.visibleTextEditors!;
+  if (editors.length > 0) {
+    for (let index = 0; index < editors.length; index++) {
+      const currEditor = editors[index];
+      if (currEditor.document && isSpinOrPasmDocument(currEditor.document)) {
+        desiredEditors.push(currEditor);
+      }
+    }
+  }
+  return desiredEditors;
+}
+
 export function editorForFilespec(filespec: string): vscode.TextEditor {
   let editorForFile: vscode.TextEditor = vscode.window.activeTextEditor!;
   if (editorForFile.document.fileName != filespec) {
     const editors = vscode.window.visibleTextEditors!;
     for (let index = 0; index < editors.length; index++) {
       const currEditor = editors[index];
-      if (currEditor.document.fileName == filespec) {
+      if (currEditor.document && currEditor.document.fileName == filespec) {
         editorForFile = currEditor;
         break;
       }
@@ -29,23 +43,35 @@ export function editorForFilespec(filespec: string): vscode.TextEditor {
 
 export function isCurrentDocumentSpin1(): boolean {
   const editor = vscode?.window.activeTextEditor!;
-  const document = editor.document!;
-  const spin1DocStatus: boolean = isSpin1File(document.fileName);
+  const document = editor ? editor.document : undefined;
+  let spin1DocStatus: boolean = false;
+  if (document) {
+    spin1DocStatus = isSpin1File(document.fileName);
+  }
   return spin1DocStatus;
 }
 
 export function isSpinDocument(document: vscode.TextDocument): boolean {
-  let spinDocumentStatus: boolean = isSpinFile(document.fileName);
+  let spinDocumentStatus: boolean = false;
+  if (document) {
+    spinDocumentStatus = isSpinFile(document.fileName);
+  }
   return spinDocumentStatus;
 }
 
 export function isSpinOrPasmDocument(document: vscode.TextDocument): boolean {
-  let spinDocumentStatus: boolean = isSpinOrPasmFile(document.fileName);
+  let spinDocumentStatus: boolean = false;
+  if (document) {
+    spinDocumentStatus = isSpinOrPasmFile(document.fileName);
+  }
   return spinDocumentStatus;
 }
 
 export function isSpin1Document(document: vscode.TextDocument): boolean {
-  let spinDocumentStatus: boolean = isSpin1File(document.fileName);
+  let spinDocumentStatus: boolean = false;
+  if (document) {
+    spinDocumentStatus = isSpin1File(document.fileName);
+  }
   return spinDocumentStatus;
 }
 
