@@ -66,6 +66,7 @@ There are additional companion documents in this Repository:
 1. [Configuring User Tasks - Windows](TASKS-User-win.md) which advises on how to automate your P2 Development when using VScode on **Windows**
 2. [Configuring User Tasks - MacOS](TASKS-User-macOS.md) which advises on how to automate your P2 Development when using VScode on **macOS**
 3. [Configuring User Tasks - Windows|MacOS|RPI](TASKS-User.md) which advises on how to automate your P2 Development when using VScode on **any of the supported platforms**
+4. [Configure VSCode for background coloring by Spin Block](PT-Color-setup.md) how to set up coloring and some additional notes
 4. [VSCode Extensions](EXTENSIONS.md) we find useful in our own P2 development
 5. [Visual Examples - Tabbing](TAB-VisualEx.md) a visual explaination of how our Tabbing feature works (*For those of us, like me, who understand more easily when we see pictures.*)
 6. [Engineering Notes - Tabbing](TAB-SPECs.md) more detailed description of how our Tabbing feature works
