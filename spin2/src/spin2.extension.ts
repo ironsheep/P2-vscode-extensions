@@ -49,7 +49,7 @@ const codeBlockColorizer: RegionColorizer = new RegionColorizer();
 const spin1SemanticTokensProvider = new Spin1DocumentSemanticTokensProvider(docGenerator, codeBlockColorizer);
 const spin2SemanticTokensProvider = new Spin2DocumentSemanticTokensProvider(docGenerator, codeBlockColorizer);
 
-const extensionDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+const extensionDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
 var extensionOutputChannel: vscode.OutputChannel | undefined = undefined;
 
 const logExtensionMessage = (message: string): void => {

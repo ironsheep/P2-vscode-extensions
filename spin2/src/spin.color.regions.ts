@@ -23,7 +23,7 @@ interface DecoratorInstanceMap {
 }
 
 export class RegionColorizer {
-  private coloringDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private coloringDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private coloringOutputChannel: vscode.OutputChannel | undefined = undefined;
 
   private namedColors: { [Identifier: string]: string } = {
