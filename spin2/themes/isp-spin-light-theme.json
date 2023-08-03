@@ -41,6 +41,7 @@
     "list.activeSelectionIconForeground": "#FFF",
     "list.focusAndSelectionOutline": "#90C2F9",
     "terminal.inactiveSelectionBackground": "#E5EBF1",
+    "terminal.foreground": "#cccccc",
     "widget.border": "#d4d4d4"
   },
   "tokenColors": [
@@ -384,7 +385,7 @@
     },
     {
       "name": "Constant",
-      "scope": ["constant.language"],
+      "scope": ["constant.language", "keyword.operator.float.spin2", "keyword.operator.unary.spin2", "keyword.operator.binary.spin2", "keyword.operator.field.spin2"],
       "settings": {
         "foreground": "#8a358a"
       }
@@ -505,7 +506,7 @@
     },
     {
       "name": "String",
-      "scope": ["string.quoted.double", "string.quoted.single.python"],
+      "scope": ["string.quoted.double"],
       "settings": {
         "foreground": "#ba4343"
       }
@@ -578,9 +579,9 @@
     "label.declaration.static.illegalUse": "#ff0000", // pasm local labels
     "variable": "#8bc4e3", // class global variable
     "variable.modification": "#8bc4e3", // class global variable
-    "variable.instance": "#64bfb9", // instance global varable
-    "variable.modification.instance": "#64bfb9", // instance global varable
-    "variable.declaration.instance": "#64bfb9", // instance global varable
+    "variable.instance": "#64bfb9", // instance global variable
+    "variable.modification.instance": "#64bfb9", // instance global variable
+    "variable.declaration.instance": "#64bfb9", // instance global variable
     "enumMember": "#a051a0", // constants
     "enumMember.declaration": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
@@ -590,10 +591,10 @@
     "variable.declaration.local": "#82c0af", // constants a0c1b8
     "returnValue.local": "#508b93", // constants
     "returnValue.declaration.local": "#438e98", // constants
-    "method": "#7b9be4", // constants
-    "method.declaration": "#7b9be4", // constants
-    "method.static": "#9178da", // private methods
-    "method.declaration.static": "#9178da", // private method declarations
+    "method": "#7b9be4", // PUB method name (use)
+    "method.declaration": "#7b9be4", // PUB method name (declaration)
+    "method.static": "#9178da", // PRI method name (use)
+    "method.declaration.static": "#9178da", // PRI method name (declaration)
     "parameter.readonly": "#b68ce3", // constants
     "parameter.declaration.readonly": "#b68ce3", // constants
     "namespace": "#6a66b3", // objects (old: 7A81FF) (new:5d60a0)
@@ -608,7 +609,7 @@
     "parameter.declaration": "#b68ce3", // TypeScript: passed parameters .ts
     "meta.type.annotation.ts": "#3b7585", // TypeScript: data types
     // things from python
-    "string.quoted.single.python": "#ba4343", // Python: quoted strings
+    "string.quoted.single.python": "#a83d3d", // Python: quoted strings
     "support.function.builtin.python": "#c1c07d", // Python: built-in methods
     // style overrides
     "*.static": { "fontStyle": "italic" }, // all static names are italic

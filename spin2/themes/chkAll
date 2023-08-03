@@ -1,0 +1,157 @@
+#!/bin/bash
+SCRIPT=${0##*/}
+SCRIPT_VERSION="1.0"
+
+echo ""
+
+#  change seperator from whitespace to not
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
+
+# =============================================================================
+# Usage info
+#
+show_help() {
+	# takes $1 as as desired exit code
+ERROR_LEVEL=$1
+cat  >&2 << EOF
+
+Usage: ${SCRIPT} [-dhv]
+
+ $SCRIPT v${SCRIPT_VERSION} Check our theme files for duplicate keys/colors
+
+where:
+    -c          (C)heck theme for duplicate keys/colors
+    -d          Enable script-(d)ebug output
+    -h          Display this (h)elp and exit
+    -v          Enable (v)erbose mode. Can be used multiple times for increased
+                 verbosity.
+
+Typical Use Cases:
+
+    ${SCRIPT}           		# check all of our theme files
+
+EOF
+	exit ${ERROR_LEVEL}
+}
+
+# =============================================================================
+#  Simple message printing functions
+#
+warningMessage () {
+# takes $1 as message text
+	MESSAGE=$1
+	echo "${SCRIPT}:WARNING- ${MESSAGE}" >&2
+}
+
+errorMessage () {
+# takes $1 as message text
+	MESSAGE=$1
+	echo "${SCRIPT}:ERROR- ${MESSAGE}" >&2
+}
+
+fatalMessage () {
+# takes $1 as message text and $2 as exit code
+	MESSAGE=$1
+	ERROR_LEVEL=$2
+	errorMessage "${MESSAGE}"
+	exit ${ERROR_LEVEL}
+}
+
+debugMessage () {
+# takes $1 as message text and (optional) $2 as gating debug level
+#  ONLY displays message if DEBUG is enabled
+## TODO add gating level logic
+	MESSAGE=$1
+	GATING_LEVEL=$2
+	if [ -n "${DEBUG}" ]; then
+		echo "${SCRIPT}(DBG): ${MESSAGE}" >&2
+	fi
+}
+
+progressMessage () {
+# takes $1 as message text
+	MESSAGE=$1
+	echo "${SCRIPT}: ${MESSAGE}"
+}
+
+verboseMessage () {
+# takes $1 as message text and $2 as gating verbose level
+#   if gating <= current then display message
+## TODO add gating level logic
+	MESSAGE=$1
+	GATING_LEVEL=$2
+	#echo "${SCRIPT}:Verbose(${GATING_LEVEL})- ${MESSAGE}" >&2
+
+	if [ ${VERBOSE_LEVEL} -gt 0 ]; then
+		echo "${SCRIPT}:Verbose- ${MESSAGE}" >&2
+	fi
+}
+
+# =============================================================================
+# =============================================================================
+# Initialize our variables
+#
+export DEBUG=""
+export DEBUG_LEVEL=0
+export VERBOSE_LEVEL=0
+
+export SHOW_WITHOUT_DOING=""
+export SEARCH_KEY=""
+
+export SHOW_CONTENTS_ONLY=""
+
+export DISPLAY_ONLY=0
+
+export LIST_ONLY="yes"
+
+# =============================================================================
+#  Process the command line arguments
+#
+OPTIND=1 # Reset is necessary if getopts was used previously in the script.  It is a good idea to make this local in a function.
+while getopts "dhns:tv" opt; do
+    case "$opt" in
+        h)
+            show_help 0
+            ;;
+        d)
+        	  export DEBUG_LEVEL=$((DEBUG_LEVEL+1))
+        	  export DEBUG=yes
+        	  if [ ${DEBUG_LEVEL} -eq 1 ]; then
+        	  	# when first setting debug set this too
+        	  	export VERBOSE_LEVEL=$((VERBOSE_LEVEL+1))
+        	  fi
+            ;;
+        v)
+        	  export VERBOSE_LEVEL=$((VERBOSE_LEVEL+1))
+        	  debugMessage "verbose set to ${VERBOSE_LEVEL}!"
+            ;;
+        '?')
+        	  echo "$SCRIPT: Question Mark!" >&2
+            show_help 0
+            ;;
+    esac
+done
+
+shift "$((OPTIND-1))" # Shift off the options and optional --.
+
+# =============================================================================
+
+
+THEMES_LIST=`cat << EOF
+isp-spin-dark-bg-theme.json
+isp-spin-dark-theme.json
+isp-spin-light-bg-theme.json
+isp-spin-light-theme.json
+isp-spin-syntax-theme.json
+EOF
+`
+
+UTIL_THEME_CHECK="./thmChk.py"
+
+for THEME in ${THEMES_LIST}; do
+    verboseMessage "* checking: ${THEME}"
+    THEME_BASENAME=${THEME%.json}
+    (set -x; ${UTIL_THEME_CHECK} -s -t ${THEME} 2>&1 >${THEME_BASENAME}.scope)
+done

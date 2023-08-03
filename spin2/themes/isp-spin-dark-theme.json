@@ -652,7 +652,7 @@
     },
     {
       "name": "Constant",
-      "scope": ["constant.language"],
+      "scope": ["constant.language", "keyword.operator.float.spin2", "keyword.operator.unary.spin2", "keyword.operator.binary.spin2", "keyword.operator.field.spin2"],
       "settings": {
         "foreground": "#8a358a"
       }
@@ -773,7 +773,7 @@
     },
     {
       "name": "String",
-      "scope": ["string.quoted.double", "string.quoted.single.python"],
+      "scope": ["string.quoted.double"],
       "settings": {
         "foreground": "#ba4343"
       }
@@ -839,18 +839,15 @@
     "string": "#ba4343", // debug() strings
     "comment": "#538054", // single line non-doc comments
     "label": "#9C775D", // pasm labels
-    "label.declaration": "#9C775D", // pasm labels
     "label.static": "#99605C", // pasm local labels
-    "label.declaration.static": "#99605C", // pasm local labels
     "label.static.illegalUse": "#ff0000", // pasm local labels
     "label.declaration.static.illegalUse": "#ff0000", // pasm local labels
     "variable": "#8bc4e3", // class global variable
     "variable.modification": "#8bc4e3", // class global variable
-    "variable.instance": "#64bfb9", // instance global varable
-    "variable.modification.instance": "#64bfb9", // instance global varable
-    "variable.declaration.instance": "#64bfb9", // instance global varable
+    "variable.instance": "#64bfb9", // instance global variable
+    "variable.modification.instance": "#64bfb9", // instance global variable
+    "variable.declaration.instance": "#64bfb9", // instance global variable
     "enumMember": "#a051a0", // constants
-    "enumMember.declaration": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
     "variable.local": "#a0c1b8", // constants
@@ -858,25 +855,21 @@
     "variable.declaration.local": "#a0c1b8", // constants
     "returnValue.local": "#508b93", // constants
     "returnValue.declaration.local": "#438e98", // constants
-    "method": "#7b9be4", // constants
-    "method.declaration": "#7b9be4", // constants
-    "method.static": "#9178da", // private methods
-    "method.declaration.static": "#9178da", // private method declarations
+    "method": "#7b9be4", // PUB method name (use)
+    "method.static": "#9178da", // PRI method name (use)
     "parameter.readonly": "#b68ce3", // constants
     "parameter.declaration.readonly": "#b68ce3", // constants
     "namespace": "#6a66b3", // objects (old: 7A81FF) (new:5d60a0)
-    "namespace.declaration": "#6a66b3", // objects
     "colorName": "#8a5ea3", // debug() display userName
     "displayType": "#b37746", // debug() display type
     "displayName": "#5d59a0", // debug() display userName
-    "displayName.declaration": "#5d59a0", // debug() display userName
     "setupParameter": "#aaac61", // debug() setup parameter name
     "feedParameter": "#b4a666", // debug() display type
     // things from typescript
     "parameter.declaration": "#b68ce3", // TypeScript: passed parameters .ts
     "meta.type.annotation.ts": "#3b7585", // TypeScript: data types
     // things from python
-    "string.quoted.single.python": "#ba4343", // Python: quoted strings
+    "string.quoted.single.python": "#a83d3d", // Python: quoted strings
     "support.function.builtin.python": "#c1c07d", // Python: built-in methods
     // style overrides
     "*.static": { "fontStyle": "italic" }, // all static names are italic

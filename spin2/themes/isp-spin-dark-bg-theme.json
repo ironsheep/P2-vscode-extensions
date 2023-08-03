@@ -245,7 +245,7 @@
     },
     {
       "name": "Constants and enums",
-      "scope": ["variable.other.constant", "variable.other.enummember", "keyword.operator.float.spin2"],
+      "scope": ["variable.other.constant", "variable.other.enummember"],
       "settings": {
         "foreground": "#8a358a"
       }
@@ -657,6 +657,13 @@
       }
     },
     {
+      "name": "Constant Property TS",
+      "scope": ["variable.other.constant.property.ts"],
+      "settings": {
+        "foreground": "#4fc1ff"
+      }
+    },
+    {
       "name": "Numeric",
       "scope": ["constant.numeric"],
       "settings": {
@@ -788,7 +795,7 @@
       "name": "spin methods",
       "scope": ["support.function"],
       "settings": {
-        "foreground": "#828128" // spin methodss c1c07d, 6d8ad3, 5D83AC
+        "foreground": "#828128" // spin methods c1c07d, 6d8ad3, 5D83AC
       }
     },
     {
@@ -838,13 +845,13 @@
     "enumMember.declaration": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
-    "variable.local": "#467275", // local vaariables 82c0af a0c1b8
-    "variable.modification.local": "#467275", // local vaariables 82c0af a0c1b8
-    "variable.declaration.local": "#467275", // local vaariables 82c0af a0c1b8
+    "variable.local": "#467275", // local variables 82c0af a0c1b8
+    "variable.modification.local": "#467275", // local variables 82c0af a0c1b8
+    "variable.declaration.local": "#467275", // local variables 82c0af a0c1b8
     "returnValue.local": "#317b85", // Return Value
     "returnValue.declaration.local": "#317b85", // Return Value (Declaration)
-    "method": "#3e709c", // PUB method name
-    "method.declaration": "#3e709c", // PUB method name
+    "method": "#3e709c", // PUB method name (use)
+    "method.declaration": "#3e709c", // PUB method name (Declaration)
     "method.static": "#6955a3", // PRI method name (use)
     "method.declaration.static": "#6955a3", // PRI method name (Declaration)
     "parameter.readonly": "#8459b3", // spin parameters b68ce3

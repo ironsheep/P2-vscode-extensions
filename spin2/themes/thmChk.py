@@ -32,6 +32,7 @@ if False:
 opt_debug = False
 opt_verbose = False
 opt_logging = False
+opt_ansii = False
 
 def print_line(
     text,
@@ -42,6 +43,7 @@ def print_line(
     progress=False,
     debug=False,
     console=True,
+    report=False,
     log=False,
 ):
     timestamp = "[{}] ".format(strftime("%Y-%m-%d %H:%M:%S", localtime()))
@@ -111,6 +113,8 @@ def print_line(
                 + "{}".format(text)
                 + Style.RESET_ALL
             )
+        elif report:
+            print("{}".format(text))
         else:
             print(
                 Fore.MAGENTA
@@ -122,15 +126,63 @@ def print_line(
                 + Style.RESET_ALL
             )
         # log messages can be debug too!
-        if log and opt_logging:
-            if debug:
-                message = "{}".format(timestamp) + "- (DBG): " + "{}".format(text)
-            else:
-                message = "{}".format(timestamp) + "- " + "{}".format(text)
-            if log_fp is not None:
-                # print("Log [{}]".format(message))
-                log_fp.write(message + "\n")
-                log_fp.flush()
+    else:
+        if error:
+            print(
+                timestamp
+                + "- (Error): "
+                + "{}".format(text),
+                file=sys.stderr,
+            )
+        elif warning:
+            print(
+                timestamp
+                + "- (Warning): "
+                + "{}".format(text),
+                file=sys.stderr,
+            )
+        elif info or verbose:
+            if verbose and opt_verbose:
+                print(
+                    timestamp
+                    + "- (Verbose): "
+                    + "{}".format(text),
+                )
+            elif info:
+                print(
+                    timestamp
+                    + "- (Info): "
+                    + "{}".format(text),
+                )
+        elif debug:
+            if opt_debug:
+                print(
+                    timestamp
+                    + "- (DBG): "
+                    + "{}".format(text),
+                )
+        elif progress:
+            print(
+                timestamp
+                + "- "
+                + "{}".format(text),
+            )
+        elif report:
+            print("{}".format(text))
+        else:
+            print(
+                timestamp
+                + "{}".format(text),
+            )
+    if log and opt_logging:
+        if debug:
+            message = "{}".format(timestamp) + "- (DBG): " + "{}".format(text)
+        else:
+            message = "{}".format(timestamp) + "- " + "{}".format(text)
+        if log_fp is not None:
+            # print("Log [{}]".format(message))
+            log_fp.write(message + "\n")
+            log_fp.flush()
 
 
 # -----------------------------------------------------------------------------
@@ -143,7 +195,11 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "-v", "--verbose", help="increase output (v)erbosity", action="store_true"
 )
+parser.add_argument("-a", "--ansii", help="omit (a)nsii output coloring", action="store_true")
+parser.add_argument("-e", "--emit", help="(e)mit key, color list for sorting", action="store_true")
+parser.add_argument("-s", "--scopes", help="list (s)copes in theme", action="store_true")
 parser.add_argument("-d", "--debug", help="show (d)ebug output", action="store_true")
+parser.add_argument("-r", "--rewrite", help="(r)ewrite theme file", action="store_true")
 parser.add_argument(
     "-l",
     "--log_filename",
@@ -160,7 +216,11 @@ parse_args = parser.parse_args()
 
 log_filename = parse_args.log_filename
 theme_filename = parse_args.theme_filename
+opt_ansii = parse_args.ansii
+opt_emit = parse_args.emit
+opt_scopes = parse_args.scopes
 opt_debug = parse_args.debug
+opt_rewrite = parse_args.rewrite
 opt_verbose = parse_args.verbose
 opt_logging = len(log_filename) > 0
 opt_read_theme = len(theme_filename) > 0
@@ -171,6 +231,10 @@ if opt_verbose:
     print_line("Verbose enabled", info=True)
 if opt_debug:
     print_line("Debug enabled", debug=True)
+if opt_emit:
+    print_line("Emit enabled", debug=True)
+if opt_scopes:
+    print_line("List Scopes enabled", debug=True)
 if opt_logging:
     logFspec = "./logs/" + log_filename
     # print("Log  Logging to [{}]".format(logFspec))
@@ -192,47 +256,6 @@ else:
 
 # returns JSON object as
 # a dictionary
-dummy = 0
-scopesDict = {}  # scopeName:valueDict
-tmpValuesDict = {}  # colorName:entryType
-
-def registerColorForScopeXXX(entryType, scopeName, colorName):
-    # older version
-    global scopesDict
-    global tmpValuesDict
-    if not scopeName in scopesDict.keys():
-        tmpValuesDict.clear()
-        tmpValuesDict[colorName] = entryType
-        scopesDict[scopeName] = tmpValuesDict
-    else:
-        tmpValuesDict = scopesDict[scopeName]
-        if not colorName in tmpValuesDict.keys():
-            tmpValuesDict[colorName] = entryType
-            scopesDict[scopeName] = tmpValuesDict
-
-def displayColorForScopeInfoXXX():
-    global scopesDict
-    print_line("- Checking all scopes:", info=True)
-    sortedScopesKeys = list(scopesDict.keys())
-    sortedScopesKeys.sort()
-    warningCount = 0
-    for scopeName in sortedScopesKeys:
-        colorValuesDict = scopesDict[scopeName]
-        #if len(colorValuesDict) > 1:
-        sortedColorKeys = list(colorValuesDict.keys())
-        sortedColorKeys.sort()
-        if len(sortedColorKeys) > 1:
-            warningCount += 1
-            for colorValue in sortedColorKeys:
-                entryType = colorValuesDict[colorValue]
-                print_line("  -- scope: {} [{}] {}".format(scopeName, colorValue, entryType), warning=True)
-
-        for colorValue in sortedColorKeys:
-            entryType = colorValuesDict[colorValue]
-            print_line("  -- scope: {} [{}] {}".format(scopeName, colorValue, entryType), verbose=True)
-    if warningCount == 0:
-        print_line("  -- No scope warnings found: no duplicate color values", info=True)
-
 
 masterColorDict = {}  # colorName:entryDict
 #entryDict = {}  # entryName:scopesList
@@ -257,6 +280,87 @@ def registerColorForScope(entryType, scopeName, colorName):
             # add scope name to existing list for entry
             scopesList = entryDict[entryType]
             scopesList.append(scopeName)
+
+def getScopeNameDict():
+    # get a list of entryTypes from the masterColorDict
+    global masterColorDict
+    masterScopeNamesDict = {}  # key:occurranceCount
+    colorKeys = list(masterColorDict.keys())
+    for colorName in colorKeys:
+        # get current dictionary for color
+        entryDict = masterColorDict[colorName]
+        entryTypes = list(entryDict.keys())
+        for entryType in entryTypes:
+            scopesList = entryDict[entryType]
+            for scopeName in scopesList:
+                if not scopeName in masterScopeNamesDict.keys():
+                    # count our first one
+                    masterScopeNamesDict[scopeName] = 1
+                else:
+                    # count our next one
+                    count = masterScopeNamesDict[scopeName]
+                    count += 1
+                    masterScopeNamesDict[scopeName] = count
+
+    return masterScopeNamesDict
+
+def displayScopesFound():
+    masterScopeNamesDict = getScopeNameDict() # scopeName:occurranceCount
+    secondListDict = {} # scopeName:occurranceCount
+    scopeNames = list(masterScopeNamesDict.keys())
+    if len(scopeNames) > 1:
+        scopeNames.sort()
+    for scopeName in scopeNames:
+        count = masterScopeNamesDict[scopeName]
+        if count > 1:
+            secondListDict[scopeName] = count
+        else:
+            print_line("- {}".format(scopeName), report=True, console=False)
+    print_line("* Found {} scope names in [{}]".format(len(scopeNames), theme_filename), report=True, console=False)
+
+    print_line("", report=True, console=False)
+    scopeNames = list(secondListDict.keys())
+    for scopeName in scopeNames:
+        count = secondListDict[scopeName]
+        print_line("- {}x  {}".format(count, scopeName), report=True, console=False)
+
+def getEntryTypes():
+    # get a list of entryTypes from the masterColorDict
+    global masterColorDict
+    masterEntryList = []
+    colorKeys = list(masterColorDict.keys())
+    for colorName in colorKeys:
+        # get current dictionary for color
+        entryDict = masterColorDict[colorName]
+        entryTypes = list(entryDict.keys())
+        for entryType in entryTypes:
+            if not entryType in masterEntryList:
+                masterEntryList.append(entryType)
+
+    if len(masterEntryList) > 1:
+        masterEntryList.sort()
+    return masterEntryList
+
+def displayKeyColorSortList():
+    global masterColorDict
+    sortedColorKeys = list(masterColorDict.keys())
+    sortedColorKeys.sort()
+    mastermEntryListOrder = getEntryTypes()
+    for masterEntryType in mastermEntryListOrder:
+        print_line("", info=True)    # blank line
+        for colorName in sortedColorKeys:
+            # get current dictionary for color
+            entryDict = masterColorDict[colorName]
+            sortedEntryKeys = list(entryDict.keys())
+            if len(sortedEntryKeys) > 1:
+                sortedEntryKeys.sort()
+            for entryType in sortedEntryKeys:
+                if entryType == masterEntryType:
+                    scopesList = entryDict[entryType]
+                    if len(scopesList) > 1:
+                        scopesList.sort()
+                    for scopeName in scopesList:
+                        print_line("  -- {} {} [{}]".format(entryType, scopeName, colorName), report=True, console=False)
 
 def displayColorForScopeInfo():
     global masterColorDict
@@ -306,6 +410,7 @@ def displayColorForScopeInfo():
                 print_line("  -- color: {}".format(colorName), info=True)
     if(foundError == False):
         print_line("* NO DUPE color entries", info=True)
+
 
 if theme_fp is not None:
     themeData = jstyleson.load(theme_fp)
@@ -378,3 +483,9 @@ if theme_fp is not None:
                     registerColorForScope(keyName, scopeName, colorValue)
     # done, finish up
     displayColorForScopeInfo()
+
+    if opt_emit:
+        displayKeyColorSortList()
+
+    if opt_scopes:
+        displayScopesFound()

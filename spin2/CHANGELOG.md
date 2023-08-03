@@ -22,6 +22,14 @@ Possible next additions:
 
 ## [1.9.12] 2023-08-01
 
+Theme and Semantic Highlight Updates (P1 and P2)
+
+- Cleaned up both Light and Dark non-colored-background-use color themes
+- BUGFIX: Semantic fix incorrect flagging of pasm instructions as missing labels
+- BUGFIX: Semantic correctly highlight variable and label declarations in DAT block
+
+## [1.9.12] 2023-08-01
+
 Feature Updates (P1 and P2)
 
 - P1 & P2: Adds editor background coloring per section à la **Parallax Propeller Tool** (disabled by default, enable in settings, requires the use of the new background color-supporting themes)

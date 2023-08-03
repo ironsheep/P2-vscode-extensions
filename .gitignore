@@ -21,6 +21,7 @@ out/
 *.vsix
 *.zip
 *.lst
+*.scope
 
 
 *-REF*

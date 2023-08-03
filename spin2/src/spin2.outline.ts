@@ -149,31 +149,31 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
         } else {
           let global_label: string | undefined = undefined;
           if (trimmedNonCommentLine.length > 0) {
-            //this._logMessage("  * [" + currState + "] ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+            //this._logMessage("  * [" + currState + "] Ln#" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
             // NOT a section start
-            if (currState == eParseState.inPasmInline) {
+            if (currState == eParseState.inPAsmInline) {
               // process pasm (assembly) lines
               if (trimmedLine.length > 0) {
-                this._logMessage("    scan inPasmInline ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+                this._logMessage("    scan inPAsmInline Ln#" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
                 const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
                 if (lineParts.length > 0 && lineParts[0].toUpperCase() == "END") {
                   currState = prePasmState;
-                  this._logMessage("    scan END-InLine ln:" + (i + 1) + " POP currState=[" + currState + "]");
+                  this._logMessage("    scan END-InLine Ln#" + (i + 1) + " POP currState=[" + currState + "]");
                   // and ignore rest of this line
                   continue;
                 }
                 // didn't leave this state check for new global label
                 global_label = this._getOlnSPIN_PasmDeclaration(0, line.text);
               }
-            } else if (currState == eParseState.inDatPasm) {
+            } else if (currState == eParseState.inDatPAsm) {
               // process pasm (assembly) lines
               if (trimmedLine.length > 0) {
-                this._logMessage("    scan inDatPasm ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+                this._logMessage("    scan inDatPAsm Ln#" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
                 const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
                 if (lineParts.length > 0 && lineParts[0].toUpperCase() == "FIT") {
                   this._logMessage("  - (" + (i + 1) + "): pre-scan DAT PASM line trimmedLine=[" + trimmedLine + "]");
                   currState = prePasmState;
-                  this._logMessage("    scan END DATPasm ln:" + (i + 1) + " POP currState=[" + currState + "]");
+                  this._logMessage("    scan END DATPasm Ln#" + (i + 1) + " POP currState=[" + currState + "]");
                   // and ignore rest of this line
                   continue;
                 }
@@ -181,15 +181,15 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
                 global_label = this._getOlnDAT_PasmDeclaration(0, line.text); // let's get possible label on this ORG statement
               }
             } else if (currState == eParseState.inDat) {
-              this._logMessage("    scan inDat ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+              this._logMessage("    scan inDat Ln#" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
               if (trimmedNonCommentLine.length > 6 && trimmedNonCommentLine.toUpperCase().includes("ORG")) {
                 // ORG, ORGF, ORGH
                 const nonStringLine: string = this.parseUtils.removeDoubleQuotedStrings(trimmedNonCommentLine);
                 if (nonStringLine.toUpperCase().includes("ORG")) {
                   this._logMessage("  - pre-scan DAT line trimmedLine=[" + trimmedLine + "] now Dat PASM");
                   prePasmState = currState;
-                  currState = eParseState.inDatPasm;
-                  this._logMessage("    scan START DATPasm ln:" + (i + 1) + " PUSH currState=[" + prePasmState + "]");
+                  currState = eParseState.inDatPAsm;
+                  this._logMessage("    scan START DATPasm Ln#" + (i + 1) + " PUSH currState=[" + prePasmState + "]");
                   // and ignore rest of this line
                   global_label = this._getOlnDAT_PasmDeclaration(0, line.text); // let's get possible label on this ORG statement
                 }
@@ -200,14 +200,14 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
               // Detect start of INLINE PASM - org detect
               // NOTE: The directives ORGH, ALIGNW, ALIGNL, and FILE are not allowed within in-line PASM code.
               if (trimmedLine.length > 0) {
-                this._logMessage("    scan inPub/inPri ln:" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
+                this._logMessage("    scan inPub/inPri Ln#" + (i + 1) + " trimmedNonCommentLine=[" + trimmedNonCommentLine + "]");
                 const lineParts: string[] = trimmedNonCommentLine.split(/[ \t]/);
                 if (lineParts.length > 0 && (lineParts[0].toUpperCase() == "ORG" || lineParts[0].toUpperCase() == "ORGF")) {
                   // Only ORG, not ORGF or ORGH
                   this._logMessage("  - (" + (i + 1) + "): outline PUB/PRI line trimmedLine=[" + trimmedLine + "]");
                   prePasmState = currState;
-                  currState = eParseState.inPasmInline;
-                  this._logMessage("    scan START-InLine ln:" + (i + 1) + " PUSH currState=[" + prePasmState + "]");
+                  currState = eParseState.inPAsmInline;
+                  this._logMessage("    scan START-InLine Ln#" + (i + 1) + " PUSH currState=[" + prePasmState + "]");
                   // and ignore rest of this line
                   continue;
                 }
@@ -308,7 +308,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
         typeIndex = 2;
         maxParts = 3;
       }
-      let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[nameIndex]);
+      let haveLabel: boolean = this.parseUtils.isDatOrPAsmLabel(lineParts[nameIndex]);
       const isDataDeclarationLine: boolean = lineParts.length > maxParts - 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[typeIndex]) ? true : false;
       let lblFlag: string = haveLabel ? "T" : "F";
       let dataDeclFlag: string = isDataDeclarationLine ? "T" : "F";
@@ -317,14 +317,14 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
         let newName = lineParts[nameIndex];
         if (
           !newName.toLowerCase().startsWith("debug") &&
-          !this.parseUtils.isPasmReservedWord(newName) &&
+          !this.parseUtils.isP2AsmReservedWord(newName) &&
           !this.parseUtils.isSpinBuiltInVariable(newName) &&
           !this.parseUtils.isSpinReservedWord(newName) &&
           !this.parseUtils.isBuiltinReservedWord(newName) &&
           // add p1asm detect
-          !this.parseUtils.isP1asmInstruction(newName) &&
-          !this.parseUtils.isP1asmVariable(newName) &&
-          !this.parseUtils.isP1asmConditional(newName)
+          !this.parseUtils.isP1AsmInstruction(newName) &&
+          !this.parseUtils.isP1AsmVariable(newName) &&
+          !this.parseUtils.isP1AsmConditional(newName)
         ) {
           if (!isDataDeclarationLine && !newName.startsWith(".") && !newName.startsWith(":") && !newName.includes("#")) {
             newGlobalLabel = newName;
@@ -346,12 +346,12 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     const lineParts: string[] = this.parseUtils.getNonWhiteNParenLineParts(datPasmRHSStr);
     this._logMessage("- Oln GetDatPasmDecl lineParts=[" + lineParts + "](" + lineParts.length + ")");
     // handle name in 1 column
-    let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(lineParts[0]);
+    let haveLabel: boolean = this.parseUtils.isDatOrPAsmLabel(lineParts[0]);
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
     if (haveLabel && !isDataDeclarationLine && !lineParts[0].startsWith(".") && !lineParts[0].startsWith(":") && !lineParts[0].includes("#")) {
       const labelName: string = lineParts[0];
       if (
-        !this.parseUtils.isReservedPasmSymbols(labelName) &&
+        !this.parseUtils.isP2AsmReservedSymbols(labelName) &&
         !labelName.toUpperCase().startsWith("IF_") &&
         !labelName.toUpperCase().startsWith("_RET_") &&
         !labelName.toUpperCase().startsWith("DEBUG")
@@ -375,7 +375,7 @@ export class Spin2ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
     //this._logPASM('- GetInLinePasmDecl lineParts=[' + lineParts + ']');
     // handle name in 1 column
     const labelName: string = lineParts[0];
-    let haveLabel: boolean = this.parseUtils.isDatOrPasmLabel(labelName);
+    let haveLabel: boolean = this.parseUtils.isDatOrPAsmLabel(labelName);
     const isDataDeclarationLine: boolean = lineParts.length > 1 && haveLabel && this.parseUtils.isDatStorageType(lineParts[1]) ? true : false;
     if (haveLabel && !isDataDeclarationLine && !labelName.startsWith(".") && !labelName.startsWith(":") && !labelName.toLowerCase().startsWith("debug") && !labelName.includes("#")) {
       newGlobalLabel = labelName;

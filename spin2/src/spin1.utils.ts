@@ -9,7 +9,7 @@ export enum eParseState {
   inPub,
   inPri,
   inVar,
-  inDatPasm,
+  inDatPAsm,
   inMultiLineComment,
   inMultiLineDocComment,
   inNothing,
@@ -180,7 +180,7 @@ export class ParseUtils {
     return lineParts;
   }
 
-  public getNonWhitePasmLineParts(line: string): string[] {
+  public getNonWhitePAsmLineParts(line: string): string[] {
     const nonEqualsLine: string = this.removeDoubleQuotedStrings(line);
     let lineParts: string[] | null = nonEqualsLine.match(/[^ \t\,\(\)\[\]\<\>\=\?\!\^\+\*\&\|\-\\\#\@\/]+/g);
     if (lineParts === null) {
@@ -332,9 +332,9 @@ export class ParseUtils {
     } else if (nameKey in this._tableSpinCogControlMethods) {
       desiredDocText.category = "COG Control Method";
       methodDescr = this._tableSpinCogControlMethods[nameKey];
-    } else if (nameKey in this._tableSpinPasmLangParts) {
-      desiredDocText.category = "Pasm Directive";
-      protoWDescr = this._tableSpinPasmLangParts[nameKey];
+    } else if (nameKey in this._tableSpinP1AsmLangParts) {
+      desiredDocText.category = "P1Asm Directive";
+      protoWDescr = this._tableSpinP1AsmLangParts[nameKey];
     }
 
     if (methodDescr[0].length > 0) {
@@ -369,7 +369,7 @@ export class ParseUtils {
     dat: "Object Shared variable declarations and/or PASM code",
   };
 
-  private _tableSpinPasmLangParts: { [Identifier: string]: string[] } = {
+  private _tableSpinP1AsmLangParts: { [Identifier: string]: string[] } = {
     // DAT cogexec
     org: [
       "ORG <Address>",
@@ -549,7 +549,7 @@ export class ParseUtils {
       reservedStatus = nameKey in this._tableSpin1ConfigurationVariableNames;
     }
     if (reservedStatus == false) {
-      reservedStatus = nameKey in this._tableSpinPasmLangParts;
+      reservedStatus = nameKey in this._tableSpinP1AsmLangParts;
     }
     if (reservedStatus == false) {
       reservedStatus = nameKey in this._tableSpin1VariableNames;
@@ -1319,19 +1319,19 @@ export class ParseUtils {
     return reservedStatus;
   }
 
-  public isReservedPasmSymbols(name: string): boolean {
-    const reservedPasmSymbolNames: string[] = ["org", "fit"];
-    const reservedStatus: boolean = reservedPasmSymbolNames.indexOf(name.toLowerCase()) != -1;
+  public isP1AsmReservedSymbols(name: string): boolean {
+    const reservedP1AsmSymbolNames: string[] = ["org", "fit"];
+    const reservedStatus: boolean = reservedP1AsmSymbolNames.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
 
-  public isPasmReservedWord(name: string): boolean {
+  public isP1AsmReservedWord(name: string): boolean {
     const pasmReservedswordsOfNote: string[] = ["cnt", "scr", "_clkfreq", "_clkmode", "_xinfreq", "_stack", "_free", "round", "float", "trunc", "true", "false", "negx", "pi", "posx"];
     const reservedStatus: boolean = pasmReservedswordsOfNote.indexOf(name.toLowerCase()) != -1;
     return reservedStatus;
   }
 
-  public isPasmInstruction(name: string): boolean {
+  public isP1AsmInstruction(name: string): boolean {
     const pasmInstructions: string[] = [
       "abs",
       "absneg",
@@ -1417,13 +1417,13 @@ export class ParseUtils {
     return instructionStatus;
   }
 
-  public isPasmNonArgumentInstruction(name: string): boolean {
+  public isP1AsmNonArgumentInstruction(name: string): boolean {
     const pasmNonArgumentInstructions: string[] = ["nop", "ret"];
     const instructionStatus: boolean = pasmNonArgumentInstructions.indexOf(name.toLowerCase()) != -1;
     return instructionStatus;
   }
 
-  public isPasmConditional(name: string): boolean {
+  public isP1AsmConditional(name: string): boolean {
     let returnStatus: boolean = false;
     if (name.length >= 2) {
       const checkType: string = name.toUpperCase();
@@ -1434,7 +1434,7 @@ export class ParseUtils {
     return returnStatus;
   }
 
-  public isDatOrPasmLabel(name: string): boolean {
+  public isDatOrPAsmLabel(name: string): boolean {
     let haveLabelStatus: boolean = false;
     if (name.length > 0) {
       haveLabelStatus = name.substr(0, 1).match(/[a-zA-Z_\.\:]/) ? true : false;
@@ -1443,15 +1443,15 @@ export class ParseUtils {
           haveLabelStatus = false;
         } else if (name.toLowerCase() == "dat") {
           haveLabelStatus = false;
-        } else if (this.isReservedPasmSymbols(name)) {
+        } else if (this.isP1AsmReservedSymbols(name)) {
           haveLabelStatus = false;
         } else if (name.toUpperCase().startsWith("IF_")) {
           haveLabelStatus = false;
-        } else if (this.isPasmConditional(name)) {
+        } else if (this.isP1AsmConditional(name)) {
           haveLabelStatus = false;
-        } else if (this.isPasmInstruction(name)) {
+        } else if (this.isP1AsmInstruction(name)) {
           haveLabelStatus = false;
-        } else if (this.isPasmNonArgumentInstruction(name)) {
+        } else if (this.isP1AsmNonArgumentInstruction(name)) {
           haveLabelStatus = false;
         }
       }

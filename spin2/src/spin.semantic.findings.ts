@@ -652,7 +652,7 @@ export class DocumentFindings {
 
   // -------------------------------------------------------------------------
   // method-scoped name token handling...
-  public clearLocalPasmTokensForMethod(methodName: string) {
+  public clearLocalPAsmTokensForMethod(methodName: string) {
     // we're studying a new method forget everything local!
     this.localPasmTokensByMethodName.clearForMethod(methodName);
   }
@@ -667,13 +667,13 @@ export class DocumentFindings {
     return tokenExistsStatus;
   }
 
-  public hasLocalPasmTokenForMethod(methodName: string, tokenName: string): boolean {
+  public hasLocalPAsmTokenForMethod(methodName: string, tokenName: string): boolean {
     let foundStatus: boolean = this.localPasmTokensByMethodName.hasTokenForMethod(methodName, tokenName);
     return foundStatus;
   }
 
-  public setLocalPasmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
-    if (this.hasLocalPasmTokenForMethod(methodName, tokenName)) {
+  public setLocalPAsmTokenForMethod(methodName: string, tokenName: string, token: RememberedToken, declarationLineNumber: number, declarationComment: string | undefined): void {
+    if (this.hasLocalPAsmTokenForMethod(methodName, tokenName)) {
       // WARNING attempt to set again
     } else {
       // set new one!
@@ -687,7 +687,7 @@ export class DocumentFindings {
     }
   }
 
-  public getLocalPasmTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
+  public getLocalPAsmTokenForMethod(methodName: string, tokenName: string): RememberedToken | undefined {
     let desiredToken: RememberedToken | undefined = this.localPasmTokensByMethodName.getTokenForMethod(methodName, tokenName);
     if (desiredToken) {
       this._logTokenMessage("  -- FND-lpTOK method=" + methodName + ": " + this._rememberdTokenString(tokenName, desiredToken));
