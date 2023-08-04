@@ -10,21 +10,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { isSpinFile } from "./spin.vscode.utils";
-
-enum eParseState {
-  Unknown = 0,
-  inCon,
-  inDat,
-  inObj,
-  inPub,
-  inPri,
-  inVar,
-  inPAsmInline,
-  inDatPAsm,
-  inMultiLineComment,
-  inMultiLineDocComment,
-  inNothing,
-}
+import { ParseUtils, eParseState } from "./spin2.utils";
 
 export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   private rootPath: string | undefined = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
@@ -32,10 +18,11 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   private topLevelFSpec: string = "";
   private topLevelFName: string = "";
 
-  private objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private objTreeDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 
   private isDocument: boolean = false;
+  private parseUtils = new ParseUtils();
 
   // https://code.visualstudio.com/api/extension-guides/tree-view#view-container
   private _onDidChangeTreeData: vscode.EventEmitter<Dependency | undefined | null | void> = new vscode.EventEmitter<Dependency | undefined | null | void>();
@@ -278,7 +265,7 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
     let deps = [];
     for (let i = 0; i < activeEditDocument.lineCount; i++) {
       let line = activeEditDocument.lineAt(i);
-      const trimmedLine = line.text.trim();
+      const trimmedLine: string = line.text.replace(/\s+$/, "");
       if (trimmedLine.length == 0) {
         continue; // skip blank lines
       }
@@ -328,14 +315,15 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
         // process single-line non-doc comment
         continue;
       }
-      const sectionStatus = this._isSectionStartLine(line.text);
+      const nonCommentLineRemainder: string = this.parseUtils.getNonCommentLineRemainder(0, trimmedLine);
+      const sectionStatus = this._isSectionStartLine(nonCommentLineRemainder);
       if (sectionStatus.isSectionStart) {
         priorState = currState;
         currState = sectionStatus.inProgressStatus;
       }
       //this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() eval trimmedLine=[${trimmedLine}]`);
-      if (currState == eParseState.inObj && trimmedLine.includes(":")) {
-        const spinObj = this._spinDepFromObjectLine(trimmedLine);
+      if (currState == eParseState.inObj && nonCommentLineRemainder.includes(":")) {
+        const spinObj = this._spinDepFromObjectLine(nonCommentLineRemainder);
         if (spinObj) {
           this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() basename=[${spinObj.baseName}] known as (${spinObj.knownAs})`);
           deps.push(spinObj);
@@ -373,7 +361,7 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
       let priorState: eParseState = currState;
       for (let i = 0; i < lines.length; i++) {
         let text = lines[i];
-        const trimmedLine = text.trim();
+        const trimmedLine = text.replace(/\s+$/, "");
         if (trimmedLine.length == 0) {
           continue; // skip blank lines
         }
@@ -422,14 +410,15 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
           // process single-line non-doc comment
           continue;
         }
+        const nonCommentLineRemainder: string = this.parseUtils.getNonCommentLineRemainder(0, text);
         const sectionStatus = this._isSectionStartLine(text);
         if (sectionStatus.isSectionStart) {
           priorState = currState;
           currState = sectionStatus.inProgressStatus;
         }
         //this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() eval trimmedLine=[${trimmedLine}]`);
-        if (currState == eParseState.inObj && trimmedLine.includes(":")) {
-          const spinObj = this._spinDepFromObjectLine(trimmedLine);
+        if (currState == eParseState.inObj && nonCommentLineRemainder.includes(":")) {
+          const spinObj = this._spinDepFromObjectLine(nonCommentLineRemainder);
           if (spinObj) {
             this.logMessage(`+ (DBG) ObjDep: _getDepsFromSpinFile() basename=[${spinObj.baseName}] known as (${spinObj.knownAs})`);
             deps.push(spinObj);
@@ -447,12 +436,26 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
 
   private _spinDepFromObjectLine(objLine: string): SpinObject | undefined {
     let desiredSpinObj = undefined;
-    const lineParts = objLine.split(/[ \t\":]/).filter(Boolean);
-    this.logMessage(`+ (DBG) ObjDep: _spinDepFromObjectLine() lineParts=[${lineParts}]`);
-    if (lineParts.length >= 3) {
-      const partIndex: number = lineParts[0].toLowerCase().includes("obj") ? 1 : 0;
-      const objName = lineParts[partIndex + 0];
-      const filename = lineParts[partIndex + 1];
+    const conOverrideLocn: number = objLine.indexOf("|");
+    const usefullObjLine: string = conOverrideLocn != -1 ? objLine.substring(0, conOverrideLocn) : objLine;
+    const lineParts = usefullObjLine.split(/[ \t\"]/).filter(Boolean);
+    this.logMessage(`+ (DBG) ObjDep: _spinDepFromObjectLine() lineParts=[${lineParts}](${lineParts.length}) line=[${objLine}]`);
+    let objName: string = "";
+    let filename: string = "";
+    if (lineParts.length >= 2) {
+      // the first colon tells us where things are so locate it...
+      for (let index = 0; index < lineParts.length; index++) {
+        const part = lineParts[index];
+        if (part == ":") {
+          objName = lineParts[index - 1];
+          filename = lineParts[index + 1];
+          break;
+        } else if (part.endsWith(":")) {
+          objName = part.replace(":", "");
+          filename = lineParts[index + 1];
+          break;
+        }
+      }
       const spinCodeFileName: string = this._filenameWithSpinFileType(filename);
       desiredSpinObj = new SpinObject(spinCodeFileName, objName);
     }
@@ -467,25 +470,22 @@ private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void {
     let startStatus: boolean = false;
     let inProgressState: eParseState = eParseState.Unknown;
     if (line.length > 2) {
-      const lineParts: string[] = line.split(/[ \t]/);
-      if (lineParts.length > 0) {
-        const sectionName: string = lineParts[0].toUpperCase();
-        startStatus = true;
-        if (sectionName === "CON") {
-          inProgressState = eParseState.inCon;
-        } else if (sectionName === "DAT") {
-          inProgressState = eParseState.inDat;
-        } else if (sectionName === "OBJ") {
-          inProgressState = eParseState.inObj;
-        } else if (sectionName === "PUB") {
-          inProgressState = eParseState.inPub;
-        } else if (sectionName === "PRI") {
-          inProgressState = eParseState.inPri;
-        } else if (sectionName === "VAR") {
-          inProgressState = eParseState.inVar;
-        } else {
-          startStatus = false;
-        }
+      const sectionName: string = line.substring(0, 3).toUpperCase();
+      startStatus = true;
+      if (sectionName === "CON") {
+        inProgressState = eParseState.inCon;
+      } else if (sectionName === "DAT") {
+        inProgressState = eParseState.inDat;
+      } else if (sectionName === "OBJ") {
+        inProgressState = eParseState.inObj;
+      } else if (sectionName === "PUB") {
+        inProgressState = eParseState.inPub;
+      } else if (sectionName === "PRI") {
+        inProgressState = eParseState.inPri;
+      } else if (sectionName === "VAR") {
+        inProgressState = eParseState.inVar;
+      } else {
+        startStatus = false;
       }
     }
     if (startStatus && inProgressState == eParseState.inObj) {

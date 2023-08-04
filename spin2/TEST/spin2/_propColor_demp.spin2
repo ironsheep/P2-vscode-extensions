@@ -21,9 +21,10 @@ OBJ
 OBJ
 ' non-doc comment
 '' doc comment too
-    obj: "filename"                                     ' just an object use
+    obj :"filename1"                                     ' just an object use
+    cat: "catfile"                                     ' just an object use
 
-OBJ
+OBJ obj: "filename2"                                     ' just an object use
 
 
 

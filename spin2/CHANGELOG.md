@@ -18,7 +18,7 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.9.13] 2023-08-??
+## [1.9.13] 2023-08-03
 
 Theme and Semantic Highlight Updates (P1 and P2)
 
@@ -26,6 +26,7 @@ Theme and Semantic Highlight Updates (P1 and P2)
 - BUGFIX: Semantic fix incorrect flagging of pasm instructions as missing labels
 - BUGFIX: Semantic correctly highlight variable and label declarations in DAT block
 - BUGFIX: P2 Syntax add missing smart pin constants P_LEVEL_B_FBP and P_LEVEL_B_FBN
+- BUGFIX: P1 and P2 Fixed Object Dependencies parser, whitespace no longer confuses
 
 ## [1.9.12] 2023-08-01
 
