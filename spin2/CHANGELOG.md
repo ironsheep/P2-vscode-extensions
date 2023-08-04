@@ -20,13 +20,13 @@ Possible next additions:
 
 ## [1.9.13] 2023-08-03
 
-Theme and Semantic Highlight Updates (P1 and P2)
+Theme, Syntax, and Semantic Highlight Updates (P1 and P2)
 
 - Cleaned up both Light and Dark non-colored-background-use color themes
-- BUGFIX: Semantic fix incorrect flagging of pasm instructions as missing labels
-- BUGFIX: Semantic correctly highlight variable and label declarations in DAT block
-- BUGFIX: P2 Syntax add missing smart pin constants P_LEVEL_B_FBP and P_LEVEL_B_FBN
-- BUGFIX: P1 and P2 Fixed Object Dependencies parser, whitespace no longer confuses
+- BUGFIX Semantic: fix incorrect flagging of pasm instructions as missing labels
+- BUGFIX Semantic: correctly highlight variable and label declarations in DAT block
+- BUGFIX P2 Syntax :add missing smart pin constants P_LEVEL_B_FBP and P_LEVEL_B_FBN
+- BUGFIX P1 and P2 Object Dependencies parser: Fixed whitespace confusing parse
 
 ## [1.9.12] 2023-08-01
 
