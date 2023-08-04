@@ -24,8 +24,9 @@ Theme, Syntax, and Semantic Highlight Updates (P1 and P2)
 
 - Cleaned up both Light and Dark non-colored-background-use color themes
 - BUGFIX Semantic: fix incorrect flagging of pasm instructions as missing labels
-- BUGFIX Semantic: correctly highlight variable and label declarations in DAT block
-- BUGFIX P2 Syntax :add missing smart pin constants P_LEVEL_B_FBP and P_LEVEL_B_FBN
+- BUGFIX Semantic: correctly highlight variable and label declarations in PAsm code
+- BUGFIX Semantic: correctly highlight global and local label declarations in PAsm code
+- BUGFIX P2 Syntax: add missing smart pin constants P_LEVEL_B_FBP and P_LEVEL_B_FBN
 - BUGFIX P1 and P2 Object Dependencies parser: Fixed whitespace confusing parse
 
 ## [1.9.12] 2023-08-01
