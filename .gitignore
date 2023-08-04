@@ -16,6 +16,8 @@ ZIPs/
 REF/
 src/HOLD/
 out/
+runNew/
+runOrig/
 .history/
 
 *.vsix

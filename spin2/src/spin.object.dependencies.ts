@@ -18,7 +18,7 @@ export class ObjectTreeProvider implements vscode.TreeDataProvider<Dependency> {
   private topLevelFSpec: string = "";
   private topLevelFName: string = "";
 
-  private objTreeDebugLogEnabled: boolean = true; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
+  private objTreeDebugLogEnabled: boolean = false; // WARNING (REMOVE BEFORE FLIGHT)- change to 'false' - disable before commit
   private objTreeOutputChannel: vscode.OutputChannel | undefined = undefined;
 
   private isDocument: boolean = false;

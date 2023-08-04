@@ -48,11 +48,6 @@
         "path": "./themes/isp-spin-dark-theme.json"
       },
       {
-        "label": "Spin2 Ironsheep Dark (orig)",
-        "uiTheme": "vs-dark",
-        "path": "./themes/isp-spin-dark-theme-old.json"
-      },
-      {
         "label": "Spin2 Ironsheep Light",
         "uiTheme": "vs",
         "path": "./themes/isp-spin-light-theme.json"

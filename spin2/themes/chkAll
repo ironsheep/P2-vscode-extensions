@@ -153,5 +153,5 @@ UTIL_THEME_CHECK="./thmChk.py"
 for THEME in ${THEMES_LIST}; do
     verboseMessage "* checking: ${THEME}"
     THEME_BASENAME=${THEME%.json}
-    (set -x; ${UTIL_THEME_CHECK}  -r -t ${THEME} 2>&1 >${THEME_BASENAME}.scope)
+    (set -x; ${UTIL_THEME_CHECK} -e -r -t ${THEME} 2>&1 >${THEME_BASENAME}.scope)
 done
