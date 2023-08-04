@@ -42,7 +42,7 @@ PUB go() | i
 
 CON _clkfreq = 100_000_000
 
-PUB go() | a, af, b, bf
+PUB go2() | a, af, b, bf
   debug(`SCOPE MyScope)
   debug(`MyScope 'FreqA' -1000 1000 100 136 15 MAGENTA)
   debug(`MyScope 'FreqB' -1000 1000 100 20 15 ORANGE)
@@ -57,7 +57,7 @@ PUB go() | a, af, b, bf
 ' TERM (1)
 CON _clkfreq = 10_000_000
 
-PUB go() | i
+PUB go3() | i
   debug(`TERM MyTerm SIZE 9 1 TEXTSIZE 40)
   repeat
     repeat i from 50 to 60
@@ -68,7 +68,7 @@ PUB go() | i
 ' LOGIC (1)
 
 CON _clkfreq = 10_000_000
-PUB go() | i
+PUB go4() | i
   debug(`LOGIC MyLogic SAMPLES 32 'Low' 3 'Mid' 2 'High')
   debug(`MyLogic TRIGGER $07 $04 HOLDOFF 2)
   repeat
@@ -88,7 +88,7 @@ CON _clkfreq  = 333_333_333  'go really fast, 3ns clock period
 
 VAR     buff[bufflongs]
 
-PUB go() | i, buffaddr
+PUB go5() | i, buffaddr
 
   debug(`logic Serial samples `(samps) spacing 12 'TX' 'IN' longs_2bit)
   debug(`Serial trigger %10 %10 22)
@@ -118,7 +118,7 @@ repeat
 ' FFT
 
 CON _clkfreq = 100_000_000
-PUB go() | i, j, k
+PUB go6() | i, j, k
   ' Set up FFT
   debug(`FFT MyFFT SIZE 250 200 SAMPLES 2048 0 127 RATE 256 LOGSCALE COLOR YELLOW 4 YELLOW 5)
   debug(`MyFFT 'FFT' 0 1000 180 10 15 YELLOW 12)
@@ -136,7 +136,7 @@ PUB go() | i, j, k
 ' Spectro
 
 CON _clkfreq = 100_000_000
-PUB go() | i, j, k
+PUB go7() | i, j, k
   ' Set up SPECTRO
   debug(`SPECTRO MySpectro SAMPLES 2048 0 236 RANGE 1000 LUMA8X GREEN)
   ' Set up SCOPE
@@ -153,7 +153,7 @@ PUB go() | i, j, k
 ' Plot
 
 CON _clkfreq = 10_000_000
-PUB go(): i, j, k
+PUB go8(): i, j, k
   debug(`plot myplot size 400 480 backcolor white update)
   debug(`myplot origin 200 200 polar -64 -16)
   k~
@@ -182,7 +182,7 @@ PUB go(): i, j, k
 ' Bitmap
 
 CON _clkfreq = 10_000_000
-PUB go() | i
+PUB go9() | i
   debug(`bitmap MyBitmap SIZE 32 16 DOTSIZE 8 LUT2 LONGS_2BIT)
   debug(`MyBitmap TRACE 14 LUTCOLORS WHITE RED BLUE YELLOW 6)
   repeat
@@ -226,7 +226,7 @@ flag    long %%3333333333333330
 ' Bitmap (2)
 
 CON _clkfreq = 100_000_000
-PUB go() | i
+PUB go10() | i
     debug(`bitmap a title 'LUT1'  pos 100 100 trace 2 lut1 longs_1bit alt)
     debug(`bitmap b title 'LUT2'  pos 370 100 trace 2 lut2 longs_2bit alt)
     debug(`bitmap c title 'LUT4'  pos 100 395 trace 2 lut4 longs_4bit alt)

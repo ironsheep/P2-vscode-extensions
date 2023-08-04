@@ -599,6 +599,7 @@ export class DocumentFindings {
 
   public getLocalTokenForLine(tokenName: string, lineNbr: number): RememberedToken | undefined {
     let desiredToken: RememberedToken | undefined = undefined;
+    this._logTokenMessage(`  -- SRCH-locTOK ln#${lineNbr} tokenName=[${tokenName}]`);
     const methodName: string | undefined = this._getMethodNameForLine(lineNbr);
     if (methodName) {
       desiredToken = this.localTokensByMethod.getTokenForMethod(methodName, tokenName);
@@ -639,14 +640,14 @@ export class DocumentFindings {
     let desiredMethodName: string | undefined = undefined;
     if (this.methodSpanInfo.size > 0) {
       for (const [currMethodName, currSpan] of this.methodSpanInfo) {
-        //this._logTokenMessage(`  -- locTOK CHK method=[${currMethodName}], span=[${currSpan.startLineNbr}, ${currSpan.endLineNbr}]`);
+        this._logTokenMessage(`  -- locTOK CHK method=[${currMethodName}], span=[${currSpan.startLineNbr}, ${currSpan.endLineNbr}]`);
         if (lineNbr >= currSpan.startLineNbr && lineNbr <= currSpan.endLineNbr) {
           desiredMethodName = currMethodName;
           break;
         }
       }
     }
-    //this._logTokenMessage(`  -- locTOK _getMethodNameForLine(${lineNbr}) = method=[${desiredMethodName}]`);
+    this._logTokenMessage(`  -- locTOK _getMethodNameForLine(${lineNbr}) = method=[${desiredMethodName}]`);
     return desiredMethodName;
   }
 

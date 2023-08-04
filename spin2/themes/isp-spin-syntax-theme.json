@@ -37,30 +37,15 @@
   },
   "tokenColors": [
     {
-      "name": "Documentation Block",
-      "scope": ["comment.block.documentation"],
+      "name": "Documentation Comment",
+      "scope": ["comment.block.documentation", "comment.line.documentation"],
       "settings": {
         "foreground": "#5db55d"
       }
     },
     {
-      "name": "Documentation Line",
-      "scope": ["comment.line.documentation"],
-      "settings": {
-        "foreground": "#5db55d"
-      }
-    },
-    {
-      "name": "Block",
-      "scope": ["comment.block"],
-      "settings": {
-        "foreground": "#538054",
-        "fontStyle": "italic"
-      }
-    },
-    {
-      "name": "Comment",
-      "scope": ["comment.line"],
+      "name": "Non-documentation Comment",
+      "scope": ["comment.block", "comment.line"],
       "settings": {
         "foreground": "#538054",
         "fontStyle": "italic"
@@ -103,7 +88,7 @@
       }
     },
     {
-      "name": "Invalid",
+      "name": "Invalid Use",
       "scope": ["invalid"],
       "settings": {
         "foreground": "#ff0000"

@@ -1115,7 +1115,8 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const haveLabel: boolean = lineParts.length > nameIndex ? this.parseUtils.isDatOrPAsmLabel(lineParts[nameIndex]) : false;
       const typeIndex: number = haveLabel ? baseIndex + 1 : baseIndex + 0;
       let dataType: string | undefined = lineParts.length > typeIndex ? lineParts[typeIndex] : undefined;
-      if (dataType && !this.parseUtils.isDatStorageType(dataType)) {
+      if (dataType && !this.parseUtils.isDatNFileStorageType(dataType)) {
+        // file, res, long, byte, word
         dataType = undefined;
       }
       const haveStorageType: boolean = dataType ? this.parseUtils.isDatStorageType(dataType) : false;
@@ -1217,7 +1218,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
         // org in first column is not label name, nor is if_ conditional
         const labelType: string = isDataDeclarationLine ? "variable" : "label";
         var labelModifiers: string[] = ["declaration"];
-        if (isDataDeclarationLine && labelName.startsWith(".")) {
+        if (!isDataDeclarationLine && labelName.startsWith(".")) {
           labelModifiers = ["declaration", "static"];
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
@@ -1325,7 +1326,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const labelName: string = lineParts[0];
       const labelType: string = isDataDeclarationLine ? "variable" : "label";
       var labelModifiers: string[] = [];
-      if (isDataDeclarationLine) {
+      if (!isDataDeclarationLine) {
         labelModifiers = labelName.startsWith(".") ? ["pasmInline", "static"] : ["pasmInline"];
       } else {
         labelModifiers = ["pasmInline"];
@@ -2922,7 +2923,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const labelType: string = isDataDeclarationLine ? "variable" : "label";
       const nameOffset: number = line.indexOf(labelName, currentOffset);
       var labelModifiers: string[] = ["declaration"];
-      if (isDataDeclarationLine && labelName.startsWith(".")) {
+      if (!isDataDeclarationLine && labelName.startsWith(".")) {
         labelModifiers = ["declaration", "static"];
       }
       tokenSet.push({

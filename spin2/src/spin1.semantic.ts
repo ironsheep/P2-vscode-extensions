@@ -987,7 +987,7 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
           if (!this.parseUtils.isSpinReservedWord(newName) && !this.parseUtils.isBuiltinReservedWord(newName) && !notOKSpin2Word) {
             const nameType: string = isDataDeclarationLine ? "variable" : "label";
             var labelModifiers: string[] = ["declaration"];
-            if (isDataDeclarationLine) {
+            if (!isDataDeclarationLine) {
               if (newName.startsWith(".")) {
                 labelModifiers = ["illegalUse", "declaration", "static"];
               } else if (newName.startsWith(":")) {
@@ -1060,9 +1060,13 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       if (!this.parseUtils.isP1AsmReservedSymbols(labelName) && !labelName.toUpperCase().startsWith("IF_")) {
         // org in first column is not label name, nor is if_ conditional
         const labelType: string = isDataDeclarationLine ? "variable" : "label";
-        var labelModifiers: string[] = [];
-        if (isDataDeclarationLine) {
-          labelModifiers = labelName.startsWith(":") ? ["static"] : [];
+        var labelModifiers: string[] = ["declaration"];
+        if (!isDataDeclarationLine) {
+          if (labelName.startsWith(".")) {
+            labelModifiers = ["illegalUse", "declaration", "static"];
+          } else if (labelName.startsWith(":")) {
+            labelModifiers = ["declaration", "static"];
+          }
         }
         this._logPASM("  -- DAT PASM GLBL labelName=[" + labelName + "(" + labelType + ")]");
         const fileName: string | undefined = isFileDeclarationLine && lineParts.length > 2 ? lineParts[2] : undefined;
@@ -2476,8 +2480,12 @@ export class Spin1DocumentSemanticTokensProvider implements vscode.DocumentSeman
       const labelType: string = isDataDeclarationLine ? "variable" : "label";
       const nameOffset: number = line.indexOf(labelName, currentOffset);
       var labelModifiers: string[] = ["declaration"];
-      if (isDataDeclarationLine && labelName.startsWith(":")) {
-        labelModifiers = ["declaration", "static"];
+      if (!isDataDeclarationLine) {
+        if (labelName.startsWith(".")) {
+          labelModifiers = ["illegalUse", "declaration", "static"];
+        } else if (labelName.startsWith(":")) {
+          labelModifiers = ["declaration", "static"];
+        }
       }
       tokenSet.push({
         line: lineIdx,

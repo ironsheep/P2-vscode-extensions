@@ -580,18 +580,13 @@
     "string": "#a83d3d", // debug() strings
     "comment": "#317333", // single line non-doc comments
     "label": "#9C775D", // pasm labels
-    "label.declaration": "#9C775D", // pasm labels
     "label.static": "#99605C", // pasm local labels
-    "label.declaration.static": "#99605C", // pasm local labels
-    "label.static.illegalUse": "#ff0000", // pasm local labels
-    "label.declaration.static.illegalUse": "#ff0000", // pasm local labels
     "variable": "#4483a6", // class global variable 8bc4e3
     "variable.modification": "#4483a6", // class global variable 8bc4e3
     "variable.instance": "#2a857f", // INSTANCE global variable 64bfb9
     "variable.modification.instance": "#2a857f", // INSTANCE global variable 64bfb9
     "variable.declaration.instance": "#2a857f", // INSTANCE global variable 64bfb9
     "enumMember": "#a051a0", // constants
-    "enumMember.declaration": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
     "variable.local": "#467275", // local variables 82c0af a0c1b8
@@ -600,17 +595,13 @@
     "returnValue.local": "#317b85", // Return Value
     "returnValue.declaration.local": "#317b85", // Return Value (Declaration)
     "method": "#3e709c", // PUB method name (use)
-    "method.declaration": "#3e709c", // PUB method name (Declaration)
     "method.static": "#6955a3", // PRI method name (use)
-    "method.declaration.static": "#6955a3", // PRI method name (Declaration)
     "parameter.readonly": "#8459b3", // spin parameters b68ce3
     "parameter.declaration.readonly": "#8459b3", // spin parameters b68ce3
     "namespace": "#504c99", // objects (old: 7A81FF) (new:5d60a0)
-    "namespace.declaration": "#504c99", // objects
     "colorName": "#8a5ea3", // debug() display userName
     "displayType": "#b37746", // debug() display type
     "displayName": "#5d59a0", // debug() display userName
-    "displayName.declaration": "#5d59a0", // debug() display userName
     "setupParameter": "#aaac61", // debug() setup parameter name
     "feedParameter": "#b4a666", // debug() display type
     // things from typescript
@@ -637,6 +628,11 @@
       // missing variable
       "fontStyle": "bold",
       "foreground": "#d83333"
+    },
+    "*.static.illegalUse": {
+      // keywords/variables in bad places
+      "foreground": "#ff0000",
+      "fontStyle": "bold"
     },
     "*.illegalUse": {
       // keywords/variables in bad places

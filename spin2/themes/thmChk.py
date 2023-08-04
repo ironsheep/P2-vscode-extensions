@@ -34,6 +34,7 @@ opt_verbose = False
 opt_logging = False
 opt_ansii = False
 
+
 def print_line(
     text,
     error=False,
@@ -185,6 +186,20 @@ def print_line(
             log_fp.flush()
 
 
+def genNextWriteFilename(filename):
+    desiredFilename = ""
+    # generate a new name from the file basename
+    if os.path.exists(filename):
+        basename, filetype = os.path.splitext(filename)
+        for suffixNbr in range(1, 11):  # [1-10]
+            suffixText = str(suffixNbr).zfill(3)
+            tmpFilename = basename + "-" + suffixText + filetype
+            if not os.path.exists(tmpFilename):
+                desiredFilename = tmpFilename
+                break
+    return desiredFilename
+
+
 # -----------------------------------------------------------------------------
 #  Parameter Handling
 # -----------------------------------------------------------------------------
@@ -195,11 +210,16 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "-v", "--verbose", help="increase output (v)erbosity", action="store_true"
 )
-parser.add_argument("-a", "--ansii", help="omit (a)nsii output coloring", action="store_true")
-parser.add_argument("-e", "--emit", help="(e)mit key, color list for sorting", action="store_true")
-parser.add_argument("-s", "--scopes", help="list (s)copes in theme", action="store_true")
-parser.add_argument("-d", "--debug", help="show (d)ebug output", action="store_true")
-parser.add_argument("-r", "--rewrite", help="(r)ewrite theme file", action="store_true")
+parser.add_argument(
+    "-a", "--ansii", help="omit (a)nsii output coloring", action="store_true")
+parser.add_argument(
+    "-e", "--emit", help="(e)mit key, color list for sorting", action="store_true")
+parser.add_argument(
+    "-s", "--scopes", help="list (s)copes in theme", action="store_true")
+parser.add_argument(
+    "-d", "--debug", help="show (d)ebug output", action="store_true")
+parser.add_argument("-r", "--rewrite",
+                    help="(r)ewrite theme file", action="store_true")
 parser.add_argument(
     "-l",
     "--log_filename",
@@ -225,7 +245,17 @@ opt_verbose = parse_args.verbose
 opt_logging = len(log_filename) > 0
 opt_read_theme = len(theme_filename) > 0
 
+# have to have an incoming theme to write a new version
+if opt_rewrite and not opt_read_theme:
+    opt_rewrite = False
 
+# generate name for new theme file
+out_filename = ""
+out_fp = None
+if opt_rewrite and opt_read_theme:
+    out_filename = genNextWriteFilename(theme_filename)
+
+# report on options we are using this run
 print_line(script_info, info=True)
 if opt_verbose:
     print_line("Verbose enabled", info=True)
@@ -249,20 +279,44 @@ if opt_read_theme:
     print_line("* Processing Theme {}".format(themeFspec), info=True)
     # open a theme file
     theme_fp = open(theme_filename)
-    if(opt_logging):
+    if (opt_logging):
         print_line("* Theme {} - Opened".format(theme_filename), log=True)
 else:
     theme_fp = None
 
 # returns JSON object as
 # a dictionary
-
+themeTopKeysDict = {}  # keyname:value
+stagedNameByScopeDict = {}  # scopeName:fakeNameKey
+stagedValuesDict = {}  # fakeNameKey:dict{"name":, "settings":}  w/Name optional
 masterColorDict = {}  # colorName:entryDict
-#entryDict = {}  # entryName:scopesList
-#scopesList = []  # [scopeName, scopeName, ...]
+# entryDict = {}  # entryName:scopesList
+# scopesList = []  # [scopeName, scopeName, ...]
+
+
+def rememberStageNameForScope(scopeName, stageDictName):
+    global stagedNameByScopeDict
+    if scopeName in stagedNameByScopeDict:
+        print_line(
+            "* Duplicate scope in stagedNameByScopeDict, replacing value [{}]".format(scopeName), warning=True)
+    stagedNameByScopeDict[scopeName] = stageDictName
+
+
+def rememberStagedValues(keyName, valueDict):
+    global stagedValuesDict
+    if keyName in stagedValuesDict:
+        print_line(
+            "* Duplicate scope in stagedValuesDict, replacing value [{}]".format(keyName), warning=True)
+    stagedValuesDict[keyName] = valueDict
+
+
+def rememberTopKeyWithValue(keyName, value):
+    global themeTopKeysDict
+    themeTopKeysDict[keyName] = value
+
 
 def registerColorForScope(entryType, scopeName, colorName):
-    #new version
+    # new version
     global masterColorDict
     if not colorName in masterColorDict.keys():
         scopesList = [scopeName]
@@ -280,6 +334,209 @@ def registerColorForScope(entryType, scopeName, colorName):
             # add scope name to existing list for entry
             scopesList = entryDict[entryType]
             scopesList.append(scopeName)
+
+
+def writeNewThemeFile(newTheme_fileName):
+    # YES write new theme file sorted by scope in each section
+    # NO  write new theme file sorted by color in each section
+    print_line(
+        "* Writing sorted Theme File {}".format(newTheme_fileName), info=True)
+    newTheme_fp = open(out_filename, "w")
+    newTheme_fp.write("{\n")
+    masterOrder = [
+        "$schema",
+        "name",
+        "semanticHighlighting",
+        "type",
+        "colors",
+        "tokenColors",
+        "semanticTokenColors",
+    ]
+    for keyName in masterOrder:
+        if keyName == "colors" or keyName == "tokenColors" or keyName == "semanticTokenColors":
+            if keyName in themeTopKeysDict:
+                writeThemeSection(newTheme_fp, keyName)
+        else:
+            if keyName in themeTopKeysDict:
+                value = themeTopKeysDict[keyName]
+                if value == True or value == False:
+                    value = str(value)
+                    newTheme_fp.write("  \"" + keyName +
+                                      "\": " + value.lower() + ",\n")
+                else:
+                    newTheme_fp.write("  \"" + keyName +
+                                      "\": \"" + value + "\",\n")
+
+    newTheme_fp.write("}\n")
+    newTheme_fp.flush()
+    newTheme_fp.close()
+
+
+def writeThemeSection(newTheme_fp, keyName):
+    if keyName == "colors":
+        newTheme_fp.write("  \"" + keyName + "\": {\n")
+        # now dump colors content
+        dumpColors(newTheme_fp, keyName)
+        newTheme_fp.write("   },\n")
+    elif keyName == "tokenColors":
+        newTheme_fp.write("  \"" + keyName + "\": [\n")
+        # now dump tokenColors content
+        dumpTokenColors(newTheme_fp, keyName)
+        newTheme_fp.write("   ],\n")
+    elif keyName == "semanticTokenColors":
+        newTheme_fp.write("  \"" + keyName + "\": {\n")
+        # now dump semanticTokenColors content
+        dumpSemanticTokenColors(newTheme_fp, keyName)
+        newTheme_fp.write("   },\n")
+    else:
+        print_line("# Error writeThemeSection({}, ...): Unknown Key!".format(
+            keyName), error=True)
+
+
+def dumpColors(newTheme_fp, keyName):
+    # masterColorDict = {}  # colorName:entryDict
+    # entryDict = {}  # entryName:scopesList
+    # scopesList = []  # [scopeName, scopeName, ...]
+    colorsByScope = {}
+    colorKeys = list(masterColorDict.keys())
+    for colorName in colorKeys:
+        entryDict = masterColorDict[colorName]
+        entryNames = list(entryDict.keys())
+        if keyName in entryNames:
+            scopesList = entryDict[keyName]
+            for scopeName in scopesList:
+                colorsByScope[scopeName] = colorName
+
+    # put out a byScope ordered list
+    scopeKeys = list(colorsByScope.keys())
+    scopeKeys.sort()
+    for scopeName in scopeKeys:
+        colorName = colorsByScope[scopeName]
+        newTheme_fp.write("    \"" + scopeName +
+                          "\": \"" + colorName + "\",\n")
+
+
+def dumpTokenColors(newTheme_fp, keyName):
+    # masterColorDict = {}  # colorName:entryDict
+    # entryDict = {}  # entryName:scopesList
+    # scopesList = []  # [scopeName, scopeName, ...]
+    colorsByScope = {}
+    colorKeys = list(masterColorDict.keys())
+    for colorName in colorKeys:
+        entryDict = masterColorDict[colorName]
+        entryNames = list(entryDict.keys())
+        if keyName in entryNames:
+            scopesList = entryDict[keyName]
+            for scopeName in scopesList:
+                colorsByScope[scopeName] = colorName
+
+    colorScopeKeys = list(colorsByScope.keys())
+    scopeKeys = list(stagedNameByScopeDict.keys())
+    scopeKeys.sort()
+    print_line("* Found {} color scopes and {} fake scopes".format(
+        len(colorScopeKeys), len(scopeKeys)), info=True)
+    reducedScopeList = scopeKeys    # copy we can alter as we go
+    # stagedNameByScopeDict = {}  # scopeName:fakeNameKey
+    # stagedValuesDict = {}  # fakeNameKey:dict{"name":, "settings":}  w/Name optional
+    while len(reducedScopeList) > 0:
+        currScopeName = reducedScopeList.pop(0)
+        # we handled this
+        fakeName = ""
+        if currScopeName in stagedNameByScopeDict:
+            fakeName = stagedNameByScopeDict[currScopeName]
+        else:
+            print_line(
+                "* ERROR: [{}] not found in stagedNameByScopeDict".format(currScopeName), error=True)
+            os._exit(-1)
+        fakeDict = stagedValuesDict[fakeName]
+        scopeNameList = scopesWithFakeDictNamed(fakeName)
+        for scopeName in scopeNameList:
+            if scopeName in reducedScopeList:
+                reducedScopeList.remove(scopeName)
+        # emit our new dictionary open
+        newTheme_fp.write("    {\n")
+        # emit name key:value
+        if "name" in fakeDict:
+            nameValue = fakeDict["name"]
+            newTheme_fp.write("      \"name\": \"" + nameValue + "\",\n")
+        # emit scope key:value|key:[list]
+        if len(scopeNameList) > 1:
+            # emit multiple scope lines form
+            newTheme_fp.write("      \"scope\": [\n")
+            for scopeName in scopeNameList:
+                newTheme_fp.write("        \"" + scopeName + "\",\n")
+            newTheme_fp.write("      ],\n")
+        else:
+            # emit single scope lines form
+            newTheme_fp.write(
+                "      \"scope\": [\"" + scopeNameList[0] + "\"],\n")
+        # emit settings key:value
+        newTheme_fp.write("      \"settings\": {\n")
+        settingsDict = fakeDict["settings"]
+        for keyName in settingsDict:
+            nameValue = settingsDict[keyName]
+            newTheme_fp.write("        \"" + keyName +
+                              "\": \"" + nameValue + "\",\n")
+        newTheme_fp.write("      },\n")
+        # emit our new dictionary close
+        newTheme_fp.write("    },\n")
+
+
+def scopesWithFakeDictNamed(fakeName):
+    desiredScopeList = []
+    scopeNames = list(stagedNameByScopeDict.keys())
+    for scopeName in scopeNames:
+        possFakeName = stagedNameByScopeDict[scopeName]
+        if possFakeName == fakeName:
+            desiredScopeList.append(scopeName)
+    if len(desiredScopeList) > 1:
+        desiredScopeList.sort()
+    return desiredScopeList
+
+
+def dumpSemanticTokenColors(newTheme_fp, keyName):
+    # masterColorDict = {}  # colorName:entryDict
+    # entryDict = {}  # entryName:scopesList
+    # scopesList = []  # [scopeName, scopeName, ...]
+    colorsByScope = {}
+    colorKeys = list(masterColorDict.keys())
+    for colorName in colorKeys:
+        entryDict = masterColorDict[colorName]
+        entryNames = list(entryDict.keys())
+        if keyName in entryNames:
+            scopesList = entryDict[keyName]
+            for scopeName in scopesList:
+                colorsByScope[scopeName] = colorName
+    # put out a byScope ordered list
+    scopeKeys = list(colorsByScope.keys())
+    scopeKeys.sort()
+    for scopeName in scopeKeys:
+        colorName = colorsByScope[scopeName]
+        # if color name has " "  then we have color, style
+        #   emit as:
+        #     scope: {foreground: color, fontStyle: style}
+        # if color name does not have " "  and starts with #
+        #   emit as:
+        #     scope: color
+        if " " in colorName:
+            # have color, style
+            lineParts = colorName.split(" ")
+            newTheme_fp.write("    \"" + scopeName + "\": {\n")
+            newTheme_fp.write("      \"foreground\": \"" +
+                              lineParts[0] + "\",\n")
+            newTheme_fp.write("      \"fontStyle\": \"" +
+                              lineParts[1] + "\",\n")
+            newTheme_fp.write("    },\n")
+        elif "#" in colorName:
+            # have color
+            newTheme_fp.write("    \"" + scopeName +
+                              "\": \"" + colorName + "\",\n")
+        else:
+            # have style
+            newTheme_fp.write("    \"" + scopeName + "\": {\n")
+            newTheme_fp.write("      \"fontStyle\": \"" + colorName + "\",\n")
+            newTheme_fp.write("    },\n")
+
 
 def getScopeNameDict():
     # get a list of entryTypes from the masterColorDict
@@ -304,9 +561,10 @@ def getScopeNameDict():
 
     return masterScopeNamesDict
 
+
 def displayScopesFound():
-    masterScopeNamesDict = getScopeNameDict() # scopeName:occurranceCount
-    secondListDict = {} # scopeName:occurranceCount
+    masterScopeNamesDict = getScopeNameDict()  # scopeName:occurranceCount
+    secondListDict = {}  # scopeName:occurranceCount
     scopeNames = list(masterScopeNamesDict.keys())
     if len(scopeNames) > 1:
         scopeNames.sort()
@@ -316,13 +574,16 @@ def displayScopesFound():
             secondListDict[scopeName] = count
         else:
             print_line("- {}".format(scopeName), report=True, console=False)
-    print_line("* Found {} scope names in [{}]".format(len(scopeNames), theme_filename), report=True, console=False)
+    print_line("* Found {} scope names in [{}]".format(
+        len(scopeNames), theme_filename), report=True, console=False)
 
     print_line("", report=True, console=False)
     scopeNames = list(secondListDict.keys())
     for scopeName in scopeNames:
         count = secondListDict[scopeName]
-        print_line("- {}x  {}".format(count, scopeName), report=True, console=False)
+        print_line("- {}x  {}".format(count, scopeName),
+                   report=True, console=False)
+
 
 def getEntryTypes():
     # get a list of entryTypes from the masterColorDict
@@ -340,6 +601,7 @@ def getEntryTypes():
     if len(masterEntryList) > 1:
         masterEntryList.sort()
     return masterEntryList
+
 
 def displayKeyColorSortList():
     global masterColorDict
@@ -360,7 +622,9 @@ def displayKeyColorSortList():
                     if len(scopesList) > 1:
                         scopesList.sort()
                     for scopeName in scopesList:
-                        print_line("  -- {} {} [{}]".format(entryType, scopeName, colorName), report=True, console=False)
+                        print_line(
+                            "  -- {} {} [{}]".format(entryType, scopeName, colorName), report=True, console=False)
+
 
 def displayColorForScopeInfo():
     global masterColorDict
@@ -379,8 +643,9 @@ def displayColorForScopeInfo():
             scopesList.sort()
             for scopeName in scopesList:
                 entryScopeKey = "{} [{}]".format(entryType, scopeName)
-                print_line("  -- entry: {} [{}]".format(entryType, scopeName), verbose=True)
-                #print_line("    --- scope: [{}]".format(scopeName), verbose=True)
+                print_line(
+                    "  -- entry: {} [{}]".format(entryType, scopeName), verbose=True)
+                # print_line("    --- scope: [{}]".format(scopeName), verbose=True)
                 if not entryScopeKey in colorCheckDict.keys():
                     # add color list for new entry scope
                     colorCheckDict[entryScopeKey] = [colorName]
@@ -401,14 +666,17 @@ def displayColorForScopeInfo():
             print_line("", info=True)    # blank line
             if (firstError):
                 print_line("----", info=True)    # blank line
-                print_line("---- Error Report ---- file:{}".format(theme_filename), info=True)    # blank line
+                # blank line
+                print_line(
+                    "---- Error Report ---- file:{}".format(theme_filename), info=True)
                 print_line("----", info=True)    # blank line
                 print_line("", info=True)    # blank line
                 firstError = False
-            print_line("- DUPE color entryScope: {}".format(entryScope), info=True)
+            print_line(
+                "- DUPE color entryScope: {}".format(entryScope), info=True)
             for colorName in colorList:
                 print_line("  -- color: {}".format(colorName), info=True)
-    if(foundError == False):
+    if (foundError == False):
         print_line("* NO DUPE color entries", info=True)
 
 
@@ -416,27 +684,49 @@ if theme_fp is not None:
     themeData = jstyleson.load(theme_fp)
     # print_line("- json file [{}]".format(themeData), debug=True)
     for keyName in themeData.keys():
-        #print_line("- key [{}]".format(keyName), debug=True)
-        if(keyName == "$schema" or keyName == "name" or keyName == "semanticHighlighting"):
-            print_line("- {}: {}".format(keyName, themeData[keyName]), verbose=True)
-        elif(keyName == "colors"):
+        # print_line("- key [{}]".format(keyName), debug=True)
+        if (keyName == "$schema" or keyName == "name" or keyName == "semanticHighlighting"):
+            print_line("- {}: {}".format(keyName,
+                       themeData[keyName]), verbose=True)
+            rememberTopKeyWithValue(keyName, themeData[keyName])
+
+        elif (keyName == "type"):
+            rememberTopKeyWithValue(keyName, themeData[keyName])
+        elif (keyName == "colors"):
+            rememberTopKeyWithValue(keyName, "fakeValue")
             #  FMT:  "checkbox.border": "#919191",
             colorDict = themeData[keyName]
-            print_line("  -- colors: has {} values".format(len(colorDict)), verbose=True)
+            print_line(
+                "  -- colors: has {} values".format(len(colorDict)), verbose=True)
             for scopeName in colorDict.keys():
-                 #print_line("  --- [{}]: {}".format(scopeName, colorDict[scopeName]), debug=True)
-                 registerColorForScope(keyName, scopeName, colorDict[scopeName])
-        elif(keyName == "tokenColors"):
+                # print_line("  --- [{}]: {}".format(scopeName, colorDict[scopeName]), debug=True)
+                registerColorForScope(keyName, scopeName, colorDict[scopeName])
+        elif (keyName == "tokenColors"):
+            rememberTopKeyWithValue(keyName, "fakeValue")
             #  FMT: [{
             #      "scope": ["meta.embedded", "source.groovy.embedded", "string meta.image.inline.markdown"],
             #      "settings": {
             #        "foreground": "#000000ff"
             #      }
             #    },{}]
+            # list of anonymous dictionaries
             tokenColorList = themeData[keyName]
-            print_line("  -- tokenColors: has {} values".format(len(tokenColorList)), verbose=True)
+            print_line(
+                "  -- tokenColors: has {} values".format(len(tokenColorList)), verbose=True)
+            dictNumber = 1
             for tokenColorDict in tokenColorList:
-                settingsDict = tokenColorDict["settings"] # returns dictionary of color name:value pairs
+                # returns dictionary of color name:value pairs
+
+                # remember details we need later
+                stageDictName = "tokenDict" + str(dictNumber).zfill(3)
+                stageDict = {}
+                nameFound = False
+                if "name" in tokenColorDict:
+                    stageDict["name"] = tokenColorDict["name"]
+                stageDict["settings"] = tokenColorDict["settings"]
+                rememberStagedValues(stageDictName, stageDict)
+                # now generate color entries
+                settingsDict = tokenColorDict["settings"]
                 colorRaw = ""
                 fontStyle = ""
                 colorValue = ""
@@ -449,22 +739,28 @@ if theme_fp is not None:
                         colorValue = fontStyle
                     else:
                         colorValue = colorRaw + " " + fontStyle
-                scopeItem = tokenColorDict["scope"] # returns string or list of strings
+                # returns string or list of strings
+                scopeItem = tokenColorDict["scope"]
                 if isinstance(scopeItem, list):
                     # have list of scopes
                     for scopeName in scopeItem:
                         registerColorForScope(keyName, scopeName, colorValue)
+                        rememberStageNameForScope(scopeName, stageDictName)
                 else:
                     # have single scope
                     registerColorForScope(keyName, scopeItem, colorValue)
-        elif(keyName == "semanticTokenColors"):
+                    rememberStageNameForScope(scopeItem, stageDictName)
+                dictNumber += 1
+        elif (keyName == "semanticTokenColors"):
+            rememberTopKeyWithValue(keyName, "fakeValue")
             #  FMT: "newOperator": "#0000ff",
             #       "stringLiteral": "#a31515",
             #       "customLiteral": "#000000",
             semanticTokenColorsDict = themeData[keyName]
-            print_line("  -- semanticTokenColorsDict: has {} values".format(len(semanticTokenColorsDict)), verbose=True)
+            print_line("  -- semanticTokenColorsDict: has {} values".format(
+                len(semanticTokenColorsDict)), verbose=True)
             for scopeName in semanticTokenColorsDict.keys():
-                colorValue  = semanticTokenColorsDict[scopeName]
+                colorValue = semanticTokenColorsDict[scopeName]
                 if isinstance(colorValue, dict):
                     colorRaw = ""
                     fontStyle = ""
@@ -489,3 +785,6 @@ if theme_fp is not None:
 
     if opt_scopes:
         displayScopesFound()
+
+    if opt_rewrite:
+        writeNewThemeFile(out_filename)

@@ -98,7 +98,6 @@ ramp_slo_   long    25_000
 '  --------------------
 
 pub start(rxpin, p_defaults) : cog
-
   if cog == 0
     debug("!!ERROR!!  failed to start SBUS Cog")    ' middle of string (start) shouldn't be hightlighted!!!
 
@@ -133,7 +132,7 @@ long channel1[8]
 dat
 null  			long 	0,0           ' for channel reset
 
-pub start() :cog,base | iii
+pub start2() :cog,base | iii
 
 base:=@channel1[0]
 
