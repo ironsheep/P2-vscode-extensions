@@ -5,11 +5,11 @@
   "type": "light",
   "colors": {
     "checkbox.border": "#919191",
-    "editor.background": "#FFFFFF",
+    "editor.background": "#EEE",
     "editor.foreground": "#000000",
     "editor.inactiveSelectionBackground": "#E5EBF1",
-    "editorIndentGuide.background": "#D3D3D3",
-    "editorIndentGuide.activeBackground": "#939393",
+    "editorIndentGuide.background1": "#D3D3D3",
+    "editorIndentGuide.activeBackground1": "#939393",
     "editor.selectionHighlightBackground": "#ADD6FF80",
     "editorSuggestWidget.background": "#F3F3F3",
     "activityBarBadge.background": "#007ACC",
@@ -365,14 +365,14 @@
       "name": "Documentation Comment",
       "scope": ["comment.line.documentation", "comment.block.documentation"],
       "settings": {
-        "foreground": "#5db55d"
+        "foreground": "#329432" // doc comments 5db55d
       }
     },
     {
       "name": "Non-documentation Comment",
       "scope": ["comment.line", "comment.block"],
       "settings": {
-        "foreground": "#49824a", // 538054
+        "foreground": "#317333", // comment
         "fontStyle": "italic"
       }
     },
@@ -431,14 +431,14 @@
       "name": "Control",
       "scope": ["keyword.control"],
       "settings": {
-        "foreground": "#b57bb0" // c586c0, cccc44
+        "foreground": "#a863a3" // 996895, b57bb0, c586c0, cccc44
       }
     },
     {
       "name": "Control",
       "scope": ["keyword.control.include"],
       "settings": {
-        "foreground": "#c659bd" // c586c0, cccc44
+        "foreground": "#c659bd"
       }
     },
     {
@@ -508,7 +508,7 @@
       "name": "String",
       "scope": ["string.quoted.double"],
       "settings": {
-        "foreground": "#ba4343"
+        "foreground": "#a83d3d"
       }
     },
     {
@@ -522,7 +522,7 @@
       "name": "Filename",
       "scope": ["meta.object.filename"],
       "settings": {
-        "foreground": "#eb6077"
+        "foreground": "#b53f4f"
       }
     },
     {
@@ -536,7 +536,7 @@
       "name": "spin methods",
       "scope": ["support.function"],
       "settings": {
-        "foreground": "#c3c14e" // c1c07d, 6d8ad3, 5D83AC
+        "foreground": "#828128" // spin methods c1c07d, 6d8ad3, 5D83AC
       }
     },
     {
@@ -569,28 +569,28 @@
     // method parts: name (parameters) : returnValues | localVariables
     //            #A7BAE7   #D0BBE6        #D0E5FA         #FEF5FA/D3F1D2
     // colors
-    "string": "#ba4343", // debug() strings
-    "comment": "#538054", // single line non-doc comments
+    "string": "#a83d3d", // debug() strings
+    "comment": "#317333", // single line non-doc comments
     "label": "#9C775D", // pasm labels
     "label.static": "#99605C", // pasm local labels
-    "variable": "#8bc4e3", // class global variable
-    "variable.modification": "#8bc4e3", // class global variable
-    "variable.instance": "#64bfb9", // instance global variable
-    "variable.modification.instance": "#64bfb9", // instance global variable
-    "variable.declaration.instance": "#64bfb9", // instance global variable
+    "variable": "#4483a6", // class global variable 8bc4e3
+    "variable.modification": "#4483a6", // class global variable 8bc4e3
+    "variable.instance": "#2a857f", // INSTANCE global variable 64bfb9
+    "variable.modification.instance": "#2a857f", // INSTANCE global variable 64bfb9
+    "variable.declaration.instance": "#2a857f", // INSTANCE global variable 64bfb9
     "enumMember": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
-    "variable.local": "#82c0af", // constants a0c1b8
-    "variable.modification.local": "#82c0af", // constants a0c1b8
-    "variable.declaration.local": "#82c0af", // constants a0c1b8
-    "returnValue.local": "#508b93", // constants
-    "returnValue.declaration.local": "#438e98", // constants
-    "method": "#7b9be4", // PUB method name (use)
-    "method.static": "#9178da", // PRI method name (use)
-    "parameter.readonly": "#b68ce3", // constants
-    "parameter.declaration.readonly": "#b68ce3", // constants
-    "namespace": "#6a66b3", // objects (old: 7A81FF) (new:5d60a0)
+    "variable.local": "#467275", // local variables 82c0af a0c1b8
+    "variable.modification.local": "#467275", // local variables 82c0af a0c1b8
+    "variable.declaration.local": "#467275", // local variables 82cx0af a0c1b8
+    "returnValue.local": "#317b85", // Return Value
+    "returnValue.declaration.local": "#317b85", // Return Value (Declaration)
+    "method": "#3e709c", // PUB method name (use)
+    "method.static": "#6955a3", // PRI method name (use)
+    "parameter.readonly": "#8459b3", // spin parameters b68ce3
+    "parameter.declaration.readonly": "#8459b3", // spin parameters b68ce3
+    "namespace": "#504c99", // objects (old: 7A81FF) (new:5d60a0)
     "colorName": "#8a5ea3", // debug() display userName
     "displayType": "#b37746", // debug() display type
     "displayName": "#5d59a0", // debug() display userName
@@ -601,7 +601,7 @@
     "meta.type.annotation.ts": "#3b7585", // TypeScript: data types
     // things from python
     "string.quoted.single.python": "#a83d3d", // Python: quoted strings
-    "support.function.builtin.python": "#c1c07d", // Python: built-in methods
+    "support.function.builtin.python": "#828128", // Python: built-in methods
     // style overrides
     "*.static": { "fontStyle": "italic" }, // all static names are italic
     "*.declaration": { "fontStyle": "bold" }, // all declarations are bold

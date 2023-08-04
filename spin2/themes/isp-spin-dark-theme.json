@@ -166,7 +166,7 @@
         "entity.name.operator.custom-literal" // See https://en.cppreference.com/w/cpp/language/user_literal
       ],
       "settings": {
-        "foreground": "#c1c07d" // 6d8ad3, 5D83AC
+        "foreground": "#dfc485" // 6d8ad3, 5D83AC
       }
     },
     {
@@ -220,7 +220,7 @@
       "name": "Control flow / Special keywords",
       "scope": ["source.cpp keyword.operator.new", "keyword.operator.delete", "keyword.other.using", "keyword.other.operator", "entity.name.operator"],
       "settings": {
-        "foreground": "#b57bb0" // match spin2
+        "foreground": "#ba7292" // match spin2
       }
     },
     {
@@ -676,7 +676,7 @@
       "name": "Control",
       "scope": ["keyword.control"],
       "settings": {
-        "foreground": "#b57bb0" // c586c0, cccc44
+        "foreground": "#ba7292" // c586c0, cccc44
       }
     },
     {
@@ -811,23 +811,23 @@
     "comment": "#538054", // single line non-doc comments
     "label": "#9C775D", // pasm labels
     "label.static": "#99605C", // pasm local labels
-    "variable": "#8bc4e3", // class global variable
-    "variable.modification": "#8bc4e3", // class global variable
-    "variable.instance": "#64bfb9", // instance global variable
-    "variable.modification.instance": "#64bfb9", // instance global variable
-    "variable.declaration.instance": "#64bfb9", // instance global variable
+    "variable": "#66b8cc", // class global variable
+    "variable.modification": "#66b8cc", // class global variable
+    "variable.instance": "#66c7cc", // instance global variable
+    "variable.modification.instance": "#66c7cc", // instance global variable
+    "variable.declaration.instance": "#66c7cc", // instance global variable
     "enumMember": "#a051a0", // constants
     "variable.readonly": "#a051a0", // constants
     "variable.declaration.readonly": "#a051a0", // constants
     "variable.local": "#a0c1b8", // constants
     "variable.modification.local": "#a0c1b8", // constants
     "variable.declaration.local": "#a0c1b8", // constants
-    "returnValue.local": "#508b93", // constants
-    "returnValue.declaration.local": "#438e98", // constants
-    "method": "#7b9be4", // PUB method name (use)
-    "method.static": "#9178da", // PRI method name (use)
-    "parameter.readonly": "#b68ce3", // constants
-    "parameter.declaration.readonly": "#b68ce3", // constants
+    "returnValue.local": "#70aab5", // constants
+    "returnValue.declaration.local": "#70aab5", // constants
+    "method": "#829bde", // PUB method name (use)
+    "method.static": "#8b7cdd", // PRI method name (use)
+    "parameter.readonly": "#ae7ede", // constants
+    "parameter.declaration.readonly": "#ae7ede", // constants
     "namespace": "#6a66b3", // objects (old: 7A81FF) (new:5d60a0)
     "colorName": "#8a5ea3", // debug() display userName
     "displayType": "#b37746", // debug() display type
@@ -835,11 +835,11 @@
     "setupParameter": "#aaac61", // debug() setup parameter name
     "feedParameter": "#b4a666", // debug() display type
     // things from typescript
-    "parameter.declaration": "#b68ce3", // TypeScript: passed parameters .ts
+    "parameter.declaration": "#ae7ede", // TypeScript: passed parameters .ts
     "meta.type.annotation.ts": "#3b7585", // TypeScript: data types
     // things from python
     "string.quoted.single.python": "#a83d3d", // Python: quoted strings
-    "support.function.builtin.python": "#c1c07d", // Python: built-in methods
+    "support.function.builtin.python": "#dfc485", // Python: built-in methods
     // style overrides
     "*.static": { "fontStyle": "italic" }, // all static names are italic
     "*.declaration": { "fontStyle": "bold" }, // all declarations are bold
