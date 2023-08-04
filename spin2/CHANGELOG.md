@@ -9,12 +9,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for reminders on how to str
 Work to appear in upcoming releases:
 
 - Work on fixes to any reported issues
-- Add tabbing to user defined tabstops as found in Propeller Tool
 
 Possible next additions:
 
-- Update theme to work better with a couple common languages we use near our P2 projects (e.g., Python)
-- Add light theme
+- Update themes to work better with common languages we use near our P1 and P2 projects (e.g., Python)
 - Investigate and possibly add unique coloring for method pointers
 - Add spin2 instruction templates as Snippets (_for instructions with two or more parameters_)
 - Add new-file templates as Snippets
@@ -27,6 +25,7 @@ Theme and Semantic Highlight Updates (P1 and P2)
 - Cleaned up both Light and Dark non-colored-background-use color themes
 - BUGFIX: Semantic fix incorrect flagging of pasm instructions as missing labels
 - BUGFIX: Semantic correctly highlight variable and label declarations in DAT block
+- BUGFIX: P2 Syntax add missing smart pin constants P_LEVEL_B_FBP and P_LEVEL_B_FBN
 
 ## [1.9.12] 2023-08-01
 

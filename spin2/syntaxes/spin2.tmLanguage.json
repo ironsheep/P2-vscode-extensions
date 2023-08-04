@@ -757,7 +757,7 @@
         },
         {
           "name": "constant.language.smartpins.spin2",
-          "match": "(?i)\\b(P_LEVEL_A|P_LEVEL_A_(FBN|FBP)|P_LOCAL_(A|B)|P_LOGIC_(A|A_FB|B_FB)|P_LOW_(100UA|10UA|150K|15K|1K5|1MA|FAST|FLOAT))\\b"
+          "match": "(?i)\\b(P_LEVEL_A|P_LEVEL_A_FBN|P_LEVEL_B_(FBN|FBP)|P_LOCAL_(A|B)|P_LOGIC_(A|A_FB|B_FB)|P_LOW_(100UA|10UA|150K|15K|1K5|1MA|FAST|FLOAT))\\b"
         },
         {
           "name": "constant.language.smartpins.spin2",

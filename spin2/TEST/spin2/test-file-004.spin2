@@ -368,7 +368,8 @@ PUB allSmartPinAliases()
             P_INVERT_OUTPUT
             P_LEVEL_A
             P_LEVEL_A_FBN
-            P_LEVEL_A_FBP
+            P_LEVEL_B_FBP
+            P_LEVEL_B_FBN
             P_LOCAL_A
             P_LOCAL_B
             P_LOGIC_A
