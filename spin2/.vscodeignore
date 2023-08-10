@@ -2,14 +2,15 @@
 */**
 .DS_Store
 syntaxes/*
-themes/*
 REF/*
 TEST/*
 !out/*
+!images/*
 !syntaxes/spin2.tmLanguage.json
 !spin2.language-configuration.json
 !syntaxes/spin1.tmLanguage.json
 !spin1.language-configuration.json
+themes/*
 !themes/isp-spin-dark-theme.json
 !themes/isp-spin-light-theme.json
 !themes/isp-spin-dark-bg-theme.json
@@ -20,5 +21,3 @@ TEST/*
 !CHANGELOG.md
 !LICENSE
 !copyright
-!images/*
-!themes/*
