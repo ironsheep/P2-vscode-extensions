@@ -18,7 +18,9 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
-## [1.9.14] 2023-08-??
+## [1.9.14] 2023-08-24
+
+General clean up of broken things P1 and P2
 
 - Repair command that inserts tab ruler
 - Repair themes, found that order of declarations matters, wildcard patterns need to be last in list!
