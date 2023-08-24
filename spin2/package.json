@@ -3,7 +3,7 @@
   "displayName": "Spin2",
   "description": "Spin2/Pasm2 Syntax/Semantic Highlighting w/Code Outline and Custom tabbing support",
   "icon": "images/Propeller.ico",
-  "version": "1.9.13",
+  "version": "1.9.14",
   "publisher": "IronSheepProductionsLLC",
   "repository": {
     "type": "git",
@@ -614,104 +614,53 @@
       {
         "key": "Ctrl+Alt+d",
         "command": "spin2.generate.documentation.file",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2"
-      },
-      {
-        "key": "Ctrl+Alt+d",
-        "command": "spin2.generate.documentation.file",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && (editorLangId == spin || editorLangId == spin2)"
       },
       {
         "key": "Ctrl+Alt+c",
         "command": "spin2.generate.doc.comment",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin2"
-      },
-      {
-        "key": "Ctrl+Alt+c",
-        "command": "spin2.generate.doc.comment",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && editorLangId == spin"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorTabMovesFocus && (editorLangId == spin || editorLangId == spin2)"
       },
       {
         "key": "tab",
         "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
-      },
-      {
-        "key": "tab",
-        "command": "spin2.indentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !suggestWidgetVisible && !editorHoverFocused && !editorHoverVisible && !editorTabMovesFocus && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "key": "Shift+tab",
         "command": "spin2.outdentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
-      },
-      {
-        "key": "Shift+tab",
-        "command": "spin2.outdentTabStop",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "key": "Ctrl+Alt+tab",
         "command": "spin2.insertTabStopsComment",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin2 && config.spinElasticTabstops.enable"
-      },
-      {
-        "key": "Ctrl+Alt+tab",
-        "command": "spin2.insertTabStopsComment",
-        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && !editorTabMovesFocus && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.rotate",
         "key": "insert",
-        "when": "editorFocus && editorLangId == spin2"
-      },
-      {
-        "command": "spin2.insertMode.rotate",
-        "key": "insert",
-        "when": "editorFocus && editorLangId == spin"
+        "when": "editorFocus && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.rotate",
         "key": "F11",
-        "when": "editorFocus && editorLangId == spin2"
-      },
-      {
-        "command": "spin2.insertMode.rotate",
-        "key": "F11",
-        "when": "editorFocus && editorLangId == spin"
+        "when": "editorFocus && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.deleteLeft",
         "key": "backspace",
-        "when": "editorTextFocus && !editorReadonly && (editorLangId == spin2 || editorLangId == p2asm) && config.spinElasticTabstops.enable"
-      },
-      {
-        "command": "spin2.insertMode.deleteLeft",
-        "key": "backspace",
-        "when": "editorTextFocus && !editorReadonly && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.deleteRight",
         "key": "delete",
-        "when": "editorTextFocus && !editorReadonly && (editorLangId == spin2 || editorLangId == p2asm) && config.spinElasticTabstops.enable"
-      },
-      {
-        "command": "spin2.insertMode.deleteRight",
-        "key": "delete",
-        "when": "editorTextFocus && !editorReadonly && editorLangId == spin && config.spinElasticTabstops.enable"
+        "when": "editorTextFocus && !editorReadonly && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       },
       {
         "command": "spin2.insertMode.toggle",
         "key": "Ctrl+Shift+i",
         "mac": "Cmd+Shift+i",
-        "when": "editorFocus && editorLangId == spin2"
-      },
-      {
-        "command": "spin2.insertMode.toggle",
-        "key": "Ctrl+Shift+i",
-        "mac": "Cmd+Shift+i",
-        "when": "editorFocus && editorLangId == spin"
+        "when": "editorFocus && (editorLangId == spin || editorLangId == spin2) && config.spinElasticTabstops.enable"
       }
     ],
     "views": {

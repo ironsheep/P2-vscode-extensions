@@ -129,9 +129,16 @@ export class Spin2HoverProvider implements HoverProvider {
 
   private getSignatureWithoutLocals(line: string): string {
     let desiredLinePortion: string = line;
+    // strip off locals
     const localOffset: number = line.indexOf("|");
     if (localOffset != -1) {
       desiredLinePortion = line.substring(0, localOffset).trim();
+    }
+    // upper case the pub/pri
+    if (desiredLinePortion.startsWith("pub ")) {
+      desiredLinePortion = desiredLinePortion.replace("pub ", "PUB ");
+    } else if (desiredLinePortion.startsWith("pri ")) {
+      desiredLinePortion = desiredLinePortion.replace("pri ", "PRI ");
     }
     return desiredLinePortion;
   }
@@ -221,9 +228,7 @@ export class Spin2HoverProvider implements HoverProvider {
         //
         const isMethod: boolean = typeString.includes("method");
         if (isMethod) {
-          if (isMethod && !isSignatureLine) {
-            tokenFindings.signature = this.getSignatureWithoutLocals(nonCommentDecl);
-          }
+          tokenFindings.signature = this.getSignatureWithoutLocals(nonCommentDecl);
           if (tokenFindings.scope.includes("object")) {
             if (typeString.includes("method")) {
               defInfo.declarationlines = [`(${scopeString} ${typeString}) ${tokenFindings.signature}`];

@@ -85,14 +85,17 @@ export class Spin1ConfigDocumentSymbolProvider implements vscode.DocumentSymbolP
             }
             let methodName: string = line.text.substr(3).trim();
             if (methodName.includes("'")) {
+              // remove tic-single-line-comment
               const lineParts: string[] = methodName.split("'");
               methodName = lineParts[0].trim();
             }
             if (methodName.includes("{")) {
+              // remove brace-wrapped-comment
               const lineParts: string[] = methodName.split("{");
               methodName = lineParts[0].trim();
             }
             if (methodName.includes("|")) {
+              // remove local vars
               const lineParts: string[] = methodName.split("|");
               methodName = lineParts[0].trim();
             }

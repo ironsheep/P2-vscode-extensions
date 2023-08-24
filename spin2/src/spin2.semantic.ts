@@ -996,6 +996,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
               //this._logOBJ("  -- GLBL GetOBJDecl newName=[" + nameParts[0] + "]");
               // remember this object name so we can annotate a call to it
               this._logSPIN("  --- objName=[" + objName + "], objRef=[" + objRef + "]");
+              // record expectation of object public interface
               if (bISMethod) {
                 this.semanticFindings.setGlobalToken(objRef, new RememberedToken("method", []), lineNbr, this._declarationComment(), objName);
               } else {
@@ -1180,6 +1181,7 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
                   this._logDAT("   -- GetDatDecl objRefParts=[" + objRefParts + "](" + objRefParts.length + ")");
                   // remember this object name so we can annotate a call to it
                   this._logDAT("   -- GetDatDecl objName=[" + objName + "], objRef=[" + objRef + "]");
+                  // record expectation of object public interface
                   if (bISMethod) {
                     this.semanticFindings.setGlobalToken(objRef, new RememberedToken("method", []), lineNbr, this._declarationComment(), objName);
                   } else {
@@ -1303,8 +1305,10 @@ export class Spin2DocumentSemanticTokensProvider implements vscode.DocumentSeman
     this.currentMethodName = methodName; // notify of latest method name so we can track inLine PASM symbols
     // mark start of method - we are learning span of lines this method covers
     this.semanticFindings.startMethod(methodName, lineNbr);
+
     // remember this method name so we can annotate a call to it
     const refModifiers: string[] = isPrivate ? ["static"] : [];
+    // record ACTUAL object public/private interface
     this.semanticFindings.setGlobalToken(methodName, new RememberedToken("method", refModifiers), lineNbr, this._declarationComment());
     // reset our list of local variables
     this.semanticFindings.clearLocalPAsmTokensForMethod(methodName);
