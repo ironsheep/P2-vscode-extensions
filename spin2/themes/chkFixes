@@ -1,0 +1,16 @@
+#!/bin/bash
+
+(set -x; sdiff -s runNew/isp-spin-dark-bg-theme.scope runFixed/isp-spin-dark-bg-theme.scope)
+echo ""
+
+(set -x; sdiff -s runNew/isp-spin-dark-theme.scope runFixed/isp-spin-dark-theme.scope)
+echo ""
+
+(set -x; sdiff -s runNew/isp-spin-light-bg-theme.scope runFixed/isp-spin-light-bg-theme.scope)
+echo ""
+
+(set -x; sdiff -s runNew/isp-spin-light-theme.scope runFixed/isp-spin-light-theme.scope)
+echo ""
+
+(set -x; sdiff -s runNew/isp-spin-syntax-theme.scope runFixed/isp-spin-syntax-theme.scope)
+echo ""

@@ -24,7 +24,7 @@ PUB Main()
         debug(`screen update ~dly(100))         ' <--- "dly" should NOT be RED!
 
 ' --------------------------------------------------------------------------------------------------
-VAR
+VAR ' instance variables
     long    position
 
 PUB Main()

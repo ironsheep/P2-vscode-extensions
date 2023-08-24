@@ -40,8 +40,8 @@
     "editorGutter.addedBackground": "#2ea043",
     "editorGutter.deletedBackground": "#f85149",
     "editorGutter.modifiedBackground": "#0078d4",
-    "editorIndentGuide.activeBackground": "#707070",
-    "editorIndentGuide.background": "#404040",
+    "editorIndentGuide.activeBackground1": "#707070",
+    "editorIndentGuide.background1": "#404040",
     "editorInlayHint.background": "#8b949e1b",
     "editorInlayHint.typeBackground": "#8b949e1b",
     "editorLineNumber.activeForeground": "#cccccc",
@@ -876,35 +876,6 @@
     },
    ],
   "semanticTokenColors": {
-    "*.declaration": {
-      "fontStyle": "bold",
-    },
-    "*.declaration.static": {
-      "fontStyle": "italic",
-    },
-    "*.illegalUse": {
-      "foreground": "#ff0000",
-      "fontStyle": "bold",
-    },
-    "*.missingDeclaration": {
-      "foreground": "#d83333",
-      "fontStyle": "bold",
-    },
-    "*.modification.missingDeclaration": {
-      "foreground": "#d83333",
-      "fontStyle": "bold",
-    },
-    "*.readonly.missingDeclaration": {
-      "foreground": "#d83333",
-      "fontStyle": "bold",
-    },
-    "*.static": {
-      "fontStyle": "italic",
-    },
-    "*.static.illegalUse": {
-      "foreground": "#ff0000",
-      "fontStyle": "bold",
-    },
     "colorName": "#8a5ea3",
     "comment": "#538054",
     "customLiteral": "#DCDCAA",
@@ -940,5 +911,34 @@
     "variable.modification.instance": "#66c7cc",
     "variable.modification.local": "#a0c1b8",
     "variable.readonly": "#a051a0",
+    "*.declaration": {
+      "fontStyle": "bold",
+    },
+    "*.declaration.static": {
+      "fontStyle": "italic",
+    },
+    "*.illegalUse": {
+      "foreground": "#ff0000",
+      "fontStyle": "bold",
+    },
+    "*.missingDeclaration": {
+      "foreground": "#d83333",
+      "fontStyle": "bold",
+    },
+    "*.modification.missingDeclaration": {
+      "foreground": "#d83333",
+      "fontStyle": "bold",
+    },
+    "*.readonly.missingDeclaration": {
+      "foreground": "#d83333",
+      "fontStyle": "bold",
+    },
+    "*.static": {
+      "fontStyle": "italic",
+    },
+    "*.static.illegalUse": {
+      "foreground": "#ff0000",
+      "fontStyle": "bold",
+    },
    },
 }

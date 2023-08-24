@@ -510,7 +510,17 @@ def dumpSemanticTokenColors(newTheme_fp, keyName):
     # put out a byScope ordered list
     scopeKeys = list(colorsByScope.keys())
     scopeKeys.sort()
+    # emit non wildcard entries first
+    dumpSemanticTokenColorsFiltered(newTheme_fp, scopeKeys, colorsByScope, False)
+    # now the wildcard entries
+    dumpSemanticTokenColorsFiltered(newTheme_fp, scopeKeys, colorsByScope, True)
+
+def dumpSemanticTokenColorsFiltered(newTheme_fp, scopeKeys, colorsByScope, emitWildcards):
     for scopeName in scopeKeys:
+        if "*" in scopeName and emitWildcards == False:
+            continue
+        if not "*" in scopeName and emitWildcards == True:
+            continue
         colorName = colorsByScope[scopeName]
         # if color name has " "  then we have color, style
         #   emit as:
@@ -536,7 +546,6 @@ def dumpSemanticTokenColors(newTheme_fp, keyName):
             newTheme_fp.write("    \"" + scopeName + "\": {\n")
             newTheme_fp.write("      \"fontStyle\": \"" + colorName + "\",\n")
             newTheme_fp.write("    },\n")
-
 
 def getScopeNameDict():
     # get a list of entryTypes from the masterColorDict

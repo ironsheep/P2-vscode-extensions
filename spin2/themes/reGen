@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+(set -x;../thmChk.py -r -t isp-spin-dark-bg-theme.json)
+(set -x;../thmChk.py -r -t isp-spin-dark-theme.json)
+(set -x;../thmChk.py -r -t isp-spin-light-bg-theme.json)
+(set -x;../thmChk.py -r -t isp-spin-light-theme.json)
+(set -x;../thmChk.py -r -t isp-spin-syntax-theme.json)

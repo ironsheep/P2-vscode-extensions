@@ -619,35 +619,6 @@
     },
    ],
   "semanticTokenColors": {
-    "*.declaration": {
-      "fontStyle": "bold",
-    },
-    "*.declaration.static": {
-      "fontStyle": "italic",
-    },
-    "*.illegalUse": {
-      "foreground": "#ff0000",
-      "fontStyle": "bold",
-    },
-    "*.missingDeclaration": {
-      "foreground": "#d83333",
-      "fontStyle": "bold",
-    },
-    "*.modification.missingDeclaration": {
-      "foreground": "#d83333",
-      "fontStyle": "bold",
-    },
-    "*.readonly.missingDeclaration": {
-      "foreground": "#d83333",
-      "fontStyle": "bold",
-    },
-    "*.static": {
-      "fontStyle": "italic",
-    },
-    "*.static.illegalUse": {
-      "foreground": "#ff0000",
-      "fontStyle": "bold",
-    },
     "colorName": "#8a5ea3",
     "comment": "#317333",
     "customLiteral": "#000000",
@@ -683,5 +654,34 @@
     "variable.modification.instance": "#2a857f",
     "variable.modification.local": "#467275",
     "variable.readonly": "#a051a0",
+    "*.declaration": {
+      "fontStyle": "bold",
+    },
+    "*.declaration.static": {
+      "fontStyle": "italic",
+    },
+    "*.illegalUse": {
+      "foreground": "#ff0000",
+      "fontStyle": "bold",
+    },
+    "*.missingDeclaration": {
+      "foreground": "#d83333",
+      "fontStyle": "bold",
+    },
+    "*.modification.missingDeclaration": {
+      "foreground": "#d83333",
+      "fontStyle": "bold",
+    },
+    "*.readonly.missingDeclaration": {
+      "foreground": "#d83333",
+      "fontStyle": "bold",
+    },
+    "*.static": {
+      "fontStyle": "italic",
+    },
+    "*.static.illegalUse": {
+      "foreground": "#ff0000",
+      "fontStyle": "bold",
+    },
    },
 }
