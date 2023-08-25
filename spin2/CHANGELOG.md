@@ -18,6 +18,13 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.15] 2023-08-25
+
+General clean up P2 debug support
+
+- P2 Repair Semantic highlight of object referenced names with underscores within debug satements
+- P2 Repair Syntax highlight of strings within in-line pasm
+
 ## [1.9.14] 2023-08-24
 
 General clean up of broken things P1 and P2

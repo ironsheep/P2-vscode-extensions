@@ -291,6 +291,7 @@ repository:
                 name: storage.modifier.spin2
         patterns:
             - include: '#comment'
+            - include: '#string'
             - include: '#constants'
             - include: '#array_index'
             - include: '#number'

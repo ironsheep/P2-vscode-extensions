@@ -524,6 +524,9 @@
           "include": "#comment"
         },
         {
+          "include": "#string"
+        },
+        {
           "include": "#constants"
         },
         {

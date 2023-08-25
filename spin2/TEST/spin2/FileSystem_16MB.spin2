@@ -128,7 +128,7 @@ PUB MountFileSystem() | i
     if field[BlockState][i] == sTEMP			'is this a valid block, but not a file block?
       ReadBlock(i, @BlockBuff, $000, $003)		'if so, read first long of block to get ID
       field[IDValid][BlockBuff.long.[19..8]]~		'..cancel ID flag
-      field[BlockState][i] := sFREE   			'..invalidate block status (FIXME: BUG this should NOT see i)
+      field[BlockState][i] := sFREE   			'..invalidate block status (FIXdoneME: BUG this should NOT see i)
       CancelBlock(i)					'..cancel block to inhibit future CRC checks
       FreeBlocks++					'..increment free-block inventory
 

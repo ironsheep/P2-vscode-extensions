@@ -84,7 +84,7 @@ pri rampSlow(tgt_incr, inDrv_incr, inDrv_state) : drv_incr, drv_state_
                 'debug("  rd: + ", sdec_long(drv_incr))
                 cmps    drv_incr, tgt_incr          wc  ' Q: Did we exceed target?
     if_nc       jmp     #.nodebug2
-                debug("  rd: CY!")
+                debug("  rd: CY!")              ' FIXdoneME: string should be colored!
 .nodebug2
 .lastSDnZero
     if_nc        mov     drv_incr, tgt_incr              ' yes, reset to target!
