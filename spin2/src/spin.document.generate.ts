@@ -243,11 +243,6 @@ export class DocGenerator {
           let line = textEditor.document.lineAt(i);
           const trimmedLine = line.text.trim();
 
-          const sectionStatus = this._isSectionStartLine(line.text);
-          if (sectionStatus.isSectionStart) {
-            currState = sectionStatus.inProgressStatus;
-          }
-
           // skip all {{ --- }} multi-line doc comments
           if (currState == eParseState.inMultiLineDocComment) {
             // in multi-line doc-comment, hunt for end '}}' to exit
@@ -267,6 +262,7 @@ export class DocGenerator {
             }
             continue;
           } else if (currState == eParseState.inMultiLineComment) {
+            // skip all { --- } multi-line non-doc comments
             // in multi-line non-doc-comment, hunt for end '}' to exit
             let closingOffset = trimmedLine.indexOf("}");
             if (closingOffset != -1) {
@@ -275,7 +271,14 @@ export class DocGenerator {
             }
             //  DO NOTHING
             continue;
-          } else if (trimmedLine.startsWith("{{")) {
+          }
+
+          const sectionStatus = this._isSectionStartLine(line.text);
+          if (sectionStatus.isSectionStart) {
+            currState = sectionStatus.inProgressStatus;
+          }
+
+          if (trimmedLine.startsWith("{{")) {
             // process multi-line doc comment
             let openingOffset = line.text.indexOf("{{");
             const closingOffset = line.text.indexOf("}}", openingOffset + 2);
@@ -301,8 +304,8 @@ export class DocGenerator {
               priorState = currState;
               currState = eParseState.inMultiLineComment;
               //  DO NOTHING
-              continue;
             }
+            continue;
           } else if (trimmedLine.startsWith("''")) {
             // process single-line doc comment
             if (trimmedLine.length > 2 && shouldEmitTopDocComments) {
@@ -310,6 +313,7 @@ export class DocGenerator {
               fs.appendFileSync(outFile, trimmedLine.substring(2) + endOfLineStr);
             }
           } else if (sectionStatus.isSectionStart && currState == eParseState.inPub) {
+            // have public method report it
             pubsFound++;
             if (shouldEmitTopDocComments) {
               fs.appendFileSync(outFile, "" + endOfLineStr); // blank line
@@ -333,10 +337,6 @@ export class DocGenerator {
           let line = textEditor.document.lineAt(i);
           const trimmedLine = line.text.trim();
 
-          const sectionStatus = this._isSectionStartLine(line.text);
-          if (sectionStatus.isSectionStart) {
-            currState = sectionStatus.inProgressStatus;
-          }
           // skip all {{ --- }} multi-line doc comments
           if (currState == eParseState.inMultiLineDocComment) {
             // in multi-line doc-comment, hunt for end '}}' to exit
@@ -364,7 +364,13 @@ export class DocGenerator {
             }
             //  DO NOTHING
             continue;
-          } else if (trimmedLine.startsWith("{{")) {
+          }
+
+          const sectionStatus = this._isSectionStartLine(line.text);
+          if (sectionStatus.isSectionStart) {
+            currState = sectionStatus.inProgressStatus;
+          }
+          if (trimmedLine.startsWith("{{")) {
             // process multi-line doc comment
             let openingOffset = line.text.indexOf("{{");
             const closingOffset = line.text.indexOf("}}", openingOffset + 2);

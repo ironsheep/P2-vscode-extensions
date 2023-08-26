@@ -18,11 +18,17 @@ Possible next additions:
 - Add new-file templates as Snippets
 - Add additional Snippets as the community identifies them
 
+## [1.9.16] 2023-08-25
+
+Clean-up P1 and P2 Object Interface Document Generator
+
+- Repair Document Generator - don't emit signature information for PUB/PRI blocks that have been commented out with multi-line comments
+
 ## [1.9.15] 2023-08-25
 
-General clean up P2 debug support
+General clean-up P2 debug support
 
-- P2 Repair Semantic highlight of object referenced names with underscores within debug satements
+- P2 Repair Semantic highlight of object-referenced names with underscores within debug statements
 - P2 Repair Syntax highlight of strings within in-line pasm
 
 ## [1.9.14] 2023-08-24
