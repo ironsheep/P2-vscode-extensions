@@ -76,7 +76,7 @@ That's all I have relative to this new background coloring feature.  I hope you 
 
 ## License
 
-Copyright © 2020 Iron Sheep Productions, LLC. All rights reserved.
+Copyright © 2023 Iron Sheep Productions, LLC.
 
 Licensed under the MIT License.
 

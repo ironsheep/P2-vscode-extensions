@@ -1039,7 +1039,7 @@ Contents I used for file: **keybindings.json**:
 
 ## License
 
-Copyright © 2021 Iron Sheep Productions, LLC. All rights reserved.<br />
+Copyright © 2023 Iron Sheep Productions, LLC.<br />
 Licensed under the MIT License. <br>
 <br>
 Follow these links for more information:

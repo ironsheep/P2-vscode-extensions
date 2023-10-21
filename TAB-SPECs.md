@@ -372,7 +372,7 @@ NOTE: empty lines are ignored for Shift+Tab.
 
 ## License
 
-Copyright © 2020 Iron Sheep Productions, LLC. All rights reserved.
+Copyright © 2023 Iron Sheep Productions, LLC.
 
 Licensed under the MIT License.
 
